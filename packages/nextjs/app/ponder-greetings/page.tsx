@@ -1,12 +1,13 @@
 "use client";
 
-import Link from "next/link";
+//import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
-import type { NextPage } from "next";
+//import type { NextPage } from "next";
 import { formatEther } from "viem";
 import { Address } from "~~/components/scaffold-eth";
 
+/*
 type Greeting = {
   id: string;
   text: string;
@@ -15,9 +16,35 @@ type Greeting = {
   value: bigint;
   timestamp: number;
 };
+*/
 
-type GreetingsData = { greetings: { items: Greeting[] } };
+type Job = {
+  jobId: string;
+  freelancer?: `0x${string}`;
+  client?: `0x${string}`;
+  payment?: string;
+  title?: string;
+  description?: string;
+  estimatedDuration?: string;
+  createdAt?: string;
+  acceptedAt?: string;
+  deadline?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+};
 
+type Confirmation = {
+  id: string;
+  jobId: string;
+  confirmer: `0x${string}`;
+  isClient: boolean;
+  timestamp: string;
+};
+
+//type GreetingsData = { greetings: { items: Greeting[] } };
+type JobsData = { jobs: { items: Job[] } };
+type ConfirmationsData = { confirmations: { items: Confirmation[] } };
+/*
 const fetchGreetings = async () => {
   const GreetingsQuery = gql`
     query Greetings {
@@ -39,7 +66,42 @@ const fetchGreetings = async () => {
   );
   return data;
 };
+*/
+const fetchJobsAndConfirmations = async () => {
+  const query = gql`
+    query JobsAndConfirmations {
+      jobs(orderBy: "createdAt", orderDirection: "desc") {
+        items {
+          jobId
+          freelancer
+          client
+          payment
+          title
+          description
+          estimatedDuration
+          createdAt
+          acceptedAt
+          deadline
+          completedAt
+          cancelledAt
+        }
+      }
+      confirmations(orderBy: "timestamp", orderDirection: "desc") {
+        items {
+          id
+          jobId
+          confirmer
+          isClient
+          timestamp
+        }
+      }
+    }
+  `;
+  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
+  return request<{ jobs: JobsData["jobs"]; confirmations: ConfirmationsData["confirmations"] }>(endpoint, query);
+};
 
+/*
 const PonderGreetings: NextPage = () => {
   const { data: greetingsData } = useQuery({
     queryKey: ["greetings"],
@@ -171,3 +233,99 @@ const PonderGreetings: NextPage = () => {
 };
 
 export default PonderGreetings;
+*/
+const PonderJobs = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["jobsAndConfirmations"],
+    queryFn: fetchJobsAndConfirmations,
+  });
+
+  return (
+    <div className="flex items-center flex-col flex-grow pt-10">
+      <h2 className="text-4xl font-bold">Jobs and Confirmations</h2>
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center flex-col pt-12">
+          <div className="loading loading-dots loading-md"></div>
+        </div>
+      )}
+
+      {/* Jobs display */}
+      {data?.jobs.items.length === 0 && <p>No jobs found.</p>}
+      {data?.jobs.items && data.jobs.items.length > 0 && (
+        <div className="mt-8 w-full max-w-3xl">
+          <h3 className="text-2xl font-bold">Jobs</h3>
+          {data.jobs.items.map(job => (
+            <div key={job.jobId} className="my-4 p-4 border rounded-lg">
+              <div>
+                <strong>Job ID:</strong> {job.jobId ? job.jobId.toString() : "N/A"}
+              </div>
+              <div>
+                <strong>Title:</strong> {job.title || "N/A"}
+              </div>
+              <div>
+                <strong>Description:</strong> {job.description || "N/A"}
+              </div>
+              <div>
+                <strong>Freelancer:</strong> {job.freelancer ? <Address address={job.freelancer} /> : "N/A"}
+              </div>
+              <div>
+                <strong>Client:</strong> {job.client ? <Address address={job.client} /> : "N/A"}
+              </div>
+              <div>
+                <strong>Payment:</strong> {job.payment ? `${formatEther(BigInt(job.payment))} ETH` : "N/A"}
+              </div>
+              <div>
+                <strong>Created At:</strong>{" "}
+                {job.createdAt ? new Date(Number(job.createdAt) * 1000).toLocaleString() : "N/A"}
+              </div>
+              <div>
+                <strong>Accepted At:</strong>{" "}
+                {job.acceptedAt ? new Date(Number(job.acceptedAt) * 1000).toLocaleString() : "N/A"}
+              </div>
+              <div>
+                <strong>Deadline:</strong>{" "}
+                {job.deadline ? new Date(Number(job.deadline) * 1000).toLocaleString() : "N/A"}
+              </div>
+              <div>
+                <strong>Completed At:</strong>{" "}
+                {job.completedAt ? new Date(Number(job.completedAt) * 1000).toLocaleString() : "N/A"}
+              </div>
+              <div>
+                <strong>Cancelled At:</strong>{" "}
+                {job.cancelledAt ? new Date(Number(job.cancelledAt) * 1000).toLocaleString() : "N/A"}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Confirmations display */}
+      {data?.confirmations.items.length === 0 && <p>No confirmations found.</p>}
+      {data?.confirmations.items && data.confirmations.items.length > 0 && (
+        <div className="mt-8 w-full max-w-3xl">
+          <h3 className="text-2xl font-bold">Confirmations</h3>
+          {data.confirmations.items.map(conf => (
+            <div key={conf.id} className="my-4 p-4 border rounded-lg">
+              <div>
+                <strong>Job ID:</strong> {conf.jobId}
+              </div>
+              <div>
+                <strong>Confirmer:</strong> <Address address={conf.confirmer} />
+              </div>
+              <div>
+                <strong>Is Client:</strong> {conf.isClient ? "Yes" : "No"}
+              </div>
+              <div>
+                <strong>Timestamp:</strong> {new Date(Number(conf.timestamp) * 1000).toLocaleString()}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PonderJobs;

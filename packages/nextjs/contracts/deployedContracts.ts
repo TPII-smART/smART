@@ -6,6 +6,684 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
   31337: {
+    JobsContract: {
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_owner",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "confirmer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "isClient",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ConfirmationReceived",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deadline",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "acceptedAt",
+              type: "uint256",
+            },
+          ],
+          name: "JobAccepted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "JobCancelled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "JobCompleted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "estimatedDuration",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+          ],
+          name: "JobCreated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "acceptJob",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "cancelJob",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "confirmCompletion",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_title",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "_description",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "_payment",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_estimatedDurationHours",
+              type: "uint256",
+            },
+          ],
+          name: "createJob",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "emergencyCancel",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_hours",
+              type: "uint256",
+            },
+          ],
+          name: "formatDuration",
+          outputs: [
+            {
+              internalType: "string",
+              name: "",
+              type: "string",
+            },
+          ],
+          stateMutability: "pure",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "getCompleteJob",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "uint256",
+                  name: "jobId",
+                  type: "uint256",
+                },
+                {
+                  internalType: "address",
+                  name: "client",
+                  type: "address",
+                },
+                {
+                  internalType: "address",
+                  name: "freelancer",
+                  type: "address",
+                },
+                {
+                  internalType: "uint256",
+                  name: "payment",
+                  type: "uint256",
+                },
+                {
+                  internalType: "string",
+                  name: "title",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "description",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "estimatedDuration",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "deadline",
+                  type: "uint256",
+                },
+                {
+                  internalType: "enum JobsContract.JobState",
+                  name: "state",
+                  type: "uint8",
+                },
+                {
+                  internalType: "uint256",
+                  name: "createdAt",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "acceptedAt",
+                  type: "uint256",
+                },
+                {
+                  internalType: "bool",
+                  name: "clientConfirmed",
+                  type: "bool",
+                },
+                {
+                  internalType: "bool",
+                  name: "freelancerConfirmed",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct JobsContract.Job",
+              name: "",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "getJobBasics",
+          outputs: [
+            {
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              internalType: "enum JobsContract.JobState",
+              name: "state",
+              type: "uint8",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "getJobContent",
+          outputs: [
+            {
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "estimatedDuration",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "deadline",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "getJobStatus",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "acceptedAt",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "clientConfirmed",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "freelancerConfirmed",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "enum JobsContract.JobState",
+              name: "_state",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "_limit",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_offset",
+              type: "uint256",
+            },
+          ],
+          name: "getJobsByState",
+          outputs: [
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getTotalJobs",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_user",
+              type: "address",
+            },
+            {
+              internalType: "bool",
+              name: "_asFreelancer",
+              type: "bool",
+            },
+          ],
+          name: "getUserJobs",
+          outputs: [
+            {
+              internalType: "uint256[]",
+              name: "",
+              type: "uint256[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "jobCounter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "jobs",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "estimatedDuration",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "deadline",
+              type: "uint256",
+            },
+            {
+              internalType: "enum JobsContract.JobState",
+              name: "state",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "acceptedAt",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "clientConfirmed",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "freelancerConfirmed",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "platformFee",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_newFee",
+              type: "uint256",
+            },
+          ],
+          name: "setPlatformFee",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+      ],
+      inheritedFunctions: {},
+    },
     YourContract: {
       address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
