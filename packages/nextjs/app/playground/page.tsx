@@ -15,10 +15,7 @@ const Playground: NextPage = () => {
         label="age"
         onChange={v => setAge(v)}
         value={age}
-        options={[
-          { value: "20", label: "veinte" },
-          { value: "30", label: "treinta" },
-        ]}
+        options={[{ value: "20" }, { value: "30", label: "treinta" }]}
       />
     </div>
   );
