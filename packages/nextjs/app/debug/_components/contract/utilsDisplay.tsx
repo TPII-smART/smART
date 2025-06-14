@@ -85,8 +85,8 @@ export const ObjectFieldDisplay = ({
 }) => {
   return (
     <div className={`flex flex-row items-baseline ${leftPad ? "ml-4" : ""}`}>
-      <span className="text-base-content/60 mr-2">{name}:</span>
-      <span className="text-base-content">{displayTxResult(value, size)}</span>
+      <span className="text-secondary-content/60 mr-2">{name}:</span>
+      <span className="text-secondary-content">{displayTxResult(value, size)}</span>
     </div>
   );
 };

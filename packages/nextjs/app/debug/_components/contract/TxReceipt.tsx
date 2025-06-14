@@ -13,7 +13,7 @@ export const TxReceipt = ({ txResult }: { txResult: TransactionReceipt }) => {
       <div className="mt-1 pl-2">
         {isTxResultCopiedToClipboard ? (
           <CheckCircleIcon
-            className="ml-1.5 text-xl font-normal text-base-content h-5 w-5 cursor-pointer"
+            className="ml-1.5 text-xl font-normal text-secondary-content h-5 w-5 cursor-pointer"
             aria-hidden="true"
           />
         ) : (

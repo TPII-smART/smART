@@ -100,7 +100,7 @@ export const TupleArray = ({ abiTupleParameter, setParentForm, parentStateObject
 
   return (
     <div>
-      <div className="collapse collapse-arrow bg-base-200 pl-4 py-1.5 border-2 border-secondary">
+      <div className="collapse collapse-arrow bg-primary pl-4 py-1.5 border-2 border-secondary">
         <input type="checkbox" className="min-h-fit! peer" />
         <div className="collapse-title after:top-3.5! p-0 min-h-fit! peer-checked:mb-1 text-primary-content/50">
           <p className="m-0 text-[1rem]">{abiTupleParameter.internalType}</p>
@@ -108,7 +108,7 @@ export const TupleArray = ({ abiTupleParameter, setParentForm, parentStateObject
         <div className="ml-3 flex-col space-y-2 border-secondary/70 border-l-2 pl-4 collapse-content">
           {additionalInputs.map((additionalInput, additionalIndex) => (
             <div key={additionalIndex} className="space-y-1">
-              <span className="badge bg-base-300 badge-sm">
+              <span className="badge bg-border badge-sm">
                 {depth > 1 ? `${additionalIndex}` : `tuple[${additionalIndex}]`}
               </span>
               <div className="space-y-4">
