@@ -133,7 +133,7 @@ const PonderGreetings: NextPage = () => {
           <div>
             <p>
               Get started defining your data schema at{" "}
-              <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
+              <code className="italic bg-border text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
                 packages / ponder / ponder.schema.tsx
               </code>{" "}
               following the Ponder documentation at{" "}
@@ -143,7 +143,7 @@ const PonderGreetings: NextPage = () => {
             </p>
             <p>
               Then index events by adding files to{" "}
-              <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
+              <code className="italic bg-border text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
                 packages / ponder / src /
               </code>{" "}
               (
@@ -158,7 +158,7 @@ const PonderGreetings: NextPage = () => {
             </p>
             <p>
               Start the development Ponder server running{" "}
-              <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
+              <code className="italic bg-border text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
                 yarn ponder:dev
               </code>
             </p>
@@ -175,7 +175,7 @@ const PonderGreetings: NextPage = () => {
             </p>
             <p>
               You can find more information at{" "}
-              <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
+              <code className="italic bg-border text-base font-bold max-w-full break-words break-all [word-spacing:-0.5rem] inline-block">
                 packages / ponder / README.md
               </code>{" "}
               or the{" "}
@@ -200,7 +200,7 @@ const PonderGreetings: NextPage = () => {
           </div>
         </div>
 
-        <div className="flex-grow bg-base-300 w-full mt-16 px-8 py-12">
+        <div className="flex-grow bg-border w-full mt-16 px-8 py-12">
           <h2 className="text-center text-4xl font-bold">Greetings</h2>
           {!greetingsData && (
             <div className="flex items-center flex-col flex-grow pt-12">

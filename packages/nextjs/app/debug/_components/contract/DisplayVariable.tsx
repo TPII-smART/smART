@@ -69,7 +69,7 @@ export const DisplayVariable = ({
         </button>
         <InheritanceTooltip inheritedFrom={inheritedFrom} />
       </div>
-      <div className="text-base-content/80 flex flex-col items-start">
+      <div className="text-secondary-content/80 flex flex-col items-start">
         <div>
           <div
             className={`break-all block transition bg-transparent ${

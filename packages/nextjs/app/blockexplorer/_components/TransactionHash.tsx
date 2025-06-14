@@ -13,7 +13,7 @@ export const TransactionHash = ({ hash }: { hash: string }) => {
       </Link>
       {isAddressCopiedToClipboard ? (
         <CheckCircleIcon
-          className="ml-1.5 text-xl font-normal text-base-content h-5 w-5 cursor-pointer"
+          className="ml-1.5 text-xl font-normal text-secondary-content h-5 w-5 cursor-pointer"
           aria-hidden="true"
         />
       ) : (
