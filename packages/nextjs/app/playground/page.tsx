@@ -2,14 +2,24 @@
 
 import React from "react";
 import type { NextPage } from "next";
-import Checkbox from "~~/components/CheckBox";
+import ComboBox from "~~/components/ComboBox";
 
 const Playground: NextPage = () => {
-  const [checked, setChecked] = React.useState(false);
+  const [age, setAge] = React.useState<string>("");
 
   return (
     <div className="container mx-auto my-10">
-      <Checkbox checked={checked} onChange={() => setChecked(!checked)} label="Unchecked Checkbox" />
+      <ComboBox
+        id="age-select"
+        variant="standard"
+        label="age"
+        onChange={v => setAge(v)}
+        value={age}
+        options={[
+          { value: "20", label: "veinte" },
+          { value: "30", label: "treinta" },
+        ]}
+      />
     </div>
   );
 };
