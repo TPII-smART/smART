@@ -1,4 +1,5 @@
-import { ChangeEvent, FocusEvent, ReactNode, useCallback, useEffect, useRef } from "react";
+import { ChangeEvent, FocusEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import styles from "./InputBase.module.css";
 import { CommonInputProps } from "~~/components/scaffold-eth";
 
 type InputBaseProps<T> = CommonInputProps<T> & {
@@ -6,6 +7,7 @@ type InputBaseProps<T> = CommonInputProps<T> & {
   prefix?: ReactNode;
   suffix?: ReactNode;
   reFocus?: boolean;
+  maxLength?: number;
 };
 
 export const InputBase = <T extends { toString: () => string } | undefined = string>({
@@ -18,15 +20,22 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   prefix,
   suffix,
   reFocus,
+  maxLength,
 }: InputBaseProps<T>) => {
   const inputReft = useRef<HTMLInputElement>(null);
 
   let modifier = "";
   if (error) {
-    modifier = "border-error";
+    modifier = "border-error text-error";
   } else if (disabled) {
     modifier = "border-disabled bg-border";
   }
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => setIsFocused(false);
+
+  const isLabelActive = isFocused || value;
 
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
@@ -41,26 +50,99 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
     if (reFocus !== undefined) {
       e.currentTarget.setSelectionRange(e.currentTarget.value.length, e.currentTarget.value.length);
     }
+    handleFocus();
   };
   useEffect(() => {
     if (reFocus !== undefined && reFocus === true) inputReft.current?.focus();
   }, [reFocus]);
 
   return (
-    <div className={`flex border-2 border-border bg-primary rounded-full text-accent ${modifier}`}>
-      {prefix}
-      <input
-        className="input input-ghost focus-within:border-transparent focus:outline-hidden focus:bg-transparent h-[2.2rem] min-h-[2.2rem] px-4 border w-full font-medium placeholder:text-accent/70 text-secondary-content/70 focus:text-secondary-content/70"
-        placeholder={placeholder}
-        name={name}
-        value={value?.toString()}
-        onChange={handleChange}
-        disabled={disabled}
-        autoComplete="off"
-        ref={inputReft}
-        onFocus={onFocus}
-      />
-      {suffix}
+    <div className={`relative w-full mb-8 mt-4`}>
+      {" "}
+      <div
+        className={`
+          relative 
+          w-full 
+          flex 
+          flex-row 
+          border-b
+          ${modifier ? modifier : "focus:border-accent" + isLabelActive ? "border-primary-content" : "border-secondary-content"}
+          focus:outline-none
+          peer
+        `}
+      >
+        {prefix}
+        <input
+          maxLength={maxLength}
+          name={name}
+          value={value?.toString()}
+          onChange={handleChange}
+          disabled={disabled}
+          autoComplete="off"
+          ref={inputReft}
+          onFocus={onFocus}
+          onBlur={handleBlur}
+          // Tailwind classes for the input
+          className={`
+          w-full
+          px-0
+          py-3
+          text-lg
+          bg-transparent
+          ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
+          focus:outline-none
+          transition-colors duration-300
+          ${modifier}
+          ${styles.input}
+          `}
+          style={{
+            transition: "color 300ms",
+            // Placeholder transition: delay showing placeholder by 300ms when !isLabelActive
+            transitionDelay: !isLabelActive ? "300ms" : "0ms",
+          }}
+          // Placeholder style: invisible until 300ms if !isLabelActive
+          placeholder={!isLabelActive ? placeholder : ""}
+        />
+        {maxLength && isLabelActive && (
+          <span
+            className={`flex items-center text-xs ${
+              modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"
+            }`}
+          >
+            {value?.toString().length}/{maxLength}
+          </span>
+        )}
+        {suffix}
+      </div>
+      {/* The floating label */}
+      <label
+        className={`
+          absolute
+          left-0
+          top-3
+          text-lg
+          ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
+          transition-all duration-300
+          pointer-events-none
+          ${
+            isLabelActive
+              ? "transform -translate-y-6 text-sm" // Moved and smaller
+              : ""
+          }
+        `}
+      >
+        {placeholder}
+      </label>
+      {/* Optional: The active line (for the accent color on focus, if not using peer-focus directly on input) */}
+      <div
+        className={`
+          absolute bottom-0 left-0 w-full h-[2px] 
+          ${modifier ? modifier : "bg-accent"}
+          transform scale-x-0
+          transition-transform duration-300 ease-out
+          ${isFocused ? "scale-x-100" : ""}
+        `}
+      ></div>
     </div>
   );
 };
