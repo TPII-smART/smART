@@ -1,14 +1,15 @@
 "use client";
 
+import React from "react";
 import type { NextPage } from "next";
-import Button from "~~/components/Button";
+import Checkbox from "~~/components/CheckBox";
 
 const Playground: NextPage = () => {
+  const [checked, setChecked] = React.useState(false);
+
   return (
     <div className="container mx-auto my-10">
-      <Button variant="danger" onClick={() => alert("Button clicked!")}>
-        Hola
-      </Button>
+      <Checkbox checked={checked} onChange={() => setChecked(!checked)} label="Unchecked Checkbox" />
     </div>
   );
 };
