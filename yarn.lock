@@ -15693,6 +15693,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react@npm:^0.515.0":
+  version: 0.515.0
+  resolution: "lucide-react@npm:0.515.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 863c53d0564eaceb2a0109a9649ab5a44c67bb1a82311afb3abbdd9bb5114c09ee31df1b7931b14ac8e76a2930e7e7d045bc3f12cd72c83337f26c4aa8465563
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^3.1.0":
   version: 3.1.0
   resolution: "make-dir@npm:3.1.0"
@@ -18958,6 +18967,8 @@ __metadata:
     "@mui/material": ^7.1.1
     husky: ~9.1.6
     lint-staged: ~13.2.2
+    lucide-react: ^0.515.0
+    tailwind-merge: ^3.3.1
   languageName: unknown
   linkType: soft
 
@@ -20031,6 +20042,13 @@ __metadata:
     string-width: ^4.2.3
     strip-ansi: ^6.0.1
   checksum: f54a7d1c11cda8c676e1e9aff5e723646905ed4579cca14b3ce12d2b12eac3e18f5dbe2549fe0b79697164858e18961145db4dd0660bbeb0fb4032af0aaf32b4
+  languageName: node
+  linkType: hard
+
+"tailwind-merge@npm:^3.3.1":
+  version: 3.3.1
+  resolution: "tailwind-merge@npm:3.3.1"
+  checksum: ace3675227d86f1def95b25b7f6793268a6ab2f340b43ef64ad25646588d2b1d87714cd60db6947bfdb5bb85be3bb6ce1802021620c541ef7a9c3faa05915f2b
   languageName: node
   linkType: hard
 
