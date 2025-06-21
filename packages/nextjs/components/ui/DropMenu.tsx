@@ -102,7 +102,7 @@ export default function DropMenu({ options }: { options: Option[] }) {
               "hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-content)]",
               "focus:ring-2 focus:border-[var(--color-accent)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)]",
               "transition-all duration-200 ease-in-out",
-              "border border-transparent focus:border-neutral-700",
+              "border border-transparent focus:border-[var(--color-accent)]",
               "h-10 flex items-center", // Added flex items-center for vertical centering
               isOpen && "bg-neutral-800 text-neutral-200",
             )}
@@ -184,7 +184,11 @@ export default function DropMenu({ options }: { options: Option[] }) {
                   <motion.div className="py-2 relative" variants={containerVariants} initial="hidden" animate="visible">
                     <motion.div
                       layoutId="hover-highlight"
-                      className="absolute inset-x-1 bg-[var(--color-primary)] rounded-md"
+                      className="absolute bg-[var(--color-primary)] rounded-md"
+                      style={{
+                        left: "4px",
+                        right: "4px",
+                      }}
                       animate={{
                         y:
                           options.findIndex(c => (hoveredOption || selectedOption.id) === c.id) * 40 +
@@ -210,14 +214,20 @@ export default function DropMenu({ options }: { options: Option[] }) {
                           onHoverStart={() => setHoveredOption(option.id)}
                           onHoverEnd={() => setHoveredOption(null)}
                           className={cn(
-                            "relative flex w-full items-center px-4 py-2.5 text-sm rounded-md",
+                            "relative flex w-full items-center rounded-md",
                             "transition-colors duration-150",
                             "focus:outline-none",
                             selectedOption.id === option.id || hoveredOption === option.id
                               ? "text-[var(--color-primary-content)]"
                               : "text-[var(--color-secondary-content)]",
                           )}
-                          style={{ display: "flex", alignItems: "center" }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            padding: "10px 16px",
+                            margin: "0 4px",
+                            height: "40px",
+                          }}
                           whileTap={{ scale: 0.98 }}
                           variants={itemVariants}
                         >
