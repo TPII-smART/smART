@@ -2,13 +2,8 @@ import * as React from "react";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
-import { type ClassValue, clsx } from "clsx";
+import { cn } from "@/lib/utils";
 import { StarIcon } from "lucide-react";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 type Job = {
   id: number;

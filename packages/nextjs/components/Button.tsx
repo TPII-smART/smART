@@ -22,8 +22,12 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           fontWeight: "bold",
           cursor: "pointer",
           width: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
           boxSizing: "border-box",
+          lineHeight: "1",
         };
       case "danger":
         return {
@@ -36,8 +40,12 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           fontWeight: "bold",
           cursor: "pointer",
           width: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
           boxSizing: "border-box",
+          lineHeight: "1",
         };
       default:
         // Primary button as default
@@ -51,8 +59,12 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           fontWeight: "bold",
           cursor: "pointer",
           width: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
           boxSizing: "border-box",
+          lineHeight: "1",
         };
     }
   };
@@ -65,4 +77,5 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
     </button>
   );
 };
+
 export default Button;
