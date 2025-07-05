@@ -3,9 +3,13 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
+//import { useState } from "react";
+//import Button from "@/components/Button";
+import { JobCard } from "@/components/JobCard";
+import DropMenu from "@/components/ui/DropMenu";
+import Slider from "@/components/ui/Slider";
+//import { Input } from "@/components/ui/Input";
 import { Filter } from "lucide-react";
-import { JobCard } from "~~/components/JobCard";
-import DropMenu from "~~/components/ui/DropMenu";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 type Job = {
@@ -94,22 +98,51 @@ export default function BrowsePage() {
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 container py-8">
         <div className="flex flex-col md:flex-row gap-8 pl-4">
-          <aside className="w-full md:w-64 space-y-6">
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
+          {/* Filters Sidebar */}
+          <aside className="w-full md:w-64">
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold flex items-center gap-2 px-4">
                 <Filter className="h-5 w-5" />
                 Filters
               </h2>
-              <div className="space-y-2" style={{ zIndex: 30, position: "relative" }}>
-                <label className="text-sm font-medium">Category</label>
-                <DropMenu
-                  options={[
-                    { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
-                    { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
-                    { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
-                    { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
-                  ]}
-                />
+
+              <div className="space-y-3" style={{ zIndex: 30, position: "relative" }}>
+                <label className="text-sm font-medium block px-4">Category</label>
+                <div className="px-0">
+                  <DropMenu
+                    options={[
+                      { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
+                      { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
+                      { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
+                      { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
+                    ]}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-sm font-medium block px-4">Price Range (ETH)</label>
+                <div className="px-4">
+                  <Slider />
+                  <div className="flex justify-between text-sm text-muted-foreground">
+                    {/*<span>{priceRange[0]} ETH</span>*/}
+                    {/*<span>{priceRange[1]} ETH</span>*/}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3" style={{ zIndex: 20, position: "relative" }}>
+                <label className="text-sm font-medium block px-4">Sort By</label>
+                <div className="px-0">
+                  <DropMenu
+                    options={[
+                      { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
+                      { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
+                      { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
+                      { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
+                    ]}
+                  />
+                </div>
               </div>
             </div>
           </aside>
