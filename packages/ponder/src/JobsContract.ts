@@ -23,7 +23,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
     // Update the Job as accepted
     await context.db.update(job, { jobId: event.args.jobId })
-        .set({ client: event.args.client, acceptedAt: BigInt(event.block.timestamp) });
+        .set({ client: event.args.client, acceptedAt: BigInt(event.block.timestamp), deadline: event.args.deadline || null });
 });
 
 ponder.on("JobsContract:JobCompleted", async ({ event, context }) => {
