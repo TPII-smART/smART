@@ -6,9 +6,10 @@ export interface ButtonProps {
   onClick?: () => void;
   className?: string; // Optional for additional styling via className
   style?: React.CSSProperties; // Optional for inline styles
+  disabled?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, style }) => {
+const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, style, disabled = false }) => {
   const getStyle = (variant: string): React.CSSProperties => {
     switch (variant) {
       case "outline":
@@ -28,6 +29,7 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           textAlign: "center",
           boxSizing: "border-box",
           lineHeight: "1",
+          opacity: disabled ? 0.5 : 1,
         };
       case "danger":
         return {
@@ -46,6 +48,7 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           textAlign: "center",
           boxSizing: "border-box",
           lineHeight: "1",
+          opacity: disabled ? 0.5 : 1,
         };
       default:
         // Primary button as default
@@ -65,6 +68,7 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           textAlign: "center",
           boxSizing: "border-box",
           lineHeight: "1",
+          opacity: disabled ? 0.5 : 1,
         };
     }
   };
