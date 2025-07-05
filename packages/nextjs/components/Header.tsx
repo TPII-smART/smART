@@ -22,6 +22,14 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
+    label: "My Jobs",
+    href: "/my-jobs",
+  },
+  {
+    label: "My hires",
+    href: "/hires",
+  },
+  {
     label: "Ponder",
     href: "/ponder-greetings",
     icon: <MagnifyingGlassIcon className="h-4 w-4" />,
