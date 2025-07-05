@@ -4,6 +4,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 //import type { NextPage } from "next";
+import { formatEther } from "viem";
 import { Address } from "~~/components/scaffold-eth";
 
 /*
@@ -275,7 +276,7 @@ const PonderJobs = () => {
                 <strong>Client:</strong> {job.client ? <Address address={job.client} /> : "N/A"}
               </div>
               <div>
-                <strong>Payment:</strong> {job.payment ? `${BigInt(job.payment)} ETH` : "N/A"}
+                <strong>Payment:</strong> {job.payment ? `${formatEther(BigInt(job.payment))} ETH` : "N/A"}
               </div>
               <div>
                 <strong>Created At:</strong>{" "}

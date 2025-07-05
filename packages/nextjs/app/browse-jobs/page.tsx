@@ -11,6 +11,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { gql, request } from "graphql-request";
 //import { Input } from "@/components/ui/Input";
 import { Filter } from "lucide-react";
+import { parseEther } from "viem";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 type Job = {
@@ -87,7 +88,7 @@ export default function BrowsePage() {
         args: [
           form.title,
           form.description,
-          BigInt(form.paymentInEth),
+          parseEther(form.paymentInEth),
           BigInt(form.estimatedDurationHours),
           form.category,
         ],
