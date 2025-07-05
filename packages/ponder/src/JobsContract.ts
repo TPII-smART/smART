@@ -10,6 +10,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
         payment: event.args.payment || null,
         title: event.args.title || null,
         description: event.args.description || null,
+        category: event.args.category || null,
         estimatedDuration: event.args.estimatedDuration || null,
         createdAt: BigInt(event.block.timestamp),
         acceptedAt: null, // Initially null

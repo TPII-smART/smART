@@ -19,6 +19,7 @@ contract JobsContract {
         uint256 payment;
         string title;
         string description;
+        string category;
         uint256 estimatedDuration; // Duration in seconds (hours/days)
         uint256 deadline; // Actual deadline set when job is accepted
         JobState state;
@@ -41,6 +42,7 @@ contract JobsContract {
         uint256 payment,
         string title,
         string description,
+        string category,
         uint256 estimatedDuration,
         uint256 createdAt
     );
@@ -111,18 +113,21 @@ contract JobsContract {
      * @param _description Job description
      * @param _payment Required payment amount in wei
      * @param _estimatedDurationHours Estimated time to complete job in hours
+     * @param _category Job category (e.g., "3D Modeling", "Web Development")
      */
     function createJob(
         string memory _title,
         string memory _description,
         uint256 _payment,
-        uint256 _estimatedDurationHours
+        uint256 _estimatedDurationHours,
+        string memory _category
     ) external returns (uint256) {
         require(_payment > 0, "Payment must be greater than 0");
         require(_estimatedDurationHours > 0, "Duration must be greater than 0");
         require(_estimatedDurationHours <= 8760, "Duration cannot exceed 1 year (8760 hours)");
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(bytes(_description).length > 0, "Description cannot be empty");
+        require(bytes(_category).length > 0, "Category cannot be empty");
 
         uint256 jobId = jobCounter++;
         uint256 estimatedDurationSeconds = _estimatedDurationHours * 1 hours;
@@ -134,6 +139,7 @@ contract JobsContract {
             payment: _payment,
             title: _title,
             description: _description,
+            category: _category,
             estimatedDuration: estimatedDurationSeconds,
             deadline: 0, // Will be set when job is accepted
             state: JobState.Available,
@@ -149,6 +155,7 @@ contract JobsContract {
             _payment,
             _title,
             _description,
+            _category,
             estimatedDurationSeconds,
             block.timestamp
         );
@@ -300,11 +307,12 @@ contract JobsContract {
     function getJobContent(uint256 _jobId) external view jobExists(_jobId) returns (
         string memory title,
         string memory description,
+        string memory category,
         uint256 estimatedDuration,
         uint256 deadline
     ) {
         Job storage job = jobs[_jobId];
-        return (job.title, job.description, job.estimatedDuration, job.deadline);
+        return (job.title, job.description, job.category, job.estimatedDuration, job.deadline);
     }
 
     /**
