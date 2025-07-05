@@ -82,11 +82,9 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultMax = 0.5, o
         <div className="relative">
           {/* Price Labels */}
           <div className="flex justify-between items-center mb-4">
-            <span className="text-sm">{formatPrice(min)} ETH</span>
             <div className="bg-[var(--color-secondary-content)] text-white px-3 py-1 rounded-md text-sm font-medium">
               Up to {formatPrice(maxValue)} ETH
             </div>
-            <span className="text-sm">{formatPrice(max)} ETH</span>
           </div>
 
           {/* Slider Track */}

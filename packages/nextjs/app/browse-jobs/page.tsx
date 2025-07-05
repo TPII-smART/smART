@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { gql, request } from "graphql-request";
 //import { useState } from "react";
 //import Button from "@/components/Button";
 import { JobCard } from "@/components/JobCard";
+import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import DropMenu from "@/components/ui/DropMenu";
 import Slider from "@/components/ui/Slider";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { gql, request } from "graphql-request";
 //import { Input } from "@/components/ui/Input";
 import { Filter } from "lucide-react";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -70,7 +71,7 @@ export default function BrowsePage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    payment: "0.1",
+    paymentInEth: "0.1",
     estimatedDurationHours: "48",
     category: "",
   });
@@ -81,11 +82,15 @@ export default function BrowsePage() {
 
   const handleSubmit = async () => {
     try {
-      // Convert ETH to Gwei (1 ETH = 1_000_000_000 Gwei)
-      const paymentGwei = BigInt(Math.floor(Number(form.payment || "0") * 1_000_000_000));
       await createJob({
         functionName: "createJob",
-        args: [form.title, form.description, paymentGwei, BigInt(form.estimatedDurationHours), form.category],
+        args: [
+          form.title,
+          form.description,
+          BigInt(form.paymentInEth),
+          BigInt(form.estimatedDurationHours),
+          form.category,
+        ],
       });
       setShowModal(false);
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
@@ -166,41 +171,28 @@ export default function BrowsePage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white text-black rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl">
-            <h2 className="text-xl font-bold">Create a Job</h2>
-            <input
-              type="text"
-              placeholder="Title"
-              value={form.title}
-              onChange={e => setForm({ ...form, title: e.target.value })}
-              className="w-full border rounded p-2"
-            />
-            <textarea
+          <div className="bg-primary text-black rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl">
+            <h2 className="text-xl font-bold text-primary-content">Create a Job</h2>
+            <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
+            <InputBase
               placeholder="Description"
               value={form.description}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-              className="w-full border rounded p-2"
+              onChange={val => setForm({ ...form, description: val })}
             />
-            <input
-              type="text"
-              placeholder="Payment in ETH"
-              value={form.payment}
-              onChange={e => setForm({ ...form, payment: e.target.value })}
-              className="w-full border rounded p-2"
+            <EtherInput
+              placeholder="Payment (ETH)"
+              value={form.paymentInEth}
+              onChange={val => setForm({ ...form, paymentInEth: val })}
             />
-            <input
-              type="number"
+            <InputBase
               placeholder="Estimated Duration (hours)"
               value={form.estimatedDurationHours}
-              onChange={e => setForm({ ...form, estimatedDurationHours: e.target.value })}
-              className="w-full border rounded p-2"
+              onChange={val => setForm({ ...form, estimatedDurationHours: val })}
             />
-            <input
-              type="text"
+            <InputBase
               placeholder="Category"
               value={form.category}
-              onChange={e => setForm({ ...form, category: e.target.value })}
-              className="w-full border rounded p-2"
+              onChange={val => setForm({ ...form, category: val })}
             />
             <div className="flex justify-end gap-2">
               <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">

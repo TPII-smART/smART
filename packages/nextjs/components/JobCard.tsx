@@ -4,7 +4,6 @@ import Button from "@/components/Button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { cn } from "@/lib/utils";
 import { StarIcon } from "lucide-react";
-import { formatEther } from "viem";
 
 type Job = {
   jobId: string;
@@ -44,7 +43,7 @@ export function JobCard({ job, className, ...props }: JobCardProps) {
         </div>
       </CardContent>
       <CardFooter className="justify-between">
-        <span className="text-lg font-bold">{job.payment ? `${formatEther(BigInt(job.payment))} ETH` : "Free"}</span>
+        <span className="text-lg font-bold">{job.payment ? `${BigInt(job.payment)} ETH` : "Free"}</span>
         <Button variant="primary">Buy Now</Button>
       </CardFooter>
     </Card>
