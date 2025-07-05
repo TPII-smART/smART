@@ -69,6 +69,7 @@
     "@fontsource/roboto": "^5.2.6",
     "@mui/icons-material": "^7.1.1",
     "@mui/material": "^7.1.1",
+    "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.18.1",
     "lucide-react": "^0.515.0",
     "tailwind-merge": "^3.3.1"
