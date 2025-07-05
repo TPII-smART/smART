@@ -2,33 +2,35 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-import Button from "@/components/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 
 interface PriceRangeSliderProps {
+  onChange?: (value: number) => void;
   min?: number;
   max?: number;
-  defaultMax?: number;
-  onSearch?: (min: number, max: number) => void;
+  defaultValue?: number;
 }
 
-export default function PriceRangeSlider({ min = 0, max = 1, defaultMax = 0.5, onSearch }: PriceRangeSliderProps) {
-  const [maxValue, setMaxValue] = useState(defaultMax);
-  const [maxInput, setMaxInput] = useState(defaultMax.toString());
+export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, onChange }: PriceRangeSliderProps) {
+  const [value, setMaxValue] = useState(defaultValue);
+  const [inputValue, setInputValue] = useState("");
 
   // Calculate appropriate step size based on range
   const range = max - min;
-  const step = range <= 1 ? 0.001 : range <= 10 ? 0.01 : range <= 100 ? 0.1 : 1;
+  const step = range <= 1 ? 0.01 : range <= 10 ? 0.1 : range <= 100 ? 1 : 10;
 
   // Update input when slider value changes
   useEffect(() => {
-    setMaxInput(maxValue.toString());
-  }, [maxValue]);
+    setInputValue(value.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleMaxSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Number(e.target.value);
-    setMaxValue(value);
+    const tmp = Number(e.target.value);
+    setMaxValue(tmp);
+    setInputValue("");
+    onChange?.(tmp);
   };
 
   const handleMaxInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,19 +40,10 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultMax = 0.5, o
     const parts = value.split(".");
     const formattedValue = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : value;
 
-    setMaxInput(formattedValue);
+    setInputValue(formattedValue);
 
     const numValue = Number(formattedValue);
     if (!isNaN(numValue) && numValue <= max && numValue >= min) {
-      setMaxValue(numValue);
-    }
-  };
-
-  const handleMaxInputBlur = () => {
-    const numValue = Number(maxInput);
-    if (isNaN(numValue) || numValue > max || numValue < min) {
-      setMaxInput(maxValue.toString());
-    } else {
       setMaxValue(numValue);
     }
   };
@@ -67,12 +60,8 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultMax = 0.5, o
   };
 
   const getSliderBackground = () => {
-    const maxPercent = ((maxValue - min) / (max - min)) * 100;
+    const maxPercent = ((value - min) / (max - min)) * 100;
     return `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${maxPercent}%, #e5e7eb ${maxPercent}%, #e5e7eb 100%)`;
-  };
-
-  const handleSearch = () => {
-    onSearch?.(min, maxValue);
   };
 
   return (
@@ -83,23 +72,32 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultMax = 0.5, o
           {/* Price Labels */}
           <div className="flex justify-between items-center mb-4">
             <div className="bg-[var(--color-secondary-content)] text-white px-3 py-1 rounded-md text-sm font-medium">
-              Up to {formatPrice(maxValue)} ETH
+              Up to {formatPrice(value)} ETH
             </div>
           </div>
 
           {/* Slider Track */}
-          <div className="relative h-2 mb-6">
-            <div className="absolute w-full h-2 rounded-full" style={{ background: getSliderBackground() }} />
+          <div className="relative h-2 mb-6 flex items-center">
+            {/* Slider Track */}
+            <div
+              className="absolute w-full h-2 rounded-full pointer-events-none"
+              style={{ background: getSliderBackground(), transition: "background 0.2s" }}
+            />
 
-            {/* Max Range Input */}
+            {/* Range Input */}
             <input
               type="range"
               min={min}
               max={max}
               step={step}
-              value={maxValue}
+              value={value}
               onChange={handleMaxSliderChange}
-              className="absolute w-full h-2 bg-transparent appearance-none cursor-pointer slider-thumb"
+              className="w-full h-2 bg-transparent appearance-none cursor-pointer z-10"
+              style={{
+                outline: "none",
+                // Remove default focus ring for better custom styling
+              }}
+              aria-label="Maximum price"
             />
           </div>
         </div>
@@ -110,22 +108,12 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultMax = 0.5, o
           <Input
             id="max-price"
             type="text"
-            value={maxInput}
+            value={inputValue}
             onChange={handleMaxInputChange}
-            onBlur={handleMaxInputBlur}
             className="border-0 text-center font-medium"
             placeholder={max.toString()}
           />
         </div>
-
-        {/* Search Button */}
-        <Button
-          onClick={handleSearch}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 rounded-lg"
-          variant={"primary"}
-        >
-          Search
-        </Button>
       </div>
 
       <style jsx>{`

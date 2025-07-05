@@ -66,9 +66,17 @@ const itemVariants = {
   },
 };
 
-export default function DropMenu({ options }: { options: Option[] }) {
+export interface DropMenuProps {
+  options: Option[];
+  value?: string;
+  onChange?: (value: string) => void;
+}
+
+export default function DropMenu({ options, value, onChange }: DropMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [selectedOption, setSelectedOption] = React.useState<Option>(options[0]); // Default to "All"
+  const [selectedOption, setSelectedOption] = React.useState<Option>(
+    options.find(option => option.id === value) || options[0],
+  );
   const [hoveredOption, setHoveredOption] = React.useState<string | null>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -82,8 +90,16 @@ export default function DropMenu({ options }: { options: Option[] }) {
     }
   };
 
+  const handleOptionChange = (option: Option) => {
+    setSelectedOption(option);
+    setIsOpen(false);
+    if (onChange) {
+      onChange(option.id);
+    }
+  };
+
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig>
       <div className="flex flex-row items-center justify-center min-h-0">
         <div
           className="w-full px-4 relative"
@@ -101,7 +117,7 @@ export default function DropMenu({ options }: { options: Option[] }) {
               "w-full justify-between bg-[var(--color-secondary)] text-[var(--color-secondary-content)]",
               "hover:bg-[var(--color-primary)] hover:text-[var(--color-primary-content)]",
               "focus:ring-2 focus:border-[var(--color-accent)] focus:ring-offset-2 focus:ring-offset-[var(--color-surface)]",
-              "transition-all duration-200 ease-in-out",
+              "transition-all duration-100 ease-in-out",
               "border border-transparent focus:border-[var(--color-accent)]",
               "h-10 flex items-center", // Added flex items-center for vertical centering
               isOpen && "bg-neutral-800 text-neutral-200",
@@ -178,7 +194,7 @@ export default function DropMenu({ options }: { options: Option[] }) {
                   initial={{ borderRadius: 8 }}
                   animate={{
                     borderRadius: 12,
-                    transition: { duration: 0.2 },
+                    transition: { duration: 0.1 },
                   }}
                 >
                   <motion.div className="py-2 relative" variants={containerVariants} initial="hidden" animate="visible">
@@ -198,7 +214,7 @@ export default function DropMenu({ options }: { options: Option[] }) {
                       transition={{
                         type: "spring",
                         bounce: 0.15,
-                        duration: 0.5,
+                        duration: 0.1,
                       }}
                     />
                     {options.map((option, index) => (
@@ -208,8 +224,7 @@ export default function DropMenu({ options }: { options: Option[] }) {
                         )}
                         <motion.button
                           onClick={() => {
-                            setSelectedOption(option);
-                            setIsOpen(false);
+                            handleOptionChange(option);
                           }}
                           onHoverStart={() => setHoveredOption(option.id)}
                           onHoverEnd={() => setHoveredOption(null)}

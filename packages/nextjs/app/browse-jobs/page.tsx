@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 //import { useState } from "react";
 //import Button from "@/components/Button";
 import { JobCard } from "@/components/JobCard";
@@ -32,6 +32,22 @@ type Job = {
 
 type JobsData = {
   jobs: Job[];
+};
+
+const fetchMaxPayment = async () => {
+  const query = gql`
+    query GetJobsPayments {
+      jobs {
+        items {
+          payment
+        }
+      }
+    }
+  `;
+  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
+  const res = await request<{ jobs: { items: { payment?: string }[] } }>(endpoint, query);
+  const payments = res.jobs.items.map(item => Number(item.payment) || 0);
+  return payments.length > 0 ? Math.max(...payments) : 0;
 };
 
 const fetchJobs = async () => {
@@ -68,6 +84,12 @@ export default function BrowsePage() {
     queryFn: fetchJobs,
   });
 
+  const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
+  const [category, setCategory] = useState<string | undefined>(undefined);
+  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>(data?.jobs || []);
+  const [maxPrice, setMaxPrice] = useState<number>(0);
+
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     title: "",
@@ -100,6 +122,51 @@ export default function BrowsePage() {
     }
   };
 
+  const filterJobs = useMemo((): Job[] => {
+    let jobs = data?.jobs || [];
+
+    jobs = jobs.filter(job => {
+      if (category && category !== "all") {
+        return job.category === category;
+      }
+      return true;
+    });
+
+    jobs = jobs.filter(job => {
+      if (maxPrice > 0) {
+        const payment = Number(job.payment) || 0;
+        return payment <= maxPrice;
+      }
+      return true;
+    });
+
+    jobs = jobs.sort((a, b) => {
+      switch (sortBy) {
+        case "recent":
+          return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
+        // case "popular":
+        //   return b.rating - a.rating; // Assuming jobs have a rating field
+        case "price-low":
+          return (Number(a.payment) || 0) - (Number(b.payment) || 0);
+        case "price-high":
+          return (Number(b.payment) || 0) - (Number(a.payment) || 0);
+        default:
+          return 0; // Default case, no sorting
+      }
+    });
+
+    return jobs;
+  }, [data, category, sortBy, maxPrice]);
+
+  const fetchMaxPaymentETH = useCallback(async () => {
+    setMaxPaymentETH(await fetchMaxPayment());
+  }, []);
+
+  useEffect(() => {
+    setFilteredJobs(filterJobs);
+    fetchMaxPaymentETH();
+  }, [filterJobs, fetchMaxPaymentETH]);
+
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-1 container py-8">
@@ -116,6 +183,8 @@ export default function BrowsePage() {
                 <label className="text-sm font-medium block px-4">Category</label>
                 <div className="px-0">
                   <DropMenu
+                    value={category}
+                    onChange={setCategory}
                     options={[
                       { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
                       { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
@@ -129,11 +198,7 @@ export default function BrowsePage() {
               <div className="space-y-3">
                 <label className="text-sm font-medium block px-4">Price Range (ETH)</label>
                 <div className="px-4">
-                  <Slider />
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    {/*<span>{priceRange[0]} ETH</span>*/}
-                    {/*<span>{priceRange[1]} ETH</span>*/}
-                  </div>
+                  <Slider max={maxPaymentETH} defaultValue={maxPrice} onChange={setMaxPrice} />
                 </div>
               </div>
 
@@ -141,6 +206,8 @@ export default function BrowsePage() {
                 <label className="text-sm font-medium block px-4">Sort By</label>
                 <div className="px-0">
                   <DropMenu
+                    value={sortBy}
+                    onChange={setSortBy}
                     options={[
                       { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
                       { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
@@ -155,7 +222,9 @@ export default function BrowsePage() {
 
           <div className="flex-1 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data?.jobs.map(job => <JobCard job={job} key={job.jobId} />)}
+              {filteredJobs.map(job => (
+                <JobCard job={job} key={job.jobId} />
+              ))}
             </div>
           </div>
         </div>
