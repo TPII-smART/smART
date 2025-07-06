@@ -1,47 +1,26 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-//import { useState } from "react";
-//import Button from "@/components/Button";
 import { JobCard } from "@/components/JobCard";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import DropMenu from "@/components/ui/DropMenu";
 import Slider from "@/components/ui/Slider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { gql, request } from "graphql-request";
-//import { Input } from "@/components/ui/Input";
 import { Filter } from "lucide-react";
 import { parseEther } from "viem";
 import ComboBox from "~~/components/ComboBox/ComboBox";
 import Modal from "~~/components/Modal/Modal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { fetchJobs, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
+import { Job, JobsData } from "~~/types/job.types";
 
-type Job = {
-  jobId: string;
-  freelancer?: `0x${string}`;
-  client?: `0x${string}`;
-  payment?: string;
-  title?: string;
-  description?: string;
-  category?: string;
-  estimatedDuration?: string;
-  createdAt?: string;
-  acceptedAt?: string;
-  deadline?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-};
-
-type JobsData = {
-  jobs: Job[];
-};
-
-const categories = [
-  { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
+const categoriesWithoutAll = [
   { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
   { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
   { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
 ];
+
+const categories = [{ id: "all", label: "All", icon: Filter, color: "#a3a3a3" }, ...categoriesWithoutAll];
 
 const sorts = [
   { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
@@ -49,49 +28,6 @@ const sorts = [
   { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
   { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
 ];
-
-const fetchMaxPayment = async () => {
-  const query = gql`
-    query GetJobsPayments {
-      jobs {
-        items {
-          payment
-        }
-      }
-    }
-  `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  const res = await request<{ jobs: { items: { payment?: string }[] } }>(endpoint, query);
-  const payments = res.jobs.items.map(item => Number(item.payment) || 0);
-  return payments.length > 0 ? Math.max(...payments) : 0;
-};
-
-const fetchJobs = async () => {
-  const query = gql`
-    query GetJobs {
-      jobs(orderBy: "createdAt", orderDirection: "desc") {
-        items {
-          jobId
-          freelancer
-          client
-          payment
-          title
-          description
-          category
-          estimatedDuration
-          createdAt
-          acceptedAt
-          deadline
-          completedAt
-          cancelledAt
-        }
-      }
-    }
-  `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query);
-  return { jobs: res.jobs.items };
-};
 
 export default function BrowsePage() {
   const queryClient = useQueryClient();
@@ -267,7 +203,7 @@ export default function BrowsePage() {
             label="Category"
             value={form.category}
             onChange={val => setForm({ ...form, category: val })}
-            options={categories}
+            options={categoriesWithoutAll}
             variant="standard"
           />
         </div>
