@@ -93,8 +93,8 @@ export default function BrowsePage() {
       switch (sortBy) {
         case "recent":
           return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
-        // case "popular":
-        //   return b.rating - a.rating; // Assuming jobs have a rating field
+        case "popular":
+          return a.rating ? (b.rating ? b.rating - a.rating : -1) : 1;
         case "price-low":
           return (Number(a.payment) || 0) - (Number(b.payment) || 0);
         case "price-high":

@@ -10,23 +10,7 @@ import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-
-type Job = {
-  jobId: string;
-  freelancer?: `0x${string}`;
-  client?: `0x${string}`;
-  payment?: string;
-  title?: string;
-  description?: string;
-  category?: string;
-  estimatedDuration?: string;
-  createdAt?: string;
-  acceptedAt?: string;
-  deadline?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-  rating?: number;
-};
+import { Job } from "~~/types/job.types";
 
 interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
   job: Job;

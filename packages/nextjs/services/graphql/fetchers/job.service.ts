@@ -45,3 +45,61 @@ export const fetchJobs = async () => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, query);
   return { jobs: res.jobs.items };
 };
+
+export const fetchMyJobs = async (userAddress: string) => {
+  console.log("fetchMyJobs", userAddress);
+
+  const query = gql`
+    query GetJobs($freelancer: String!) {
+      jobs(where: { freelancer: $freelancer }, orderBy: "acceptedAt", orderDirection: "desc") {
+        items {
+          jobId
+          freelancer
+          client
+          payment
+          title
+          description
+          category
+          estimatedDuration
+          createdAt
+          acceptedAt
+          deadline
+          completedAt
+          cancelledAt
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { freelancer: userAddress });
+  return { jobs: res.jobs.items };
+};
+
+export const fetchHires = async (userAddress: string) => {
+  console.log("fetchHires", userAddress);
+
+  const query = gql`
+    query GetJobs($client: String!) {
+      jobs(where: { client: $client }, orderBy: "acceptedAt", orderDirection: "desc") {
+        items {
+          jobId
+          freelancer
+          client
+          payment
+          title
+          description
+          category
+          estimatedDuration
+          createdAt
+          acceptedAt
+          deadline
+          completedAt
+          cancelledAt
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { client: userAddress });
+  return { jobs: res.jobs.items };
+};

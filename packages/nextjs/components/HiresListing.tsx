@@ -1,56 +1,12 @@
 "use client";
 
-import CustomerCard from "@/components/ui/CustomerCard";
 import { useQuery } from "@tanstack/react-query";
-import { gql, request } from "graphql-request";
-
-type Job = {
-  jobId: string;
-  freelancer?: `0x${string}`;
-  client?: `0x${string}`;
-  payment?: string;
-  title?: string;
-  description?: string;
-  category?: string;
-  estimatedDuration?: string;
-  createdAt?: string;
-  acceptedAt?: string;
-  deadline?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-};
+import CustomerCard from "~~/components/CustomerCard/CustomerCard";
+import { fetchHires } from "~~/services/graphql/fetchers/job.service";
+import { Job } from "~~/types/job.types";
 
 type HiresData = {
   jobs: Job[];
-};
-
-const fetchHires = async (userAddress: string) => {
-  console.log("fetchHires", userAddress);
-
-  const query = gql`
-    query GetJobs($client: String!) {
-      jobs(where: { client: $client }, orderBy: "acceptedAt", orderDirection: "desc") {
-        items {
-          jobId
-          freelancer
-          client
-          payment
-          title
-          description
-          category
-          estimatedDuration
-          createdAt
-          acceptedAt
-          deadline
-          completedAt
-          cancelledAt
-        }
-      }
-    }
-  `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { client: userAddress });
-  return { jobs: res.jobs.items };
 };
 
 export default function HiresListing({ userAddress }: { userAddress: string }) {

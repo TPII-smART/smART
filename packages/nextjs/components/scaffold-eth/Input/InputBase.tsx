@@ -1,20 +1,6 @@
-import { FocusEvent, ReactNode, useEffect, useRef, useState } from "react";
+import { FocusEvent, useEffect, useRef, useState } from "react";
 import styles from "./InputBase.module.css";
-
-type InputBaseProps = {
-  error?: boolean;
-  prefix?: ReactNode;
-  suffix?: ReactNode;
-  reFocus?: boolean;
-  maxLength?: number;
-  variant?: "default" | "background";
-  value: string;
-  onChange: (newValue: string) => void;
-  onBlur?: () => void;
-  name?: string;
-  placeholder?: string;
-  disabled?: boolean;
-};
+import { InputBaseProps } from "./types";
 
 export const InputBase = ({
   name,
