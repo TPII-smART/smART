@@ -1,97 +1,32 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-//import { useState } from "react";
-//import Button from "@/components/Button";
 import { JobCard } from "@/components/JobCard";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
-import DropMenu from "@/components/ui/DropMenu";
-import Slider from "@/components/ui/Slider";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { gql, request } from "graphql-request";
-//import { Input } from "@/components/ui/Input";
-import { Filter } from "lucide-react";
+import { Filter, FilterIcon } from "lucide-react";
 import { parseEther } from "viem";
 import ComboBox from "~~/components/ComboBox/ComboBox";
 import Modal from "~~/components/Modal/Modal";
+import Slider from "~~/components/Slider/Slider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { fetchJobs, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
+import { Job, JobsData } from "~~/types/job.types";
 
-type Job = {
-  jobId: string;
-  freelancer?: `0x${string}`;
-  client?: `0x${string}`;
-  payment?: string;
-  title?: string;
-  description?: string;
-  category?: string;
-  estimatedDuration?: string;
-  createdAt?: string;
-  acceptedAt?: string;
-  deadline?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-};
-
-type JobsData = {
-  jobs: Job[];
-};
-
-const categories = [
-  { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
+const optionsCategoriesWithoutAll = [
   { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
   { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
   { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
 ];
 
-const sorts = [
+const optionsCategories = [{ id: "all", label: "All", icon: Filter, color: "#a3a3a3" }, ...optionsCategoriesWithoutAll];
+
+const optionsSorts = [
   { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
   { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
   { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
   { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
 ];
-
-const fetchMaxPayment = async () => {
-  const query = gql`
-    query GetJobsPayments {
-      jobs {
-        items {
-          payment
-        }
-      }
-    }
-  `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  const res = await request<{ jobs: { items: { payment?: string }[] } }>(endpoint, query);
-  const payments = res.jobs.items.map(item => Number(item.payment) || 0);
-  return payments.length > 0 ? Math.max(...payments) : 0;
-};
-
-const fetchJobs = async () => {
-  const query = gql`
-    query GetJobs {
-      jobs(orderBy: "createdAt", orderDirection: "desc") {
-        items {
-          jobId
-          freelancer
-          client
-          payment
-          title
-          description
-          category
-          estimatedDuration
-          createdAt
-          acceptedAt
-          deadline
-          completedAt
-          cancelledAt
-        }
-      }
-    }
-  `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query);
-  return { jobs: res.jobs.items };
-};
 
 export default function BrowsePage() {
   const queryClient = useQueryClient();
@@ -101,8 +36,8 @@ export default function BrowsePage() {
   });
 
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
-  const [category, setCategory] = useState<string | undefined>(undefined);
-  const [sortBy, setSortBy] = useState<string | undefined>(undefined);
+  const [categories, setCategories] = useState<string[]>(["all"]);
+  const [sortBy, setSortBy] = useState<string>("recent");
   const [filteredJobs, setFilteredJobs] = useState<Job[]>(data?.jobs || []);
   const [maxPrice, setMaxPrice] = useState<number>(0);
 
@@ -141,16 +76,14 @@ export default function BrowsePage() {
   const filterJobs = useMemo((): Job[] => {
     let jobs = data?.jobs || [];
 
-    jobs = jobs.filter(job => {
-      if (category && category !== "all") {
-        return job.category === category;
-      }
-      return true;
-    });
+    console.log("Filtering jobs with categories:", categories);
+    if (categories && !categories.some(v => v === "all")) {
+      jobs = jobs.filter(job => categories.some(cat => cat === job.category));
+    }
 
     jobs = jobs.filter(job => {
       if (maxPrice > 0) {
-        const payment = Number(job.payment) || 0;
+        const payment = Number(job.payment) / 1e18 || 0;
         return payment <= maxPrice;
       }
       return true;
@@ -160,8 +93,8 @@ export default function BrowsePage() {
       switch (sortBy) {
         case "recent":
           return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
-        // case "popular":
-        //   return b.rating - a.rating; // Assuming jobs have a rating field
+        case "popular":
+          return a.rating ? (b.rating ? b.rating - a.rating : -1) : 1;
         case "price-low":
           return (Number(a.payment) || 0) - (Number(b.payment) || 0);
         case "price-high":
@@ -172,7 +105,7 @@ export default function BrowsePage() {
     });
 
     return jobs;
-  }, [data, category, sortBy, maxPrice]);
+  }, [data, categories, sortBy, maxPrice]);
 
   const fetchMaxPaymentETH = useCallback(async () => {
     setMaxPaymentETH(await fetchMaxPayment());
@@ -195,12 +128,17 @@ export default function BrowsePage() {
                 Filters
               </h2>
 
-              <div className="space-y-3" style={{ zIndex: 30, position: "relative" }}>
-                <label className="text-sm font-medium block px-4">Category</label>
-                <div className="px-0">
-                  <DropMenu value={category} onChange={setCategory} options={categories} />
-                </div>
-              </div>
+              <ComboBox
+                id="categories"
+                label="Categories"
+                variant="outlined"
+                multiple
+                value={categories}
+                onChange={setCategories}
+                options={optionsCategories}
+                resetKey="all"
+                icon={<FilterIcon className={"h-[1.125rem] w-[1.125rem]"} />}
+              />
 
               <div className="space-y-3">
                 <label className="text-sm font-medium block px-4">Price Range (ETH)</label>
@@ -209,12 +147,15 @@ export default function BrowsePage() {
                 </div>
               </div>
 
-              <div className="space-y-3" style={{ zIndex: 20, position: "relative" }}>
-                <label className="text-sm font-medium block px-4">Sort By</label>
-                <div className="px-0">
-                  <DropMenu value={sortBy} onChange={setSortBy} options={sorts} />
-                </div>
-              </div>
+              <ComboBox
+                id="sort-by"
+                label="Sort by"
+                variant="outlined"
+                value={sortBy}
+                onChange={setSortBy}
+                options={optionsSorts}
+                icon={<FilterIcon className={"h-[1.125rem] w-[1.125rem]"} />}
+              />
             </div>
           </aside>
 
@@ -267,7 +208,7 @@ export default function BrowsePage() {
             label="Category"
             value={form.category}
             onChange={val => setForm({ ...form, category: val })}
-            options={categories}
+            options={optionsCategoriesWithoutAll}
             variant="standard"
           />
         </div>

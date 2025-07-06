@@ -1,12 +1,7 @@
 import Link from "next/link";
+import { AddressLinkWrapperProps } from "./types";
 import { hardhat } from "viem/chains";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth";
-
-type AddressLinkWrapperProps = {
-  children: React.ReactNode;
-  disableAddressLink?: boolean;
-  blockExplorerAddressLink: string;
-};
 
 export const AddressLinkWrapper = ({
   children,

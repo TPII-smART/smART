@@ -1,15 +1,7 @@
 import React from "react";
-import CheckIcon from "./assets/Checkbox/CheckedIcon";
-import UncheckIcon from "./assets/Checkbox/UncheckedIcon";
-
-export interface CheckboxProps {
-  checked: boolean;
-  onChange: (checked: boolean) => void;
-  label?: string;
-  className?: string;
-  checkStyle?: React.CSSProperties;
-  containerStyle?: React.CSSProperties;
-}
+import CheckIcon from "../assets/Checkbox/CheckedIcon";
+import UncheckIcon from "../assets/Checkbox/UncheckedIcon";
+import { CheckboxProps } from "./types";
 
 const hiddenCheckboxStyle: React.CSSProperties = {
   // Hide checkbox visually but remain accessible to screen readers

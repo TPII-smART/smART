@@ -1,57 +1,9 @@
 "use client";
 
-import CustomerCard from "@/components/ui/CustomerCard";
 import { useQuery } from "@tanstack/react-query";
-import { gql, request } from "graphql-request";
-
-type Job = {
-  jobId: string;
-  freelancer?: `0x${string}`;
-  client?: `0x${string}`;
-  payment?: string;
-  title?: string;
-  description?: string;
-  category?: string;
-  estimatedDuration?: string;
-  createdAt?: string;
-  acceptedAt?: string;
-  deadline?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-};
-
-type JobsData = {
-  jobs: Job[];
-};
-
-const fetchMyJobs = async (userAddress: string) => {
-  console.log("fetchMyJobs", userAddress);
-
-  const query = gql`
-    query GetJobs($freelancer: String!) {
-      jobs(where: { freelancer: $freelancer }, orderBy: "acceptedAt", orderDirection: "desc") {
-        items {
-          jobId
-          freelancer
-          client
-          payment
-          title
-          description
-          category
-          estimatedDuration
-          createdAt
-          acceptedAt
-          deadline
-          completedAt
-          cancelledAt
-        }
-      }
-    }
-  `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { freelancer: userAddress });
-  return { jobs: res.jobs.items };
-};
+import CustomerCard from "~~/components/CustomerCard/CustomerCard";
+import { fetchMyJobs } from "~~/services/graphql/fetchers/job.service";
+import { JobsData } from "~~/types/job.types";
 
 export default function MyJobsListing({ userAddress }: { userAddress: string }) {
   const { data } = useQuery<JobsData>({

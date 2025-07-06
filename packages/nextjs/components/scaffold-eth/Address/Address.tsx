@@ -2,7 +2,8 @@
 
 import { AddressCopyIcon } from "./AddressCopyIcon";
 import { AddressLinkWrapper } from "./AddressLinkWrapper";
-import { Address as AddressType, getAddress, isAddress } from "viem";
+import { AddressProps } from "./types";
+import { getAddress, isAddress } from "viem";
 import { normalize } from "viem/ens";
 import { useEnsAvatar, useEnsName } from "wagmi";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
@@ -65,14 +66,6 @@ const getPrevSize = <T extends SizeMap>(sizeMap: T, currentSize: keyof T, step =
   const currentIndex = sizes.indexOf(currentSize);
   const prevIndex = Math.max(currentIndex - step, 0);
   return sizes[prevIndex];
-};
-
-type AddressProps = {
-  address?: AddressType;
-  disableAddressLink?: boolean;
-  format?: "short" | "long";
-  size?: "xs" | "sm" | "base" | "lg" | "xl" | "2xl" | "3xl";
-  onlyEnsOrAddress?: boolean;
 };
 
 export const Address = ({

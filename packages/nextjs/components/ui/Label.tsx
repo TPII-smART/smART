@@ -26,6 +26,9 @@ const labelVariants = cva(
 
 export interface LabelProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof labelVariants> {}
 
+/**
+ * @deprecated
+ */
 const Label = React.forwardRef<HTMLDivElement, LabelProps>(({ className, variant, size, ...props }, ref) => {
   return <div className={cn(labelVariants({ variant, size, className }))} ref={ref} {...props} />;
 });

@@ -1,4 +1,4 @@
-import Button from "../Button";
+import Button from "../Button/Button";
 import { ModalProps } from "./types";
 
 const BaseModal = ({ title, description, children, isOpen, onClose }: ModalProps) => {
@@ -28,18 +28,18 @@ const getVariant = (props: ModalProps) => {
       return (
         <>
           {props.children}
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between mt-4 max-h-[54px]">
             <Button onClick={props.onClose} variant="outline">
-              {"Cancel"}
+              {props.cancelLabel || "Cancel"}
             </Button>
-            <Button onClick={props.onSubmit} disabled={props.loading} variant="primary">
-              {props.loading ? "Creating..." : "Create Job"}
+            <Button onClick={props.onSubmit} disabled={props.loading} loading={props.loading} variant="primary">
+              {props.submitLabel || "Submit"}
             </Button>
           </div>
         </>
       );
     case "custom":
-      return null;
+      return props.children;
   }
 };
 

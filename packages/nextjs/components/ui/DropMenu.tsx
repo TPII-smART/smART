@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Button from "@/components/Button";
 import { cn } from "@/lib/utils";
 import { useClickAway } from "@hooks/use-click-away";
 import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import Button from "~~/components/Button/Button";
 
 interface Option {
   id: string;
@@ -71,7 +71,9 @@ export interface DropMenuProps {
   value?: string;
   onChange?: (value: string) => void;
 }
-
+/** 
+  @deprecated "DropMenu is deprecated, please use the new ComboBox  component instead. -@/components/Combobox"
+*/
 export default function DropMenu({ options, value, onChange }: DropMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState<Option>(

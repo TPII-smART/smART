@@ -1,14 +1,7 @@
+import { CustomerProps } from "./types";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { MessageCircle, UserPlus } from "lucide-react";
-
-type CustomerProps = {
-  address: string;
-  jobStatus: "ongoing" | "finished" | "cancelled";
-  tags?: string[];
-  isVerified?: boolean;
-  followers?: number;
-};
 
 export default function CustomerCard({ address, jobStatus, tags = [] }: CustomerProps) {
   return (
