@@ -12,6 +12,8 @@ import { gql, request } from "graphql-request";
 //import { Input } from "@/components/ui/Input";
 import { Filter } from "lucide-react";
 import { parseEther } from "viem";
+import ComboBox from "~~/components/ComboBox/ComboBox";
+import Modal from "~~/components/Modal/Modal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 type Job = {
@@ -33,6 +35,20 @@ type Job = {
 type JobsData = {
   jobs: Job[];
 };
+
+const categories = [
+  { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
+  { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
+  { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
+  { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
+];
+
+const sorts = [
+  { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
+  { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
+  { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
+  { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
+];
 
 const fetchMaxPayment = async () => {
   const query = gql`
@@ -182,16 +198,7 @@ export default function BrowsePage() {
               <div className="space-y-3" style={{ zIndex: 30, position: "relative" }}>
                 <label className="text-sm font-medium block px-4">Category</label>
                 <div className="px-0">
-                  <DropMenu
-                    value={category}
-                    onChange={setCategory}
-                    options={[
-                      { id: "all", label: "All", icon: Filter, color: "#a3a3a3" },
-                      { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
-                      { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
-                      { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
-                    ]}
-                  />
+                  <DropMenu value={category} onChange={setCategory} options={categories} />
                 </div>
               </div>
 
@@ -205,16 +212,7 @@ export default function BrowsePage() {
               <div className="space-y-3" style={{ zIndex: 20, position: "relative" }}>
                 <label className="text-sm font-medium block px-4">Sort By</label>
                 <div className="px-0">
-                  <DropMenu
-                    value={sortBy}
-                    onChange={setSortBy}
-                    options={[
-                      { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
-                      { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
-                      { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
-                      { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
-                    ]}
-                  />
+                  <DropMenu value={sortBy} onChange={setSortBy} options={sorts} />
                 </div>
               </div>
             </div>
@@ -238,47 +236,42 @@ export default function BrowsePage() {
         +
       </button>
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-primary text-black rounded-lg p-6 w-full max-w-md space-y-4 shadow-xl">
-            <h2 className="text-xl font-bold text-primary-content">Create a Job</h2>
-            <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
-            <InputBase
-              placeholder="Description"
-              value={form.description}
-              onChange={val => setForm({ ...form, description: val })}
-            />
-            <EtherInput
-              placeholder="Payment (ETH)"
-              value={form.paymentInEth}
-              onChange={val => setForm({ ...form, paymentInEth: val })}
-            />
-            <InputBase
-              placeholder="Estimated Duration (hours)"
-              value={form.estimatedDurationHours}
-              onChange={val => setForm({ ...form, estimatedDurationHours: val })}
-            />
-            <InputBase
-              placeholder="Category"
-              value={form.category}
-              onChange={val => setForm({ ...form, category: val })}
-            />
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setShowModal(false)} className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400">
-                Cancel
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={isMining}
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-              >
-                {isMining ? "Creating..." : "Create Job"}
-              </button>
-            </div>
-          </div>
+      <Modal
+        title="Create a job"
+        variant="form"
+        onClose={() => setShowModal(false)}
+        onSubmit={handleSubmit}
+        isOpen={showModal}
+        loading={isMining}
+        description="Create a new job to find freelancers for your tasks."
+      >
+        <div className="space-y-4">
+          <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
+          <InputBase
+            placeholder="Description"
+            value={form.description}
+            onChange={val => setForm({ ...form, description: val })}
+          />
+          <EtherInput
+            placeholder="Payment"
+            value={form.paymentInEth}
+            onChange={val => setForm({ ...form, paymentInEth: val })}
+          />
+          <InputBase
+            placeholder="Estimated Duration (hours)"
+            value={form.estimatedDurationHours}
+            onChange={val => setForm({ ...form, estimatedDurationHours: val })}
+          />
+          <ComboBox
+            id="category-combo"
+            label="Category"
+            value={form.category}
+            onChange={val => setForm({ ...form, category: val })}
+            options={categories}
+            variant="standard"
+          />
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

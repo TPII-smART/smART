@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { NextPage } from "next";
-import ComboBox from "~~/components/ComboBox";
+import ComboBox from "~~/components/ComboBox/ComboBox";
 
 const Playground: NextPage = () => {
   const [age, setAge] = React.useState<string>("");
@@ -15,7 +15,7 @@ const Playground: NextPage = () => {
         label="age"
         onChange={v => setAge(v)}
         value={age}
-        options={[{ value: "20" }, { value: "30", label: "treinta" }]}
+        options={[{ id: "20" }, { id: "30", label: "treinta" }]}
       />
     </div>
   );

@@ -57,7 +57,7 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   }, [reFocus]);
 
   return (
-    <div className={`relative w-full mb-8 mt-4`}>
+    <div className={`relative w-full`}>
       {" "}
       <div
         className={`
@@ -68,10 +68,9 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
           border-b
           ${modifier ? modifier : "focus:border-accent" + isLabelActive ? "border-primary-content" : "border-secondary-content"}
           focus:outline-none
-          peer
         `}
       >
-        {prefix}
+        {isLabelActive && prefix && <div className="place-self-center mr-2 pt-[18px]">{prefix}</div>}
         <input
           maxLength={maxLength}
           name={name}
@@ -86,7 +85,8 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
           className={`
           w-full
           px-0
-          py-3
+          pt-[20px]
+          pb-[2px]
           text-lg
           bg-transparent
           ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
@@ -112,24 +112,24 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
             {value?.toString().length}/{maxLength}
           </span>
         )}
-        {suffix}
+        {isLabelActive && suffix && <div className="place-self-center mr-2 pt-[18px]">{suffix}</div>}
       </div>
       {/* The floating label */}
       <label
         className={`
           absolute
           left-0
-          top-3
+          top-5
+          pointer-events-none
           text-lg
           ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
           transition-all duration-300
-          pointer-events-none
           ${
             isLabelActive
-              ? "transform -translate-y-6 text-sm" // Moved and smaller
+              ? "top-6 transform -translate-y-6 scale-73 origin-top-left" // Moved and smaller
               : ""
           }
-        `}
+          `}
       >
         {placeholder}
       </label>
