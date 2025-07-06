@@ -71,7 +71,9 @@ export interface DropMenuProps {
   value?: string;
   onChange?: (value: string) => void;
 }
-
+/** 
+  @deprecated "DropMenu is deprecated, please use the new ComboBox  component instead. -@/components/Combobox"
+*/
 export default function DropMenu({ options, value, onChange }: DropMenuProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedOption, setSelectedOption] = React.useState<Option>(

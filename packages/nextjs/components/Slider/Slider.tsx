@@ -3,15 +3,9 @@
 import type React from "react";
 import { useState } from "react";
 import { InputBase } from "../scaffold-eth";
+import { SliderProps } from "./types";
 
-interface PriceRangeSliderProps {
-  onChange?: (value: number) => void;
-  min?: number;
-  max?: number;
-  defaultValue?: number;
-}
-
-export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, onChange }: PriceRangeSliderProps) {
+export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, onChange }: SliderProps) {
   const [value, setMaxValue] = useState(defaultValue);
   const [inputValue, setInputValue] = useState("");
 

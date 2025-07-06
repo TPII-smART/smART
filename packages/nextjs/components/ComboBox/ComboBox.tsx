@@ -14,25 +14,28 @@ const _style: React.CSSProperties = {
   margin: "1px",
 };
 
-const _sx: SxProps<Theme> = {
+const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
     borderColor: "var(--color-accent)",
   },
   ".MuiSelect-select": {
     color: "var(--color-primary-content)",
-    px: "0.5rem",
+    ...(variant === "standard" && { px: "0.5rem" }),
   },
   "& .MuiFormLabel-root": {
     color: "var(--color-secondary-content) !important",
     fontSize: "var(--text-lg)",
-    px: "0.5rem",
+    ...(variant === "standard" && { px: "0.5rem" }),
+    left: -1.5,
+    top: -2,
+    ...(variant === "filled" && { left: 0 }),
   },
   "& .MuiFormLabel-root-focused": {
     color: "var(--color-primary-content) !important",
   },
   "& .MuiInputLabel-shrink": {
     color: "var(--color-primary-content) !important",
-    px: "11px !important",
+    ...(variant === "standard" && { px: "11px !important" }),
   },
   "& .MuiSelect-icon": {
     color: "var(--color-accent)",
@@ -72,7 +75,7 @@ const _sx: SxProps<Theme> = {
   "& .Mui-focused .MuiSelect-icon": {
     color: "var(--color-accent)",
   },
-};
+});
 
 const menuProps = {
   PaperProps: {
@@ -96,20 +99,33 @@ export default function ComboBox({
   style,
   sx,
   multiple = false, // Default to single selection
+  resetKey,
+  icon,
 }: ComboBoxProps) {
   const handleChange = (event: SelectChangeEvent) => {
     if (multiple) {
       const {
         target: { value },
       } = event;
-      onChange(typeof value === "string" ? value.split(",") : value);
+      let val = typeof value === "string" ? value.split(",") : value;
+
+      const hasResetKey = val.some((v: any) => v === resetKey);
+      if (hasResetKey) {
+        if (val.length > 1 && val[0] !== resetKey) {
+          val = [resetKey]; // Reset to only the resetKey value
+        } else {
+          val = val.slice(1);
+        }
+      }
+
+      onChange(val);
     } else {
       onChange(event.target.value);
     }
   };
 
   const __style = { ..._style, ...style };
-  const __sx = { ..._sx, ...sx };
+  const __sx = { ..._sx(variant), ...sx };
 
   return (
     <div>
@@ -130,7 +146,7 @@ export default function ComboBox({
                 {selected.map(value => (
                   <Chip
                     key={value}
-                    label={value}
+                    label={options.find(option => option.id === value)?.label ?? selected}
                     sx={{
                       ".MuiChip-label": {
                         color: "var(--color-primary-content)",
@@ -161,10 +177,19 @@ export default function ComboBox({
             className="text-lg"
             sx={{
               "& .MuiSelect-select": {
-                py: "4px",
+                ...(variant === "standard" && { py: "4px" }),
                 fontSize: "var(--text-lg)",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
               },
             }}
+            renderValue={selected => (
+              <Box sx={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                {icon}
+                <span>{options.find(option => option.id === selected)?.label ?? selected}</span>
+              </Box>
+            )}
           >
             {options.map(option => (
               <MenuItem key={option.id} value={option.id}>
