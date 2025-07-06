@@ -43,7 +43,9 @@ export const fetchJobs = async () => {
   `;
 
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, query);
-  return { jobs: res.jobs.items };
+  // Only keep jobs that have no client (i.e., not hired yet)
+  const no_client_jobs = res.jobs.items.filter(job => !job.client);
+  return { jobs: no_client_jobs };
 };
 
 export const fetchMyJobs = async (userAddress: string) => {
