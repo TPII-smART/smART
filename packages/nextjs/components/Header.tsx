@@ -22,11 +22,15 @@ export const menuLinks: HeaderMenuLink[] = [
     href: "/",
   },
   {
+    label: "Browse Jobs",
+    href: "/browse-jobs",
+  },
+  {
     label: "My Jobs",
     href: "/my-jobs",
   },
   {
-    label: "My hires",
+    label: "My Hires",
     href: "/hires",
   },
   {
