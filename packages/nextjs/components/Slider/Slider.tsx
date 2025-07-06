@@ -64,7 +64,7 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, o
         <div className="relative">
           {/* Price Labels */}
           <div className="flex justify-between items-center mb-4">
-            <div className="bg-[var(--color-secondary-content)] text-white px-3 py-1 rounded-md text-sm font-medium">
+            <div className="bg-[var(--color-primary)] text-primary-content px-3 py-1 rounded-md text-sm font-medium">
               Up to {formatPrice(value)} ETH
             </div>
           </div>
