@@ -3,12 +3,12 @@
 import * as React from "react";
 import Modal from "./Modal/Modal";
 import { Badge } from "@/components/Badge";
-import Button from "@/components/Button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { cn } from "@/lib/utils";
 import { StarIcon } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 type Job = {
