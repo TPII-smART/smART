@@ -30,16 +30,16 @@ const getVariant = (props: ModalProps) => {
           {props.children}
           <div className="flex justify-between mt-4">
             <Button onClick={props.onClose} variant="outline">
-              {"Cancel"}
+              {props.cancelLabel || "Cancel"}
             </Button>
             <Button onClick={props.onSubmit} disabled={props.loading} variant="primary">
-              {props.loading ? "Creating..." : "Create Job"}
+              {props.submitLabel || "Submit"}
             </Button>
           </div>
         </>
       );
     case "custom":
-      return null;
+      return props.children;
   }
 };
 

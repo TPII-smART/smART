@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Modal from "./Modal/Modal";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
@@ -81,29 +82,22 @@ export function JobCard({ job, className, ...props }: JobCardProps) {
       </Card>
 
       {/* Confirm Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-primary rounded-lg p-6 w-full max-w-sm shadow-lg space-y-4 text-black">
-            <h2 className="text-xl font-semibold text-primary-content">Are you sure?</h2>
-            <p className="text-sm text-primary-content">
-              You’re about to buy <strong>{job.title}</strong> for{" "}
-              <strong>{job.payment ? `${formatEther(BigInt(job.payment))} ETH` : "Free"}</strong>.
-            </p>
-            <div className="flex justify-end gap-2">
-              <button className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400" onClick={() => setShowModal(false)}>
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                onClick={handleAccept}
-                disabled={isMining}
-              >
-                {isMining ? "Processing..." : "Yes, Buy"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Confirm Purchase"
+        variant="form"
+        onSubmit={handleAccept}
+        loading={isMining}
+        cancelLabel="Cancel"
+        submitLabel="Yes, Buy"
+        description={
+          <label>
+            {"You're about to buy"} <strong>{job.title}</strong> {"for "}
+            <strong>{job.payment ? `${formatEther(BigInt(job.payment))} ETH` : "Free"}</strong>
+          </label>
+        }
+      />
     </>
   );
 }

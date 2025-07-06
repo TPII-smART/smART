@@ -6,7 +6,7 @@ export interface ModalProps {
   /**
    * Optional description for the modal.
    */
-  description?: string;
+  description?: string | React.ReactNode;
   /**
    * Whether the modal is currently open.
    */
@@ -32,4 +32,12 @@ export interface ModalProps {
    * Optional loading state for the modal, used to indicate processing.
    */
   loading?: boolean;
+  /**
+   * Optional label for the cancel button.
+   */
+  cancelLabel?: string;
+  /**
+   * Optional label for the submit button.
+   */
+  submitLabel?: string;
 }
