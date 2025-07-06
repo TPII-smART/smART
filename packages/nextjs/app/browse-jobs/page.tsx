@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import ComboBox from "@/components/ComboBox/ComboBox";
 import { JobCard } from "@/components/JobCard";
+import Modal from "@/components/Modal/Modal";
+import Slider from "@/components/Slider/Slider";
+import Spinner from "@/components/Spinner/Spinner";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, FilterIcon } from "lucide-react";
+import { Filter, FilterIcon, Plus } from "lucide-react";
 import { parseEther } from "viem";
-import ComboBox from "~~/components/ComboBox/ComboBox";
-import Modal from "~~/components/Modal/Modal";
-import Slider from "~~/components/Slider/Slider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchJobs, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
 import { Job, JobsData } from "~~/types/job.types";
@@ -30,7 +31,7 @@ const optionsSorts = [
 
 export default function BrowsePage() {
   const queryClient = useQueryClient();
-  const { data } = useQuery<JobsData>({
+  const { data, isLoading } = useQuery<JobsData>({
     queryKey: ["jobs"],
     queryFn: fetchJobs,
   });
@@ -159,22 +160,31 @@ export default function BrowsePage() {
             </div>
           </aside>
 
-          <div className="flex-1 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredJobs.map(job => (
-                <JobCard job={job} key={job.jobId} />
-              ))}
+          {/* Jobs Listing */}
+          {isLoading ? (
+            <div className="flex-1 flex items-center justify-center">
+              <Spinner />
             </div>
-          </div>
+          ) : (
+            <div className="flex-1 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredJobs.map(job => (
+                  <JobCard job={job} key={job.jobId} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
       {/* Floating + Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white text-3xl shadow-lg hover:bg-blue-700 transition-all z-50"
+        className="fixed bottom-20 right-6 w-14 h-14 rounded-full text-white text-3xl shadow-lg hover:brightness-90 transition-all z-50 flex items-center justify-center"
+        style={{ backgroundColor: "var(--color-accent)" }}
+        aria-label="Create Job"
       >
-        +
+        <Plus className="h-5 w-5" />
       </button>
 
       <Modal
