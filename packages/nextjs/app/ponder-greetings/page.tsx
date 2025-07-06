@@ -25,6 +25,7 @@ type Job = {
   payment?: string;
   title?: string;
   description?: string;
+  category?: string;
   estimatedDuration?: string;
   createdAt?: string;
   acceptedAt?: string;
@@ -78,6 +79,7 @@ const fetchJobsAndConfirmations = async () => {
           payment
           title
           description
+          category
           estimatedDuration
           createdAt
           acceptedAt

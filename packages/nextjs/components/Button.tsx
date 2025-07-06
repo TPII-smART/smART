@@ -6,9 +6,10 @@ export interface ButtonProps {
   onClick?: () => void;
   className?: string; // Optional for additional styling via className
   style?: React.CSSProperties; // Optional for inline styles
+  disabled?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, style }) => {
+const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, style, disabled = false }) => {
   const getStyle = (variant: string): React.CSSProperties => {
     switch (variant) {
       case "outline":
@@ -22,8 +23,13 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           fontWeight: "bold",
           cursor: "pointer",
           width: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
           boxSizing: "border-box",
+          lineHeight: "1",
+          opacity: disabled ? 0.5 : 1,
         };
       case "danger":
         return {
@@ -36,8 +42,13 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           fontWeight: "bold",
           cursor: "pointer",
           width: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
           boxSizing: "border-box",
+          lineHeight: "1",
+          opacity: disabled ? 0.5 : 1,
         };
       default:
         // Primary button as default
@@ -51,8 +62,13 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
           fontWeight: "bold",
           cursor: "pointer",
           width: "fit-content",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
           textAlign: "center",
           boxSizing: "border-box",
+          lineHeight: "1",
+          opacity: disabled ? 0.5 : 1,
         };
     }
   };
@@ -65,4 +81,5 @@ const Button: React.FC<ButtonProps> = ({ variant, children, onClick, className, 
     </button>
   );
 };
+
 export default Button;

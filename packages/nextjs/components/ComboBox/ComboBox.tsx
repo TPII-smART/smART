@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ComboBoxProps } from "./types";
 import Chip from "@mui/material/Chip";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -6,22 +7,6 @@ import MenuItem from "@mui/material/MenuItem";
 import Select, { SelectChangeEvent } from "@mui/material/Select";
 import { SxProps } from "@mui/material/styles";
 import { Box, Theme } from "@mui/system";
-
-export type ComboValue = string;
-
-export interface ComboBoxProps {
-  id: string;
-  label: string;
-  onChange: (val: ComboValue) => void;
-  value: ComboValue;
-  options: Array<{ value: ComboValue; label?: string }>;
-  error?: boolean;
-  disabled?: boolean;
-  variant?: "standard" | "filled" | "outlined";
-  style?: React.CSSProperties;
-  sx?: SxProps<Theme>;
-  multiple?: boolean; // Optional prop for multiple selection
-}
 
 const _style: React.CSSProperties = {
   width: "100%",
@@ -31,15 +16,19 @@ const _style: React.CSSProperties = {
 
 const _sx: SxProps<Theme> = {
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--color-accent) !important",
+    borderColor: "var(--color-accent)",
   },
   ".MuiSelect-select": {
-    color: "var(--color-primary-content) !important",
+    color: "var(--color-primary-content)",
   },
   "& .MuiFormLabel-root": {
     color: "var(--color-secondary-content) !important",
+    fontSize: "var(--text-lg)",
   },
   "& .MuiFormLabel-root-focused": {
+    color: "var(--color-primary-content) !important",
+  },
+  "& .MuiInputLabel-shrink": {
     color: "var(--color-primary-content) !important",
   },
   "& .MuiSelect-icon": {
@@ -142,6 +131,7 @@ export default function ComboBox({
                     sx={{
                       ".MuiChip-label": {
                         color: "var(--color-primary-content)",
+                        marginBottom: "2px",
                       },
                       backgroundColor: "var(--color-surface) !important",
                     }}
@@ -151,8 +141,8 @@ export default function ComboBox({
             )}
           >
             {options.map(option => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label ? option.label : option.value}
+              <MenuItem key={option.id} value={option.id}>
+                {option.label ? option.label : option.id}
               </MenuItem>
             ))}
           </Select>
@@ -165,10 +155,17 @@ export default function ComboBox({
             onChange={handleChange}
             label={label}
             MenuProps={menuProps}
+            className="text-lg"
+            sx={{
+              "& .MuiSelect-select": {
+                py: "4px",
+                fontSize: "var(--text-lg)",
+              },
+            }}
           >
             {options.map(option => (
-              <MenuItem key={option.value} value={option.value}>
-                {option.label ? option.label : option.value}
+              <MenuItem key={option.id} value={option.id}>
+                {option.label ? option.label : option.id}
               </MenuItem>
             ))}
           </Select>

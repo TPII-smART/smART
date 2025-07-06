@@ -10,6 +10,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
         payment: event.args.payment || null,
         title: event.args.title || null,
         description: event.args.description || null,
+        category: event.args.category || null,
         estimatedDuration: event.args.estimatedDuration || null,
         createdAt: BigInt(event.block.timestamp),
         acceptedAt: null, // Initially null
@@ -22,7 +23,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
     // Update the Job as accepted
     await context.db.update(job, { jobId: event.args.jobId })
-        .set({ client: event.args.client, acceptedAt: BigInt(event.block.timestamp) });
+        .set({ client: event.args.client, acceptedAt: BigInt(event.block.timestamp), deadline: event.args.deadline || null });
 });
 
 ponder.on("JobsContract:JobCompleted", async ({ event, context }) => {

@@ -100,10 +100,10 @@ export const EtherInput = ({
     <InputBase
       name={name}
       value={displayValue}
-      placeholder={placeholder}
+      placeholder={placeholder + (displayUsdMode ? " (USD)" : " (ETH)")}
       onChange={handleChangeNumber}
       disabled={disabled}
-      prefix={<span className="pl-4 -mr-2 text-accent self-center">{displayUsdMode ? "$" : "Ξ"}</span>}
+      prefix={<span className="text-accent self-center">{displayUsdMode ? "$" : "Ξ"}</span>}
       suffix={
         <div
           className={`${
@@ -114,12 +114,12 @@ export const EtherInput = ({
           data-tip={isNativeCurrencyPriceFetching ? "Fetching price" : "Unable to fetch price"}
         >
           <button
-            className="btn btn-primary h-[2.2rem] min-h-[2.2rem]"
+            className="hover:text-accent text-primary-content"
             onClick={toggleDisplayUsdMode}
             disabled={!displayUsdMode && !nativeCurrencyPrice}
             type="button"
           >
-            <ArrowsRightLeftIcon className="h-3 w-3 cursor-pointer" aria-hidden="true" />
+            <ArrowsRightLeftIcon className="h-5 w-5 cursor-pointer" aria-hidden="true" />
           </button>
         </div>
       }

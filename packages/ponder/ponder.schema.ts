@@ -16,6 +16,7 @@ export const job = onchainTable("job", (t) => ({
   payment: t.bigint(),        // Optional (nullable)
   title: t.text(),            // Optional (nullable)
   description: t.text(),      // Optional (nullable)
+  category: t.text(),         // Optional (nullable)
   estimatedDuration: t.bigint(),  // Optional (nullable)
   createdAt: t.bigint(),      // Optional (nullable)
   acceptedAt: t.bigint(),     // Optional (nullable)
