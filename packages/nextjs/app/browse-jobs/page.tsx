@@ -86,7 +86,7 @@ export default function BrowsePage() {
 
     jobs = jobs.filter(job => {
       if (maxPrice > 0) {
-        const payment = Number(job.payment) || 0;
+        const payment = Number(job.payment) / 1e18 || 0;
         return payment <= maxPrice;
       }
       return true;

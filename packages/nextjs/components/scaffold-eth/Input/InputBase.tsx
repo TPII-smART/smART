@@ -1,19 +1,26 @@
-import { ChangeEvent, FocusEvent, ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { FocusEvent, ReactNode, useEffect, useRef, useState } from "react";
 import styles from "./InputBase.module.css";
-import { CommonInputProps } from "~~/components/scaffold-eth";
 
-type InputBaseProps<T> = CommonInputProps<T> & {
+type InputBaseProps = {
   error?: boolean;
   prefix?: ReactNode;
   suffix?: ReactNode;
   reFocus?: boolean;
   maxLength?: number;
+  variant?: "default" | "background";
+  value: string;
+  onChange: (newValue: string) => void;
+  onBlur?: () => void;
+  name?: string;
+  placeholder?: string;
+  disabled?: boolean;
 };
 
-export const InputBase = <T extends { toString: () => string } | undefined = string>({
+export const InputBase = ({
   name,
   value,
   onChange,
+  onBlur = () => {},
   placeholder,
   error,
   disabled,
@@ -21,7 +28,8 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   suffix,
   reFocus,
   maxLength,
-}: InputBaseProps<T>) => {
+  variant = "default",
+}: InputBaseProps) => {
   const inputReft = useRef<HTMLInputElement>(null);
 
   let modifier = "";
@@ -33,16 +41,12 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
-  const handleBlur = () => setIsFocused(false);
+  const handleBlur = () => {
+    onBlur();
+    setIsFocused(false);
+  };
 
   const isLabelActive = isFocused || value;
-
-  const handleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      onChange(e.target.value as unknown as T);
-    },
-    [onChange],
-  );
 
   // Runs only when reFocus prop is passed, useful for setting the cursor
   // at the end of the input. Example AddressInput
@@ -70,12 +74,12 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
           focus:outline-none
         `}
       >
-        {isLabelActive && prefix && <div className="place-self-center mr-2 pt-[18px]">{prefix}</div>}
+        {isLabelActive && prefix && <div className="place-self-center px-2 pt-[18px]">{prefix}</div>}
         <input
           maxLength={maxLength}
           name={name}
-          value={value?.toString()}
-          onChange={handleChange}
+          value={value}
+          onChange={e => onChange(e.target.value)}
           disabled={disabled}
           autoComplete="off"
           ref={inputReft}
@@ -84,11 +88,11 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
           // Tailwind classes for the input
           className={`
           w-full
-          px-0
+          ${!prefix && "px-2"}
           pt-[20px]
           pb-[2px]
           text-lg
-          bg-transparent
+          ${variant === "background" ? "bg-[var(--color-surface)] rounded-t-lg" : "bg-transparent"}
           ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
           focus:outline-none
           transition-colors duration-300
@@ -118,7 +122,7 @@ export const InputBase = <T extends { toString: () => string } | undefined = str
       <label
         className={`
           absolute
-          left-0
+          left-2
           top-5
           pointer-events-none
           text-lg

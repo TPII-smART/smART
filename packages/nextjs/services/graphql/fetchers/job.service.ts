@@ -15,7 +15,8 @@ export const fetchMaxPayment = async () => {
 
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, query);
   const payments = res.jobs.items.map(item => Number(item.payment) || 0);
-  return payments.length > 0 ? Math.max(...payments) : 0;
+  const max = payments.length > 0 ? Math.max(...payments) : 0;
+  return max / 1e18; // Convert wei to ether
 };
 
 export const fetchJobs = async () => {
@@ -40,7 +41,7 @@ export const fetchJobs = async () => {
       }
     }
   `;
-  const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
+
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, query);
   return { jobs: res.jobs.items };
 };

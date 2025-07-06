@@ -20,16 +20,19 @@ const _sx: SxProps<Theme> = {
   },
   ".MuiSelect-select": {
     color: "var(--color-primary-content)",
+    px: "0.5rem",
   },
   "& .MuiFormLabel-root": {
     color: "var(--color-secondary-content) !important",
     fontSize: "var(--text-lg)",
+    px: "0.5rem",
   },
   "& .MuiFormLabel-root-focused": {
     color: "var(--color-primary-content) !important",
   },
   "& .MuiInputLabel-shrink": {
     color: "var(--color-primary-content) !important",
+    px: "11px !important",
   },
   "& .MuiSelect-icon": {
     color: "var(--color-accent)",

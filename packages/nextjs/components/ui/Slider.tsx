@@ -1,9 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
-import { Input } from "@/components/ui/Input";
-import { Label } from "@/components/ui/Label";
+import { useState } from "react";
+import { InputBase } from "../scaffold-eth";
 
 interface PriceRangeSliderProps {
   onChange?: (value: number) => void;
@@ -20,32 +19,32 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, o
   const range = max - min;
   const step = range <= 1 ? 0.01 : range <= 10 ? 0.1 : range <= 100 ? 1 : 10;
 
-  // Update input when slider value changes
-  useEffect(() => {
-    setInputValue(value.toString());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleMaxSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const tmp = Number(e.target.value);
-    setMaxValue(tmp);
-    setInputValue("");
-    onChange?.(tmp);
+  const handleChange = (val: number) => {
+    setMaxValue(val);
+    onChange?.(val);
   };
 
-  const handleMaxInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const tmp = Number(e.target.value);
+    handleChange(tmp);
+  };
+
+  const handleInputChange = (v: string) => {
+    if (!v) return;
     // Allow numbers with decimal points
-    const value = e.target.value.replace(/[^0-9.]/g, "");
+    const value = v.replace(/[^0-9.]/g, "");
     // Prevent multiple decimal points
     const parts = value.split(".");
     const formattedValue = parts.length > 2 ? parts[0] + "." + parts.slice(1).join("") : value;
 
     setInputValue(formattedValue);
 
-    const numValue = Number(formattedValue);
-    if (!isNaN(numValue) && numValue <= max && numValue >= min) {
-      setMaxValue(numValue);
-    }
+    let numValue = Number(formattedValue);
+
+    if (isNaN(numValue)) return;
+
+    numValue = numValue < min ? min : numValue > max ? max : numValue;
+    handleChange(numValue);
   };
 
   const formatPrice = (value: number) => {
@@ -91,7 +90,7 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, o
               max={max}
               step={step}
               value={value}
-              onChange={handleMaxSliderChange}
+              onChange={handleSliderChange}
               className="w-full h-2 bg-transparent appearance-none cursor-pointer z-10"
               style={{
                 outline: "none",
@@ -103,17 +102,16 @@ export default function PriceRangeSlider({ min = 0, max = 1, defaultValue = 0, o
         </div>
 
         {/* Input Field */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Maximum Price</Label>
-          <Input
-            id="max-price"
-            type="text"
-            value={inputValue}
-            onChange={handleMaxInputChange}
-            className="border-0 text-center font-medium"
-            placeholder={max.toString()}
-          />
-        </div>
+        <InputBase
+          variant="background"
+          value={inputValue}
+          onChange={handleInputChange}
+          onBlur={() => {
+            handleInputChange(inputValue);
+            setInputValue("");
+          }}
+          placeholder={"Maximum Price"}
+        />
       </div>
 
       <style jsx>{`

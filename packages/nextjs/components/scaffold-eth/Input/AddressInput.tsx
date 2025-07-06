@@ -79,11 +79,11 @@ export const AddressInput = ({ value, name, placeholder, onChange, disabled }: C
     ensAddress === null;
 
   return (
-    <InputBase<Address>
+    <InputBase
       name={name}
       placeholder={placeholder}
       error={ensAddress === null}
-      value={value as Address}
+      value={value}
       onChange={onChange}
       disabled={isEnsAddressLoading || isEnsNameLoading || disabled}
       reFocus={reFocus}
