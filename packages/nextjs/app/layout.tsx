@@ -9,9 +9,13 @@ export const metadata = getMetadata({ title: "Scaffold-ETH 2 App", description: 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   return (
     <html suppressHydrationWarning>
-      <body style={{ width: "100vw", height: "100vh" }}>
+      <body style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
         <ThemeProvider enableSystem>
-          <ScaffoldEthAppWithProviders>{children}</ScaffoldEthAppWithProviders>
+          <ScaffoldEthAppWithProviders>
+            <div className="w-full" style={{ height: "100vh", overflow: "auto" }}>
+              {children}
+            </div>
+          </ScaffoldEthAppWithProviders>
         </ThemeProvider>
       </body>
     </html>
