@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Address as AddressType, createWalletClient, http, parseEther } from "viem";
 import { hardhat } from "viem/chains";
 import { useAccount } from "wagmi";
-import { BanknotesIcon } from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, BanknotesIcon } from "@heroicons/react/24/outline";
 import { Address, AddressInput, Balance, EtherInput } from "~~/components/scaffold-eth";
 import { useTransactor } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
@@ -82,12 +82,11 @@ export const Faucet = () => {
   return (
     <div>
       <label htmlFor="faucet-modal" className="btn btn-primary btn-sm font-normal gap-1">
-        <BanknotesIcon className="h-4 w-4" />
-        <span>Faucet</span>
+        <ArrowsRightLeftIcon className="h-4 w-4" />
       </label>
       <input type="checkbox" id="faucet-modal" className="modal-toggle" />
       <label htmlFor="faucet-modal" className="modal cursor-pointer">
-        <label className="modal-box relative">
+        <label className="modal-box relative z-50">
           {/* dummy input to capture event onclick on modal box */}
           <input className="h-0 w-0 absolute top-0 left-0" />
           <h3 className="text-xl font-bold mb-3">Local Faucet</h3>

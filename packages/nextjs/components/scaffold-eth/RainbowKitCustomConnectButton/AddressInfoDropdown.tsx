@@ -8,11 +8,9 @@ import {
   ArrowTopRightOnSquareIcon,
   ArrowsRightLeftIcon,
   CheckCircleIcon,
-  ChevronDownIcon,
   DocumentDuplicateIcon,
   QrCodeIcon,
 } from "@heroicons/react/24/outline";
-import { BlockieAvatar, isENS } from "~~/components/scaffold-eth";
 import { useCopyToClipboard, useOutsideClick } from "~~/hooks/scaffold-eth";
 import { getTargetNetworks } from "~~/utils/scaffold-eth";
 
@@ -21,16 +19,10 @@ const allowedNetworks = getTargetNetworks();
 type AddressInfoDropdownProps = {
   address: Address;
   blockExplorerAddressLink: string | undefined;
-  displayName: string;
-  ensAvatar?: string;
+  children?: React.ReactNode;
 };
 
-export const AddressInfoDropdown = ({
-  address,
-  ensAvatar,
-  displayName,
-  blockExplorerAddressLink,
-}: AddressInfoDropdownProps) => {
+export const AddressInfoDropdown = ({ address, blockExplorerAddressLink, children }: AddressInfoDropdownProps) => {
   const { disconnect } = useDisconnect();
   const checkSumAddress = getAddress(address);
 
@@ -49,14 +41,59 @@ export const AddressInfoDropdown = ({
   return (
     <>
       <details ref={dropdownRef} className="dropdown dropdown-end leading-3">
-        <summary className="btn btn-secondary btn-sm pl-0 pr-2 shadow-md dropdown-toggle gap-0 h-auto!">
-          <BlockieAvatar address={checkSumAddress} size={30} ensImage={ensAvatar} />
-          <span className="ml-2 mr-1">
-            {isENS(displayName) ? displayName : checkSumAddress?.slice(0, 6) + "..." + checkSumAddress?.slice(-4)}
-          </span>
-          <ChevronDownIcon className="h-6 w-4 ml-2 sm:ml-0" />
-        </summary>
-        <ul className="dropdown-content menu z-2 p-2 mt-2 shadow-center shadow-accent bg-primary rounded-box gap-1">
+        {children}
+        <ul
+          className="dropdown-content menu z-50 p-2 mt-2 shadow-center shadow-accent bg-primary rounded-box gap-1"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            ...(dropdownRef.current
+              ? (() => {
+                  const rect = dropdownRef.current.getBoundingClientRect();
+                  const dropdownHeight = 250; // Approximate dropdown height
+                  const dropdownWidth = 300; // Approximate dropdown width
+                  const overflowBottom = rect.bottom + dropdownHeight > window.innerHeight;
+                  const overflowRight = rect.left + dropdownWidth > window.innerWidth;
+                  if (overflowBottom && overflowRight) {
+                    // Render above and align left
+                    return {
+                      top: "auto",
+                      bottom: "100%",
+                      left: "auto",
+                      right: "100%",
+                      marginBottom: "0.5rem",
+                      marginTop: 0,
+                    };
+                  } else if (overflowBottom) {
+                    // Render above
+                    return {
+                      top: "auto",
+                      bottom: "100%",
+                      marginBottom: "0.5rem",
+                      marginTop: 0,
+                    };
+                  } else if (overflowRight) {
+                    // Align left
+                    return {
+                      left: -80,
+                      right: "100%",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    };
+                  } else {
+                    // Default: render below
+                    return {
+                      top: "100%",
+                      bottom: "auto",
+                      marginTop: "0.5rem",
+                      marginBottom: 0,
+                    };
+                  }
+                })()
+              : { top: "100%", bottom: "auto", marginTop: "0.5rem", marginBottom: 0 }),
+          }}
+        >
           <NetworkOptions hidden={!selectingNetwork} />
           <li className={selectingNetwork ? "hidden" : ""}>
             <div

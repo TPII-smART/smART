@@ -3,9 +3,9 @@ import Button from "./Button/Button";
 
 export function Hero() {
   return (
-    <div className="relative">
+    <div className="relative isolate overflow-hidden bg-secondary w-full">
       <div
-        className="absolute inset-0"
+        className=""
         style={{
           background: "var(--color-secondary)",
         }}

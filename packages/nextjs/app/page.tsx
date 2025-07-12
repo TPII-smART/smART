@@ -6,14 +6,10 @@ import type { NextPage } from "next";
 
 const Home: NextPage = () => {
   return (
-    <>
-      <div>
-        <main className="flex-1">
-          <Hero />
-          <FeaturedJobs />
-        </main>
-      </div>
-    </>
+    <div className="w-full">
+      <Hero />
+      <FeaturedJobs />
+    </div>
   );
 };
 

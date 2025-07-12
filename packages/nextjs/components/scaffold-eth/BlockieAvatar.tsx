@@ -11,6 +11,7 @@ export const BlockieAvatar: AvatarComponent = ({ address, ensImage, size }) => (
     className="rounded-full"
     src={ensImage || blo(address as `0x${string}`)}
     width={size}
+    style={{ minWidth: size, minHeight: size }}
     height={size}
     alt={`${address} avatar`}
   />
