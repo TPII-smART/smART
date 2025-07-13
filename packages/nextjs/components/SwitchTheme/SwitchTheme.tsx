@@ -52,6 +52,7 @@ export const SwitchTheme = ({ open }: SwitchThemeProps) => {
             margin: open ? "" : "0",
             fontSize: 14,
             marginLeft: open ? "0.5rem" : "0",
+            fontWeight: "bold",
           }}
         >
           Toggle theme
