@@ -12,7 +12,13 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
       <body style={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
         <ThemeProvider enableSystem>
           <ScaffoldEthAppWithProviders>
-            <div className="w-full" style={{ height: "100vh", overflow: "auto" }}>
+            <div
+              className="w-full border-t border-l main-body"
+              style={{
+                height: "93vh",
+                overflow: "auto",
+              }}
+            >
               {children}
             </div>
           </ScaffoldEthAppWithProviders>

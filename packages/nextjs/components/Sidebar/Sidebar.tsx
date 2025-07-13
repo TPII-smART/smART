@@ -22,7 +22,6 @@ const SidebarContainer = styled(Box, {
   display: "flex",
   flexDirection: "column",
   padding: 2,
-  boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
   transition: "all 0.5s ease-in-out",
 }));
 
@@ -39,7 +38,6 @@ const SidebarContent = styled(Box, {
   gap: 2,
   backgroundColor: "var(--color-surface)",
   color: "var(--color-primary-content)",
-  boxShadow: "0px 4px 20px rgba(0,0,0,0.1)",
   padding: 20,
   top: 0,
   left: 0,

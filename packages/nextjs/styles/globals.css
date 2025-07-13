@@ -112,3 +112,16 @@
 .link:hover {
   opacity: 80%;
 }
+
+html[data-theme="dark"] .main-body {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    10px 0 10px -10px rgba(0, 0, 0, 0.7),
+    0 10px 10px -10px rgba(0, 0, 0, 0.7);
+}
+html[data-theme="light"] .main-body {
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow:
+    10px 0 10px -10px rgba(0, 0, 0, 0.15),
+    0 10px 10px -10px rgba(0, 0, 0, 0.15);
+}
