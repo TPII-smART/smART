@@ -25,7 +25,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-      <main className="flex flex-1 w-full">
+      <main className="flex flex-1 w-full inherit">
         <Header />
         <Sidebar
           items={[
@@ -56,7 +56,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
             },
           ]}
         />
-        <div className="flex flex-col w-full">
+        <div className="flex flex-col w-full inherit">
           <div className="h-[7vh] w-full relative"></div>
           {children}
         </div>

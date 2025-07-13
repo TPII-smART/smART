@@ -18,7 +18,7 @@ export const Header = () => {
         paddingLeft: 10,
         paddingRight: 10,
         zIndex: 999,
-        backgroundColor: "var(--color-surface)",
+        backgroundColor: "inherit",
         color: "var(--color-primary-content)",
       }}
     >
