@@ -109,6 +109,7 @@ const SidebarItem = (props: SidebarElementProps) => {
           opacity: props.open ? 1 : 0,
           transition: "all 0.5s ease-in-out",
           textAlign: "left",
+          fontWeight: "bold",
         }}
       >
         {props.label ? props.label : props.customLabel ? props.customLabel : null}
