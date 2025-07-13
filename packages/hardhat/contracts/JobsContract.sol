@@ -3,15 +3,16 @@ pragma solidity ^0.8.19;
 
 /**
  * @title JobsContract
- * @dev A simplified escrow contract for freelance work
- * @author Juan Manuel Pascual Osorio
+ * @dev A simplified escrow contract for managing freelance job postings.
+ * @author SmArt
  */
 contract JobsContract {
 
     // Enums for job states
-    enum JobState { Available, Ongoing, Finished, Cancelled }
+    enum JobState { WaitingForApproval, Ongoing, Finished, Cancelled, Disputed }
 
-    // Struct for job details
+    // Struct for individual jobs
+    // Each job is stored inside a JobPosting, containing details about the job and the people involved
     struct Job {
         uint256 jobId;
         address client;
@@ -20,81 +21,128 @@ contract JobsContract {
         string title;
         string description;
         string category;
-        uint256 estimatedDuration; // Duration in seconds (hours/days)
+        uint256 durationInHours; // Estimated time to complete job in hours
         uint256 deadline; // Actual deadline set when job is accepted
         JobState state;
         uint256 createdAt;
         uint256 acceptedAt; // When the job was accepted
-        bool clientConfirmed;
-        bool freelancerConfirmed;
+        bool clientReceived; // Whether the client has received the job results
+        bool freelancerDelivered; // Whether the freelancer has delivered the job results
     }
 
-    // State variables
-    mapping(uint256 => Job) public jobs;
-    uint256 public jobCounter;
-    uint256 public platformFee = 250; // 2.5% in basis points (100 basis points = 1%)
+    // Struct for the JobPostings
+    struct JobPosting {
+        uint256 postingId;
+        address freelancer;
+        uint256 basePayment;
+        string title;
+        string description;
+        string category;
+        string bannerImageUrl;
+        uint256 minimumNoticeTime;
+        uint256 averageWorkDuration;
+        uint256 createdAt;
+        Job[] jobs;
+    }
+
+    // State variables of the contract
+    mapping(uint256 => JobPosting) public postedJobs;
+    uint256 public postedJobsCounter;
     address public owner;
 
     // Events for Ponder database indexing
+    event JobPostingCreated(
+        uint256 indexed postingId,
+        address indexed freelancer,
+        uint256 basePayment,
+        string title,
+        string description,
+        string category,
+        string bannerImageUrl,
+        uint256 minimumNoticeTime,
+        uint256 averageWorkDuration
+    );
+
     event JobCreated(
+        uint256 indexed postingId,
         uint256 indexed jobId,
         address indexed freelancer,
+        address client,
         uint256 payment,
         string title,
         string description,
         string category,
-        uint256 estimatedDuration,
-        uint256 createdAt
+        string bannerImageUrl,
+        uint256 jobDuration
     );
 
     event JobAccepted(
+        uint256 indexed postingId,
         uint256 indexed jobId,
         address indexed client,
-        uint256 deadline,
-        uint256 acceptedAt
+        uint256 deadline
     );
 
-    event JobCompleted(
+    event FreelancerMarkedAsDelivered(
+        uint256 indexed postingId,
         uint256 indexed jobId,
-        address indexed freelancer,
-        address indexed client,
-        uint256 payment,
+        address freelancer,
         uint256 timestamp
+    );
+
+    event ClientMarkedAsReceived(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address client,
+        uint256 timestamp
+    );
+
+    event JobFinished(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address freelancer,
+        address client,
+        uint256 payment
     );
 
     event JobCancelled(
+        uint256 indexed postingId,
         uint256 indexed jobId,
-        uint256 timestamp
-    );
-
-    event ConfirmationReceived(
-        uint256 indexed jobId,
-        address indexed confirmer,
-        bool isClient,
+        JobState state,
         uint256 timestamp
     );
 
     // Modifiers
-    modifier onlyFreelancer(uint256 _jobId) {
-        require(jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
+    modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
+        require(postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
         _;
     }
 
-    modifier onlyClient(uint256 _jobId) {
-        require(jobs[_jobId].client == msg.sender, "Only client can call this");
+    modifier notFreelancer(uint256 _postingId) {
+        require(postedJobs[_postingId].freelancer != msg.sender, "Freelancer cannot create a job for their own posting");
         _;
     }
 
-    modifier onlyJobParties(uint256 _jobId) {
+    modifier onlyClient(uint256 _postingId, uint256 _jobId) {
+        require(postedJobs[_postingId].jobs[_jobId].client == msg.sender, "Only client can call this");
+        _;
+    }
+
+    modifier onlyJobParties(uint256 _postingId, uint256 _jobId) {
         require(
-            jobs[_jobId].freelancer == msg.sender || jobs[_jobId].client == msg.sender,
+            postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender || postedJobs[_postingId].jobs[_jobId].client == msg.sender,
             "Only job parties can call this"
         );
         _;
     }
 
-    modifier jobExists(uint256 _jobId) {
-        require(_jobId < jobCounter, "Job does not exist");
+    modifier postingExists(uint256 _postingId) {
+        require(_postingId < postedJobsCounter, "Job posting does not exist");
+        _;
+    }
+
+    modifier jobExists(uint256 _postingId, uint256 _jobId) {
+        require(_jobId < postedJobs[_postingId].jobs.length, "Job does not exist");
         _;
     }
 
@@ -109,172 +157,234 @@ contract JobsContract {
 
     /**
      * @dev Create a new job posting (Freelancer creates job offer)
-     * @param _title Job title
-     * @param _description Job description
-     * @param _payment Required payment amount in wei
+     * @param _title of the Job Posting
+     * @param _description of the Job
+     * @param _bannerImageUrl URL to the job's banner image
+     * @param _basePayment Average payment for the job in wei
+     * @param _minimumNoticeTime Minimum notice time in hours
      * @param _estimatedDurationHours Estimated time to complete job in hours
      * @param _category Job category (e.g., "3D Modeling", "Web Development")
      */
-    function createJob(
+    function createJobPosting(
         string memory _title,
         string memory _description,
-        uint256 _payment,
+        string memory _bannerImageUrl,
+        uint256 _basePayment,
         uint256 _estimatedDurationHours,
+        uint256 _minimumNoticeTime,
         string memory _category
-    ) external returns (uint256) {
-        require(_payment > 0, "Payment must be greater than 0");
+    ) external  returns (uint256) {
+        require(_basePayment > 0, "Payment must be greater than 0");
         require(_estimatedDurationHours > 0, "Duration must be greater than 0");
-        require(_estimatedDurationHours <= 8760, "Duration cannot exceed 1 year (8760 hours)");
+        require(_minimumNoticeTime > 0, "Minimum notice time must be greater than 0");
         require(bytes(_title).length > 0, "Title cannot be empty");
         require(bytes(_description).length > 0, "Description cannot be empty");
         require(bytes(_category).length > 0, "Category cannot be empty");
 
-        uint256 jobId = jobCounter++;
-        uint256 estimatedDurationSeconds = _estimatedDurationHours * 1 hours;
+        uint256 postingId = postedJobsCounter++;
 
-        jobs[jobId] = Job({
-            jobId: jobId,
-            client: address(0), // No client assigned yet
-            freelancer: msg.sender, // Freelancer creates the job
-            payment: _payment,
-            title: _title,
-            description: _description,
-            category: _category,
-            estimatedDuration: estimatedDurationSeconds,
-            deadline: 0, // Will be set when job is accepted
-            state: JobState.Available,
-            createdAt: block.timestamp,
-            acceptedAt: 0,
-            clientConfirmed: false,
-            freelancerConfirmed: false
-        });
+        // Create JobPosting with all required fields including empty jobs array
+        JobPosting storage newPosting = postedJobs[postingId];
+        newPosting.postingId = postingId;
+        newPosting.freelancer = msg.sender;
+        newPosting.basePayment = _basePayment;
+        newPosting.title = _title;
+        newPosting.description = _description;
+        newPosting.category = _category;
+        newPosting.bannerImageUrl = _bannerImageUrl;
+        newPosting.minimumNoticeTime = _minimumNoticeTime;
+        newPosting.averageWorkDuration = _estimatedDurationHours;
+        newPosting.createdAt = block.timestamp;
+        // jobs array is automatically initialized as empty
 
-        emit JobCreated(
-            jobId,
-            msg.sender, // freelancer
-            _payment,
+        emit JobPostingCreated(
+            postingId,
+            msg.sender,
+            _basePayment,
             _title,
             _description,
             _category,
-            estimatedDurationSeconds,
-            block.timestamp
+            _bannerImageUrl,
+            _minimumNoticeTime,
+            _estimatedDurationHours
         );
 
-        return jobId;
+        return postingId;
     }
 
     /**
-     * @dev Accept an available job and set deadline (Client accepts freelancer's job offer)
+     * @dev Create a new job under an existing job posting (Client creates job)
+     * @param _postingId The ID of the job posting to create a job under
+     * @param _payment The payment amount for the job in wei
+     * @param _description The job description
+     * @param _durationInHours Estimated time to complete job in hours
+     */
+     function createJob(
+        uint256 _postingId,
+        uint256 _payment,
+        string memory _title,
+        string memory _description,
+        uint256 _durationInHours
+     ) external payable postingExists(_postingId) notFreelancer(_postingId) {
+        JobPosting storage posting = postedJobs[_postingId];
+
+        require(msg.value == _payment, "Must send exact payment amount");
+        require(_payment > 0, "Payment must be greater than 0");
+        require(_durationInHours > 0, "Duration must be greater than 0");
+        require(bytes(_title).length > 0, "Title cannot be empty");
+        require(bytes(_description).length > 0, "Description cannot be empty");
+
+        // Create new job
+        uint256 jobId = posting.jobs.length;
+        Job memory newJob = Job({
+            jobId: jobId,
+            client: msg.sender,
+            freelancer: posting.freelancer,
+            payment: _payment,
+            title: _title,
+            description: _description,
+            category: posting.category,
+            durationInHours: _durationInHours,
+            deadline: 0, // Deadline will be set when job is accepted, while waiting for approval no progress is made
+            state: JobState.WaitingForApproval,
+            createdAt: block.timestamp,
+            acceptedAt: 0,
+            clientReceived: false,
+            freelancerDelivered: false
+        });
+
+        // Add job to the posting
+        posting.jobs.push(newJob);
+
+        emit JobCreated(
+            _postingId,
+            jobId,
+            posting.freelancer,
+            msg.sender,
+            _payment,
+            posting.title,
+            _description,
+            posting.category,
+            posting.bannerImageUrl,
+            _durationInHours
+        );
+     }
+
+
+
+    /**
+     * @dev Accept an available job and set deadline (Freelancer accepts job offered by client)
+     * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to accept
      */
-    function acceptJob(uint256 _jobId) external payable jobExists(_jobId) {
-        Job storage job = jobs[_jobId];
+    function acceptJob(uint256 _postingId, uint256 _jobId) external jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
 
-        require(job.state == JobState.Available, "Job is not available");
-        require(job.freelancer != msg.sender, "Freelancer cannot accept their own job");
-        require(msg.value == job.payment, "Must send exact payment amount");
+        require(job.state == JobState.WaitingForApproval, "Job is not available for acceptance");
+        require(msg.sender == job.freelancer, "Only freelancer can accept this job");
+        require(job.client != address(0), "Job has no assigned client");
+        require(job.durationInHours > 0, "Job duration must be greater than 0");
 
-        // Set client and calculate deadline
-        job.client = msg.sender;
-        job.acceptedAt = block.timestamp;
-        job.deadline = block.timestamp + job.estimatedDuration;
+        // Set job state to ongoing
         job.state = JobState.Ongoing;
+        job.acceptedAt = block.timestamp;
+        job.deadline = block.timestamp + (job.durationInHours * 1 hours); // Set deadline based on duration
 
-        emit JobAccepted(_jobId, msg.sender, job.deadline, block.timestamp);
+        emit JobAccepted(
+            _postingId,
+            _jobId,
+            job.client,
+            job.deadline
+        );
     }
 
     /**
-     * @dev Confirm job completion (both parties must confirm)
+     * @dev Confirm job completion (both parties must confirm in order to complete the job)
+     * This function allows either the client or freelancer to confirm that the job has been completed.
+     * If both parties confirm, the job is marked as finished and payment is released.
+     * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
      */
-    function confirmCompletion(uint256 _jobId) external onlyJobParties(_jobId) jobExists(_jobId) {
-        Job storage job = jobs[_jobId];
+    function confirmCompletion(uint256 _postingId, uint256 _jobId) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.client != address(0), "Job has no assigned client");
+        require(job.freelancer != address(0), "Job has no assigned freelancer");
 
         // Set confirmation based on who is calling
         if (msg.sender == job.client) {
-            require(!job.clientConfirmed, "Client already confirmed");
-            job.clientConfirmed = true;
-            emit ConfirmationReceived(_jobId, msg.sender, true, block.timestamp);
+            require(!job.clientReceived, "Client already confirmed job reception");
+            job.clientReceived = true;
+            emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
         } else {
-            require(!job.freelancerConfirmed, "Freelancer already confirmed");
-            job.freelancerConfirmed = true;
-            emit ConfirmationReceived(_jobId, msg.sender, false, block.timestamp);
+            require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
+            job.freelancerDelivered = true;
+            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, block.timestamp);
         }
 
         // If both parties have confirmed, complete the job
-        if (job.clientConfirmed && job.freelancerConfirmed) {
-            _completeJob(_jobId);
+        if (job.clientReceived && job.freelancerDelivered) {
+            _completeJob(_postingId, _jobId);
         }
     }
 
     /**
      * @dev Internal function to complete job and release payment
+     * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to complete
      */
-    function _completeJob(uint256 _jobId) internal {
-        Job storage job = jobs[_jobId];
+    function _completeJob(uint256 _postingId, uint256 _jobId) internal {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
         job.state = JobState.Finished;
 
-        // Calculate platform fee and freelancer payment
-        uint256 feeAmount = (job.payment * platformFee) / 10000;
-        uint256 freelancerPayment = job.payment - feeAmount;
+        // Sends payment to freelancer
+        payable(job.freelancer).transfer(job.payment);
 
-        // Transfer payments
-        if (feeAmount > 0) {
-            payable(owner).transfer(feeAmount);
-        }
-        payable(job.freelancer).transfer(freelancerPayment);
-
-        emit JobCompleted(
+        emit JobFinished(
+            _postingId,
             _jobId,
             job.freelancer,
             job.client,
-            freelancerPayment,
-            block.timestamp
+            job.payment
         );
     }
 
     /**
      * @dev Cancel a job
+     * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to cancel
      */
-    function cancelJob(uint256 _jobId) external jobExists(_jobId) {
-        Job storage job = jobs[_jobId];
+    function cancelJob(uint256 _postingId, uint256 _jobId) external jobExists(_postingId, _jobId) onlyJobParties(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
 
-        // Available jobs can only be cancelled by the freelancer who created them
-        if (job.state == JobState.Available) {
-            require(msg.sender == job.freelancer, "Only freelancer can cancel available job");
-        }
-            // For ongoing jobs, either party can cancel
-        else if (job.state == JobState.Ongoing) {
-            require(
-                msg.sender == job.freelancer || msg.sender == job.client,
-                "Only job parties can cancel ongoing job"
-            );
-            // Refund payment to client if job was ongoing
-            payable(job.client).transfer(job.payment);
+        if (job.state == JobState.WaitingForApproval) {
+            // If job is still waiting for approval, simply remove it
+            job.state = JobState.Cancelled;
+        } else if (job.state == JobState.Ongoing) {
+            // If job is ongoing, set it to cancelled and refund client
+            job.state = JobState.Cancelled;
+
+            // Refund payment to client if there was one
+            if (job.client != address(0)) {
+                payable(job.client).transfer(job.payment);
+            }
         } else {
-            revert("Cannot cancel job in current state");
+            revert("Job cannot be cancelled in its current state");
         }
 
-        job.state = JobState.Cancelled;
-        emit JobCancelled(_jobId, block.timestamp);
+        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
+
     }
 
     /**
      * @dev Emergency cancel by owner (with refund)
      * @param _jobId The job ID to emergency cancel
      */
-    function emergencyCancel(uint256 _jobId) external onlyOwner jobExists(_jobId) {
-        Job storage job = jobs[_jobId];
+    function emergencyCancel(uint256 _postingId, uint256 _jobId) external onlyOwner jobExists(_postingId, _jobId) {
 
-        require(
-            job.state == JobState.Available || job.state == JobState.Ongoing,
-            "Cannot cancel finished job"
-        );
+
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         job.state = JobState.Cancelled;
 
@@ -283,7 +393,7 @@ contract JobsContract {
             payable(job.client).transfer(job.payment);
         }
 
-        emit JobCancelled(_jobId, block.timestamp);
+        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
     }
 
     // Optimized view functions to avoid stack too deep errors
@@ -291,134 +401,47 @@ contract JobsContract {
     /**
      * @dev Get basic job info
      */
-    function getJobBasics(uint256 _jobId) external view jobExists(_jobId) returns (
+    function getJobBasics(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (
         address freelancer,
         address client,
         uint256 payment,
         JobState state
     ) {
-        Job storage job = jobs[_jobId];
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
         return (job.freelancer, job.client, job.payment, job.state);
     }
 
     /**
      * @dev Get job content
      */
-    function getJobContent(uint256 _jobId) external view jobExists(_jobId) returns (
+    function getJobContent(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (
         string memory title,
         string memory description,
         string memory category,
-        uint256 estimatedDuration,
         uint256 deadline
     ) {
-        Job storage job = jobs[_jobId];
-        return (job.title, job.description, job.category, job.estimatedDuration, job.deadline);
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        return (job.title, job.description, job.category, job.deadline);
     }
 
     /**
      * @dev Get job timestamps and confirmations
      */
-    function getJobStatus(uint256 _jobId) external view jobExists(_jobId) returns (
+    function getJobStatus(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (
         uint256 createdAt,
         uint256 acceptedAt,
-        bool clientConfirmed,
-        bool freelancerConfirmed
+        bool clientReceived,
+        bool freelancerDelivered
     ) {
-        Job storage job = jobs[_jobId];
-        return (job.createdAt, job.acceptedAt, job.clientConfirmed, job.freelancerConfirmed);
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        return (job.createdAt, job.acceptedAt, job.clientReceived, job.freelancerDelivered);
     }
 
     /**
      * @dev Get complete job info (alternative approach using fewer variables)
      */
-    function getCompleteJob(uint256 _jobId) external view jobExists(_jobId) returns (Job memory) {
-        return jobs[_jobId];
-    }
-
-    /**
-     * @dev Get jobs by state (for frontend filtering)
-     * @param _state The job state to filter by
-     * @param _limit Maximum number of jobs to return
-     * @param _offset Starting index for pagination
-     */
-    function getJobsByState(JobState _state, uint256 _limit, uint256 _offset)
-    external
-    view
-    returns (uint256[] memory)
-    {
-        // First pass: count matching jobs
-        uint256 matchCount = 0;
-        for (uint256 i = 0; i < jobCounter; i++) {
-            if (jobs[i].state == _state) {
-                matchCount++;
-            }
-        }
-
-        // Handle pagination bounds
-        if (_offset >= matchCount) {
-            return new uint256[](0);
-        }
-
-        uint256 endIndex = _offset + _limit;
-        if (endIndex > matchCount) {
-            endIndex = matchCount;
-        }
-
-        uint256 resultLength = endIndex - _offset;
-        uint256[] memory result = new uint256[](resultLength);
-
-        // Second pass: collect the paginated results
-        uint256 currentMatch = 0;
-        uint256 resultIndex = 0;
-
-        for (uint256 i = 0; i < jobCounter && resultIndex < resultLength; i++) {
-            if (jobs[i].state == _state) {
-                if (currentMatch >= _offset) {
-                    result[resultIndex] = i;
-                    resultIndex++;
-                }
-                currentMatch++;
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * @dev Get jobs by user (freelancer or client)
-     * @param _user The user address
-     * @param _asFreelancer True to get jobs where user is freelancer, false for client
-     */
-    function getUserJobs(address _user, bool _asFreelancer)
-    external
-    view
-    returns (uint256[] memory)
-    {
-        // Count matching jobs first
-        uint256 count = 0;
-        for (uint256 i = 0; i < jobCounter; i++) {
-            if (_asFreelancer && jobs[i].freelancer == _user) {
-                count++;
-            } else if (!_asFreelancer && jobs[i].client == _user) {
-                count++;
-            }
-        }
-
-        // Create result array and populate
-        uint256[] memory result = new uint256[](count);
-        uint256 resultIndex = 0;
-
-        for (uint256 i = 0; i < jobCounter && resultIndex < count; i++) {
-            if (_asFreelancer && jobs[i].freelancer == _user) {
-                result[resultIndex] = i;
-                resultIndex++;
-            } else if (!_asFreelancer && jobs[i].client == _user) {
-                result[resultIndex] = i;
-                resultIndex++;
-            }
-        }
-
-        return result;
+    function getCompleteJob(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (Job memory) {
+        return postedJobs[_postingId].jobs[_jobId];
     }
 
     /**
@@ -464,13 +487,8 @@ contract JobsContract {
         return string(bstr);
     }
 
-    function setPlatformFee(uint256 _newFee) external onlyOwner {
-        require(_newFee <= 1000, "Platform fee cannot exceed 10%");
-        platformFee = _newFee;
-    }
-
-    function getTotalJobs() external view returns (uint256) {
-        return jobCounter;
+    function getTotalJobsPosted() external view returns (uint256) {
+        return postedJobsCounter;
     }
 
     // Function to receive Ether
