@@ -1,4 +1,3 @@
-// UniversalJobCard.tsx
 "use client";
 
 import * as React from "react";
@@ -8,26 +7,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { StarIcon } from "lucide-react";
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
-
-// UniversalJobCard.tsx
 
 export function UniversalJobCard({
   bannerUrl,
