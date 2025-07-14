@@ -7,7 +7,9 @@ export function Hero() {
       <div
         className="absolute inset-0"
         style={{
-          background: "var(--color-secondary)",
+          background:
+            "url('https://cdn.pixabay.com/photo/2020/03/06/08/00/laptop-4906312_1280.jpg') no-repeat center center / cover",
+          opacity: 0.4,
         }}
       />
       <div className="relative mx-auto max-w-5xl px-6 py-24 sm:py-32 lg:px-8">

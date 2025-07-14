@@ -3,10 +3,10 @@ import { JobCard } from "@/components/JobCard";
 const featuredJobs = [
   {
     postingId: "1",
-    freelancer: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
+    freelancer: "0x1234567890abcdef1234567890abcdef12345679" as `0x${string}`,
     title: "I'll create a Figma perfect for your next project!",
     description: "I'll create a Figma for your next Web Application.",
-    bannerImageUrl: "",
+    bannerImageUrl: "https://cdn.pixabay.com/photo/2016/11/29/06/15/plans-1867745_1280.jpg",
     basePayment: "1000000000000000000", // 1 ETH in wei
     category: "Design",
     minimumNoticeTime: 24, // in hours
@@ -16,10 +16,10 @@ const featuredJobs = [
   },
   {
     postingId: "2",
-    freelancer: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
+    freelancer: "0x1234567890abcdef1234567890abcdef12345699" as `0x${string}`,
     title: "Stunning 3D Art for Games & Animation",
     description: "Custom 3D models and assets for your game or animation project.",
-    bannerImageUrl: "",
+    bannerImageUrl: "https://cdn.pixabay.com/photo/2022/05/23/22/48/art-7217326_1280.jpg",
     basePayment: "1000000000000000000", // 1 ETH in wei
     category: "3D Art",
     minimumNoticeTime: 24, // in hours
@@ -32,7 +32,7 @@ const featuredJobs = [
     freelancer: "0x1234567890abcdef1234567890abcdef12345678" as `0x${string}`,
     title: "Professional Photo Editing & Retouching",
     description: "Enhance your photos with expert editing and retouching services.",
-    bannerImageUrl: "",
+    bannerImageUrl: "https://cdn.pixabay.com/photo/2014/12/27/15/31/camera-581126_1280.jpg",
     basePayment: "1000000000000000000", // 1 ETH in wei
     category: "Photography",
     minimumNoticeTime: 24, // in hours
