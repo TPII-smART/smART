@@ -24,6 +24,14 @@ export interface ButtonProps {
    */
   style?: React.CSSProperties;
   /**
+   * Optional size for the button, can be "sm", "md", or "lg".
+   * - "sm": Small button, typically used for compact layouts.
+   * - "md": Medium button, default size.
+   * - "lg": Large button, used for emphasis.
+   * @default "md"
+   */
+  size?: "sm" | "md" | "lg";
+  /**
    * Optional disabled state for the button.
    * When true, the button will be unclickable and styled as disabled.
    */

@@ -1,34 +1,39 @@
-import { onchainTable } from "ponder";
+import { onchainTable, primaryKey } from "ponder";
 
-export const greeting = onchainTable("greeting", (t) => ({
-  id: t.text().primaryKey(),
-  text: t.text().notNull(),
-  setterId: t.hex().notNull(),
-  premium: t.boolean().notNull(),
-  value: t.bigint().notNull(),
-  timestamp: t.integer().notNull(),
+// JobPosting table
+export const jobPosting = onchainTable("jobPosting", (t) => ({
+  postingId: t.bigint().primaryKey(),
+  freelancer: t.hex().notNull(),
+  basePayment: t.bigint().notNull(),
+  title: t.text().notNull(),
+  description: t.text().notNull(),
+  category: t.text().notNull(),
+  bannerImageUrl: t.text().notNull(), // Optional, can be null if not provided
+  minimumNoticeTime: t.bigint().notNull(),
+  averageWorkDuration: t.bigint().notNull(),
+  createdAt: t.bigint().notNull(),
 }));
 
+// Job table
 export const job = onchainTable("job", (t) => ({
-  jobId: t.bigint().notNull().primaryKey(), // Unique identifier for the job
-  freelancer: t.hex(),        // Optional (nullable)
-  client: t.hex(),            // Optional (nullable)
-  payment: t.bigint(),        // Optional (nullable)
-  title: t.text(),            // Optional (nullable)
-  description: t.text(),      // Optional (nullable)
-  category: t.text(),         // Optional (nullable)
-  estimatedDuration: t.bigint(),  // Optional (nullable)
-  createdAt: t.bigint(),      // Optional (nullable)
-  acceptedAt: t.bigint(),     // Optional (nullable)
-  deadline: t.bigint(),       // Optional (nullable)
-  completedAt: t.bigint(),    // Optional (nullable)
-  cancelledAt: t.bigint(),    // Optional (nullable)
+  jobId: t.bigint().notNull(),
+  postingId: t.bigint().notNull(),
+  client: t.hex().notNull(),
+  freelancer: t.hex().notNull(),
+  payment: t.bigint().notNull(),
+  title: t.text().notNull(),
+  description: t.text().notNull(),
+  category: t.text().notNull(),
+  bannerImageUrl: t.text().notNull(),
+  jobDuration: t.bigint().notNull(),
+  deadline: t.bigint(),
+  state: t.integer().notNull(),
+  createdAt: t.bigint().notNull(),
+  acceptedAt: t.bigint(),
+  clientReceived: t.boolean().notNull(),
+  freelancerDelivered: t.boolean().notNull(),
+}),
+ (table) => ({
+  pk: primaryKey({ columns: [table.jobId, table.postingId] }),
 }));
 
-export const confirmation = onchainTable("confirmation", (t) => ({
-  id: t.text().primaryKey(),      // Unique: jobId + confirmer
-  jobId: t.bigint().notNull(),
-  confirmer: t.hex().notNull(),
-  isClient: t.boolean().notNull(),
-  timestamp: t.bigint().notNull(),
-}));

@@ -1,10 +1,6 @@
 import { Job } from "~~/types/job.types";
 
-export type CustomerProps = {
-  /**
-   * The address of the customer.
-   */
-  address: string;
+export type CustomerProps = React.HTMLAttributes<HTMLDivElement> & {
   /**
    * The job details.
    * This includes information such as job ID,
@@ -13,4 +9,8 @@ export type CustomerProps = {
    * timestamps related to the job's lifecycle.
    */
   job: Job;
+  /**
+   * A function to reload the job data.
+   */
+  reload?: () => Promise<void>;
 };

@@ -16,7 +16,7 @@ export default function Hires() {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col min-h-screen mt-4">
       <HiresListing userAddress={userAddress || ""} />
     </div>
   );

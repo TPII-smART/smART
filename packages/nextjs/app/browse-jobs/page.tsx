@@ -11,8 +11,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Filter, FilterIcon, Plus } from "lucide-react";
 import { parseEther } from "viem";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { fetchJobs, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
-import { Job, JobsData } from "~~/types/job.types";
+import { fetchJobPostings, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
+import { JobPosting, JobPostingData } from "~~/types/job.types";
 
 const optionsCategoriesWithoutAll = [
   { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
@@ -31,81 +31,90 @@ const optionsSorts = [
 
 export default function BrowsePage() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery<JobsData>({
-    queryKey: ["jobs"],
-    queryFn: fetchJobs,
+  const { data, isLoading, refetch } = useQuery<JobPostingData>({
+    queryKey: ["jobPostings"],
+    queryFn: fetchJobPostings,
   });
 
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
   const [categories, setCategories] = useState<string[]>(["all"]);
   const [sortBy, setSortBy] = useState<string>("recent");
-  const [filteredJobs, setFilteredJobs] = useState<Job[]>(data?.jobs || []);
+  const [filteredJobs, setFilteredJobs] = useState<JobPosting[]>(data?.jobPostings || []);
   const [maxPrice, setMaxPrice] = useState<number>(0);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
+    bannerImageUrl: "",
     paymentInEth: "0.1",
     estimatedDurationHours: "48",
     category: "",
   });
 
-  const { writeContractAsync: createJob, isMining } = useScaffoldWriteContract({
+  const { writeContractAsync: createJobPosting, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
 
+  const reload = async () => {
+    queryClient.invalidateQueries({ queryKey: ["jobPostings"] });
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay to ensure UI updates
+    await refetch();
+  };
+
   const handleSubmit = async () => {
     try {
-      await createJob({
-        functionName: "createJob",
+      await createJobPosting({
+        functionName: "createJobPosting",
         args: [
           form.title,
           form.description,
+          form.bannerImageUrl || "",
           parseEther(form.paymentInEth),
           BigInt(form.estimatedDurationHours),
+          BigInt(24), // minimumNoticeTime, can be set to 24 for now
           form.category,
         ],
       });
+      await reload();
       setShowModal(false);
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
     } catch (err) {
       console.error("Failed to create job:", err);
     }
   };
 
-  const filterJobs = useMemo((): Job[] => {
-    let jobs = data?.jobs || [];
+  const filterJobs = useMemo((): JobPosting[] => {
+    let jobPostings = data?.jobPostings || [];
 
     console.log("Filtering jobs with categories:", categories);
     if (categories && !categories.some(v => v === "all")) {
-      jobs = jobs.filter(job => categories.some(cat => cat === job.category));
+      jobPostings = jobPostings.filter(jobPosting => categories.some(cat => cat === jobPosting.category));
     }
 
-    jobs = jobs.filter(job => {
+    jobPostings = jobPostings.filter(jobPosting => {
       if (maxPrice > 0) {
-        const payment = Number(job.payment) / 1e18 || 0;
+        const payment = Number(jobPosting.basePayment) / 1e18 || 0;
         return payment <= maxPrice;
       }
       return true;
     });
 
-    jobs = jobs.sort((a, b) => {
+    jobPostings = jobPostings.sort((a, b) => {
       switch (sortBy) {
         case "recent":
           return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
         case "popular":
           return a.rating ? (b.rating ? b.rating - a.rating : -1) : 1;
         case "price-low":
-          return (Number(a.payment) || 0) - (Number(b.payment) || 0);
+          return (Number(a.basePayment) || 0) - (Number(b.basePayment) || 0);
         case "price-high":
-          return (Number(b.payment) || 0) - (Number(a.payment) || 0);
+          return (Number(b.basePayment) || 0) - (Number(a.basePayment) || 0);
         default:
           return 0; // Default case, no sorting
       }
     });
 
-    return jobs;
+    return jobPostings;
   }, [data, categories, sortBy, maxPrice]);
 
   const fetchMaxPaymentETH = useCallback(async () => {
@@ -115,7 +124,7 @@ export default function BrowsePage() {
   useEffect(() => {
     setFilteredJobs(filterJobs);
     fetchMaxPaymentETH();
-  }, [filterJobs, fetchMaxPaymentETH]);
+  }, [filterJobs, fetchMaxPaymentETH, data]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -168,8 +177,8 @@ export default function BrowsePage() {
           ) : (
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredJobs.map(job => (
-                  <JobCard job={job} key={job.jobId} />
+                {filteredJobs.map(jobPosting => (
+                  <JobCard jobPosting={jobPosting} key={jobPosting.postingId} reload={reload} />
                 ))}
               </div>
             </div>
@@ -188,13 +197,13 @@ export default function BrowsePage() {
       </button>
 
       <Modal
-        title="Create a job"
+        title="Create a job posting"
         variant="form"
         onClose={() => setShowModal(false)}
         onSubmit={handleSubmit}
         isOpen={showModal}
         loading={isMining}
-        description="Create a new job to find freelancers for your tasks."
+        description="Offer your services to the community by creating a job posting."
       >
         <div className="space-y-4">
           <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
@@ -202,6 +211,11 @@ export default function BrowsePage() {
             placeholder="Description"
             value={form.description}
             onChange={val => setForm({ ...form, description: val })}
+          />
+          <InputBase
+            placeholder="Banner Image URL"
+            value={form.bannerImageUrl}
+            onChange={val => setForm({ ...form, bannerImageUrl: val })}
           />
           <EtherInput
             placeholder="Payment"

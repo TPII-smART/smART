@@ -2,11 +2,14 @@ export interface Job {
   /** Unique identifier for the job. */
   jobId: string;
 
-  /** (Optional) Ethereum address of the freelancer assigned to the job, formatted as a hexadecimal string. */
-  freelancer?: `0x${string}`;
+  /** Unique identifier for the job posting this job is based on. */
+  postingId: string;
 
   /** (Optional) Ethereum address of the client who created the job, formatted as a hexadecimal string. */
   client?: `0x${string}`;
+
+  /** (Optional) Ethereum address of the freelancer assigned to the job, formatted as a hexadecimal string. */
+  freelancer?: `0x${string}`;
 
   /** (Optional) Payment amount or details for the job. */
   payment?: string;
@@ -20,8 +23,17 @@ export interface Job {
   /** (Optional) Category or field of the job. */
   category?: string;
 
+  /** (Optional) URL of the banner image associated with the job. */
+  bannerImageUrl?: string;
+
   /** (Optional) Estimated time required to complete the job. */
-  estimatedDuration?: string;
+  jobDuration?: string;
+
+  /** (Optional) ISO date string representing the job's deadline. */
+  deadline?: string;
+
+  /** Current state of the job, represented as an integer. */
+  state: number;
 
   /** (Optional) ISO date string representing when the job was created. */
   createdAt?: string;
@@ -29,19 +41,61 @@ export interface Job {
   /** (Optional) ISO date string representing when the job was accepted by a freelancer. */
   acceptedAt?: string;
 
-  /** (Optional) ISO date string representing the job's deadline. */
-  deadline?: string;
+  /** (Optional) Boolean indicating if the client has marked they received the job deliverables. */
+  clientReceived?: boolean;
 
-  /** (Optional) ISO date string representing when the job was completed. */
-  completedAt?: string;
+  /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
+  freelancerDelivered?: boolean;
+}
 
-  /** (Optional) ISO date string representing when the job was cancelled. */
-  cancelledAt?: string;
+export interface JobPosting {
+  /** Unique identifier for the job posting. */
+  postingId: string;
+
+  /** Ethereum address of the freelancer who posted the job, formatted as a hexadecimal string. */
+  freelancer: `0x${string}`;
+
+  /** Base payment amount for the job posting. */
+  basePayment: string;
+
+  /** Title of the job posting. */
+  title: string;
+
+  /** Description of the job posting. */
+  description: string;
+
+  /** Category of the job posting. */
+  category: string;
+
+  /** URL of the banner image associated with the job posting. */
+  bannerImageUrl: string;
+
+  /** Minimum notice time required before starting the job, in seconds. */
+  minimumNoticeTime: number;
+
+  /** Average work duration expected for the job, in seconds. */
+  averageWorkDuration: number;
+
+  /** ISO date string representing when the job posting was created. */
+  createdAt: string;
 
   /** (Optional) Numeric rating given to the job, typically after completion. */
   rating?: number;
 }
 
+/** Enum representing the possible states of a job. */
+export enum JobState {
+  WaitingForApproval = 0,
+  Ongoing = 1,
+  Finished = 2,
+  Cancelled = 3,
+  Disputed = 4,
+}
+
 export interface JobsData {
   jobs: Job[];
+}
+
+export interface JobPostingData {
+  jobPostings: JobPosting[];
 }

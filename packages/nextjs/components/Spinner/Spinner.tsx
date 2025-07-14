@@ -85,7 +85,7 @@ export const Spinner: React.FC<SpinnerProps> = ({
   ariaLabel = "Loading...",
   variant = "default",
 }) => {
-  const _color = color || getComputedStyle(document.documentElement).getPropertyValue("--color-accent").trim();
+  const _color = color || "var(--color-accent)";
 
   const BaseSpinner = () => {
     if (numberOfArcs < 1) {
