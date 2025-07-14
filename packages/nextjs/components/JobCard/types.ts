@@ -7,6 +7,8 @@ export interface UniversalJobCardProps extends React.HTMLAttributes<HTMLDivEleme
   title?: string;
   /** Description of the job card. */
   description?: string;
+  /** Extra information about the job card. */
+  extraInfo?: string;
   /** Category of the job card. */
   category?: string;
   /** Rating of the job card, displayed as stars. */

@@ -13,6 +13,7 @@ export function UniversalJobCard({
   avatarAddress,
   title,
   description,
+  extraInfo,
   category,
   rating,
   paymentDisplay,
@@ -72,18 +73,21 @@ export function UniversalJobCard({
         </div>
       </CardHeader>
 
-      <CardContent className="flex gap-2">
-        {rating !== undefined && (
-          <div className="flex items-center gap-1 text-yellow-500">
-            <StarIcon className="h-4 w-4 fill-current" />
-            <span className="text-sm font-medium">{rating}</span>
-          </div>
-        )}
-        {category && (
-          <div className="w-fit">
-            <Badge variant="secondary">{category}</Badge>
-          </div>
-        )}
+      <CardContent className="space-y-1">
+        {extraInfo && <p className="text-sm text-muted-foreground">{extraInfo}</p>}
+        <div className="flex gap-3">
+          {rating !== undefined && (
+            <div className="flex items-center gap-1 text-yellow-500">
+              <StarIcon className="h-4 w-4 fill-current" />
+              <span className="text-sm font-medium">{rating}</span>
+            </div>
+          )}
+          {category && (
+            <div className="w-fit">
+              <Badge variant="secondary">{category}</Badge>
+            </div>
+          )}
+        </div>
       </CardContent>
 
       <CardFooter className="flex justify-between items-center">

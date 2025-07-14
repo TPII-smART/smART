@@ -155,6 +155,25 @@ export default function CustomerCard({ job }: CustomerProps) {
     </div>
   );
 
+  const deadlineFormatted = job.deadline
+    ? new Date(Number(job.deadline) * 1000).toLocaleString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : undefined;
+
+  const timeText =
+    jobStatus === JobState.Ongoing
+      ? deadlineFormatted
+        ? `Deadline: ${deadlineFormatted}`
+        : "Deadline not set"
+      : jobStatus === JobState.WaitingForApproval
+        ? `Client expected duration: ${job.jobDuration} hours`
+        : undefined;
+
   // Action buttons based on user role and job state
   const getActionButtons = () => {
     const buttons = [];
@@ -214,6 +233,7 @@ export default function CustomerCard({ job }: CustomerProps) {
       avatarAddress={isFreelancer ? job.client : job.freelancer}
       title={job.title || "Untitled Job"}
       description={job.description || "No description provided"}
+      extraInfo={timeText}
       category={job.category}
       paymentDisplay={paymentDisplay}
       footerLeft={statusDisplay}
