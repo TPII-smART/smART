@@ -262,7 +262,7 @@ contract JobsContract {
             posting.freelancer,
             msg.sender,
             _payment,
-            posting.title,
+            _title,
             _description,
             posting.category,
             posting.bannerImageUrl,

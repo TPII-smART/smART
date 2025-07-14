@@ -3,22 +3,28 @@ import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { CheckCircle, XCircle } from "lucide-react";
 import { formatEther } from "viem";
+import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { JobState } from "~~/types/job.types";
 
 export default function CustomerCard({ address, job }: CustomerProps) {
+  const { address: userAddress } = useAccount();
   const tags = job.category ? [job.category] : [];
-  const jobStatus = job.completedAt
-    ? "Finished"
-    : job.cancelledAt
-      ? "Cancelled"
-      : job.acceptedAt
-        ? "Ongoing"
-        : "Available";
+  const jobStatus = job.state as JobState;
 
   const { writeContractAsync: writeContract } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
 
+  console.log("User Address:", userAddress);
+  console.log("Job Status:", jobStatus);
+  console.log("Job freelancer:", job.freelancer);
+
+  const awaitingFreelancer =
+    job.freelancer?.toLowerCase() !== userAddress?.toLowerCase() && jobStatus === JobState.WaitingForApproval;
+  console.log("Awaiting Freelancer:", awaitingFreelancer);
+
+  /*
   const toDate = (timestamp: string | number): string => {
     const ts = Number(timestamp);
     const date = new Date(ts * 1000); // convert from seconds to milliseconds
@@ -33,13 +39,28 @@ export default function CustomerCard({ address, job }: CustomerProps) {
           minute: "2-digit",
         });
   };
+  */
+
+  const handleAccept = async () => {
+    try {
+      console.log("Accepting job:", job);
+      if (job.state !== JobState.WaitingForApproval) return;
+      console.log("Writing contract to accept job:", job.postingId, job.jobId);
+      await writeContract({
+        functionName: "acceptJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
+      });
+    } catch (err) {
+      console.error("Accept job failed:", err);
+    }
+  };
 
   const handleCancel = async () => {
     try {
       if (!job.payment || !job.jobId) return;
       await writeContract({
         functionName: "cancelJob",
-        args: [BigInt(job.jobId)],
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
     } catch (err) {
       console.error("Cancel job failed:", err);
@@ -51,10 +72,18 @@ export default function CustomerCard({ address, job }: CustomerProps) {
       if (!job.jobId) return;
       await writeContract({
         functionName: "confirmCompletion",
-        args: [BigInt(job.jobId)],
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
     } catch (err) {
       console.error("Confirm job completion failed:", err);
+    }
+  };
+
+  const handleAction = async () => {
+    if (jobStatus === JobState.WaitingForApproval) {
+      await handleAccept();
+    } else {
+      await handleConfirmCompletion();
     }
   };
 
@@ -65,13 +94,15 @@ export default function CustomerCard({ address, job }: CustomerProps) {
         <div
           className={cn(
             "h-3 w-3 rounded-full border border-white",
-            jobStatus === "Ongoing"
-              ? "bg-green-500"
-              : jobStatus === "Finished"
-                ? "bg-amber-500"
-                : jobStatus === "Cancelled"
-                  ? "bg-red-500"
-                  : "bg-blue-300",
+            jobStatus === JobState.WaitingForApproval
+              ? "bg-gray-300"
+              : jobStatus === JobState.Ongoing
+                ? "bg-green-500"
+                : jobStatus === JobState.Finished
+                  ? "bg-amber-500"
+                  : jobStatus === JobState.Cancelled
+                    ? "bg-red-500"
+                    : "bg-blue-300",
           )}
         ></div>
       </div>
@@ -117,26 +148,37 @@ export default function CustomerCard({ address, job }: CustomerProps) {
         </div>
       )}
 
-      {/* Status and Dates */}
-      <div className="mt-4 text-center">
-        <h4 className="text-sm font-medium text-gray-900">Status: {jobStatus}</h4>
-
-        <p className="text-sm text-gray-900">
-          {job.createdAt ? `Created At: ${toDate(job.createdAt)}` : "Creation date not specified"}
-        </p>
-
-        {job.acceptedAt && job.completedAt ? (
-          <p className="text-sm text-gray-900">Completed At: {toDate(job.completedAt)}</p>
-        ) : job.cancelledAt ? (
-          <p className="text-sm text-gray-900">Cancelled At: {toDate(job.cancelledAt)}</p>
-        ) : (
-          <>
-            <p className="text-sm text-gray-900">
-              Accepted At: {job.acceptedAt ? toDate(job.acceptedAt) : "Not accepted yet"}
-            </p>
-            <p className="text-sm text-gray-900">Deadline: {job.deadline ? toDate(job.deadline) : "No deadline set"}</p>
-          </>
-        )}
+      {/* Status */}
+      <div className="mt-2 flex justify-center">
+        <span
+          className={cn(
+            "inline-block rounded-full px-3 py-1 text-xs font-medium",
+            jobStatus === JobState.WaitingForApproval
+              ? "bg-gray-300 text-gray-800"
+              : jobStatus === JobState.Ongoing
+                ? "bg-green-500 text-white"
+                : jobStatus === JobState.Finished
+                  ? "bg-amber-500 text-white"
+                  : jobStatus === JobState.Cancelled
+                    ? "bg-red-500 text-white"
+                    : "bg-blue-300 text-white",
+          )}
+        >
+          {(() => {
+            switch (jobStatus) {
+              case JobState.WaitingForApproval:
+                return "Waiting for Approval";
+              case JobState.Ongoing:
+                return "Ongoing";
+              case JobState.Finished:
+                return "Finished";
+              case JobState.Cancelled:
+                return "Cancelled";
+              default:
+                return "Unknown";
+            }
+          })()}
+        </span>
       </div>
 
       {/* Action Buttons */}
@@ -146,11 +188,11 @@ export default function CustomerCard({ address, job }: CustomerProps) {
           className={cn(
             "flex-1 rounded-full bg-white py-2 text-sm font-medium shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all",
             "hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)]",
-            jobStatus === "Finished" || jobStatus === "Cancelled"
+            jobStatus === JobState.Finished || jobStatus === JobState.Cancelled
               ? "text-gray-400 cursor-not-allowed opacity-50"
               : "text-red-600",
           )}
-          disabled={jobStatus === "Finished" || jobStatus === "Cancelled"}
+          disabled={jobStatus === JobState.Finished || jobStatus === JobState.Cancelled}
           onClick={handleCancel}
         >
           <XCircle className="mx-auto h-4 w-4" />
@@ -161,12 +203,12 @@ export default function CustomerCard({ address, job }: CustomerProps) {
           className={cn(
             "flex-1 rounded-full bg-white py-2 text-sm font-medium shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all",
             "hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)]",
-            jobStatus === "Finished" || jobStatus === "Cancelled" || jobStatus === "Available"
+            jobStatus === JobState.Finished || jobStatus === JobState.Cancelled || awaitingFreelancer
               ? "text-gray-400 cursor-not-allowed opacity-50"
               : "text-green-700",
           )}
-          disabled={jobStatus === "Finished" || jobStatus === "Cancelled" || jobStatus === "Available"}
-          onClick={handleConfirmCompletion}
+          disabled={jobStatus === JobState.Finished || jobStatus === JobState.Cancelled || awaitingFreelancer}
+          onClick={handleAction}
         >
           <CheckCircle className="mx-auto h-4 w-4" />
         </button>
