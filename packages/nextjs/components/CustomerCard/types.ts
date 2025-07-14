@@ -1,6 +1,6 @@
 import { Job } from "~~/types/job.types";
 
-export type CustomerProps = {
+export type CustomerProps = React.HTMLAttributes<HTMLDivElement> & {
   /**
    * The job details.
    * This includes information such as job ID,

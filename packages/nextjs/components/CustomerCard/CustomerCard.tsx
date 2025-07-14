@@ -7,7 +7,7 @@ import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobState } from "~~/types/job.types";
 
-export default function CustomerCard({ job, reload }: CustomerProps) {
+export default function CustomerCard({ job, reload, className }: CustomerProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobState;
 
@@ -260,7 +260,7 @@ export default function CustomerCard({ job, reload }: CustomerProps) {
       paymentDisplay={paymentDisplay}
       footerLeft={statusDisplay}
       footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
-      className="hover:shadow-lg transition-shadow duration-200"
+      className={className}
     />
   );
 }
