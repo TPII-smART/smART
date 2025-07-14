@@ -9,4 +9,8 @@ export type CustomerProps = {
    * timestamps related to the job's lifecycle.
    */
   job: Job;
+  /**
+   * A function to reload the job data.
+   */
+  reload?: () => Promise<void>;
 };

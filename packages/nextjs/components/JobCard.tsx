@@ -12,9 +12,10 @@ import { JobPosting } from "~~/types/job.types";
 
 interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
   jobPosting?: JobPosting;
+  reload?: () => Promise<void>;
 }
 
-export function JobCard({ jobPosting, className, ...props }: JobCardProps) {
+export function JobCard({ jobPosting, className, reload, ...props }: JobCardProps) {
   const { address } = useAccount();
   const [showModal, setShowModal] = React.useState(false);
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
@@ -40,6 +41,7 @@ export function JobCard({ jobPosting, className, ...props }: JobCardProps) {
         ],
         value: BigInt(jobPosting?.basePayment),
       });
+      if (reload) await reload();
       setShowModal(false);
     } catch (err) {
       console.error("Create job failed:", err);

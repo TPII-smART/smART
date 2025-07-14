@@ -8,7 +8,7 @@ import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobState } from "~~/types/job.types";
 
-export default function CustomerCard({ job }: CustomerProps) {
+export default function CustomerCard({ job, reload }: CustomerProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobState;
 
@@ -99,6 +99,7 @@ export default function CustomerCard({ job }: CustomerProps) {
         functionName: "acceptJob",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
+      if (reload) await reload();
     } catch (err) {
       console.error("Accept job failed:", err);
     }
@@ -111,6 +112,7 @@ export default function CustomerCard({ job }: CustomerProps) {
         functionName: "cancelJob",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
+      if (reload) await reload();
     } catch (err) {
       console.error("Cancel job failed:", err);
     }
@@ -123,6 +125,7 @@ export default function CustomerCard({ job }: CustomerProps) {
         functionName: "confirmCompletion",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
+      if (reload) await reload();
     } catch (err) {
       console.error("Confirm job completion failed:", err);
     }

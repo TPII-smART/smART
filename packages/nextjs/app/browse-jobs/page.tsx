@@ -31,7 +31,7 @@ const optionsSorts = [
 
 export default function BrowsePage() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery<JobPostingData>({
+  const { data, isLoading, refetch } = useQuery<JobPostingData>({
     queryKey: ["jobPostings"],
     queryFn: fetchJobPostings,
   });
@@ -56,6 +56,12 @@ export default function BrowsePage() {
     contractName: "JobsContract",
   });
 
+  const reload = async () => {
+    queryClient.invalidateQueries({ queryKey: ["jobPostings"] });
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay to ensure UI updates
+    await refetch();
+  };
+
   const handleSubmit = async () => {
     try {
       await createJobPosting({
@@ -70,8 +76,8 @@ export default function BrowsePage() {
           form.category,
         ],
       });
+      await reload();
       setShowModal(false);
-      queryClient.invalidateQueries({ queryKey: ["jobPostings"] });
     } catch (err) {
       console.error("Failed to create job:", err);
     }
@@ -118,7 +124,7 @@ export default function BrowsePage() {
   useEffect(() => {
     setFilteredJobs(filterJobs);
     fetchMaxPaymentETH();
-  }, [filterJobs, fetchMaxPaymentETH]);
+  }, [filterJobs, fetchMaxPaymentETH, data]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -172,7 +178,7 @@ export default function BrowsePage() {
             <div className="flex-1 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredJobs.map(jobPosting => (
-                  <JobCard jobPosting={jobPosting} key={jobPosting.postingId} />
+                  <JobCard jobPosting={jobPosting} key={jobPosting.postingId} reload={reload} />
                 ))}
               </div>
             </div>
