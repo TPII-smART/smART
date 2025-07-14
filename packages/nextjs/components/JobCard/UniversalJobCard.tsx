@@ -6,7 +6,7 @@ import { UniversalJobCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
-import { StarIcon } from "lucide-react";
+import { CopyIcon, StarIcon } from "lucide-react";
 
 export function UniversalJobCard({
   bannerUrl,
@@ -22,6 +22,17 @@ export function UniversalJobCard({
   className,
   ...props
 }: UniversalJobCardProps) {
+  const handleCopyAddress = async () => {
+    if (avatarAddress) {
+      try {
+        await navigator.clipboard.writeText(avatarAddress);
+        // You could add a toast notification here
+      } catch (err) {
+        console.error("Failed to copy address:", err);
+      }
+    }
+  };
+
   return (
     <Card
       className={cn(
@@ -58,11 +69,27 @@ export function UniversalJobCard({
         )}
       </div>
 
-      <CardHeader className="relative">
+      <CardHeader className="relative overflow-visible">
         {avatarAddress && (
-          <div className="absolute -top-12 right-6 z-10">
-            <div className="h-24 w-24 overflow-hidden rounded-full p-1 shadow-lg ring-4 ring-background transition-transform duration-300 group-hover:scale-105">
+          <div className="absolute -top-12 right-6 z-20 group/avatar">
+            <div
+              className="h-24 w-24 rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer"
+              onClick={handleCopyAddress}
+            >
               <BlockieAvatar address={avatarAddress} size={96} />
+              {/* TODO: Go to profile page on click, for now just copy address */}
+              {/* Hover overlay with darkening effect and copy icon */}
+              <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                <CopyIcon className="h-6 w-6 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
+              </div>
+              {/* Address tooltip that slides up from avatar */}
+              <div className="absolute -top-12 right-0 opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 ease-out translate-y-2 group-hover/avatar:translate-y-0 z-30 pointer-events-none">
+                <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap font-mono shadow-lg backdrop-blur-sm">
+                  {avatarAddress}
+                  {/* Arrow pointing down to avatar */}
+                  <div className="absolute -bottom-1 right-6 w-2 h-2 bg-black/90 rotate-45"></div>
+                </div>
+              </div>
             </div>
           </div>
         )}
