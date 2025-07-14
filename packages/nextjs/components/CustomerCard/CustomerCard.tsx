@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle, Clock, Download, Play, Send, XCircle } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobState } from "~~/types/job.types";
 
@@ -184,10 +183,15 @@ export default function CustomerCard({ job, reload }: CustomerProps) {
     // Cancel button - available for both parties until job is finished
     if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
       buttons.push(
-        <Button key="cancel" variant="danger" size="sm" onClick={handleCancel} disabled={isMining}>
-          <XCircle className="h-4 w-4 mr-1" />
-          Cancel
-        </Button>,
+        <button
+          key="cancel"
+          onClick={handleCancel}
+          disabled={isMining}
+          title="Cancel Job"
+          className="p-2 rounded-lg border-2 border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <XCircle className="h-4 w-4" />
+        </button>,
       );
     }
 
@@ -195,18 +199,28 @@ export default function CustomerCard({ job, reload }: CustomerProps) {
     if (isFreelancer) {
       if (jobStatus === JobState.WaitingForApproval) {
         buttons.push(
-          <Button key="accept" variant="primary" size="sm" onClick={handleAccept} disabled={isMining}>
-            <CheckCircle className="h-4 w-4 mr-1" />
-            Accept Job
-          </Button>,
+          <button
+            key="accept"
+            onClick={handleAccept}
+            disabled={isMining}
+            title="Accept Job"
+            className="p-2 rounded-lg border-2 border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <CheckCircle className="h-4 w-4" />
+          </button>,
         );
       }
       if (jobStatus === JobState.Ongoing && !job.freelancerDelivered) {
         buttons.push(
-          <Button key="deliver" variant="primary" size="sm" onClick={handleConfirmCompletion} disabled={isMining}>
-            <Send className="h-4 w-4 mr-1" />
-            Mark Delivered
-          </Button>,
+          <button
+            key="deliver"
+            onClick={handleConfirmCompletion}
+            disabled={isMining}
+            title="Mark as Delivered"
+            className="p-2 rounded-lg border-2 border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Send className="h-4 w-4" />
+          </button>,
         );
       }
     }
@@ -216,10 +230,15 @@ export default function CustomerCard({ job, reload }: CustomerProps) {
       if (jobStatus === JobState.Ongoing) {
         if (job.freelancerDelivered && !job.clientReceived) {
           buttons.push(
-            <Button key="receive" variant="outline" size="sm" onClick={handleConfirmCompletion} disabled={isMining}>
-              <Download className="h-4 w-4 mr-1" />
-              Mark Received
-            </Button>,
+            <button
+              key="receive"
+              onClick={handleConfirmCompletion}
+              disabled={isMining}
+              title="Mark as Received"
+              className="p-2 rounded-lg border-2 border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="h-4 w-4" />
+            </button>,
           );
         }
       }
