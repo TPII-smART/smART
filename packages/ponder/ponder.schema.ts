@@ -1,4 +1,4 @@
-import { onchainTable } from "ponder";
+import { onchainTable, primaryKey } from "ponder";
 
 // JobPosting table
 export const jobPosting = onchainTable("jobPosting", (t) => ({
@@ -14,22 +14,26 @@ export const jobPosting = onchainTable("jobPosting", (t) => ({
   createdAt: t.bigint().notNull(),
 }));
 
-// Job table (references JobPosting)
+// Job table
 export const job = onchainTable("job", (t) => ({
-  jobId: t.bigint().primaryKey(),
-  postingId: t.bigint().notNull(), // Foreign key to JobPosting
+  jobId: t.bigint().notNull(),
+  postingId: t.bigint().notNull(),
   client: t.hex().notNull(),
   freelancer: t.hex().notNull(),
   payment: t.bigint().notNull(),
   title: t.text().notNull(),
   description: t.text().notNull(),
   category: t.text().notNull(),
-  bannerImageUrl: t.text().notNull(), // Optional, can be null if not provided
+  bannerImageUrl: t.text().notNull(),
   jobDuration: t.bigint().notNull(),
   deadline: t.bigint(),
-  state: t.integer().notNull(), // Enum: 0=WaitingForApproval, 1=Ongoing, etc.
+  state: t.integer().notNull(),
   createdAt: t.bigint().notNull(),
   acceptedAt: t.bigint(),
   clientReceived: t.boolean().notNull(),
   freelancerDelivered: t.boolean().notNull(),
+}),
+ (table) => ({
+  pk: primaryKey({ columns: [table.jobId, table.postingId] }),
 }));
+

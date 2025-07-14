@@ -1,13 +1,9 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Modal from "./Modal/Modal";
-import { Badge } from "@/components/Badge";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
+import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
 import { InputBase } from "@/components/scaffold-eth";
-import { cn } from "@/lib/utils";
-import { StarIcon } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
@@ -52,47 +48,57 @@ export function JobCard({ jobPosting, className, ...props }: JobCardProps) {
 
   const isMyOwnJob = jobPosting?.freelancer?.toLowerCase() === address?.toLowerCase();
 
+  // Payment display with formatting and truncation
+  const formatEthPrice = (wei: bigint) => {
+    const eth = formatEther(wei);
+    const num = parseFloat(eth);
+    if (num === 0) return "Free";
+    if (num < 0.001) return `${num.toFixed(6)} ETH`;
+    if (num < 1) return `${num.toFixed(4)} ETH`;
+    return `${num.toFixed(3)} ETH`;
+  };
+
+  const paymentDisplay = (
+    <span
+      className="text-lg font-bold cursor-help text-content-primary"
+      title={jobPosting?.basePayment ? `${formatEther(BigInt(jobPosting.basePayment))} ETH` : "Free"}
+    >
+      {jobPosting?.basePayment ? formatEthPrice(BigInt(jobPosting.basePayment)) : "Free"}
+    </span>
+  );
+
+  // Hire button
+  const hireButton = !isMyOwnJob ? (
+    <Button variant="primary" onClick={() => setShowModal(true)}>
+      Hire
+    </Button>
+  ) : null;
+
   return (
     <>
-      <Card className={cn("group relative overflow-hidden transition-all hover:shadow-lg", className)} {...props}>
-        {/* Banner Image */}
-        {jobPosting?.bannerImageUrl && (
-          <Image src={jobPosting.bannerImageUrl} alt="Job Banner" className="h-40 w-full object-cover" />
-        )}
-        <CardHeader>
-          <CardTitle>{jobPosting?.title}</CardTitle>
-          <CardDescription className="mt-2">{jobPosting?.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          <div className="w-fit">
-            <Badge variant="secondary">{jobPosting?.category}</Badge>
-          </div>
-          <div className="flex items-center gap-1 text-yellow-500">
-            <StarIcon className="h-4 w-4 fill-current" />
-            <span className="text-sm font-medium">{jobPosting?.rating ? jobPosting.rating : 0}</span>
-          </div>
-        </CardContent>
-        <CardFooter className="justify-between">
-          <span className="text-lg font-bold">
-            {jobPosting?.basePayment ? `${formatEther(BigInt(jobPosting.basePayment))} ETH` : "Free"}
-          </span>
-          {!isMyOwnJob && (
-            <Button variant="primary" onClick={() => setShowModal(true)}>
-              Hire
-            </Button>
-          )}
-        </CardFooter>
-      </Card>
+      <UniversalJobCard
+        bannerUrl={jobPosting?.bannerImageUrl}
+        avatarAddress={jobPosting?.freelancer}
+        title={jobPosting?.title}
+        description={jobPosting?.description}
+        category={jobPosting?.category}
+        rating={jobPosting?.rating ? jobPosting.rating : 0}
+        paymentDisplay={paymentDisplay}
+        footerLeft={<div className="flex items-center gap-4">{paymentDisplay}</div>}
+        footerRight={hireButton}
+        className={className}
+        {...props}
+      />
 
       {/* Confirm Modal */}
       <Modal
-        title="Create a job"
+        title="Hire this Freelancer"
         variant="form"
         onClose={() => setShowModal(false)}
         onSubmit={handleCreateJob}
         isOpen={showModal}
         loading={isMining}
-        description="You are about to create a job based on this posting."
+        description={`You are about to create a job based on this posting. The price will be deducted from your wallet: ${jobPosting?.basePayment ? `${formatEther(BigInt(jobPosting.basePayment))} ETH` : "Free"}`}
       >
         <div className="space-y-4">
           <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />

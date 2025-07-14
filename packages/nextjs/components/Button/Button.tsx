@@ -10,15 +10,51 @@ const Button: React.FC<ButtonProps> = ({
   style,
   loading,
   icon,
+  size = "md",
   disabled = false,
 }) => {
+  const getSizeStyles = (size: string): React.CSSProperties => {
+    switch (size) {
+      case "sm":
+        return {
+          padding: "0.5rem 1rem",
+          fontSize: "14px",
+          borderRadius: "0.375rem",
+        };
+      case "lg":
+        return {
+          padding: "1.25rem 2.5rem",
+          fontSize: "20px",
+          borderRadius: "0.625rem",
+        };
+      case "md":
+      default:
+        return {
+          padding: "1rem 2rem",
+          fontSize: "18px",
+          borderRadius: "0.5rem",
+        };
+    }
+  };
+
+  const getSpinnerSize = (size: string): number => {
+    switch (size) {
+      case "sm":
+        return 20;
+      case "lg":
+        return 36;
+      case "md":
+      default:
+        return 30;
+    }
+  };
+
   const getStyle = (variant: string): React.CSSProperties => {
+    const sizeStyles = getSizeStyles(size);
+
     const shared: React.CSSProperties = {
-      borderRadius: "0.5rem",
-      padding: "1rem 2rem",
-      fontSize: "18px",
       fontWeight: "bold",
-      cursor: "pointer",
+      cursor: disabled ? "not-allowed" : "pointer",
       width: "fit-content",
       display: "inline-flex",
       alignItems: "center",
@@ -27,6 +63,8 @@ const Button: React.FC<ButtonProps> = ({
       boxSizing: "border-box",
       lineHeight: "1",
       opacity: disabled ? 0.5 : 1,
+      transition: "all 0.2s ease-in-out",
+      ...sizeStyles,
     };
 
     switch (variant) {
@@ -39,16 +77,16 @@ const Button: React.FC<ButtonProps> = ({
         };
       case "danger":
         return {
-          backgroundColor: "var(--color-error)", // A strong red
-          color: "#FFFFFF", // White text
+          backgroundColor: "var(--color-error)",
+          color: "#FFFFFF",
           border: "2px solid var(--color-error)",
           ...shared,
         };
       default:
         // Primary button as default
         return {
-          backgroundColor: "var(--color-accent)", // A shade of orange
-          color: "var(--color-primary-content)", // Dark gray for text
+          backgroundColor: "var(--color-accent)",
+          color: "var(--color-primary-content)",
           border: "2px solid var(--color-accent)",
           ...shared,
         };
@@ -56,16 +94,17 @@ const Button: React.FC<ButtonProps> = ({
   };
 
   const _style = getStyle(variant);
+  const spinnerSize = getSpinnerSize(size);
 
   return (
-    <button style={{ ..._style, ...style }} onClick={onClick} className={className}>
-      {loading && <Spinner numberOfArcs={1} size={30} sizeMultiplier={1} color={"var(--color-primary)"} />}
+    <button style={{ ..._style, ...style }} onClick={onClick} className={className} disabled={disabled || loading}>
+      {loading && <Spinner numberOfArcs={1} size={spinnerSize} sizeMultiplier={1} color={"var(--color-primary)"} />}
       <div
         style={{
           opacity: loading ? 0 : 1,
           width: loading ? 0 : "",
           display: "inline-flex",
-          gap: "8px",
+          gap: size === "sm" ? "6px" : "8px",
           alignItems: "center",
           justifyContent: "center",
         }}

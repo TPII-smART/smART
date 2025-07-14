@@ -1,51 +1,100 @@
 import { CustomerProps } from "./types";
-import { BlockieAvatar } from "@/components/scaffold-eth";
+import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
 import { cn } from "@/lib/utils";
-import { CheckCircle, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Clock, Download, Play, Send, XCircle } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobState } from "~~/types/job.types";
 
-export default function CustomerCard({ address, job }: CustomerProps) {
+export default function CustomerCard({ job }: CustomerProps) {
   const { address: userAddress } = useAccount();
-  const tags = job.category ? [job.category] : [];
   const jobStatus = job.state as JobState;
 
-  const { writeContractAsync: writeContract } = useScaffoldWriteContract({
+  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
 
-  console.log("User Address:", userAddress);
-  console.log("Job Status:", jobStatus);
-  console.log("Job freelancer:", job.freelancer);
+  const isFreelancer = job.freelancer?.toLowerCase() === userAddress?.toLowerCase();
+  const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
 
-  const awaitingFreelancer =
-    job.freelancer?.toLowerCase() !== userAddress?.toLowerCase() && jobStatus === JobState.WaitingForApproval;
-  console.log("Awaiting Freelancer:", awaitingFreelancer);
+  // Enhanced status logic considering both parties
+  const getJobStatus = () => {
+    if (jobStatus === JobState.WaitingForApproval) {
+      return {
+        label: "Waiting for Approval",
+        color: "bg-amber-500",
+        icon: Clock,
+        description: isFreelancer ? "Waiting for client approval" : "Awaiting your approval",
+      };
+    }
 
-  /*
-  const toDate = (timestamp: string | number): string => {
-    const ts = Number(timestamp);
-    const date = new Date(ts * 1000); // convert from seconds to milliseconds
+    if (jobStatus === JobState.Ongoing) {
+      // Check delivery status for ongoing jobs
+      if (job.freelancerDelivered && job.clientReceived) {
+        return {
+          label: "Completed - Awaiting Payment",
+          color: "bg-blue-500",
+          icon: CheckCircle,
+          description: "Work delivered and received",
+        };
+      } else if (job.freelancerDelivered && !job.clientReceived) {
+        return {
+          label: "Delivered - Awaiting Review",
+          color: "bg-purple-500",
+          icon: Send,
+          description: "Work delivered, awaiting client review",
+        };
+      } else if (!job.freelancerDelivered && job.clientReceived) {
+        return {
+          label: "In Progress - Client Ready",
+          color: "bg-green-500",
+          icon: Play,
+          description: "Client ready, awaiting delivery",
+        };
+      } else {
+        return {
+          label: "In Progress",
+          color: "bg-green-500",
+          icon: Play,
+          description: "Work in progress",
+        };
+      }
+    }
 
-    return isNaN(date.getTime())
-      ? "Invalid date"
-      : date.toLocaleString(undefined, {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        });
+    if (jobStatus === JobState.Finished) {
+      return {
+        label: "Completed",
+        color: "bg-emerald-500",
+        icon: CheckCircle,
+        description: "Job successfully completed",
+      };
+    }
+
+    if (jobStatus === JobState.Cancelled) {
+      return {
+        label: "Cancelled",
+        color: "bg-red-500",
+        icon: XCircle,
+        description: "Job was cancelled",
+      };
+    }
+
+    return {
+      label: "Unknown",
+      color: "bg-gray-500",
+      icon: AlertCircle,
+      description: "Unknown status",
+    };
   };
-  */
+
+  const statusInfo = getJobStatus();
+  const StatusIcon = statusInfo.icon;
 
   const handleAccept = async () => {
     try {
-      console.log("Accepting job:", job);
       if (job.state !== JobState.WaitingForApproval) return;
-      console.log("Writing contract to accept job:", job.postingId, job.jobId);
       await writeContract({
         functionName: "acceptJob",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
@@ -79,140 +128,97 @@ export default function CustomerCard({ address, job }: CustomerProps) {
     }
   };
 
-  const handleAction = async () => {
-    if (jobStatus === JobState.WaitingForApproval) {
-      await handleAccept();
-    } else {
-      await handleConfirmCompletion();
-    }
+  // Payment display formatting
+  const formatEthPrice = (wei: bigint) => {
+    const eth = formatEther(wei);
+    const num = parseFloat(eth);
+    if (num === 0) return "Free";
+    if (num < 0.001) return `${num.toFixed(6)} ETH`;
+    if (num < 1) return `${num.toFixed(4)} ETH`;
+    return `${num.toFixed(3)} ETH`;
   };
 
-  return (
-    <div className="group relative overflow-hidden rounded-3xl bg-white p-6 shadow-[12px_12px_24px_rgba(0,0,0,0.15),-12px_-12px_24px_rgba(255,255,255,0.9)] transition-all duration-300 hover:shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.8)]">
-      {/* Status indicator */}
-      <div className="absolute right-4 top-4">
-        <div
-          className={cn(
-            "h-3 w-3 rounded-full border border-white",
-            jobStatus === JobState.WaitingForApproval
-              ? "bg-gray-300"
-              : jobStatus === JobState.Ongoing
-                ? "bg-green-500"
-                : jobStatus === JobState.Finished
-                  ? "bg-amber-500"
-                  : jobStatus === JobState.Cancelled
-                    ? "bg-red-500"
-                    : "bg-blue-300",
-          )}
-        ></div>
-      </div>
-
-      {/* Profile Photo */}
-      <div className="mb-4 flex justify-center">
-        <div className="relative">
-          <div className="h-28 w-28 overflow-hidden rounded-full bg-white p-1 shadow-[inset_6px_6px_12px_rgba(0,0,0,0.1),inset_-6px_-6px_12px_rgba(255,255,255,0.9)]">
-            <BlockieAvatar address={address} size={120} />
-          </div>
-        </div>
-      </div>
-
-      {/* Profile Info */}
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900">{job.title || "Untitled Job"}</h3>
-        <p className="text-sm text-gray-600 mt-1">
-          {job.freelancer ? `Freelancer: ${job.freelancer}` : "No freelancer assigned"}
-        </p>
-        <p className="text-sm text-gray-600 mt-1">{job.client ? `Client: ${job.client}` : "No client assigned"}</p>
-        <p className="text-sm text-gray-600 mt-1">
-          {job.payment ? `Payment: ${formatEther(BigInt(job.payment))} ETH` : "Payment not specified"}
-        </p>
-        <p className="text-sm text-gray-600 mt-1">
-          {job.description ? `Description: ${job.description}` : "No description provided"}
-        </p>
-      </div>
-
-      {/* Tags */}
-      {tags.length > 0 && (
-        <div className="mt-4 flex justify-center gap-2">
-          {tags.map((tag, i) => (
-            <span
-              key={i}
-              className={cn(
-                "inline-block rounded-full bg-white px-3 py-1 text-xs font-medium shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)]",
-                tag === "Premium" ? "text-blue-600" : "text-gray-600",
-              )}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Status */}
-      <div className="mt-2 flex justify-center">
-        <span
-          className={cn(
-            "inline-block rounded-full px-3 py-1 text-xs font-medium",
-            jobStatus === JobState.WaitingForApproval
-              ? "bg-gray-300 text-gray-800"
-              : jobStatus === JobState.Ongoing
-                ? "bg-green-500 text-white"
-                : jobStatus === JobState.Finished
-                  ? "bg-amber-500 text-white"
-                  : jobStatus === JobState.Cancelled
-                    ? "bg-red-500 text-white"
-                    : "bg-blue-300 text-white",
-          )}
-        >
-          {(() => {
-            switch (jobStatus) {
-              case JobState.WaitingForApproval:
-                return "Waiting for Approval";
-              case JobState.Ongoing:
-                return "Ongoing";
-              case JobState.Finished:
-                return "Finished";
-              case JobState.Cancelled:
-                return "Cancelled";
-              default:
-                return "Unknown";
-            }
-          })()}
-        </span>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="mt-6 flex gap-2">
-        {/* Cancel Button */}
-        <button
-          className={cn(
-            "flex-1 rounded-full bg-white py-2 text-sm font-medium shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all",
-            "hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)]",
-            jobStatus === JobState.Finished || jobStatus === JobState.Cancelled
-              ? "text-gray-400 cursor-not-allowed opacity-50"
-              : "text-red-600",
-          )}
-          disabled={jobStatus === JobState.Finished || jobStatus === JobState.Cancelled}
-          onClick={handleCancel}
-        >
-          <XCircle className="mx-auto h-4 w-4" />
-        </button>
-
-        {/* Confirm Completion Button */}
-        <button
-          className={cn(
-            "flex-1 rounded-full bg-white py-2 text-sm font-medium shadow-[6px_6px_12px_rgba(0,0,0,0.1),-6px_-6px_12px_rgba(255,255,255,0.9)] transition-all",
-            "hover:shadow-[2px_2px_4px_rgba(0,0,0,0.05),-2px_-2px_4px_rgba(255,255,255,0.8)]",
-            jobStatus === JobState.Finished || jobStatus === JobState.Cancelled || awaitingFreelancer
-              ? "text-gray-400 cursor-not-allowed opacity-50"
-              : "text-green-700",
-          )}
-          disabled={jobStatus === JobState.Finished || jobStatus === JobState.Cancelled || awaitingFreelancer}
-          onClick={handleAction}
-        >
-          <CheckCircle className="mx-auto h-4 w-4" />
-        </button>
-      </div>
+  const paymentDisplay = (
+    <div className="flex items-center gap-2">
+      <span className="text-lg font-bold text-content-primary">
+        {job.payment ? formatEthPrice(BigInt(job.payment)) : "Free"}
+      </span>
     </div>
+  );
+
+  // Status display for footer left
+  const statusDisplay = (
+    <div className="flex items-center gap-2">
+      <div className={cn("h-3 w-3 rounded-full", statusInfo.color)}></div>
+      <span className="text-sm font-medium text-content-secondary">{statusInfo.label}</span>
+      <StatusIcon className="h-4 w-4 text-content-tertiary" />
+    </div>
+  );
+
+  // Action buttons based on user role and job state
+  const getActionButtons = () => {
+    const buttons = [];
+
+    // Cancel button - available for both parties until job is finished
+    if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
+      buttons.push(
+        <Button key="cancel" variant="danger" size="sm" onClick={handleCancel} disabled={isMining}>
+          <XCircle className="h-4 w-4 mr-1" />
+          Cancel
+        </Button>,
+      );
+    }
+
+    // Freelancer actions
+    if (isFreelancer) {
+      if (jobStatus === JobState.WaitingForApproval) {
+        buttons.push(
+          <Button key="accept" variant="primary" size="sm" onClick={handleAccept} disabled={isMining}>
+            <CheckCircle className="h-4 w-4 mr-1" />
+            Accept Job
+          </Button>,
+        );
+      }
+      if (jobStatus === JobState.Ongoing && !job.freelancerDelivered) {
+        buttons.push(
+          <Button key="deliver" variant="primary" size="sm" onClick={handleConfirmCompletion} disabled={isMining}>
+            <Send className="h-4 w-4 mr-1" />
+            Mark Delivered
+          </Button>,
+        );
+      }
+    }
+
+    // Client actions
+    if (isClient) {
+      if (jobStatus === JobState.Ongoing) {
+        if (job.freelancerDelivered && !job.clientReceived) {
+          buttons.push(
+            <Button key="receive" variant="outline" size="sm" onClick={handleConfirmCompletion} disabled={isMining}>
+              <Download className="h-4 w-4 mr-1" />
+              Mark Received
+            </Button>,
+          );
+        }
+      }
+    }
+
+    return buttons;
+  };
+
+  const actionButtons = getActionButtons();
+
+  return (
+    <UniversalJobCard
+      bannerUrl={job.bannerImageUrl}
+      avatarAddress={isFreelancer ? job.client : job.freelancer}
+      title={job.title || "Untitled Job"}
+      description={job.description || "No description provided"}
+      category={job.category}
+      paymentDisplay={paymentDisplay}
+      footerLeft={statusDisplay}
+      footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
+      className="hover:shadow-lg transition-shadow duration-200"
+    />
   );
 }
