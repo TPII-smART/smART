@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiProvider } from "wagmi";
 import {
+  BookOpenIcon,
   BriefcaseIcon,
   BugAntIcon,
   HomeIcon,
@@ -43,6 +44,11 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               label: "My hires",
               href: "/hires",
               icon: WrenchScrewdriverIcon,
+            },
+            {
+              label: "Browse jobs",
+              href: "/browse-jobs",
+              icon: BookOpenIcon,
             },
             {
               label: "Ponder",
