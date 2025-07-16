@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Badge } from "../Badge";
+import { jobCategories } from "./JobCategory/jobCategory.data";
 import { UniversalJobCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
@@ -111,7 +112,7 @@ export function UniversalJobCard({
           )}
           {category && (
             <div className="w-fit">
-              <Badge variant="secondary">{category}</Badge>
+              <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
             </div>
           )}
         </div>
