@@ -46,4 +46,10 @@ export interface ButtonProps {
    * This can be any React node, such as an SVG or an icon component.
    */
   icon?: React.ReactNode;
+
+  /**
+   * Optional tooltip text to be displayed on hover.
+   * This can provide additional context or information about the button's action.
+   */
+  tooltip?: string;
 }

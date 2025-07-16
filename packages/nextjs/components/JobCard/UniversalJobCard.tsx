@@ -38,6 +38,7 @@ export function UniversalJobCard({
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 ease-in-out",
+        // Only shadow and translate on hover, not scale or blur
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
         className,
       )}
@@ -47,19 +48,25 @@ export function UniversalJobCard({
       <div className="relative h-36 w-full overflow-hidden">
         {bannerUrl ? (
           <>
-            <img
-              src={bannerUrl}
-              alt="Banner"
-              width={600}
-              height={144}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            <div className="h-full w-full relative">
+              <img
+                src={bannerUrl}
+                alt="Banner"
+                width={600}
+                height={144}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm"
+                style={{ willChange: "transform, filter" }}
+              />
+              {/* Overlay for better text readability, not blurred */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+            </div>
           </>
         ) : (
           // Glassmorphism banner when no image
-          <div className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm">
+          <div
+            className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:blur-sm"
+            style={{ willChange: "transform, filter" }}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-tl from-black/5 to-transparent" />
             {/* Subtle pattern overlay */}
