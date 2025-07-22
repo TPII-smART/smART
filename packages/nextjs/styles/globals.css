@@ -16,12 +16,12 @@
 
   --color-primary: #f0f4f7;
   --color-primary-content: #37474f;
-  --color-secondary: #fff3e0;
-  --color-secondary-content: #607d8b;
+  --color-secondary: #d1cfcf;
+  --color-secondary-content: #1c2529;
   --color-accent: #fb8c00;
   --color-accent-hover: #cc7103;
   --color-surface: #fcfcfc;
-  --color-border: #90caf9;
+  --color-border: #85c8ff;
   --color-info: #93bbfb;
   --color-success: #34eeb6;
   --color-warning: #ffcf72;
@@ -36,13 +36,13 @@
 @plugin "daisyui/theme" {
   name: "dark";
 
-  --color-primary: #03152e;
+  --color-primary: #111314;
   --color-primary-content: #fafafa;
-  --color-secondary: #313b4a;
+  --color-secondary: #2b2a2a;
   --color-secondary-content: #e1f5fe;
-  --color-accent: #db7a00;
+  --color-accent: #c97000;
   --color-accent-hover: #cc7103;
-  --color-surface: #041f3b;
+  --color-surface: #1c1c1c;
   --color-border: #234969;
   --color-base-content: #f9fbff;
   --color-info: #385183;
@@ -72,7 +72,7 @@
   ::before,
   ::backdrop,
   ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
+    border-color: var(--color-border);
   }
 
   p {
