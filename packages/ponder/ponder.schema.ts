@@ -37,3 +37,40 @@ export const job = onchainTable("job", (t) => ({
   pk: primaryKey({ columns: [table.jobId, table.postingId] }),
 }));
 
+// Gigs table
+export const gig = onchainTable("gig", (t) => ({
+  gigId: t.bigint().primaryKey(),
+  client: t.hex().notNull(),
+  acceptedFreelancer: t.hex(),
+  maxPayment: t.bigint().notNull(),
+  finalPayment: t.bigint(),
+  title: t.text().notNull(),
+  description: t.text().notNull(),
+  category: t.text().notNull(),
+  maxDurationInHours: t.bigint().notNull(),
+  finalDurationInHours: t.bigint(),
+  deadline: t.bigint(),
+  state: t.integer().notNull(),
+  createdAt: t.bigint().notNull(),
+  acceptedAt: t.bigint(),
+  clientReceived: t.boolean().notNull(),
+  freelancerDelivered: t.boolean().notNull(),
+  acceptedApplicationId: t.bigint(),
+}));
+
+// Gig Applications table
+export const gigApplication = onchainTable("gigApplication", (t) => ({
+  applicationId: t.bigint().notNull(),
+  gigId: t.bigint().notNull(),
+  freelancer: t.hex().notNull(),
+  proposedPayment: t.bigint().notNull(),
+  proposedDurationInHours: t.bigint().notNull(),
+  state: t.integer().notNull(),
+  createdAt: t.bigint().notNull(),
+  proposalComment: t.text().notNull(),
+  rejectionComment: t.text(),
+}),
+(table) => ({
+  pk: primaryKey({ columns: [table.applicationId, table.gigId] }),
+}));
+

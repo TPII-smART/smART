@@ -91,6 +91,7 @@ contract GigsContract {
         uint256 indexed applicationId,
         address indexed freelancer,
         uint256 finalPayment,
+        uint256 finalDurationInHours,
         uint256 deadline
     );
 
@@ -323,6 +324,7 @@ contract GigsContract {
             _applicationId,
             application.freelancer,
             application.proposedPayment,
+            application.proposedDurationInHours,
             gig.deadline
         );
     }
