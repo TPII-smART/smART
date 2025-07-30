@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { Badge } from "../Badge";
+import { jobCategories } from "./JobCategory/jobCategory.data";
 import { UniversalJobCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
@@ -37,7 +38,8 @@ export function UniversalJobCard({
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 ease-in-out",
-        "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02]",
+        // Only shadow and translate on hover, not scale or blur
+        "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
         className,
       )}
       {...props}
@@ -46,19 +48,25 @@ export function UniversalJobCard({
       <div className="relative h-36 w-full overflow-hidden">
         {bannerUrl ? (
           <>
-            <img
-              src={bannerUrl}
-              alt="Banner"
-              width={600}
-              height={144}
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-            {/* Overlay for better text readability */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+            <div className="h-full w-full relative">
+              <img
+                src={bannerUrl}
+                alt="Banner"
+                width={600}
+                height={144}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm"
+                style={{ willChange: "transform, filter" }}
+              />
+              {/* Overlay for better text readability, not blurred */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+            </div>
           </>
         ) : (
           // Glassmorphism banner when no image
-          <div className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm">
+          <div
+            className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:blur-sm"
+            style={{ willChange: "transform, filter" }}
+          >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-tl from-black/5 to-transparent" />
             {/* Subtle pattern overlay */}
@@ -71,7 +79,7 @@ export function UniversalJobCard({
 
       <CardHeader className="relative overflow-visible">
         {avatarAddress && (
-          <div className="absolute -top-12 right-6 z-20 group/avatar">
+          <div className="absolute -top-18 right-6 z-20 group/avatar">
             <div
               className="h-24 w-24 rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer"
               onClick={handleCopyAddress}
@@ -93,16 +101,22 @@ export function UniversalJobCard({
             </div>
           </div>
         )}
-
-        <div className={cn("space-y-2", avatarAddress ? "mt-2 pr-28" : "pt-4")}>
-          <CardTitle className="transition-colors duration-200">{title}</CardTitle>
-          <CardDescription className="line-clamp-2">{description}</CardDescription>
-        </div>
       </CardHeader>
 
-      <CardContent className="space-y-1">
-        {extraInfo && <p className="text-sm text-muted-foreground">{extraInfo}</p>}
-        <div className="flex gap-3">
+      <CardContent className="space-y-3 h-60">
+        <div className={cn("space-y-2 h-7/12", avatarAddress ? "mt-2" : "pt-4")}>
+          <CardTitle
+            className="transition-colors duration-200 h-5/12 max-h-5/12 text-justify overflow-hidden text-ellipsis"
+            style={{ lineHeight: "1.15" }}
+          >
+            {title}
+          </CardTitle>
+          <CardDescription className="whitespace-normal h-7/12 max-h-7/12 text-ellipsis line-clamp-4">
+            {description}
+          </CardDescription>
+        </div>
+        {extraInfo && <span className="relative text-sm text-muted-foreground">{extraInfo}</span>}
+        <div className="flex gap-3 items-center">
           {rating !== undefined && (
             <div className="flex items-center gap-1 text-yellow-500">
               <StarIcon className="h-4 w-4 fill-current" />
@@ -111,13 +125,13 @@ export function UniversalJobCard({
           )}
           {category && (
             <div className="w-fit">
-              <Badge variant="secondary">{category}</Badge>
+              <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
             </div>
           )}
         </div>
       </CardContent>
 
-      <CardFooter className="flex justify-between items-center">
+      <CardFooter className="flex justify-between items-center h-2/12">
         <div className="flex items-center">{footerLeft ?? paymentDisplay}</div>
         <div className="flex items-center">{footerRight}</div>
       </CardFooter>

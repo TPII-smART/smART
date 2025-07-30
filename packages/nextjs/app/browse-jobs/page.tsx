@@ -10,17 +10,12 @@ import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Filter, FilterIcon, Plus } from "lucide-react";
 import { parseEther } from "viem";
+import { jobCategories } from "~~/components/JobCard/JobCategory/jobCategory.data";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchJobPostings, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
 import { JobPosting, JobPostingData } from "~~/types/job.types";
 
-const optionsCategoriesWithoutAll = [
-  { id: "creative-writing", label: "Creative Writing", icon: Filter, color: "#fbbf24" },
-  { id: "technical-writing", label: "Technical Writing", icon: Filter, color: "#38bdf8" },
-  { id: "marketing-copy", label: "Marketing Copy", icon: Filter, color: "#f472b6" },
-];
-
-const optionsCategories = [{ id: "all", label: "All", icon: Filter, color: "#a3a3a3" }, ...optionsCategoriesWithoutAll];
+const optionsCategories = [{ id: "all", label: "All", icon: Filter, color: "#a3a3a3" }, ...jobCategories];
 
 const optionsSorts = [
   { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
@@ -47,8 +42,8 @@ export default function BrowsePage() {
     title: "",
     description: "",
     bannerImageUrl: "",
-    paymentInEth: "0.1",
-    estimatedDurationHours: "48",
+    paymentInEth: "",
+    estimatedDurationHours: "",
     category: "",
   });
 
@@ -232,7 +227,7 @@ export default function BrowsePage() {
             label="Category"
             value={form.category}
             onChange={val => setForm({ ...form, category: val })}
-            options={optionsCategoriesWithoutAll}
+            options={jobCategories}
             variant="standard"
           />
         </div>

@@ -10,6 +10,7 @@ const Button: React.FC<ButtonProps> = ({
   style,
   loading,
   icon,
+  tooltip,
   size = "md",
   disabled = false,
 }) => {
@@ -97,7 +98,13 @@ const Button: React.FC<ButtonProps> = ({
   const spinnerSize = getSpinnerSize(size);
 
   return (
-    <button style={{ ..._style, ...style }} onClick={onClick} className={className} disabled={disabled || loading}>
+    <button
+      title={tooltip}
+      style={{ ..._style, ...style }}
+      onClick={onClick}
+      className={className}
+      disabled={disabled || loading}
+    >
       {loading && <Spinner numberOfArcs={1} size={spinnerSize} sizeMultiplier={1} color={"var(--color-primary)"} />}
       <div
         style={{

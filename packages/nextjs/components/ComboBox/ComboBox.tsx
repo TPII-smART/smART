@@ -18,6 +18,12 @@ const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
     borderColor: "var(--color-accent)",
   },
+  "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--color-border)",
+    "&:hover": {
+      borderColor: "var(--color-border)",
+    },
+  },
   ".MuiSelect-select": {
     color: "var(--color-primary-content)",
     ...(variant === "standard" && { px: "0.5rem" }),
@@ -47,7 +53,7 @@ const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
   ".MuiFilledInput-underline": {
     // Default (unfocused) line color
     "&:before": {
-      borderColor: "var(--color-secondary-content)", // Your desired unfocused line color
+      borderColor: "var(--color-border)", // Your desired unfocused line color
     },
     // Focused line color
     "&:after": {
@@ -55,13 +61,13 @@ const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
     },
     // Hover line color
     "&:hover:not(.Mui-disabled):before": {
-      borderColor: "var(--color-primary-content)", // Your desired hover line color
+      borderColor: "var(--color-border)", // Your desired hover line color
     },
   },
   ".MuiInput-underline": {
     // Default (unfocused) line color
     "&:before": {
-      borderColor: "var(--color-secondary-content)", // Your desired unfocused line color
+      borderColor: "var(--color-border)", // Your desired unfocused line color
     },
     // Focused line color
     "&:after": {
@@ -69,7 +75,7 @@ const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
     },
     // Hover line color
     "&:hover:not(.Mui-disabled):before": {
-      borderColor: "var(--color-primary-content)", // Your desired hover line color
+      borderColor: "var(--color-border)", // Your desired hover line color
     },
   },
   "& .Mui-focused .MuiSelect-icon": {

@@ -1,3 +1,4 @@
+import Button from "../Button/Button";
 import { CustomerProps } from "./types";
 import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
 import { cn } from "@/lib/utils";
@@ -183,15 +184,9 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
     // Cancel button - available for both parties until job is finished
     if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
       buttons.push(
-        <button
-          key="cancel"
-          onClick={handleCancel}
-          disabled={isMining}
-          title="Cancel Job"
-          className="p-2 rounded-lg border-2 border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <XCircle className="h-4 w-4" />
-        </button>,
+        <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
+          <XCircle className="h-5 w-5" />
+        </Button>,
       );
     }
 
@@ -199,28 +194,30 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
     if (isFreelancer) {
       if (jobStatus === JobState.WaitingForApproval) {
         buttons.push(
-          <button
+          <Button
+            variant="primary"
             key="accept"
             onClick={handleAccept}
             disabled={isMining}
-            title="Accept Job"
-            className="p-2 rounded-lg border-2 border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
+            tooltip="Accept Job"
           >
-            <CheckCircle className="h-4 w-4" />
-          </button>,
+            <CheckCircle className="h-5 w-5" />
+          </Button>,
         );
       }
       if (jobStatus === JobState.Ongoing && !job.freelancerDelivered) {
         buttons.push(
-          <button
+          <Button
+            variant="primary"
             key="deliver"
             onClick={handleConfirmCompletion}
             disabled={isMining}
-            title="Mark as Delivered"
-            className="p-2 rounded-lg border-2 border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            size="sm"
+            tooltip="Mark as Delivered"
           >
-            <Send className="h-4 w-4" />
-          </button>,
+            <Send className="h-5 w-5" />
+          </Button>,
         );
       }
     }
@@ -230,15 +227,16 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
       if (jobStatus === JobState.Ongoing) {
         if (job.freelancerDelivered && !job.clientReceived) {
           buttons.push(
-            <button
+            <Button
+              variant="primary"
               key="receive"
               onClick={handleConfirmCompletion}
               disabled={isMining}
-              title="Mark as Received"
-              className="p-2 rounded-lg border-2 border-[var(--color-accent)] text-[var(--color-accent)] hover:bg-[var(--color-accent)] hover:text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              size="sm"
+              tooltip="Mark as Received"
             >
-              <Download className="h-4 w-4" />
-            </button>,
+              <Download className="h-5 w-5" />
+            </Button>,
           );
         }
       }
