@@ -30,6 +30,14 @@ contract JobsContract {
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
     }
 
+    // Struct that reduces the amount of parameters needed when submitting a Job
+    struct JobParams {
+        string title;
+        string description;
+        uint256 payment; // Payment amount in wei
+        uint256 durationInHours; // Estimated time to complete job in hours
+    }
+
     // Struct for the JobPostings
     struct JobPosting {
         uint256 postingId;
@@ -43,6 +51,17 @@ contract JobsContract {
         uint256 averageWorkDuration;
         uint256 createdAt;
         Job[] jobs;
+    }
+
+    // Struct that reduces the amount of parameters needed when submitting a JobPosting
+    struct JobPostingParams {
+        string title;
+        string description;
+        string category;
+        string bannerImageUrl;
+        uint256 basePayment;
+        uint256 minimumNoticeTime;
+        uint256 averageWorkDuration;
     }
 
     // State variables of the contract
@@ -157,56 +176,46 @@ contract JobsContract {
 
     /**
      * @dev Create a new job posting (Freelancer creates job offer)
-     * @param _title of the Job Posting
-     * @param _description of the Job
-     * @param _bannerImageUrl URL to the job's banner image
-     * @param _basePayment Average payment for the job in wei
-     * @param _minimumNoticeTime Minimum notice time in hours
-     * @param _estimatedDurationHours Estimated time to complete job in hours
-     * @param _category Job category (e.g., "3D Modeling", "Web Development")
+     * @param params Struct containing all job posting parameters
      */
     function createJobPosting(
-        string memory _title,
-        string memory _description,
-        string memory _bannerImageUrl,
-        uint256 _basePayment,
-        uint256 _estimatedDurationHours,
-        uint256 _minimumNoticeTime,
-        string memory _category
+        JobPostingParams memory params
     ) external  returns (uint256) {
-        require(_basePayment > 0, "Payment must be greater than 0");
-        require(_estimatedDurationHours > 0, "Duration must be greater than 0");
-        require(_minimumNoticeTime > 0, "Minimum notice time must be greater than 0");
-        require(bytes(_title).length > 0, "Title cannot be empty");
-        require(bytes(_description).length > 0, "Description cannot be empty");
-        require(bytes(_category).length > 0, "Category cannot be empty");
+        require(params.basePayment > 0, "Payment must be greater than 0");
+        require(params.averageWorkDuration > 0, "Duration must be greater than 0");
+        require(params.minimumNoticeTime > 0, "Minimum notice time must be greater than 0");
+        require(bytes(params.title).length > 0, "Title cannot be empty");
+        require(bytes(params.description).length > 0, "Description cannot be empty");
+        require(bytes(params.category).length > 0, "Category cannot be empty");
 
         uint256 postingId = postedJobsCounter++;
 
         // Create JobPosting with all required fields including empty jobs array
         JobPosting storage newPosting = postedJobs[postingId];
+        {
         newPosting.postingId = postingId;
         newPosting.freelancer = msg.sender;
-        newPosting.basePayment = _basePayment;
-        newPosting.title = _title;
-        newPosting.description = _description;
-        newPosting.category = _category;
-        newPosting.bannerImageUrl = _bannerImageUrl;
-        newPosting.minimumNoticeTime = _minimumNoticeTime;
-        newPosting.averageWorkDuration = _estimatedDurationHours;
+        newPosting.basePayment = params.basePayment;
+        newPosting.title = params.title;
+        newPosting.description = params.description;
+        newPosting.category = params.category;
+        newPosting.bannerImageUrl = params.bannerImageUrl;
+        newPosting.minimumNoticeTime = params.minimumNoticeTime;
+        newPosting.averageWorkDuration = params.averageWorkDuration;
         newPosting.createdAt = block.timestamp;
         // jobs array is automatically initialized as empty
+        }
 
         emit JobPostingCreated(
             postingId,
             msg.sender,
-            _basePayment,
-            _title,
-            _description,
-            _category,
-            _bannerImageUrl,
-            _minimumNoticeTime,
-            _estimatedDurationHours
+            params.basePayment,
+            params.title,
+            params.description,
+            params.category,
+            params.bannerImageUrl,
+            params.minimumNoticeTime,
+            params.averageWorkDuration
         );
 
         return postingId;
@@ -215,24 +224,19 @@ contract JobsContract {
     /**
      * @dev Create a new job under an existing job posting (Client creates job)
      * @param _postingId The ID of the job posting to create a job under
-     * @param _payment The payment amount for the job in wei
-     * @param _description The job description
-     * @param _durationInHours Estimated time to complete job in hours
+     * @param params Struct containing all job parameters
      */
      function createJob(
         uint256 _postingId,
-        uint256 _payment,
-        string memory _title,
-        string memory _description,
-        uint256 _durationInHours
+        JobParams memory params
      ) external payable postingExists(_postingId) notFreelancer(_postingId) {
         JobPosting storage posting = postedJobs[_postingId];
 
-        require(msg.value == _payment, "Must send exact payment amount");
-        require(_payment > 0, "Payment must be greater than 0");
-        require(_durationInHours > 0, "Duration must be greater than 0");
-        require(bytes(_title).length > 0, "Title cannot be empty");
-        require(bytes(_description).length > 0, "Description cannot be empty");
+        require(msg.value == params.payment, "Must send exact payment amount");
+        require(params.payment > 0, "Payment must be greater than 0");
+        require(params.durationInHours > 0, "Duration must be greater than 0");
+        require(bytes(params.title).length > 0, "Title cannot be empty");
+        require(bytes(params.description).length > 0, "Description cannot be empty");
 
         // Create new job
         uint256 jobId = posting.jobs.length;
@@ -240,11 +244,11 @@ contract JobsContract {
             jobId: jobId,
             client: msg.sender,
             freelancer: posting.freelancer,
-            payment: _payment,
-            title: _title,
-            description: _description,
+            payment: params.payment,
+            title: params.title,
+            description: params.description,
             category: posting.category,
-            durationInHours: _durationInHours,
+            durationInHours: params.durationInHours,
             deadline: 0, // Deadline will be set when job is accepted, while waiting for approval no progress is made
             state: JobState.WaitingForApproval,
             createdAt: block.timestamp,
@@ -261,16 +265,14 @@ contract JobsContract {
             jobId,
             posting.freelancer,
             msg.sender,
-            _payment,
-            _title,
-            _description,
+            params.payment,
+            params.title,
+            params.description,
             posting.category,
             posting.bannerImageUrl,
-            _durationInHours
+            params.durationInHours
         );
      }
-
-
 
     /**
      * @dev Accept an available job and set deadline (Freelancer accepts job offered by client)
@@ -382,8 +384,6 @@ contract JobsContract {
      * @param _jobId The job ID to emergency cancel
      */
     function emergencyCancel(uint256 _postingId, uint256 _jobId) external onlyOwner jobExists(_postingId, _jobId) {
-
-
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         job.state = JobState.Cancelled;
@@ -394,97 +394,6 @@ contract JobsContract {
         }
 
         emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
-    }
-
-    // Optimized view functions to avoid stack too deep errors
-
-    /**
-     * @dev Get basic job info
-     */
-    function getJobBasics(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (
-        address freelancer,
-        address client,
-        uint256 payment,
-        JobState state
-    ) {
-        Job storage job = postedJobs[_postingId].jobs[_jobId];
-        return (job.freelancer, job.client, job.payment, job.state);
-    }
-
-    /**
-     * @dev Get job content
-     */
-    function getJobContent(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (
-        string memory title,
-        string memory description,
-        string memory category,
-        uint256 deadline
-    ) {
-        Job storage job = postedJobs[_postingId].jobs[_jobId];
-        return (job.title, job.description, job.category, job.deadline);
-    }
-
-    /**
-     * @dev Get job timestamps and confirmations
-     */
-    function getJobStatus(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (
-        uint256 createdAt,
-        uint256 acceptedAt,
-        bool clientReceived,
-        bool freelancerDelivered
-    ) {
-        Job storage job = postedJobs[_postingId].jobs[_jobId];
-        return (job.createdAt, job.acceptedAt, job.clientReceived, job.freelancerDelivered);
-    }
-
-    /**
-     * @dev Get complete job info (alternative approach using fewer variables)
-     */
-    function getCompleteJob(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (Job memory) {
-        return postedJobs[_postingId].jobs[_jobId];
-    }
-
-    /**
-     * @dev Helper function to convert hours to human readable format
-     * @param _hours Number of hours
-     */
-    function formatDuration(uint256 _hours) external pure returns (string memory) {
-        if (_hours < 24) {
-            return string(abi.encodePacked(_uint2str(_hours), " hours"));
-        } else {
-            uint256 remainingDays = _hours / 24;
-            uint256 remainingHours = _hours % 24;
-            if (remainingHours == 0) {
-                return string(abi.encodePacked(_uint2str(remainingDays), " days"));
-            } else {
-                return string(abi.encodePacked(_uint2str(remainingDays), " days, ", _uint2str(remainingHours), " hours"));
-            }
-        }
-    }
-
-    /**
-     * @dev Helper function to convert uint to string
-     */
-    function _uint2str(uint256 _i) internal pure returns (string memory) {
-        if (_i == 0) {
-            return "0";
-        }
-        uint256 j = _i;
-        uint256 len;
-        while (j != 0) {
-            len++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(len);
-        uint256 k = len;
-        while (_i != 0) {
-            k = k - 1;
-            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
-            bytes1 b1 = bytes1(temp);
-            bstr[k] = b1;
-            _i /= 10;
-        }
-        return string(bstr);
     }
 
     function getTotalJobsPosted() external view returns (uint256) {
