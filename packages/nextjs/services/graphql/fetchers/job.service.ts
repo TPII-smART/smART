@@ -2,7 +2,7 @@ import { endpoint } from "../config";
 import request, { gql } from "graphql-request";
 import { Job, JobPosting } from "~~/types/job.types";
 
-export const fetchMaxPayment = async () => {
+export const fetchMaxJobPayment = async () => {
   const query = gql`
     query GetJobPostingsPayments {
       jobPostings {
