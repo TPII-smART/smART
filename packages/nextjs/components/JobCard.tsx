@@ -34,10 +34,12 @@ export function JobCard({ jobPosting, className, reload, ...props }: JobCardProp
         functionName: "createJob",
         args: [
           BigInt(jobPosting?.postingId),
-          BigInt(jobPosting?.basePayment),
-          form.title,
-          form.description,
-          BigInt(form.jobHours),
+          {
+            title: form.title,
+            description: form.description,
+            payment: BigInt(jobPosting.basePayment),
+            durationInHours: BigInt(form.jobHours),
+          },
         ],
         value: BigInt(jobPosting?.basePayment),
       });

@@ -62,13 +62,15 @@ export default function BrowsePage() {
       await createJobPosting({
         functionName: "createJobPosting",
         args: [
-          form.title,
-          form.description,
-          form.bannerImageUrl || "",
-          parseEther(form.paymentInEth),
-          BigInt(form.estimatedDurationHours),
-          BigInt(24), // minimumNoticeTime, can be set to 24 for now
-          form.category,
+          {
+            title: form.title,
+            description: form.description,
+            bannerImageUrl: form.bannerImageUrl || "",
+            basePayment: parseEther(form.paymentInEth),
+            averageWorkDuration: BigInt(form.estimatedDurationHours),
+            minimumNoticeTime: BigInt(24), // minimumNoticeTime, can be set to 24 for now
+            category: form.category,
+          },
         ],
       });
       await reload();
