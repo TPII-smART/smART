@@ -2,10 +2,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { Contract } from "ethers";
 
-const CONTRACT_NAME = "GigsContract";
+const CONTRACT_NAME = "ProfileConfigContract";
 
 /**
- * Deploys the GigsContract using the deployer account and
+ * Deploys the ProfileConfigContract using the deployer account and
  * sets the owner to the deployer address.
  */
 const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -14,9 +14,8 @@ const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvi
 
   await deploy(CONTRACT_NAME, {
     from: deployer,
-    args: [deployer],
+    args: [],
     log: true,
-    autoMine: true,
   });
 
   const contract = await hre.ethers.getContract<Contract>(CONTRACT_NAME, deployer);
