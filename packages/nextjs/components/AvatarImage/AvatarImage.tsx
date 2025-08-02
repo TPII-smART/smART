@@ -1,5 +1,6 @@
 import Skeleton from "../Skeleton/Skeleton";
 import { AvatarImageProps } from "./types";
+import { blo } from "blo";
 
 export default function AvatarImage({
   src,
@@ -7,12 +8,13 @@ export default function AvatarImage({
   width = 128,
   height = 128,
   loading = false,
+  address,
 }: AvatarImageProps) {
   const component = (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={src ? src : undefined}
-      alt={alt}
+      src={src ? src : address ? blo(address) : undefined}
+      alt={address ? `${address} avatar` : alt}
       className={`rounded-full border-2 border-border`}
       width={width}
       height={height}

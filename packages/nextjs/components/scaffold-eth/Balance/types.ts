@@ -17,4 +17,8 @@ export type BalanceProps = {
    * Default is false.
    */
   usdMode?: boolean;
+  /**
+   * The name of the chain to display.
+   */
+  chainName?: string; // Optional, for displaying the chain name
 };
