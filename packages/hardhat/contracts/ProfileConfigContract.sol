@@ -82,6 +82,10 @@ contract ProfileConfigContract {
         require(StringUtils.isMaxLength(profileData.bannerPicture, 1024), "Banner picture URL exceeds max length of 1024 characters");
         require(StringUtils.isMaxLength(profileData.biography, 512), "Biography exceeds max length of 512 characters");
         require(StringUtils.isMaxLength(profileData.email, 128), "Email exceeds max length of 128 characters");
+        if (bytes(profileData.email).length > 0) {
+            require(StringUtils.contains(profileData.email, "@"), "Email must be an email address");
+            require(StringUtils.contains(profileData.email, "."), "Email must be an email address");
+        }
         require(StringUtils.isMaxLength(profileData.xUrl, 256), "X URL exceeds max length of 256 characters");
         require(StringUtils.isMaxLength(profileData.instagramUrl, 256), "Instagram URL exceeds max length of 256 characters");
         require(StringUtils.isMaxLength(profileData.linkedinUrl, 256), "LinkedIn URL exceeds max length of 256 characters");
@@ -90,21 +94,23 @@ contract ProfileConfigContract {
         require(StringUtils.isMaxLength(profileData.customUrl, 256), "Custom URL exceeds max length of 256 characters");
 
         Profile storage profile = profiles[msg.sender];
-        profile.username = profileData.username;
-        profile.profilePicture = profileData.profilePicture;
-        profile.bannerPicture = profileData.bannerPicture;
-        profile.biography = profileData.biography;
-        profile.email = profileData.email;
-        profile.xUrl = profileData.xUrl;
-        profile.instagramUrl = profileData.instagramUrl;
-        profile.linkedinUrl = profileData.linkedinUrl;
-        profile.artstationUrl = profileData.artstationUrl;
-        profile.sketchfabUrl = profileData.sketchfabUrl;
-        profile.customUrl = profileData.customUrl;
+        {
+            profile.username = StringUtils.updateIfDefined(profile.username, profileData.username);
+            profile.profilePicture = StringUtils.updateIfDefined(profile.profilePicture, profileData.profilePicture);
+            profile.bannerPicture = StringUtils.updateIfDefined(profile.bannerPicture, profileData.bannerPicture);
+            profile.biography = StringUtils.updateIfDefined(profile.biography, profileData.biography);
+            profile.email = StringUtils.updateIfDefined(profile.email, profileData.email);
+            profile.xUrl = StringUtils.updateIfDefinedWithPrefix(profile.xUrl, profileData.xUrl, "https://");
+            profile.instagramUrl = StringUtils.updateIfDefinedWithPrefix(profile.instagramUrl, profileData.instagramUrl, "https://");
+            profile.linkedinUrl = StringUtils.updateIfDefinedWithPrefix(profile.linkedinUrl, profileData.linkedinUrl, "https://");
+            profile.artstationUrl = StringUtils.updateIfDefinedWithPrefix(profile.artstationUrl, profileData.artstationUrl, "https://");
+            profile.sketchfabUrl = StringUtils.updateIfDefinedWithPrefix(profile.sketchfabUrl, profileData.sketchfabUrl, "https://");
+            profile.customUrl = StringUtils.updateIfDefinedWithPrefix(profile.customUrl, profileData.customUrl, "https://");
+        }
 
         emit ProfileUpdated(
             msg.sender,
-            profileData
+            profile
         );
     }
 
@@ -116,16 +122,18 @@ contract ProfileConfigContract {
         )
     {
         Profile storage profile = profiles[user];
-        profileData.username = profile.username;
-        profileData.profilePicture = profile.profilePicture;
-        profileData.bannerPicture = profile.bannerPicture;
-        profileData.biography = profile.biography;
-        profileData.email = profile.email;
-        profileData.xUrl = profile.xUrl;
-        profileData.instagramUrl = profile.instagramUrl;
-        profileData.linkedinUrl = profile.linkedinUrl;
-        profileData.artstationUrl = profile.artstationUrl;
-        profileData.sketchfabUrl = profile.sketchfabUrl;
-        profileData.customUrl = profile.customUrl;
+        {
+            profileData.username = profile.username;
+            profileData.profilePicture = profile.profilePicture;
+            profileData.bannerPicture = profile.bannerPicture;
+            profileData.biography = profile.biography;
+            profileData.email = profile.email;
+            profileData.xUrl = profile.xUrl;
+            profileData.instagramUrl = profile.instagramUrl;
+            profileData.linkedinUrl = profile.linkedinUrl;
+            profileData.artstationUrl = profile.artstationUrl;
+            profileData.sketchfabUrl = profile.sketchfabUrl;
+            profileData.customUrl = profile.customUrl;
+        }
     }
 }

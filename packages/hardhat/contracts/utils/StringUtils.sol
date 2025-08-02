@@ -50,4 +50,40 @@ library StringUtils {
     function isMaxLength(string memory str, uint maxLength) internal pure returns (bool) {
         return bytes(str).length <= maxLength;
     }
+
+    function addPrefix(
+        string memory str,
+        string memory prefix
+    ) internal pure returns (string memory) {
+        if (bytes(str).length == 0) {
+            return prefix;
+        }
+
+        if (startsWith(str, prefix)) {
+            return str; // No need to add prefix if it already exists
+        }
+
+        return string(abi.encodePacked(prefix, str));
+    }
+
+    function updateIfDefined(
+        string memory currentValue,
+        string memory newValue
+    ) internal pure returns (string memory) {
+        if (bytes(newValue).length > 0) {
+            return newValue;
+        }
+        return currentValue;
+    }
+
+    function updateIfDefinedWithPrefix(
+        string memory currentValue,
+        string memory newValue,
+        string memory prefix
+    ) internal pure returns (string memory) {
+        if (bytes(newValue).length > 0) {
+            return StringUtils.addPrefix(newValue, prefix);
+        }
+        return currentValue;
+    }    
 }
