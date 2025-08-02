@@ -27,6 +27,7 @@
   --color-warning: #ffcf72;
   --color-error: #e21818;
   --color-input: #c8c6c6;
+  --color-skeleton: #888888;
 
   --radius-field: 9999rem;
   --radius-box: 1rem;
@@ -50,6 +51,7 @@
   --color-warning: #ffcf72;
   --color-error: #e21818;
   --color-input: #555454;
+  --color-skeleton: #555555;
 
   --radius-field: 9999rem;
   --radius-box: 1rem;
