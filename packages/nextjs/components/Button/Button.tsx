@@ -87,7 +87,7 @@ const Button: React.FC<ButtonProps> = ({
         // Primary button as default
         return {
           backgroundColor: "var(--color-accent)",
-          color: "var(--color-primary-content)",
+          color: "var(--color-secondary-content)",
           border: "2px solid var(--color-accent)",
           ...shared,
         };

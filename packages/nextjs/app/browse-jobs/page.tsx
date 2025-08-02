@@ -8,20 +8,20 @@ import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, FilterIcon, Plus } from "lucide-react";
 import { parseEther } from "viem";
+import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { jobCategories } from "~~/components/JobCard/JobCategory/jobCategory.data";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchJobPostings, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
 import { JobPosting, JobPostingData } from "~~/types/job.types";
 
-const optionsCategories = [{ id: "all", label: "All", icon: Filter, color: "#a3a3a3" }, ...jobCategories];
+const optionsCategories = [{ id: "all", label: "All", icon: FunnelIcon, color: "#a3a3a3" }, ...jobCategories];
 
 const optionsSorts = [
-  { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
-  { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
-  { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
-  { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
+  { id: "recent", label: "Most Recent", icon: FunnelIcon, color: "#a3a3a3" },
+  { id: "popular", label: "Most Popular", icon: FunnelIcon, color: "#38bdf8" },
+  { id: "price-low", label: "Price: Low to High", icon: FunnelIcon, color: "#fbbf24" },
+  { id: "price-high", label: "Price: High to Low", icon: FunnelIcon, color: "#f472b6" },
 ];
 
 export default function BrowsePage() {
@@ -62,13 +62,15 @@ export default function BrowsePage() {
       await createJobPosting({
         functionName: "createJobPosting",
         args: [
-          form.title,
-          form.description,
-          form.bannerImageUrl || "",
-          parseEther(form.paymentInEth),
-          BigInt(form.estimatedDurationHours),
-          BigInt(24), // minimumNoticeTime, can be set to 24 for now
-          form.category,
+          {
+            title: form.title,
+            description: form.description,
+            bannerImageUrl: form.bannerImageUrl || "",
+            basePayment: parseEther(form.paymentInEth),
+            averageWorkDuration: BigInt(form.estimatedDurationHours),
+            minimumNoticeTime: BigInt(24), // minimumNoticeTime, can be set to 24 for now
+            category: form.category,
+          },
         ],
       });
       await reload();
@@ -129,7 +131,7 @@ export default function BrowsePage() {
           <aside className="w-full md:w-64">
             <div className="space-y-6">
               <h2 className="text-lg font-semibold flex items-center gap-2 px-4">
-                <Filter className="h-5 w-5" />
+                <FunnelIcon className="h-5 w-5" />
                 Filters
               </h2>
 
@@ -142,7 +144,7 @@ export default function BrowsePage() {
                 onChange={setCategories}
                 options={optionsCategories}
                 resetKey="all"
-                icon={<FilterIcon className={"h-[1.125rem] w-[1.125rem]"} />}
+                icon={<FunnelIcon className={"h-[1.125rem] w-[1.125rem]"} />}
               />
 
               <div className="space-y-3">
@@ -159,7 +161,7 @@ export default function BrowsePage() {
                 value={sortBy}
                 onChange={setSortBy}
                 options={optionsSorts}
-                icon={<FilterIcon className={"h-[1.125rem] w-[1.125rem]"} />}
+                icon={<FunnelIcon className={"h-[1.125rem] w-[1.125rem]"} />}
               />
             </div>
           </aside>
@@ -188,7 +190,7 @@ export default function BrowsePage() {
         style={{ backgroundColor: "var(--color-accent)" }}
         aria-label="Create Job"
       >
-        <Plus className="h-5 w-5" />
+        <PlusIcon className="h-5 w-5" />
       </button>
 
       <Modal

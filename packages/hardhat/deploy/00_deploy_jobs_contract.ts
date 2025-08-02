@@ -2,13 +2,15 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { Contract } from "ethers";
 
+const CONTRACT_NAME = "JobsContract";
+
 /**
  * Deploys a contract named "JobsContract" using the deployer account and
  * constructor arguments set to the deployer address
  *
  * @param hre HardhatRuntimeEnvironment object.
  */
-const deployJobsContract: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   /*
     On localhost, the deployer account is the one that comes with Hardhat, which is already funded.
 
@@ -22,7 +24,7 @@ const deployJobsContract: DeployFunction = async function (hre: HardhatRuntimeEn
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  await deploy("JobsContract", {
+  await deploy(CONTRACT_NAME, {
     from: deployer,
     // Contract constructor arguments
     args: [deployer],
@@ -33,12 +35,12 @@ const deployJobsContract: DeployFunction = async function (hre: HardhatRuntimeEn
   });
 
   // Get the deployed contract to interact with it after deploying.
-  const yourContract = await hre.ethers.getContract<Contract>("JobsContract", deployer);
-  console.log("Jobs contract deployed at:", yourContract.address);
+  const contract = await hre.ethers.getContract<Contract>(CONTRACT_NAME, deployer);
+  console.log(`${CONTRACT_NAME} deployed at: ${contract.address}`);
 };
-
-export default deployJobsContract;
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
 // e.g. yarn deploy --tags JobsContract
-deployJobsContract.tags = ["JobsContract"];
+deployedContract.tags = [CONTRACT_NAME];
+
+export default deployedContract;

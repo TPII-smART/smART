@@ -2,7 +2,11 @@ import { FocusEvent, useEffect, useRef, useState } from "react";
 import styles from "./InputBase.module.css";
 import { InputBaseProps } from "./types";
 
-export const InputBase = ({
+export interface TextAreaProps extends Omit<InputBaseProps, "prefix" | "suffix"> {
+  rows?: number;
+}
+
+export const TextArea = ({
   name,
   value,
   onChange,
@@ -10,14 +14,13 @@ export const InputBase = ({
   placeholder,
   error,
   disabled,
-  prefix,
-  suffix,
   reFocus,
   maxLength,
   readOnly = false,
-  variant = "default", // "default" | "background" | "outlined"
-}: InputBaseProps) => {
-  const inputReft = useRef<HTMLInputElement>(null);
+  variant = "default",
+  rows = 4,
+}: TextAreaProps) => {
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   let modifier = "";
   if (error) {
@@ -38,20 +41,20 @@ export const InputBase = ({
 
   // Runs only when reFocus prop is passed, useful for setting the cursor
   // at the end of the input. Example AddressInput
-  const onFocus = (e: FocusEvent<HTMLInputElement, Element>) => {
+  const onFocus = (e: FocusEvent<HTMLTextAreaElement, Element>) => {
     if (reFocus !== undefined) {
       e.currentTarget.setSelectionRange(e.currentTarget.value.length, e.currentTarget.value.length);
     }
     handleFocus();
   };
   useEffect(() => {
-    if (reFocus !== undefined && reFocus === true) inputReft.current?.focus();
+    if (reFocus !== undefined && reFocus === true) textAreaRef.current?.focus();
   }, [reFocus]);
 
   // Outlined variant classes
   const outlinedWrapper =
     variant === "outlined"
-      ? `border rounded-lg px-3 py-2 ${isFocused ? "border-accent" : "border-secondary-content"} bg-transparent`
+      ? `border rounded-lg px-3 pt-2 pb-3 ${isFocused ? "border-accent" : "border-secondary-content"} bg-transparent`
       : "";
 
   const outlinedInput = variant === "outlined" ? "bg-transparent px-0" : "";
@@ -64,43 +67,46 @@ export const InputBase = ({
     <div className={`relative w-full`}>
       <div
         className={`
-          relative 
-          w-full 
-          flex 
-          flex-row 
-          ${variant === "outlined" ? outlinedWrapper : "border-b"}
-          ${modifier ? modifier : variant !== "outlined" ? (isLabelActive ? "border-primary-content" : "border-secondary-content") : ""}
-          focus:outline-none
+            relative 
+            w-full 
+            flex 
+            flex-row 
+            ${variant === "outlined" ? "" : "border-b"}
+            ${modifier ? modifier : variant === "outlined" ? "" : "focus:border-accent" + (isLabelActive ? " border-primary-content" : " border-secondary-content")}
+            focus:outline-none
+            ${outlinedWrapper}
           ${readOnly ? "border-0" : ""}
         `}
         style={{
           ...(readOnly ? { caretColor: "transparent" } : {}),
         }}
       >
-        {isLabelActive && prefix && <div className="place-self-center px-2 pt-[18px]">{prefix}</div>}
-        <input
+        <textarea
+          rows={rows}
           maxLength={maxLength}
           name={name}
           value={value}
           onChange={e => onChange(e.target.value)}
           disabled={disabled}
           autoComplete="off"
-          ref={inputReft}
+          ref={textAreaRef}
           onFocus={onFocus}
           onBlur={handleBlur}
           readOnly={readOnly}
           className={`
-            w-full
-            ${!prefix && "px-2"}
-            text-lg
-            ${variant === "background" ? "bg-[var(--color-surface)] rounded-t-lg" : "bg-transparent"}
-            ${variant === "outlined" ? outlinedInput : "pt-[20px]"}
-            ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
-            focus:outline-none
-            transition-colors duration-300
-            ${modifier}
-            ${styles.input}
-          `}
+                w-full
+                px-2
+                text-lg
+                resize-none
+                ${variant === "background" ? "bg-[var(--color-surface)] rounded-t-lg" : ""}
+                ${variant === "outlined" ? outlinedInput : "pt-[20px] pb-[2px]"}
+                ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
+                focus:outline-none
+                transition-colors duration-300
+                ${modifier}
+                ${styles.input}
+                ${readOnly ? "cursor-not-allowed border-0" : ""}
+            `}
           style={{
             transition: "color 300ms",
             transitionDelay: !isLabelActive ? "300ms" : "0ms",
@@ -117,17 +123,16 @@ export const InputBase = ({
             {value?.toString().length}/{maxLength}
           </span>
         )}
-        {isLabelActive && suffix && <div className="place-self-center mr-2 pt-[18px]">{suffix}</div>}
       </div>
       {/* The floating label */}
       <label
         className={`
-          absolute
-          ${variant === "outlined" ? outlinedLabel : "left-2 top-5 text-lg"}
-          pointer-events-none
-          ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
-          transition-all duration-300
-          ${variant !== "outlined" && isLabelActive ? "top-6 transform -translate-y-6 scale-73 origin-top-left" : ""}
+            absolute
+            ${variant === "outlined" ? outlinedLabel : "left-2 top-5 text-lg"}
+            pointer-events-none
+            ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
+            transition-all duration-300
+            ${variant !== "outlined" && isLabelActive ? "top-6 transform -translate-y-6 scale-73 origin-top-left" : ""}
         `}
       >
         {placeholder}
@@ -136,12 +141,12 @@ export const InputBase = ({
       {variant !== "outlined" && (
         <div
           className={`
-            absolute bottom-0 left-0 w-full h-[2px] 
-            ${modifier ? modifier : "bg-accent"}
-            transform scale-x-0
-            transition-transform duration-300 ease-out
-            ${isFocused ? "scale-x-100" : ""}
-          `}
+                        absolute bottom-0 left-0 w-full h-[2px] 
+                        ${modifier ? modifier : "bg-accent"}
+                        transform scale-x-0
+                        transition-transform duration-300 ease-out
+                        ${isFocused ? "scale-x-100" : ""}
+                    `}
         ></div>
       )}
     </div>
