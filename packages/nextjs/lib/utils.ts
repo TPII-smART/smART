@@ -15,3 +15,10 @@ export function isImageUrl(url: string): boolean {
     return false;
   }
 }
+
+export function addPrefixToUrl(url: string, prefix: string): string {
+  if (!url.startsWith(prefix)) {
+    return prefix + url;
+  }
+  return url;
+}
