@@ -7,7 +7,7 @@ import { UniversalJobCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
-import { CopyIcon, StarIcon } from "lucide-react";
+import { DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
 
 export function UniversalJobCard({
   bannerUrl,
@@ -88,7 +88,7 @@ export function UniversalJobCard({
               {/* TODO: Go to profile page on click, for now just copy address */}
               {/* Hover overlay with darkening effect and copy icon */}
               <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <CopyIcon className="h-6 w-6 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
+                <DocumentDuplicateIcon className="h-6 w-6 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
               </div>
               {/* Address tooltip that slides up from avatar */}
               <div className="absolute -top-12 right-0 opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 ease-out translate-y-2 group-hover/avatar:translate-y-0 z-30 pointer-events-none">
