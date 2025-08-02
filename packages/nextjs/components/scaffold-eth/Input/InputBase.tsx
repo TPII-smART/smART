@@ -14,7 +14,8 @@ export const InputBase = ({
   suffix,
   reFocus,
   maxLength,
-  variant = "default",
+  readOnly = false,
+  variant = "default", // "default" | "background" | "outlined"
 }: InputBaseProps) => {
   const inputReft = useRef<HTMLInputElement>(null);
 
@@ -24,6 +25,7 @@ export const InputBase = ({
   } else if (disabled) {
     modifier = "border-disabled bg-border";
   }
+
   const [isFocused, setIsFocused] = useState(false);
 
   const handleFocus = () => setIsFocused(true);
@@ -46,19 +48,34 @@ export const InputBase = ({
     if (reFocus !== undefined && reFocus === true) inputReft.current?.focus();
   }, [reFocus]);
 
+  // Outlined variant classes
+  const outlinedWrapper =
+    variant === "outlined"
+      ? `border rounded-lg px-3 py-2 ${isFocused ? "border-accent" : "border-secondary-content"} bg-transparent`
+      : "";
+
+  const outlinedInput = variant === "outlined" ? "bg-transparent px-0" : "";
+
+  // For outlined, label is always fixed above input
+  const outlinedLabel =
+    variant === "outlined" ? "left-0 -top-8 text-primary-content text-lg bg-[transparent] px-1 z-10" : "";
+
   return (
     <div className={`relative w-full`}>
-      {" "}
       <div
         className={`
           relative 
           w-full 
           flex 
           flex-row 
-          border-b
-          ${modifier ? modifier : "focus:border-accent" + isLabelActive ? "border-primary-content" : "border-secondary-content"}
+          ${variant === "outlined" ? outlinedWrapper : "border-b"}
+          ${modifier ? modifier : variant !== "outlined" ? (isLabelActive ? "border-primary-content" : "border-secondary-content") : ""}
           focus:outline-none
+          ${readOnly ? "border-0" : ""}
         `}
+        style={{
+          ...(readOnly ? { caretColor: "transparent" } : {}),
+        }}
       >
         {isLabelActive && prefix && <div className="place-self-center px-2 pt-[18px]">{prefix}</div>}
         <input
@@ -71,26 +88,24 @@ export const InputBase = ({
           ref={inputReft}
           onFocus={onFocus}
           onBlur={handleBlur}
-          // Tailwind classes for the input
+          readOnly={readOnly}
           className={`
-          w-full
-          ${!prefix && "px-2"}
-          pt-[20px]
-          pb-[2px]
-          text-lg
-          ${variant === "background" ? "bg-[var(--color-surface)] rounded-t-lg" : "bg-transparent"}
-          ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
-          focus:outline-none
-          transition-colors duration-300
-          ${modifier}
-          ${styles.input}
+            w-full
+            ${!prefix && "px-2"}
+            text-lg
+            ${variant === "background" ? "bg-[var(--color-surface)] rounded-t-lg" : "bg-transparent"}
+            ${variant === "outlined" ? outlinedInput : "pt-[20px]"}
+            ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
+            focus:outline-none
+            transition-colors duration-300
+            ${modifier}
+            ${styles.input}
           `}
           style={{
             transition: "color 300ms",
-            // Placeholder transition: delay showing placeholder by 300ms when !isLabelActive
             transitionDelay: !isLabelActive ? "300ms" : "0ms",
+            ...(readOnly ? { cursor: "default" } : {}),
           }}
-          // Placeholder style: invisible until 300ms if !isLabelActive
           placeholder={!isLabelActive ? placeholder : ""}
         />
         {maxLength && isLabelActive && (
@@ -108,31 +123,27 @@ export const InputBase = ({
       <label
         className={`
           absolute
-          left-2
-          top-5
+          ${variant === "outlined" ? outlinedLabel : "left-2 top-5 text-lg"}
           pointer-events-none
-          text-lg
           ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
           transition-all duration-300
-          ${
-            isLabelActive
-              ? "top-6 transform -translate-y-6 scale-73 origin-top-left" // Moved and smaller
-              : ""
-          }
-          `}
+          ${variant !== "outlined" && isLabelActive ? "top-6 transform -translate-y-6 scale-73 origin-top-left" : ""}
+        `}
       >
         {placeholder}
       </label>
       {/* Optional: The active line (for the accent color on focus, if not using peer-focus directly on input) */}
-      <div
-        className={`
-          absolute bottom-0 left-0 w-full h-[2px] 
-          ${modifier ? modifier : "bg-accent"}
-          transform scale-x-0
-          transition-transform duration-300 ease-out
-          ${isFocused ? "scale-x-100" : ""}
-        `}
-      ></div>
+      {variant !== "outlined" && (
+        <div
+          className={`
+            absolute bottom-0 left-0 w-full h-[2px] 
+            ${modifier ? modifier : "bg-accent"}
+            transform scale-x-0
+            transition-transform duration-300 ease-out
+            ${isFocused ? "scale-x-100" : ""}
+          `}
+        ></div>
+      )}
     </div>
   );
 };

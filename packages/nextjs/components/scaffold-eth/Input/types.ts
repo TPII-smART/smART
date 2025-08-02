@@ -32,7 +32,7 @@ export type InputBaseProps = {
    * - "default": Standard appearance.
    * - "background": Input with background styling.
    */
-  variant?: "default" | "background";
+  variant?: "default" | "background" | "outlined";
 
   /**
    * Current value of the input.
@@ -64,6 +64,10 @@ export type InputBaseProps = {
    * If true, the input will be disabled and not editable.
    */
   disabled?: boolean;
+  /**
+   * If true, the input will be read-only and not editable.
+   */
+  readOnly?: boolean;
 };
 
 export type IntegerInputProps = CommonInputProps<string> & {
