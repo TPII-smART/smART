@@ -19,4 +19,8 @@ export interface AvatarImageProps {
    * Whether the image should be displayed with a loading state.
    */
   loading?: boolean;
+  /**
+   * Optional address for the avatar, if applicable.
+   */
+  address?: `0x${string}`; // Optional address for the avatar, if applicable
 }

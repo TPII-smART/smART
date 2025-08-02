@@ -20,6 +20,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { SpinnerProvider } from "~~/context/SpinnerProvider";
+import { UserProvider } from "~~/context/UserProvider";
 import { useInitializeNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 
@@ -99,16 +100,18 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
   return (
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <ProgressBar height="3px" color="#2299dd" />
-        <RainbowKitProvider
-          avatar={BlockieAvatar}
-          theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
-        >
-          <ScaffoldEthApp>
-            <SpinnerProvider>{children}</SpinnerProvider>
-            <Toaster /> {/* Toaster for notifications */}
-          </ScaffoldEthApp>
-        </RainbowKitProvider>
+        <UserProvider>
+          <ProgressBar height="3px" color="#2299dd" />
+          <RainbowKitProvider
+            avatar={BlockieAvatar}
+            theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
+          >
+            <ScaffoldEthApp>
+              <SpinnerProvider>{children}</SpinnerProvider>
+              <Toaster /> {/* Toaster for notifications */}
+            </ScaffoldEthApp>
+          </RainbowKitProvider>
+        </UserProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
