@@ -46,4 +46,8 @@ library StringUtils {
             startsWith(url, domain) ||
             startsWith(url, string(abi.encodePacked("www.", domain))));
     }
+
+    function isMaxLength(string memory str, uint maxLength) internal pure returns (bool) {
+        return bytes(str).length <= maxLength;
+    }
 }
