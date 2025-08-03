@@ -19,7 +19,6 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
   const isFreelancer = job.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
 
-  // Enhanced status logic considering both parties
   const getJobStatus = () => {
     if (jobStatus === JobState.WaitingForApproval) {
       return {

@@ -51,7 +51,7 @@ export interface Gig {
   acceptedApplicationId?: string;
 }
 
-export interface GigApplication {
+export interface Application {
   /** Unique identifier for the application. */
   applicationId: string;
   /** Unique identifier for the gig this application is for. */
@@ -70,6 +70,8 @@ export interface GigApplication {
   proposalComment: string;
   /** (Optional) Comment or message included if the application was rejected. */
   rejectionComment?: string;
+  /** (Optional) Gig details associated with the application, if available. */
+  gig?: Gig;
 }
 
 /** Enum representing the possible states of a gig. */
@@ -81,6 +83,12 @@ export enum GigState {
   Disputed = 4,
 }
 
+/** Enum representing the possible states of an application. */
+export enum ApplicationState {
+  Pending = 0,
+  Accepted = 1,
+  Rejected = 2,
+}
 export interface GigsData {
   gigs: Gig[];
 }

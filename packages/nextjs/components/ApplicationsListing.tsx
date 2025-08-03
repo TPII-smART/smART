@@ -1,0 +1,54 @@
+"use client";
+
+import Spinner from "@/components//Spinner/Spinner";
+import ApplicationCard from "@/components/ApplicationCard";
+import { useQuery } from "@tanstack/react-query";
+import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig.service";
+import { Application } from "~~/types/gig.types";
+
+type ApplicationsData = {
+  applications: Application[];
+};
+
+export default function ApplicationsListing({ userAddress }: { userAddress: string }) {
+  const { data, isLoading } = useQuery<ApplicationsData>({
+    queryKey: ["applicationsFromUser", userAddress],
+    queryFn: async () => {
+      const result = await fetchApplicationsWithGigDetails(userAddress);
+      console.log("Query function result:", result);
+      return result;
+    },
+    enabled: !!userAddress, // Only run query if userAddress exists
+    staleTime: 0, // Force fresh data
+  });
+
+  return (
+    <div className="w-full px-4 md:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-content-primary mb-2">My Applications</h1>
+        <p className="text-content-secondary">Manage your applications to gigs.</p>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center w-full h-64">
+          <Spinner />
+        </div>
+      ) : (
+        <div className="w-full">
+          {data?.applications && data.applications.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {data?.applications.map(application => (
+                <ApplicationCard key={application.applicationId} application={application} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-content-secondary text-lg">No applications found.</p>
+              <p className="text-content-tertiary mt-2">Start by applying to gigs that interest you.</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
