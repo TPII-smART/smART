@@ -2,12 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ComboBox from "@/components/ComboBox/ComboBox";
+import FileUploadBox from "@/components/FileUploadBox";
 import { JobCard } from "@/components/JobCard";
 import Modal from "@/components/Modal/Modal";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+// Library for handling file uploads and storage in the IPFS
+import { ThirdwebStorage } from "@thirdweb-dev/storage";
 import { parseEther } from "viem";
 import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { jobCategories } from "~~/components/JobCard/JobCategory/jobCategory.data";
@@ -31,6 +34,9 @@ export default function BrowsePage() {
     queryFn: fetchJobPostings,
   });
 
+  // Instantiate the storage SDK
+  const storage = new ThirdwebStorage({ clientId: "42632462dcab5721755adc586a42e066" });
+
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
   const [categories, setCategories] = useState<string[]>(["all"]);
   const [sortBy, setSortBy] = useState<string>("recent");
@@ -41,7 +47,7 @@ export default function BrowsePage() {
   const [form, setForm] = useState({
     title: "",
     description: "",
-    bannerImageUrl: "",
+    bannerImageFile: undefined as File | undefined,
     paymentInEth: "",
     estimatedDurationHours: "",
     category: "",
@@ -57,7 +63,18 @@ export default function BrowsePage() {
     await refetch();
   };
 
+  // ! Para debuggeo, modificar después los logs y que quede solo el upload, el resolveScheme es solo para ver si lo cargo bien !
+  const handleFileUpload = async (file: File | undefined) => {
+    if (!file) return;
+
+    const uri = await storage.upload(file);
+    console.log(uri);
+    console.log(storage.resolveScheme(uri));
+    return uri;
+  };
+
   const handleSubmit = async () => {
+    const bannerImageUrl = await handleFileUpload(form.bannerImageFile);
     try {
       await createJobPosting({
         functionName: "createJobPosting",
@@ -65,7 +82,7 @@ export default function BrowsePage() {
           {
             title: form.title,
             description: form.description,
-            bannerImageUrl: form.bannerImageUrl || "",
+            bannerImageUrl: bannerImageUrl || "",
             basePayment: parseEther(form.paymentInEth),
             averageWorkDuration: BigInt(form.estimatedDurationHours),
             minimumNoticeTime: BigInt(24), // minimumNoticeTime, can be set to 24 for now
@@ -209,10 +226,10 @@ export default function BrowsePage() {
             value={form.description}
             onChange={val => setForm({ ...form, description: val })}
           />
-          <InputBase
-            placeholder="Banner Image URL"
-            value={form.bannerImageUrl}
-            onChange={val => setForm({ ...form, bannerImageUrl: val })}
+          <FileUploadBox
+            onUploadSuccess={(val: File) => setForm({ ...form, bannerImageFile: val })}
+            //onUploadError={Render error message}
+            acceptedFileType={"Image"}
           />
           <EtherInput
             placeholder="Payment"
