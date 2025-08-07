@@ -43,7 +43,13 @@ export interface OwnProfileProps {
 
 export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
   const [hasChanged, setHasChanged] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+
   const { showSpinner, hideSpinner } = useGlobalSpinner();
   const { writeContractAsync: updateUserProfile } = useScaffoldWriteContract({
     contractName: "ProfileConfigContract",
@@ -59,26 +65,87 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
       if (!file) return;
 
       try {
-        setIsUploading(true);
-        const imageuri = await uploadToIPFS(file);
-        const imageHash = imageuri ? resolveIPFSHash(imageuri) : undefined;
-
-        if (imageHash) {
-          if (type === "banner") {
-            setUser(prev => ({ ...prev, bannerPicture: imageHash }));
-          } else {
-            setUser(prev => ({ ...prev, profilePicture: imageHash }));
-          }
+        const fileUrl = URL.createObjectURL(file);
+        if (type === "banner") {
+          setBannerPreview(fileUrl);
+        } else {
+          setAvatarPreview(fileUrl);
         }
+
+        if (type === "banner") {
+          // Clear previous banner preview if exists
+          if (bannerPreview) {
+            URL.revokeObjectURL(bannerPreview);
+          }
+          setBannerPreview(fileUrl);
+          setBannerFile(file);
+        } else {
+          if (avatarPreview) {
+            URL.revokeObjectURL(avatarPreview);
+          }
+          setAvatarPreview(fileUrl);
+          setAvatarFile(file);
+        }
+
         setHasChanged(true);
       } catch (error) {
-        console.error("Upload failed:", error);
-      } finally {
-        setIsUploading(false);
+        console.error(`${type} upload failed:`, error);
       }
     };
-
     input.click();
+  };
+
+  const getBannerSrc = () => {
+    if (bannerPreview) return bannerPreview;
+    if (isImageUrl(user.bannerPicture)) return user.bannerPicture; // IPFS URL
+    return "https://placehold.co/1200x300/1f2937/1f2937"; // Placeholder
+  };
+
+  const getAvatarSrc = () => {
+    if (avatarPreview) return avatarPreview;
+    if (isImageUrl(user.profilePicture)) return user.profilePicture; // IPFS URL
+    return `https://placehold.co/128x128/7c3aed/ffffff?text=${user.username.charAt(0).toUpperCase() || "U"}`;
+  };
+
+  const handleFileUpload = async (file: File | null, type: "banner" | "avatar") => {
+    if (!file) return;
+
+    try {
+      const imageUri = await uploadToIPFS(file);
+      const imageHash = imageUri ? resolveIPFSHash(imageUri) : undefined;
+
+      if (imageHash) {
+        if (type === "banner") {
+          setUser(prev => ({ ...prev, bannerPicture: imageHash }));
+          console.log("Banner uploaded:", imageHash);
+        } else {
+          setUser(prev => ({ ...prev, profilePicture: imageHash }));
+          console.log("Avatar uploaded:", imageHash);
+        }
+        setHasChanged(true);
+      }
+    } catch (error) {
+      console.error(`${type} upload failed:`, error);
+      if (type === "banner") {
+        setBannerPreview(null);
+      } else {
+        setAvatarPreview(null);
+      }
+    }
+  };
+
+  const cleanPreview = () => {
+    if (bannerPreview) {
+      URL.revokeObjectURL(bannerPreview);
+      setBannerPreview(null);
+    }
+    setBannerFile(null);
+
+    if (avatarPreview) {
+      URL.revokeObjectURL(avatarPreview);
+      setAvatarPreview(null);
+    }
+    setAvatarFile(null);
   };
 
   const handleChange = (value: string, key: keyof UserProfile) => {
@@ -125,6 +192,9 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
     try {
       // If user does not change any field, we do not update the profile
       // This is to avoid unnecessary transactions (and gas costs)
+      await handleFileUpload(bannerFile, "banner");
+      await handleFileUpload(avatarFile, "avatar");
+
       if (hasChanged) {
         socialNetworks.forEach(({ key }) => {
           if (user[key]) {
@@ -137,7 +207,7 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
           args: [user],
         });
       }
-
+      cleanPreview();
       onSave();
     } catch (err) {
       console.error("Failed to update the profile:", err);
@@ -150,27 +220,15 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
     <div className={styles.profileTab}>
       <div className={styles.profileContainer}>
         <div className="relative">
-          <BannerImage
-            src={isImageUrl(user.bannerPicture) ? user.bannerPicture : "https://placehold.co/1200x300/1f2937/1f2937"}
-            alt="Banner"
-            height={192}
-            width={"100%"}
-          />
+          <BannerImage src={getBannerSrc()} alt="Banner" height={192} width={"100%"} />
           <div className="absolute top-0 right-0 m-4  ">
-            <EditButton onClick={() => handleImageUpload("banner")} isLoading={isUploading} />
+            <EditButton onClick={() => handleImageUpload("banner")} />
           </div>
           <div className={styles.avatarImage}>
             <div className="relative">
-              <AvatarImage
-                src={
-                  isImageUrl(user.profilePicture)
-                    ? user.profilePicture
-                    : `https://placehold.co/128x128/7c3aed/ffffff?text=${user.username.charAt(0).toUpperCase() || "U"}`
-                }
-                alt="Profile Picture"
-              />
+              <AvatarImage src={getAvatarSrc()} alt="Profile Picture" />
               <div className="absolute bottom-2 right-2 p-2 ">
-                <EditButton onClick={() => handleImageUpload("avatar")} isLoading={isUploading} />{" "}
+                <EditButton onClick={() => handleImageUpload("avatar")} />
               </div>
             </div>
           </div>
@@ -221,7 +279,7 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
 
         <div className="mt-10 py-6 border-t border-gray-700 flex justify-end min-w-full">
           <Button variant="primary" onClick={handleSubmit}>
-            Save
+            Save Profile
           </Button>
         </div>
       </div>
