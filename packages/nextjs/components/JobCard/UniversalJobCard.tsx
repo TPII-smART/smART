@@ -7,8 +7,7 @@ import { UniversalJobCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
-// Library for handling file uploads and storage in the IPFS
-import { ThirdwebStorage } from "@thirdweb-dev/storage";
+import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
 import { DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
 
 export function UniversalJobCard({
@@ -36,11 +35,8 @@ export function UniversalJobCard({
     }
   };
 
-  // Instantiate the storage SDK
-  const storage = new ThirdwebStorage({ clientId: process.env.NEXT_PUBLIC_THIRD_WEB_STORAGE_CLIENT_ID });
-
   // ! Cambiar junto con el contract por bannerHash y en los lugares que corresponda, porque ahora guardamos el hash del IPFS !
-  const bannerUri = bannerUrl ? storage.resolveScheme(bannerUrl) : undefined;
+  const bannerUri = bannerUrl ? resolveIPFSHash(bannerUrl) : undefined;
 
   return (
     <Card

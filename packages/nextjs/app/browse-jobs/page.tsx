@@ -8,14 +8,13 @@ import Modal from "@/components/Modal/Modal";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
+import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
+import { fetchJobPostings, fetchMaxPayment } from "@services/graphql/fetchers/job.service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-// Library for handling file uploads and storage in the IPFS
-import { ThirdwebStorage } from "@thirdweb-dev/storage";
 import { parseEther } from "viem";
 import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { jobCategories } from "~~/components/JobCard/JobCategory/jobCategory.data";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { fetchJobPostings, fetchMaxPayment } from "~~/services/graphql/fetchers/job.service";
 import { JobPosting, JobPostingData } from "~~/types/job.types";
 
 const optionsCategories = [{ id: "all", label: "All", icon: FunnelIcon, color: "#a3a3a3" }, ...jobCategories];
@@ -33,9 +32,6 @@ export default function BrowsePage() {
     queryKey: ["jobPostings"],
     queryFn: fetchJobPostings,
   });
-
-  // Instantiate the storage SDK
-  const storage = new ThirdwebStorage({ clientId: "42632462dcab5721755adc586a42e066" });
 
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
   const [categories, setCategories] = useState<string[]>(["all"]);
@@ -63,14 +59,10 @@ export default function BrowsePage() {
     await refetch();
   };
 
-  // ! Para debuggeo, modificar después los logs y que quede solo el upload, el resolveScheme es solo para ver si lo cargo bien !
   const handleFileUpload = async (file: File | undefined) => {
     if (!file) return;
 
-    const uri = await storage.upload(file);
-    console.log(uri);
-    console.log(storage.resolveScheme(uri));
-    return uri;
+    return await uploadToIPFS(file);
   };
 
   const handleSubmit = async () => {
