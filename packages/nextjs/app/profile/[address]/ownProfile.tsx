@@ -2,7 +2,7 @@
 
 import { Dispatch, SetStateAction, useState } from "react";
 import styles from "./Profile.module.css";
-import { ThirdwebStorage } from "@thirdweb-dev/storage";
+import { resolveIPFSHash, uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
 import { LinkIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";
@@ -49,18 +49,6 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
     contractName: "ProfileConfigContract",
   });
 
-  const storage = new ThirdwebStorage({ clientId: process.env.NEXT_PUBLIC_CLIENT_STORAGE_ID });
-
-  const handleFileUpload = async (file: File | undefined) => {
-    if (!file) return;
-
-    const uri = await storage.upload(file);
-    const resolvedUri = storage.resolveScheme(uri);
-    console.log("Uploaded file URI:", uri);
-    console.log("Resolved URI:", resolvedUri);
-    return resolvedUri;
-  };
-
   const handleImageUpload = async (type: "banner" | "avatar") => {
     const input = document.createElement("input");
     input.type = "file";
@@ -72,12 +60,14 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
 
       try {
         setIsUploading(true);
-        const ipfsUrl = await handleFileUpload(file);
-        if (ipfsUrl) {
+        const imageuri = await uploadToIPFS(file);
+        const imageHash = imageuri ? resolveIPFSHash(imageuri) : undefined;
+
+        if (imageHash) {
           if (type === "banner") {
-            setUser(prev => ({ ...prev, bannerPicture: ipfsUrl }));
+            setUser(prev => ({ ...prev, bannerPicture: imageHash }));
           } else {
-            setUser(prev => ({ ...prev, profilePicture: ipfsUrl }));
+            setUser(prev => ({ ...prev, profilePicture: imageHash }));
           }
         }
         setHasChanged(true);
@@ -166,13 +156,8 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
             height={192}
             width={"100%"}
           />
-          <div className="absolute top-0 right-0 m-4 bg-gray-800/50 p-2 rounded-full cursor-pointer hover:bg-gray-700/70">
+          <div className="absolute top-0 right-0 m-4  ">
             <EditButton onClick={() => handleImageUpload("banner")} isLoading={isUploading} />
-            {isUploading && (
-              <div className="absolute -bottom-8 right-0 text-xs text-white bg-black/50 px-2 py-1 rounded">
-                Uploading...
-              </div>
-            )}{" "}
           </div>
           <div className={styles.avatarImage}>
             <div className="relative">
@@ -184,7 +169,7 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
                 }
                 alt="Profile Picture"
               />
-              <div className="absolute bottom-2 right-2 bg-gray-800/50 p-2 rounded-full cursor-pointer hover:bg-gray-700/70">
+              <div className="absolute bottom-2 right-2 p-2 ">
                 <EditButton onClick={() => handleImageUpload("avatar")} isLoading={isUploading} />{" "}
               </div>
             </div>
