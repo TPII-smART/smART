@@ -8,21 +8,24 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
-import { WagmiProvider } from "wagmi";
+import { WagmiProvider, useAccount } from "wagmi";
 import {
   BookOpenIcon,
   BriefcaseIcon,
   BugAntIcon,
   HomeIcon,
   MagnifyingGlassIcon,
+  UserIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { SpinnerProvider } from "~~/context/SpinnerProvider";
 import { useInitializeNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   useInitializeNativeCurrencyPrice();
+  const { address } = useAccount();
 
   return (
     <>
@@ -34,6 +37,11 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               label: "Home",
               href: "/",
               icon: HomeIcon,
+            },
+            {
+              label: "Profile",
+              href: `/profile/${address}`,
+              icon: UserIcon,
             },
             {
               label: "My Jobs",
@@ -112,8 +120,8 @@ export const ScaffoldEthAppWithProviders = ({ children }: { children: React.Reac
           theme={mounted ? (isDarkMode ? darkTheme() : lightTheme()) : lightTheme()}
         >
           <ScaffoldEthApp>
-            {children}
-            <Toaster /> {/* Notifications */}
+            <SpinnerProvider>{children}</SpinnerProvider>
+            <Toaster /> {/* Toaster for notifications */}
           </ScaffoldEthApp>
         </RainbowKitProvider>
       </QueryClientProvider>

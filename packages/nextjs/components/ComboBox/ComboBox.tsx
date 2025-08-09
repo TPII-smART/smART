@@ -116,7 +116,7 @@ export default function ComboBox({
       let val = typeof value === "string" ? value.split(",") : value;
 
       const hasResetKey = val.some((v: any) => v === resetKey);
-      if (hasResetKey) {
+      if (resetKey && hasResetKey) {
         if (val.length > 1 && val[0] !== resetKey) {
           val = [resetKey]; // Reset to only the resetKey value
         } else {
@@ -143,7 +143,7 @@ export default function ComboBox({
             labelId={id + "_label"}
             id={id}
             value={Array.isArray(value) ? (value as string[]) : []}
-            onChange={handleChange}
+            onChange={e => handleChange(e as unknown as SelectChangeEvent)}
             label={label}
             multiple
             MenuProps={menuProps}

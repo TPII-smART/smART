@@ -2,9 +2,17 @@ import Button from "../Button/Button";
 import { CustomerProps } from "./types";
 import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle, Clock, Download, Play, Send, XCircle } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import {
+  ArrowDownTrayIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  PaperAirplaneIcon,
+  PlayIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobState } from "~~/types/job.types";
 
@@ -24,7 +32,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
       return {
         label: "Waiting for Approval",
         color: "bg-amber-500",
-        icon: Clock,
+        icon: ClockIcon,
         description: isFreelancer ? "Waiting for client approval" : "Awaiting your approval",
       };
     }
@@ -35,28 +43,28 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
         return {
           label: "Completed - Awaiting Payment",
           color: "bg-blue-500",
-          icon: CheckCircle,
+          icon: CheckCircleIcon,
           description: "Work delivered and received",
         };
       } else if (job.freelancerDelivered && !job.clientReceived) {
         return {
           label: "Delivered - Awaiting Review",
           color: "bg-purple-500",
-          icon: Send,
+          icon: PaperAirplaneIcon,
           description: "Work delivered, awaiting client review",
         };
       } else if (!job.freelancerDelivered && job.clientReceived) {
         return {
           label: "In Progress - Client Ready",
           color: "bg-green-500",
-          icon: Play,
+          icon: PlayIcon,
           description: "Client ready, awaiting delivery",
         };
       } else {
         return {
           label: "In Progress",
           color: "bg-green-500",
-          icon: Play,
+          icon: PlayIcon,
           description: "Work in progress",
         };
       }
@@ -66,7 +74,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
       return {
         label: "Completed",
         color: "bg-emerald-500",
-        icon: CheckCircle,
+        icon: CheckCircleIcon,
         description: "Job successfully completed",
       };
     }
@@ -75,7 +83,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
       return {
         label: "Cancelled",
         color: "bg-red-500",
-        icon: XCircle,
+        icon: XCircleIcon,
         description: "Job was cancelled",
       };
     }
@@ -83,7 +91,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
     return {
       label: "Unknown",
       color: "bg-gray-500",
-      icon: AlertCircle,
+      icon: ExclamationTriangleIcon,
       description: "Unknown status",
     };
   };
@@ -184,7 +192,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
     if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
       buttons.push(
         <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
-          <XCircle className="h-5 w-5" />
+          <XCircleIcon className="h-5 w-5" />
         </Button>,
       );
     }
@@ -201,7 +209,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
             size="sm"
             tooltip="Accept Job"
           >
-            <CheckCircle className="h-5 w-5" />
+            <CheckCircleIcon className="h-5 w-5" />
           </Button>,
         );
       }
@@ -215,7 +223,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
             size="sm"
             tooltip="Mark as Delivered"
           >
-            <Send className="h-5 w-5" />
+            <PaperAirplaneIcon className="h-5 w-5" />
           </Button>,
         );
       }
@@ -234,7 +242,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
               size="sm"
               tooltip="Mark as Received"
             >
-              <Download className="h-5 w-5" />
+              <ArrowDownTrayIcon className="h-5 w-5" />
             </Button>,
           );
         }

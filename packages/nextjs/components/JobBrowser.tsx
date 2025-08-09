@@ -2,14 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ComboBox from "@/components/ComboBox/ComboBox";
+import FileUploadBox from "@/components/FileUploadBox";
 import { GigCard } from "@/components/GigCard";
 import { JobCard } from "@/components/JobCard";
 import Modal from "@/components/Modal/Modal";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
-import { Filter, FilterIcon, Plus } from "lucide-react";
+import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
 import { parseEther } from "viem";
+import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { jobCategories } from "~~/components/JobCard/JobCategory/jobCategory.data";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig.service";
@@ -17,13 +19,13 @@ import { fetchMaxJobPayment } from "~~/services/graphql/fetchers/job.service";
 import { Gig, GigsData } from "~~/types/gig.types";
 import { JobPosting, JobPostingData } from "~~/types/job.types";
 
-const optionsCategories = [{ id: "all", label: "All", icon: Filter, color: "#a3a3a3" }, ...jobCategories];
+const optionsCategories = [{ id: "all", label: "All", icon: FunnelIcon, color: "#a3a3a3" }, ...jobCategories];
 
 const optionsSorts = [
-  { id: "recent", label: "Most Recent", icon: Filter, color: "#a3a3a3" },
-  { id: "popular", label: "Most Popular", icon: Filter, color: "#38bdf8" },
-  { id: "price-low", label: "Price: Low to High", icon: Filter, color: "#fbbf24" },
-  { id: "price-high", label: "Price: High to Low", icon: Filter, color: "#f472b6" },
+  { id: "recent", label: "Most Recent", icon: FunnelIcon, color: "#a3a3a3" },
+  { id: "popular", label: "Most Popular", icon: FunnelIcon, color: "#38bdf8" },
+  { id: "price-low", label: "Price: Low to High", icon: FunnelIcon, color: "#fbbf24" },
+  { id: "price-high", label: "Price: High to Low", icon: FunnelIcon, color: "#f472b6" },
 ];
 
 interface BrowsePageProps {
@@ -46,7 +48,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   const [form, setForm] = useState({
     title: "",
     description: "",
-    bannerImageUrl: "",
+    bannerImageFile: undefined as File | undefined,
     paymentInEth: "",
     estimatedDurationHours: "",
     category: "",
@@ -56,7 +58,14 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
     contractName: type === "job" ? "JobsContract" : "GigsContract",
   });
 
+  const handleFileUpload = async (file: File | undefined) => {
+    if (!file) return;
+
+    return await uploadToIPFS(file);
+  };
+
   const handleSubmit = async () => {
+    const bannerImageUrl = await handleFileUpload(form.bannerImageFile);
     try {
       if (type === "job") {
         await createPosting({
@@ -65,7 +74,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
             {
               title: form.title,
               description: form.description,
-              bannerImageUrl: form.bannerImageUrl || "",
+              bannerImageUrl: bannerImageUrl || "",
               basePayment: parseEther(form.paymentInEth),
               averageWorkDuration: BigInt(form.estimatedDurationHours),
               minimumNoticeTime: BigInt(24),
@@ -80,6 +89,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
             {
               title: form.title,
               description: form.description,
+              // bannerImageUrl: bannerImageUrl || "",
               category: form.category,
               maxDurationInHours: BigInt(form.estimatedDurationHours),
             },
@@ -184,7 +194,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
           <aside className="w-full md:w-64">
             <div className="space-y-6">
               <h2 className="text-lg font-semibold flex items-center gap-2 px-4">
-                <Filter className="h-5 w-5" />
+                <FunnelIcon className="h-5 w-5" />
                 Filters
               </h2>
 
@@ -197,7 +207,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
                 onChange={setCategories}
                 options={optionsCategories}
                 resetKey="all"
-                icon={<FilterIcon className={"h-[1.125rem] w-[1.125rem]"} />}
+                icon={<FunnelIcon className={"h-[1.125rem] w-[1.125rem]"} />}
               />
 
               <div className="space-y-3">
@@ -214,7 +224,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
                 value={sortBy}
                 onChange={setSortBy}
                 options={optionsSorts}
-                icon={<FilterIcon className={"h-[1.125rem] w-[1.125rem]"} />}
+                icon={<FunnelIcon className={"h-[1.125rem] w-[1.125rem]"} />}
               />
             </div>
           </aside>
@@ -247,7 +257,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
         style={{ backgroundColor: "var(--color-accent)" }}
         aria-label="Create Job"
       >
-        <Plus className="h-5 w-5" />
+        <PlusIcon className="h-5 w-5" />
       </button>
 
       <Modal
@@ -270,10 +280,10 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
             value={form.description}
             onChange={val => setForm({ ...form, description: val })}
           />
-          <InputBase
-            placeholder="Banner Image URL"
-            value={form.bannerImageUrl}
-            onChange={val => setForm({ ...form, bannerImageUrl: val })}
+          <FileUploadBox
+            onUploadSuccess={(val: File) => setForm({ ...form, bannerImageFile: val })}
+            //onUploadError={Render error message}
+            acceptedFileType={"Image"}
           />
           <EtherInput
             placeholder="Payment"
