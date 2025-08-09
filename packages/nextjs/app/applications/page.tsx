@@ -1,23 +1,23 @@
 "use client";
 
 import { useEffect } from "react";
-import MyJobPostingsListing from "@/components/MyJobPostingsListing";
+import ApplicationsListing from "@/components/ApplicationsListing";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
-export default function MyJobs() {
+export default function Applications() {
   const { address: userAddress } = useAccount();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     queryClient.invalidateQueries({
-      queryKey: ["jobPostingsFromUser", userAddress],
+      queryKey: ["applicationsFromUser", userAddress],
     });
   }, []);
 
   return (
     <div className="flex flex-col min-h-screen mt-4">
-      <MyJobPostingsListing userAddress={userAddress || ""} />
+      <ApplicationsListing userAddress={userAddress || ""} />
     </div>
   );
 }

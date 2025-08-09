@@ -2,7 +2,7 @@ import { endpoint } from "../config";
 import request, { gql } from "graphql-request";
 import { Job, JobPosting } from "~~/types/job.types";
 
-export const fetchMaxPayment = async () => {
+export const fetchMaxJobPayment = async () => {
   const query = gql`
     query GetJobPostingsPayments {
       jobPostings {
@@ -43,12 +43,38 @@ export const fetchJobPostings = async () => {
   return { jobPostings: res.jobPostings.items };
 };
 
-export const fetchMyJobs = async (userAddress: string) => {
-  console.log("fetchMyJobs", userAddress);
+export const fetchMyJobPostings = async (userAddress: string) => {
+  console.log("fetchMyJobPostings", userAddress);
 
   const query = gql`
-    query GetJobs($freelancer: String!) {
-      jobs(where: { freelancer: $freelancer }, orderBy: "acceptedAt", orderDirection: "desc") {
+    query GetJobPostings($userAddress: String!) {
+      jobPostings(where: { freelancer: $userAddress }, orderBy: "createdAt", orderDirection: "desc") {
+        items {
+          postingId
+          freelancer
+          basePayment
+          title
+          description
+          category
+          bannerImageUrl
+          minimumNoticeTime
+          averageWorkDuration
+          createdAt
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, query, { userAddress: userAddress });
+  return { jobPostings: res.jobPostings.items };
+};
+
+export const fetchJobsFromPosting = async (postingId: string) => {
+  console.log("fetchJobsFromPosting", postingId);
+
+  const query = gql`
+    query GetJobs($postingId: BigInt!) {
+      jobs(where: { postingId: $postingId }, orderBy: "acceptedAt", orderDirection: "desc") {
         items {
           jobId
           postingId
@@ -71,7 +97,7 @@ export const fetchMyJobs = async (userAddress: string) => {
     }
   `;
 
-  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { freelancer: userAddress });
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { postingId: postingId });
   return { jobs: res.jobs.items };
 };
 

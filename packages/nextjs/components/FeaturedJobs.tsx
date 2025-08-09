@@ -1,4 +1,4 @@
-import { JobCard } from "@/components/JobCard";
+import { JobPostingCard } from "~~/components/Card/JobPostingCard/JobPostingCard";
 
 const featuredJobs = [
   {
@@ -49,7 +49,7 @@ export function FeaturedJobs() {
         <h2 className="text-3xl font-bold tracking-tight text-center mb-12">Featured Jobs</h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {featuredJobs.map(job => (
-            <JobCard jobPosting={job} key={job.postingId} />
+            <JobPostingCard jobPosting={job} key={job.postingId} />
           ))}
         </div>
       </div>
