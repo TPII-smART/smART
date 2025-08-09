@@ -37,6 +37,7 @@ contract GigsContract {
         string description;
         string category; // e.g., "Writing", "Web Development", "Design"
         uint256 maxDurationInHours; // Maximum time client is willing to wait
+        string gigBannerImageHash; // IPFS hash of the gig banner image
     }
 
     // Struct for individual gigs posted by clients
@@ -59,6 +60,7 @@ contract GigsContract {
         bool freelancerDelivered; // Whether the freelancer has delivered the work results
         Application[] applications; // All applications for this gig
         uint256 acceptedApplicationId; // ID of the accepted application
+        string gigBannerImageHash; // IPFS hash of the gig banner image
     }
 
     // State variables of the contract
@@ -74,7 +76,8 @@ contract GigsContract {
         string title,
         string description,
         string category,
-        uint256 maxDurationInHours
+        uint256 maxDurationInHours,
+        string gigBannerImageHash
     );
 
     event ApplicationSubmitted(
@@ -200,6 +203,7 @@ contract GigsContract {
         newGig.clientReceived = false;
         newGig.freelancerDelivered = false;
         newGig.acceptedApplicationId = 0;
+        newGig.gigBannerImageHash = params.gigBannerImageHash; // Store gig banner image hash
         // applications array is automatically initialized as empty
         }
 
@@ -210,7 +214,8 @@ contract GigsContract {
             params.title,
             params.description,
             params.category,
-            params.maxDurationInHours
+            params.maxDurationInHours,
+            params.gigBannerImageHash
         );
 
         return gigId;

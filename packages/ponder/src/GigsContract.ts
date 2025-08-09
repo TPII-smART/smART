@@ -36,6 +36,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
         clientReceived: false,
         freelancerDelivered: false,
         acceptedApplicationId: null,
+        gigBannerImageHash: event.args.gigBannerImageHash,
     });
 });
 
