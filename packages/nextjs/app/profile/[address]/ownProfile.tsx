@@ -97,33 +97,29 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
 
   const getBannerSrc = () => {
     if (bannerPreview) return bannerPreview;
-    if (isImageUrl(user.bannerPicture)) return user.bannerPicture; // IPFS URL
+    if (isImageUrl(user?.bannerPicture || "")) return user.bannerPicture; // IPFS URL
     return "https://placehold.co/1200x300/1f2937/1f2937"; // Placeholder
   };
 
   const getAvatarSrc = () => {
     if (avatarPreview) return avatarPreview;
-    if (isImageUrl(user.profilePicture)) return user.profilePicture; // IPFS URL
-    return `https://placehold.co/128x128/7c3aed/ffffff?text=${user.username.charAt(0).toUpperCase() || "U"}`;
+    if (user && isImageUrl(user.profilePicture || "")) return user.profilePicture; // IPFS URL
+    return `https://placehold.co/128x128/7c3aed/ffffff?text=${user?.username.charAt(0).toUpperCase() || "U"}`;
   };
 
-  const handleFileUpload = async (file: File | null, type: "banner" | "avatar") => {
-    if (!file) return;
+  const handleFileUpload = async (file: File | null, type: "banner" | "avatar"): Promise<string | null> => {
+    if (!file) return null;
 
     try {
+      console.log(` Uploading ${type} to IPFS...`);
       const imageUri = await uploadToIPFS(file);
       const imageHash = imageUri ? resolveIPFSHash(imageUri) : undefined;
 
       if (imageHash) {
-        if (type === "banner") {
-          setUser(prev => ({ ...prev, bannerPicture: imageHash }));
-          console.log("Banner uploaded:", imageHash);
-        } else {
-          setUser(prev => ({ ...prev, profilePicture: imageHash }));
-          console.log("Avatar uploaded:", imageHash);
-        }
-        setHasChanged(true);
+        console.log(` ${type} uploaded:`, imageHash);
+        return imageHash;
       }
+      return null;
     } catch (error) {
       console.error(`${type} upload failed:`, error);
       if (type === "banner") {
@@ -131,6 +127,7 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
       } else {
         setAvatarPreview(null);
       }
+      return null;
     }
   };
 
@@ -192,19 +189,30 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
     try {
       // If user does not change any field, we do not update the profile
       // This is to avoid unnecessary transactions (and gas costs)
-      await handleFileUpload(bannerFile, "banner");
-      await handleFileUpload(avatarFile, "avatar");
-
       if (hasChanged) {
+        const bannerHash = await handleFileUpload(bannerFile, "banner");
+        const avatarHash = await handleFileUpload(avatarFile, "avatar");
+
+        const updatedUser = { ...user };
+
+        if (bannerHash) {
+          updatedUser.bannerPicture = bannerHash;
+        }
+        if (avatarHash) {
+          updatedUser.profilePicture = avatarHash;
+        }
+
         socialNetworks.forEach(({ key }) => {
-          if (user[key]) {
-            setUser(prev => ({ ...prev, [key]: addPrefixToUrl(user[key], "https://") }));
+          if (updatedUser[key]) {
+            updatedUser[key] = addPrefixToUrl(updatedUser[key], "https://");
           }
         });
 
+        setUser(updatedUser);
+
         await updateUserProfile({
           functionName: "setProfile",
-          args: [user],
+          args: [updatedUser],
         });
       }
       cleanPreview();

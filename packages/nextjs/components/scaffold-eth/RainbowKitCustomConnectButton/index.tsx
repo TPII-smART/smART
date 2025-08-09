@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Faucet, FaucetButton, isENS } from "..";
 import { Balance } from "../Balance/Balance";
 import { BlockieAvatar } from "../BlockieAvatar";
@@ -9,19 +10,34 @@ import { WrongNetworkDropdown } from "./WrongNetworkDropdown";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Address } from "viem";
 import { hardhat } from "viem/chains";
+import { useAccount } from "wagmi";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { useUserProfile } from "~~/context/UserProfileContext";
 import { useNetworkColor } from "~~/hooks/scaffold-eth";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
+import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
 
 /**
  * Custom Wagmi Connect Button (watch balance + custom design)
  */
+
 export const RainbowKitCustomConnectButton = () => {
   const networkColor = useNetworkColor();
   const { targetNetwork } = useTargetNetwork();
 
   const isLocalNetwork = targetNetwork.id === hardhat.id;
+
+  const { userProfile, setUserProfile } = useUserProfile();
+  const { address } = useAccount();
+
+  useEffect(() => {
+    if (address) {
+      fetchUserProfile(address)
+        .then(profile => setUserProfile(profile))
+        .catch(() => setUserProfile(null));
+    }
+  }, [address, setUserProfile]);
 
   return (
     <ConnectButton.Custom>
@@ -30,6 +46,8 @@ export const RainbowKitCustomConnectButton = () => {
         const blockExplorerAddressLink = account
           ? getBlockExplorerAddressLink(targetNetwork, account.address)
           : undefined;
+
+        const avatarImage = userProfile?.profilePicture || account?.ensAvatar;
 
         return (
           <>
@@ -56,7 +74,7 @@ export const RainbowKitCustomConnectButton = () => {
                       className={`"pr-2" btn btn-secondary btn-sm pl-0 ml-1 shadow-md dropdown-toggle gap-0 h-auto!`}
                       style={{ transition: "all 0.5s ease-in-out" }}
                     >
-                      <BlockieAvatar address={account.address} size={30} ensImage={account.ensAvatar} />
+                      <BlockieAvatar address={account.address} size={30} ensImage={avatarImage} />
 
                       <span className="ml-2 mr-1 whitespace-nowrap overflow-hidden text-ellipsis">
                         {isENS(account.displayName)
