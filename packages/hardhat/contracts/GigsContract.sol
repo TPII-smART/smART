@@ -38,6 +38,7 @@ contract GigsContract {
         string category; // e.g., "Writing", "Web Development", "Design"
         uint256 maxDurationInHours; // Maximum time client is willing to wait
         string gigBannerImageHash; // IPFS hash of the gig banner image
+        uint256 basePayment; // Base ETH client is willing to pay
     }
 
     // Struct for individual gigs posted by clients
@@ -45,7 +46,7 @@ contract GigsContract {
         uint256 gigId;
         address client;
         address acceptedFreelancer; // The freelancer whose application was accepted
-        uint256 maxPayment; // Maximum ETH client is willing to pay
+        uint256 basePayment; // Base ETH client is willing to pay
         uint256 finalPayment; // Final agreed payment (from accepted application)
         string title;
         string description;
@@ -72,7 +73,7 @@ contract GigsContract {
     event GigCreated(
         uint256 indexed gigId,
         address indexed client,
-        uint256 maxPayment,
+        uint256 basePayment,
         string title,
         string description,
         string category,
@@ -168,33 +169,27 @@ contract GigsContract {
         owner = _owner;
     }
 
-    /**
-     * @dev Create a new gig (Client posts work request)
-     * @param params GigParams struct containing title, description, category, and maxDurationInHours
-     */
     function createGig(
         GigParams memory params
-    ) external payable returns (uint256) {
-        require(msg.value > 0, "Must send ETH as maximum payment");
+    ) external returns (uint256) {
         require(params.maxDurationInHours > 0, "Duration must be greater than 0");
         require(bytes(params.title).length > 0, "Title cannot be empty");
         require(bytes(params.description).length > 0, "Description cannot be empty");
         require(bytes(params.category).length > 0, "Category cannot be empty");
+        require(params.basePayment > 0, "Base payment must be greater than 0");
 
         uint256 gigId = postedGigsCounter++;
-
-        // Create Gig with all required fields
         Gig storage newGig = postedGigs[gigId];
         {
         newGig.gigId = gigId;
         newGig.client = msg.sender;
         newGig.acceptedFreelancer = address(0);
-        newGig.maxPayment = msg.value;
+        newGig.basePayment = params.basePayment;
         newGig.finalPayment = 0;
-            newGig.title = params.title;
-            newGig.description = params.description;
-            newGig.category = params.category;
-            newGig.maxDurationInHours = params.maxDurationInHours;
+        newGig.title = params.title;
+        newGig.description = params.description;
+        newGig.category = params.category;
+        newGig.maxDurationInHours = params.maxDurationInHours;
         newGig.finalDurationInHours = 0;
         newGig.deadline = 0;
         newGig.state = GigState.Open;
@@ -203,14 +198,13 @@ contract GigsContract {
         newGig.clientReceived = false;
         newGig.freelancerDelivered = false;
         newGig.acceptedApplicationId = 0;
-        newGig.gigBannerImageHash = params.gigBannerImageHash; // Store gig banner image hash
-        // applications array is automatically initialized as empty
+        newGig.gigBannerImageHash = params.gigBannerImageHash;
         }
 
         emit GigCreated(
             gigId,
             msg.sender,
-            msg.value,
+            params.basePayment,
             params.title,
             params.description,
             params.category,
@@ -235,9 +229,7 @@ contract GigsContract {
         require(gig.state == GigState.Open, "Gig is not accepting applications");
         require(msg.sender != gig.client, "Client cannot apply to their own gig");
         require(params.proposedPayment > 0, "Proposed payment must be greater than 0");
-        require(params.proposedPayment <= gig.maxPayment, "Proposed payment exceeds maximum");
         require(params.proposedDurationInHours > 0, "Duration must be greater than 0");
-        require(params.proposedDurationInHours <= gig.maxDurationInHours, "Proposed duration exceeds maximum");
         require(bytes(params.proposal).length > 0, "Proposal comment cannot be empty");
 
         _validateApplication(_gigId);
@@ -287,6 +279,7 @@ contract GigsContract {
      */
     function acceptApplication(uint256 _gigId, uint256 _applicationId)
     external
+    payable
     gigExists(_gigId)
     applicationExists(_gigId, _applicationId)
     onlyClient(_gigId)
@@ -296,6 +289,7 @@ contract GigsContract {
 
         require(gig.state == GigState.Open, "Gig is not accepting applications");
         require(application.state == ApplicationState.Pending, "Application is not pending");
+        require(msg.value == application.proposedPayment, "Must pay the agreed price");
 
         // Accept the application
         _processAcceptance(_gigId, _applicationId);
@@ -415,12 +409,6 @@ contract GigsContract {
         // Send agreed payment to freelancer
         payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
 
-        // Refund remaining payment to client if any
-        uint256 refund = gig.maxPayment - gig.finalPayment;
-        if (refund > 0) {
-            payable(gig.client).transfer(refund);
-        }
-
         emit GigCompleted(
             _gigId,
             gig.acceptedFreelancer,
@@ -437,13 +425,12 @@ contract GigsContract {
         Gig storage gig = postedGigs[_gigId];
 
         if (gig.state == GigState.Open) {
-            // If gig is still open, simply cancel and refund full amount
+            // If gig is still open, simply cancel the gig
             gig.state = GigState.Cancelled;
-            payable(gig.client).transfer(gig.maxPayment);
         } else if (gig.state == GigState.InProgress) {
             // If gig is in progress, cancel and refund full amount to client
             gig.state = GigState.Cancelled;
-            payable(gig.client).transfer(gig.maxPayment);
+            payable(gig.client).transfer(gig.finalPayment);
         } else {
             revert("Gig cannot be cancelled in its current state");
         }
@@ -460,8 +447,10 @@ contract GigsContract {
 
         gig.state = GigState.Cancelled;
 
-        // Refund full amount to client
-        payable(gig.client).transfer(gig.maxPayment);
+        // Refund full amount to client if gig is in progress
+        if (gig.state == GigState.InProgress) {
+            payable(gig.client).transfer(gig.basePayment);
+        }
 
         emit GigCancelled(_gigId, GigState.Cancelled, block.timestamp);
     }

@@ -21,7 +21,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
     await context.db.insert(gig).values({
         gigId: event.args.gigId,
         client: event.args.client,
-        maxPayment: event.args.maxPayment,
+        basePayment: event.args.basePayment,
         title: event.args.title,
         description: event.args.description,
         category: event.args.category,
