@@ -1,8 +1,8 @@
 "use client";
 
+import React from "react";
 import { Faucet, FaucetButton, isENS } from "..";
 import { Balance } from "../Balance/Balance";
-import { BlockieAvatar } from "../BlockieAvatar";
 import { AddressInfoDropdown } from "./AddressInfoDropdown";
 import { AddressQRCodeModal } from "./AddressQRCodeModal";
 import { WrongNetworkDropdown } from "./WrongNetworkDropdown";
@@ -10,7 +10,9 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Address } from "viem";
 import { hardhat } from "viem/chains";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { useNetworkColor } from "~~/hooks/scaffold-eth";
+import AvatarImage from "~~/components/AvatarImage/AvatarImage";
+import Skeleton from "~~/components/Skeleton/Skeleton";
+import { useUserContext } from "~~/context/UserProvider";
 import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
 
@@ -19,7 +21,7 @@ import { getBlockExplorerAddressLink } from "~~/utils/scaffold-eth";
  */
 
 export const RainbowKitCustomConnectButton = () => {
-  const networkColor = useNetworkColor();
+  const { savedUser, loadingUser } = useUserContext();
   const { targetNetwork } = useTargetNetwork();
 
   const isLocalNetwork = targetNetwork.id === hardhat.id;
@@ -46,7 +48,7 @@ export const RainbowKitCustomConnectButton = () => {
         //const avatarImage = userProfile?.profilePicture || account?.ensAvatar;
 
         return (
-          <>
+          <Skeleton variant="rounded" active={!mounted || !chain} width={200}>
             {(() => {
               if (!connected) {
                 return (
@@ -67,16 +69,29 @@ export const RainbowKitCustomConnectButton = () => {
                     blockExplorerAddressLink={blockExplorerAddressLink}
                   >
                     <summary
-                      className={`"pr-2" btn btn-secondary btn-sm pl-0 ml-1 shadow-md dropdown-toggle gap-0 h-auto!`}
+                      className={`pr-2 btn btn-secondary btn-sm pl-0 ml-1 shadow-md dropdown-toggle gap-0 h-auto!`}
                       style={{ transition: "all 0.5s ease-in-out" }}
                     >
-                      <BlockieAvatar address={account.address} size={30} ensImage={account.ensAvatar} />
+                      <AvatarImage
+                        src={savedUser?.profilePicture ?? account.ensAvatar}
+                        address={account.address as `0x${string}`}
+                        width={30}
+                        height={30}
+                        loading={loadingUser}
+                      />
 
-                      <span className="ml-2 mr-1 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {isENS(account.displayName)
-                          ? account.displayName
-                          : account.address?.slice(0, 6) + "..." + account.address?.slice(-4)}
-                      </span>
+                      {loadingUser ? (
+                        <div className="ml-2">
+                          <Skeleton variant="rounded" width={100} height={15} />
+                        </div>
+                      ) : (
+                        <span className="ml-2 mr-1 whitespace-nowrap overflow-hidden text-ellipsis text-sm">
+                          {savedUser?.username ??
+                            (isENS(account?.displayName)
+                              ? account?.displayName
+                              : account?.address?.slice(0, 6) + "..." + account?.address?.slice(-4))}
+                        </span>
+                      )}
                     </summary>
                   </AddressInfoDropdown>
                   {isLocalNetwork && (
@@ -91,17 +106,14 @@ export const RainbowKitCustomConnectButton = () => {
                       </label>
                     </div>
                   )}
-                  <div className="flex flex-col items-center mr-1">
-                    <Balance address={account.address as Address} className="min-h-0 h-auto" />
-                    <span className="text-xs" style={{ color: networkColor }}>
-                      {chain.name}
-                    </span>
+                  <div>
+                    <Balance address={account.address as Address} chainName={chain?.name} className="min-h-0 h-auto" />
                   </div>
                   <AddressQRCodeModal address={account.address as Address} modalId="qrcode-modal" />
                 </div>
               );
             })()}
-          </>
+          </Skeleton>
         );
       }}
     </ConnectButton.Custom>

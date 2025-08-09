@@ -15,6 +15,7 @@ import XIcon from "~~/components/assets/Logos/x";
 import { InputBase } from "~~/components/scaffold-eth";
 import { TextArea } from "~~/components/scaffold-eth/Input/TextArea";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
+import { useUserContext } from "~~/context/UserProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { addPrefixToUrl, isImageUrl } from "~~/lib/utils";
 import { UserProfile } from "~~/types/user-profile.type";
@@ -50,6 +51,7 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
+  const { reloadUser } = useUserContext();
   const { showSpinner, hideSpinner } = useGlobalSpinner();
   const { writeContractAsync: updateUserProfile } = useScaffoldWriteContract({
     contractName: "ProfileConfigContract",
@@ -214,6 +216,8 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
           functionName: "setProfile",
           args: [updatedUser],
         });
+
+        await reloadUser(); // Reload user profile after update
       }
       cleanPreview();
       onSave();
