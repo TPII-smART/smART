@@ -47,8 +47,8 @@ export const fetchMyJobPostings = async (userAddress: string) => {
   console.log("fetchMyJobPostings", userAddress);
 
   const query = gql`
-    query GetJobPostings($freelancer: String!) {
-      jobPostings(where: { freelancer: $freelancer }, orderBy: "createdAt", orderDirection: "desc") {
+    query GetJobPostings($userAddress: String!) {
+      jobPostings(where: { freelancer: $userAddress }, orderBy: "createdAt", orderDirection: "desc") {
         items {
           postingId
           freelancer
@@ -62,9 +62,10 @@ export const fetchMyJobPostings = async (userAddress: string) => {
           createdAt
         }
       }
+    }
   `;
 
-  const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, query, { freelancer: userAddress });
+  const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, query, { userAddress: userAddress });
   return { jobPostings: res.jobPostings.items };
 };
 
@@ -72,7 +73,7 @@ export const fetchJobsFromPosting = async (postingId: string) => {
   console.log("fetchJobsFromPosting", postingId);
 
   const query = gql`
-    query GetJobs($postingId: String!) {
+    query GetJobs($postingId: BigInt!) {
       jobs(where: { postingId: $postingId }, orderBy: "acceptedAt", orderDirection: "desc") {
         items {
           jobId

@@ -71,7 +71,11 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
     <Button variant="primary" onClick={() => setShowModal(true)}>
       Hire
     </Button>
-  ) : null;
+  ) : (
+    <Button variant="outline" onClick={() => (window.location.href = `/job-posting/${jobPosting?.postingId}`)}>
+      Details
+    </Button>
+  );
 
   return (
     <>

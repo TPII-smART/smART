@@ -4,25 +4,16 @@ import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import Modal from "@/components/Modal/Modal";
-import { queryClient } from "@/components/ScaffoldEthAppWithProviders";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
-import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { fetchApplicationsForGig } from "~~/services/graphql/fetchers/gig.service";
-import { Application } from "~~/types/gig.types";
-
-interface ApplicationsData {
-  applications: Application[];
-}
 
 export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   const { address } = useAccount();
   const [showApplyModal, setShowApplyModal] = React.useState(false);
-  const [showApplicationsModal, setShowApplicationsModal] = React.useState(false);
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
@@ -31,25 +22,6 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
     proposedDurationInHours: "48",
     proposalComment: "",
   });
-  const { data, isLoading, refetch } = useQuery<ApplicationsData>({
-    queryKey: ["applicationsFromGig", gig.gigId],
-    queryFn: () => fetchApplicationsForGig(gig.gigId),
-  });
-
-  const reloadApplications = async () => {
-    queryClient.invalidateQueries({ queryKey: ["applicationsFromGig", gig.gigId] });
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay to ensure UI
-    if (reload) await reload();
-    await refetch();
-  };
-
-  React.useEffect(() => {
-    if (showApplicationsModal) {
-      reloadApplications();
-    }
-  }, [showApplicationsModal]);
-
-  console.log("GigCard data:", data);
 
   const handleApplyToGig = async () => {
     try {
@@ -92,19 +64,14 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
     </span>
   );
 
-  const truncateAddress = (address: string) => {
-    if (!address) return "";
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
   // Apply button
   const applyButton = !isMyOwnGig ? (
     <Button variant="primary" onClick={() => setShowApplyModal(true)}>
       Apply
     </Button>
   ) : (
-    <Button variant="outline" onClick={() => setShowApplicationsModal(true)}>
-      View Applications
+    <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
+      Details
     </Button>
   );
 
@@ -153,48 +120,6 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
             value={form.proposalComment}
             onChange={val => setForm({ ...form, proposalComment: val })}
           />
-        </div>
-      </Modal>
-
-      {/* Applications Modal */}
-      <Modal
-        title="Applications for this Gig"
-        variant="custom"
-        onClose={() => setShowApplicationsModal(false)}
-        isOpen={showApplicationsModal}
-        loading={isLoading}
-        description="Here are the applications submitted for this gig."
-      >
-        {/* TODO: Use scrollable container and application components */}
-        <div className="max-h-[60vh] overflow-y-auto">
-          {isLoading ? (
-            <div className="text-center py-12">Loading applications...</div>
-          ) : data?.applications && data.applications.length > 0 ? (
-            <div className="space-y-3">
-              {data.applications.map(application => (
-                <div
-                  key={application.applicationId}
-                  className="p-4 border rounded-lg bg-secondary flex flex-col space-y-2"
-                >
-                  <div className="flex justify-between items-start">
-                    <h3 className="text-lg font-bold">{truncateAddress(application.freelancer)}</h3>
-                    <span className="text-sm font-medium">{formatEthPrice(BigInt(application.proposedPayment))}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Duration: {application.proposedDurationInHours} hours</span>
-                  </div>
-                  {application.proposalComment && (
-                    <div className="text-sm">
-                      <span className="font-medium">Proposal: </span>
-                      <span>{application.proposalComment}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12">No applications found for this gig.</div>
-          )}
         </div>
       </Modal>
     </>
