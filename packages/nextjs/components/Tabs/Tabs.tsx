@@ -2,7 +2,13 @@ import React from "react";
 import { TabsProps } from "./types";
 import { Box, Tab as MUITab, Tabs as MUITabs } from "@mui/material";
 
-const Tabs: React.FC<TabsProps> = ({ tabs, color = "var(--color-accent)", onChange }) => {
+const Tabs: React.FC<TabsProps> = ({
+  tabs,
+  color = "var(--color-accent)",
+  onChange,
+  variant = "fullWidth",
+  centered = true,
+}) => {
   const [value, setValue] = React.useState(0);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
@@ -15,8 +21,9 @@ const Tabs: React.FC<TabsProps> = ({ tabs, color = "var(--color-accent)", onChan
         value={value}
         onChange={handleChange}
         aria-label="basic tabs example"
-        variant="scrollable"
-        scrollButtons="auto"
+        variant={variant}
+        centered={variant === "scrollable" ? false : centered}
+        scrollButtons={variant === "scrollable" ? "auto" : false}
         sx={{
           "& .MuiTabs-indicator": {
             backgroundColor: color,
