@@ -26,17 +26,6 @@ export const RainbowKitCustomConnectButton = () => {
 
   const isLocalNetwork = targetNetwork.id === hardhat.id;
 
-  // const { userProfile, setUserProfile } = useUserProfile();
-  // const { address } = useAccount();
-
-  // useEffect(() => {
-  //   if (address) {
-  //     fetchUserProfile(address)
-  //       .then(profile => setUserProfile(profile))
-  //       .catch(() => setUserProfile(null));
-  //   }
-  // }, [address, setUserProfile]);
-
   return (
     <ConnectButton.Custom>
       {({ account, chain, openConnectModal, mounted }) => {
@@ -44,8 +33,6 @@ export const RainbowKitCustomConnectButton = () => {
         const blockExplorerAddressLink = account
           ? getBlockExplorerAddressLink(targetNetwork, account.address)
           : undefined;
-
-        //const avatarImage = userProfile?.profilePicture || account?.ensAvatar;
 
         return (
           <Skeleton variant="rounded" active={!mounted || !chain} width={200}>
