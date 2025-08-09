@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Modal from "./Modal/Modal";
-import { queryClient } from "./ScaffoldEthAppWithProviders";
-import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
+import { GigCardProps } from "./types";
+import { UniversalCard } from "@/components/Card/UniversalCard";
+import Modal from "@/components/Modal/Modal";
+import { queryClient } from "@/components/ScaffoldEthAppWithProviders";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
@@ -12,12 +13,7 @@ import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchApplicationsForGig } from "~~/services/graphql/fetchers/gig.service";
-import { Application, Gig } from "~~/types/gig.types";
-
-interface GigCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  gig: Gig;
-  reload?: () => Promise<void>;
-}
+import { Application } from "~~/types/gig.types";
 
 interface ApplicationsData {
   applications: Application[];
@@ -114,7 +110,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   return (
     <>
-      <UniversalJobCard
+      <UniversalCard
         avatarAddress={gig?.client}
         title={gig?.title}
         description={gig?.description}

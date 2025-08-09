@@ -1,15 +1,10 @@
-import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
+import { ApplicationProps } from "./types";
+import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { ApplicationState } from "~~/types/gig.types";
-import { Application } from "~~/types/gig.types";
-
-interface ApplicationProps {
-  application: Application;
-  className?: string;
-}
 
 export default function ApplicationCard({ application, className }: ApplicationProps) {
   const { address: userAddress } = useAccount();
@@ -86,7 +81,7 @@ export default function ApplicationCard({ application, className }: ApplicationP
   const extraInfo = `Proposal: ${application.proposalComment || "No proposal provided"}  |  Duration: ${application.proposedDurationInHours} hours`;
 
   return (
-    <UniversalJobCard
+    <UniversalCard
       avatarAddress={application.gig?.client}
       title={application.gig?.title || "Gig Title Not Available"}
       description={application.gig?.description || "Description not available"}

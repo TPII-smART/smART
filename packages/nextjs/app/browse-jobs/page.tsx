@@ -1,7 +1,7 @@
 "use client";
 
-import JobBrowser from "@/components/JobBrowser";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import BrowsePage from "~~/components/Browser";
 import { fetchJobPostings } from "~~/services/graphql/fetchers/job.service";
 import { JobPostingData } from "~~/types/job.types";
 
@@ -20,7 +20,7 @@ export default function BrowseJobsPage() {
 
   return (
     <div>
-      <JobBrowser type="job" data={data as JobPostingData} isLoading={isLoading} reload={reload} />
+      <BrowsePage type="job" data={data as JobPostingData} isLoading={isLoading} reload={reload} />
     </div>
   );
 }

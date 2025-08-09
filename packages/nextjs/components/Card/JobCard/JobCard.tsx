@@ -1,6 +1,6 @@
-import Button from "../Button/Button";
-import { CustomerProps } from "./types";
-import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
+import Button from "../../Button/Button";
+import type { JobCardProps } from "./types";
+import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -16,7 +16,7 @@ import {
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobState } from "~~/types/job.types";
 
-export default function CustomerCard({ job, reload, className }: CustomerProps) {
+export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobState;
 
@@ -255,7 +255,7 @@ export default function CustomerCard({ job, reload, className }: CustomerProps) 
   const actionButtons = getActionButtons();
 
   return (
-    <UniversalJobCard
+    <UniversalCard
       bannerUrl={job.bannerImageUrl}
       avatarAddress={isFreelancer ? job.client : job.freelancer}
       title={job.title || "Untitled Job"}

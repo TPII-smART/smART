@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ComboBox from "@/components/ComboBox/ComboBox";
 import FileUploadBox from "@/components/FileUploadBox";
-import { GigCard } from "@/components/GigCard";
-import { JobCard } from "@/components/JobCard";
 import Modal from "@/components/Modal/Modal";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
@@ -12,7 +10,9 @@ import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
 import { parseEther } from "viem";
 import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
-import { jobCategories } from "~~/components/JobCard/JobCategory/jobCategory.data";
+import { GigCard } from "~~/components/Card/GigCard/GigCard";
+import { jobCategories } from "~~/components/Card/JobCategory/jobCategory.data";
+import { JobPostingCard } from "~~/components/Card/JobPostingCard/JobPostingCard";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig.service";
 import { fetchMaxJobPayment } from "~~/services/graphql/fetchers/job.service";
@@ -239,7 +239,11 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredItems.map(item =>
                   type === "job" ? (
-                    <JobCard jobPosting={item as JobPosting} key={(item as JobPosting).postingId} reload={reload} />
+                    <JobPostingCard
+                      jobPosting={item as JobPosting}
+                      key={(item as JobPosting).postingId}
+                      reload={reload}
+                    />
                   ) : (
                     <GigCard gig={item as Gig} key={(item as Gig).gigId} reload={reload} />
                   ),
@@ -253,9 +257,9 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
       {/* Floating + Button */}
       <button
         onClick={() => setShowModal(true)}
-        className="fixed bottom-20 right-6 w-14 h-14 rounded-full text-white text-3xl shadow-lg hover:brightness-90 transition-all z-50 flex items-center justify-center"
+        className="fixed bottom-10 right-15 w-14 h-14 rounded-full text-white text-3xl shadow-lg hover:brightness-90 transition-all z-50 flex items-center justify-center"
         style={{ backgroundColor: "var(--color-accent)" }}
-        aria-label="Create Job"
+        aria-label={`Create ${type === "job" ? "Job Posting" : "Gig Posting"}`}
       >
         <PlusIcon className="h-5 w-5" />
       </button>

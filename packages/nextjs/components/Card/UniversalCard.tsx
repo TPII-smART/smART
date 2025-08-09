@@ -3,14 +3,14 @@
 import * as React from "react";
 import { Badge } from "../Badge";
 import { jobCategories } from "./JobCategory/jobCategory.data";
-import { UniversalJobCardProps } from "./types";
+import { UniversalCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
 import { DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
 
-export function UniversalJobCard({
+export function UniversalCard({
   bannerUrl,
   avatarAddress,
   title,
@@ -23,7 +23,7 @@ export function UniversalJobCard({
   footerRight,
   className,
   ...props
-}: UniversalJobCardProps) {
+}: UniversalCardProps) {
   const handleCopyAddress = async () => {
     if (avatarAddress) {
       try {

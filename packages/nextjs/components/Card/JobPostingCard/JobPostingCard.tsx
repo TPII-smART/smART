@@ -1,21 +1,16 @@
 "use client";
 
 import * as React from "react";
-import Modal from "./Modal/Modal";
-import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
+import Modal from "../../Modal/Modal";
+import { JobPostingCardProps } from "./types";
+import { UniversalCard } from "@/components/Card/UniversalCard";
 import { InputBase } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { JobPosting } from "~~/types/job.types";
 
-interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  jobPosting?: JobPosting;
-  reload?: () => Promise<void>;
-}
-
-export function JobCard({ jobPosting, className, reload, ...props }: JobCardProps) {
+export function JobPostingCard({ jobPosting, className, reload, ...props }: JobPostingCardProps) {
   const { address } = useAccount();
   const [showModal, setShowModal] = React.useState(false);
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
@@ -80,7 +75,7 @@ export function JobCard({ jobPosting, className, reload, ...props }: JobCardProp
 
   return (
     <>
-      <UniversalJobCard
+      <UniversalCard
         bannerUrl={jobPosting?.bannerImageUrl}
         avatarAddress={jobPosting?.freelancer}
         title={jobPosting?.title}

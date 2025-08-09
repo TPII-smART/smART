@@ -1,8 +1,8 @@
 "use client";
 
 import Spinner from "@/components//Spinner/Spinner";
-import ApplicationCard from "@/components/ApplicationCard";
 import { useQuery } from "@tanstack/react-query";
+import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig.service";
 import { Application } from "~~/types/gig.types";
 

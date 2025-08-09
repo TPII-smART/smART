@@ -44,7 +44,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               icon: UserIcon,
             },
             {
-              label: "My Jobs",
+              label: "My Job Postings",
               href: "/my-jobs",
               icon: BriefcaseIcon,
             },

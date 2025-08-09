@@ -1,7 +1,7 @@
 "use client";
 
-import JobBrowser from "@/components/JobBrowser";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import BrowsePage from "~~/components/Browser";
 import { fetchGigs } from "~~/services/graphql/fetchers/gig.service";
 import { GigsData } from "~~/types/gig.types";
 
@@ -20,7 +20,7 @@ export default function BrowseGigsPage() {
 
   return (
     <div>
-      <JobBrowser type="gig" data={data as GigsData} isLoading={isLoading} reload={reload} />
+      <BrowsePage type="gig" data={data as GigsData} isLoading={isLoading} reload={reload} />
     </div>
   );
 }

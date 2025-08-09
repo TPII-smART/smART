@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import MyJobsListing from "@/components/MyJobsListing";
+import MyJobPostingsListing from "@/components/MyJobPostingsListing";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
@@ -17,7 +17,7 @@ export default function MyJobs() {
 
   return (
     <div className="flex flex-col min-h-screen mt-4">
-      <MyJobsListing userAddress={userAddress || ""} />
+      <MyJobPostingsListing userAddress={userAddress || ""} />
     </div>
   );
 }
