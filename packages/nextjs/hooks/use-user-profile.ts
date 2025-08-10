@@ -7,10 +7,10 @@ const normalizeAddress = (address?: string): string | null => {
   if (!address) return null;
 
   try {
-    return getAddress(address); // Convierte a checksum format
+    return getAddress(address);
   } catch (error) {
     console.warn("Invalid Ethereum address:", address);
-    console.error(error);
+    console.warn(error);
     return null;
   }
 };
