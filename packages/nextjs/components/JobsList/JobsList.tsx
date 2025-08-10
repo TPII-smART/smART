@@ -74,14 +74,6 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState):
       info: item.freelancerDelivered ? "Submitted" : "Not submitted",
     });
   } else if (currentTab === JobState.Finished) {
-    infoIcons.push({
-      title: item.clientReceived
-        ? "The client received the deliverables"
-        : "The client has not yet received the deliverables",
-      icon: item.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
-      info: item.clientReceived ? "Received" : "Not received",
-    });
-
     if (item.finishedAt) {
       infoIcons.push({
         title: "Finished At",
@@ -89,6 +81,14 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState):
         info: new Date(+item.finishedAt * 1000).toLocaleDateString(window.navigator.language, { dateStyle: "medium" }),
       });
     }
+
+    infoIcons.push({
+      title: item.clientReceived
+        ? "The client received the deliverables"
+        : "The client has not yet received the deliverables",
+      icon: item.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
+      info: item.clientReceived ? "Received" : "Not received",
+    });
   } else if (currentTab === JobState.Cancelled) {
     if (item.canceledAt) {
       infoIcons.push({
