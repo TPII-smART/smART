@@ -9,10 +9,12 @@ import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
 import { DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
+import { useUserProfile } from "~~/hooks/use-user-profile";
 
 export function UniversalCard({
   bannerUrl,
   avatarAddress,
+  customAvatar,
   title,
   description,
   extraInfo,
@@ -24,6 +26,8 @@ export function UniversalCard({
   className,
   ...props
 }: UniversalCardProps) {
+  const { profilePicture, isLoading } = useUserProfile(avatarAddress);
+
   const handleCopyAddress = async () => {
     if (avatarAddress) {
       try {
@@ -37,6 +41,34 @@ export function UniversalCard({
 
   // ! Cambiar junto con el contract por bannerHash y en los lugares que corresponda, porque ahora guardamos el hash del IPFS !
   const bannerUri = bannerUrl ? resolveIPFSHash(bannerUrl) : undefined;
+
+  const renderAvatar = () => {
+    // Prioridad: customAvatar > profilePicture (del fetch) > BlockieAvatar
+    const imageToShow = customAvatar || profilePicture;
+
+    if (imageToShow) {
+      return (
+        <img
+          src={typeof imageToShow === "string" ? imageToShow : undefined}
+          alt="User avatar"
+          className="h-24 w-24 rounded-full object-cover"
+          onError={e => {
+            // ✅ Fallback al BlockieAvatar si la imagen falla
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+            const fallback = target.nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = "block";
+          }}
+        />
+      );
+    }
+
+    if (isLoading) {
+      return <div className="h-24 w-24 rounded-full bg-gray-300 animate-pulse" />;
+    }
+
+    return <BlockieAvatar address={avatarAddress ? avatarAddress : ""} size={96} />;
+  };
 
   return (
     <Card
@@ -88,7 +120,7 @@ export function UniversalCard({
               className="h-24 w-24 rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer"
               onClick={handleCopyAddress}
             >
-              <BlockieAvatar address={avatarAddress} size={96} />
+              {renderAvatar()}
               {/* TODO: Go to profile page on click, for now just copy address */}
               {/* Hover overlay with darkening effect and copy icon */}
               <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center">
