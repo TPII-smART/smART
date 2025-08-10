@@ -4,17 +4,20 @@ import { ListItemProps } from "../List/types";
 import Tabs from "../Tabs/Tabs";
 import { Tab, TabProps } from "../Tabs/types";
 import { useQuery } from "@tanstack/react-query";
+import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import {
+  BookmarkIcon,
   CheckCircleIcon,
   ClockIcon,
   CurrencyDollarIcon,
   EnvelopeIcon,
   EnvelopeOpenIcon,
   FlagIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job.service";
-import { Job, JobsData } from "~~/types/job.types";
+import { Job, JobState, JobsData } from "~~/types/job.types";
 
 interface InfoIcons {
   title: string;
@@ -24,26 +27,86 @@ interface InfoIcons {
 
 const tabs: TabProps[] = [
   {
-    id: 0,
+    id: JobState.WaitingForApproval,
     label: "Waiting for Approval",
   },
   {
-    id: 1,
+    id: JobState.Ongoing,
     label: "Ongoing",
   },
   {
-    id: 2,
+    id: JobState.Finished,
     label: "Finished",
   },
   {
-    id: 3,
+    id: JobState.Cancelled,
     label: "Cancelled",
   },
   {
-    id: 4,
+    id: JobState.Disputed,
     label: "Disputed",
   },
 ];
+
+const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState): InfoIcons[] => {
+  const infoIcons = [];
+
+  console.log(item);
+
+  if (currentTab === JobState.WaitingForApproval) {
+    infoIcons.push({
+      title: `Job Duration: ${item.jobDuration} hours`,
+      icon: <ClockIcon className="w-4 h-4" />,
+      info: item.jobDuration + " hours",
+    });
+  } else if (currentTab === JobState.Ongoing) {
+    infoIcons.push({
+      title: `Deadline: ${item.deadline}`,
+      icon: <FlagIcon className="w-4 h-4" />,
+      info: item.deadline,
+    });
+
+    infoIcons.push({
+      title: item.freelancerDelivered
+        ? "The freelancer has delivered the work"
+        : "The freelancer has not yet delivered the work",
+      icon: item.freelancerDelivered ? <EnvelopeIcon className="w-4 h-4" /> : <EnvelopeOpenIcon className="w-4 h-4" />,
+      info: item.freelancerDelivered ? "Submitted" : "Not submitted",
+    });
+  } else if (currentTab === JobState.Finished) {
+    infoIcons.push({
+      title: item.clientReceived
+        ? "The client received the deliverables"
+        : "The client has not yet received the deliverables",
+      icon: item.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
+      info: item.clientReceived ? "Received" : "Not received",
+    });
+
+    if (item.finishedAt) {
+      infoIcons.push({
+        title: "Finished At",
+        icon: <BookmarkIcon className="w-4 h-4" />,
+        info: new Date(+item.finishedAt * 1000).toLocaleDateString(window.navigator.language, { dateStyle: "medium" }),
+      });
+    }
+  } else if (currentTab === JobState.Cancelled) {
+    if (item.canceledAt) {
+      infoIcons.push({
+        title: "Canceled At",
+        icon: <XCircleIcon className="w-4 h-4" />,
+        info: new Date(+item.canceledAt * 1000).toLocaleDateString(window.navigator.language, { dateStyle: "medium" }),
+      });
+    }
+  }
+
+  infoIcons.push({
+    title: `Payment: ${item.payment} ETH`,
+    icon: <CurrencyDollarIcon className="w-4 h-4" />,
+    info: item.payment + " ETH",
+  });
+
+  return infoIcons;
+};
 
 const JobsList = () => {
   const { address: userAddress } = useAccount();
@@ -67,12 +130,12 @@ const JobsList = () => {
           .filter(job => job.state === selectedTab.id)
           .map(job => ({
             ...job,
-            payment: `${parseInt(job.payment ?? "0") / 1e18}`,
+            payment: formatEther(BigInt(job.payment ?? "0")).toString(),
             deadline:
               job.deadline && job.deadline != 0
                 ? new Date(+job.deadline * 1000).toLocaleDateString(window.navigator.language, { dateStyle: "medium" })
                 : undefined,
-            id: job.jobId,
+            id: job.postingId + "-" + job.jobId,
             title: job.title ?? "",
             description: job.description ?? "",
             userAddress: job.client,
@@ -87,39 +150,8 @@ const JobsList = () => {
       <div className="p-10 w-full">
         <List<Job>
           secondaryAction={item => {
-            const infoIcons: InfoIcons[] = [
-              item.deadline &&
-                item.deadline != 0 && {
-                  title: `Deadline: ${item.deadline}`,
-                  icon: <FlagIcon className="w-4 h-4" />,
-                  info: item.deadline,
-                },
-              item.jobDuration && {
-                title: `Job Duration: ${item.jobDuration} hours`,
-                icon: <ClockIcon className="w-4 h-4" />,
-                info: item.jobDuration + " hours",
-              },
-              item.payment && {
-                title: `Payment: ${item.payment}`,
-                icon: <CurrencyDollarIcon className="w-4 h-4" />,
-                info: item.payment + " ETH",
-              },
-              item.acceptedAt && {
-                title: item.clientReceived
-                  ? "The client received the deliverables"
-                  : item.freelancerDelivered
-                    ? "The freelancer has delivered the work"
-                    : "The freelancer has not yet delivered the work",
-                icon: item.clientReceived ? (
-                  <CheckCircleIcon className="w-4 h-4" />
-                ) : item.freelancerDelivered ? (
-                  <EnvelopeIcon className="w-4 h-4" />
-                ) : (
-                  <EnvelopeOpenIcon className="w-4 h-4" />
-                ),
-                info: item.clientReceived ? "Received" : item.freelancerDelivered ? "Submitted" : "Not submitted",
-              },
-            ].filter(Boolean) as InfoIcons[];
+            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedTab.id as JobState);
+
             return (
               <div className="flex flex-col h-full place-items-center">
                 {infoIcons.map(({ title, icon, info }) => (

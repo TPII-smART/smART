@@ -64,6 +64,8 @@ export const fetchMyJobs = async (userAddress: string) => {
           state
           createdAt
           acceptedAt
+          finishedAt
+          canceledAt
           clientReceived
           freelancerDelivered
         }

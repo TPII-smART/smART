@@ -3,11 +3,11 @@ import { job, jobPosting } from "ponder:schema";
 
 // Enums for job states
 export enum JobState {
-    WaitingForApproval = 0,
-    Ongoing = 1,
-    Finished = 2,
-    Cancelled = 3,
-    Disputed = 4,
+	WaitingForApproval = 0,
+	Ongoing = 1,
+	Finished = 2,
+	Cancelled = 3,
+	Disputed = 4,
 }
 
 // Event handlers for the JobsContract
@@ -16,95 +16,111 @@ export enum JobState {
 // -------------------------------------------------------------
 // This event is triggered when a new job posting is created.
 ponder.on("JobsContract:JobPostingCreated", async ({ event, context }) => {
-    // Creates a new Job Posting
-    await context.db.insert(jobPosting).values({
-        postingId: event.args.postingId,
-        freelancer: event.args.freelancer || null,
-        basePayment: event.args.basePayment || null,
-        title: event.args.title || "",
-        description: event.args.description || "",
-        category: event.args.category || "",
-        bannerImageUrl: event.args.bannerImageUrl || "",
-        minimumNoticeTime: event.args.minimumNoticeTime || 0n,
-        averageWorkDuration: event.args.averageWorkDuration || 0n,
-        createdAt: BigInt(event.block.timestamp),
-    });
+	// Creates a new Job Posting
+	await context.db.insert(jobPosting).values({
+		postingId: event.args.postingId,
+		freelancer: event.args.freelancer || null,
+		basePayment: event.args.basePayment || null,
+		title: event.args.title || "",
+		description: event.args.description || "",
+		category: event.args.category || "",
+		bannerImageUrl: event.args.bannerImageUrl || "",
+		minimumNoticeTime: event.args.minimumNoticeTime || 0n,
+		averageWorkDuration: event.args.averageWorkDuration || 0n,
+		createdAt: BigInt(event.block.timestamp),
+	});
 });
 
 // Job handlers
 // -------------------------------------------------------------
 // This event is triggered when a new job is created.
 ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
-    // Creates a new Job
-    await context.db.insert(job).values({
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-        client: event.args.client || null,
-        freelancer: event.args.freelancer || null,
-        payment: event.args.payment || null,
-        title: event.args.title || null,
-        description: event.args.description || null,
-        category: event.args.category || null,
-        bannerImageUrl: event.args.bannerImageUrl || "",
-        jobDuration: event.args.jobDuration || null,
-        deadline: 0n, // Placeholder for deadline, will be updated on confirmation
-        state: JobState.WaitingForApproval, // Initial job state
-        createdAt: BigInt(event.block.timestamp),
-        acceptedAt: null,
-        clientReceived: false,
-        freelancerDelivered: false,
-    });
+	// Creates a new Job
+	await context.db.insert(job).values({
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+		client: event.args.client || null,
+		freelancer: event.args.freelancer || null,
+		payment: event.args.payment || null,
+		title: event.args.title || null,
+		description: event.args.description || null,
+		category: event.args.category || null,
+		bannerImageUrl: event.args.bannerImageUrl || "",
+		jobDuration: event.args.jobDuration || null,
+		deadline: 0n, // Placeholder for deadline, will be updated on confirmation
+		state: JobState.WaitingForApproval, // Initial job state
+		createdAt: BigInt(event.block.timestamp),
+		acceptedAt: null,
+		clientReceived: false,
+		freelancerDelivered: false,
+	});
 });
 
 // This event is triggered when a job is accepted by a freelancer.
 ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
-    // Updates the job with the acceptedAt timestamp
-    await context.db.update(job, {
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-    })
-        .set({
-            client : event.args.client || null, acceptedAt: BigInt(event.block.timestamp),
-             state: JobState.Ongoing, deadline: event.args.deadline || 0n
-        })
+	// Updates the job with the acceptedAt timestamp
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			client: event.args.client || null,
+			acceptedAt: BigInt(event.block.timestamp),
+			state: JobState.Ongoing,
+			deadline: event.args.deadline || 0n,
+		});
 });
 
 // This event is triggered when a job is marked as completed by a freelancer.
-ponder.on("JobsContract:FreelancerMarkedAsDelivered", async ({ event, context }) => {
-    // Updates the job to mark it as delivered by the freelancer
-    await context.db.update(job, {
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-    })
-        .set({ freelancerDelivered: true });
-});
+ponder.on(
+	"JobsContract:FreelancerMarkedAsDelivered",
+	async ({ event, context }) => {
+		// Updates the job to mark it as delivered by the freelancer
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({ freelancerDelivered: true });
+	}
+);
 
 // This event is triggered when a job is marked as received by the client.
 ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
-    // Updates the job to mark it as received by the client
-    await context.db.update(job, {
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-    })
-        .set({ clientReceived: true });
+	// Updates the job to mark it as received by the client
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({ clientReceived: true });
 });
 
 // This event is triggered when a job is marked as finished.
 ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
-    // Updates the job to mark it as finished
-    await context.db.update(job, {
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-    })
-        .set({ state: JobState.Finished });
+	// Updates the job to mark it as finished
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			state: JobState.Finished,
+			finishedAt: BigInt(event.args.timestamp),
+		});
 });
 
 // This event is triggered when a job is cancelled.
 ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
-    // Updates the job to mark it as cancelled
-    await context.db.update(job, {
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-    })
-        .set({ state: JobState.Cancelled });
+	// Updates the job to mark it as cancelled
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			state: JobState.Cancelled,
+			canceledAt: BigInt(event.args.timestamp),
+		});
 });

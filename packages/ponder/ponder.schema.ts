@@ -32,6 +32,8 @@ export const job = onchainTable(
 		state: t.integer().notNull(),
 		createdAt: t.bigint().notNull(),
 		acceptedAt: t.bigint(),
+		finishedAt: t.bigint(), // When the job was finished
+		canceledAt: t.bigint(), // When the job was canceled
 		clientReceived: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 	}),

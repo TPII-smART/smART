@@ -26,6 +26,8 @@ contract JobsContract {
         JobState state;
         uint256 createdAt;
         uint256 acceptedAt; // When the job was accepted
+        uint256 finishedAt; // When the job was finished
+        uint256 canceledAt; // When the job was canceled
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
     }
@@ -121,7 +123,8 @@ contract JobsContract {
         uint256 indexed jobId,
         address freelancer,
         address client,
-        uint256 payment
+        uint256 payment,
+        uint256 timestamp
     );
 
     event JobCancelled(
@@ -253,6 +256,8 @@ contract JobsContract {
             state: JobState.WaitingForApproval,
             createdAt: block.timestamp,
             acceptedAt: 0,
+            finishedAt: 0,
+            canceledAt: 0,
             clientReceived: false,
             freelancerDelivered: false
         });
@@ -339,6 +344,7 @@ contract JobsContract {
     function _completeJob(uint256 _postingId, uint256 _jobId) internal {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
         job.state = JobState.Finished;
+        job.finishedAt = block.timestamp;
 
         // Sends payment to freelancer
         payable(job.freelancer).transfer(job.payment);
@@ -348,7 +354,8 @@ contract JobsContract {
             _jobId,
             job.freelancer,
             job.client,
-            job.payment
+            job.payment,
+            job.finishedAt
         );
     }
 
@@ -375,7 +382,9 @@ contract JobsContract {
             revert("Job cannot be cancelled in its current state");
         }
 
-        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
+        job.canceledAt = block.timestamp;
+
+        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, job.canceledAt);
 
     }
 
