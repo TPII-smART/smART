@@ -30,7 +30,7 @@ export interface Job {
   jobDuration?: string;
 
   /** (Optional) ISO date string representing the job's deadline. */
-  deadline?: string;
+  deadline?: string | number;
 
   /** Current state of the job, represented as an integer. */
   state: number;

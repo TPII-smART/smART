@@ -4,7 +4,7 @@ export interface Tab {
   /**
    * Unique identifier for the tab
    */
-  id: string;
+  id: string | number;
   /**
    * Label for the tab
    */
@@ -34,7 +34,7 @@ export interface TabsProps {
   /**
    * Callback function called when the tab is changed
    */
-  onChange: (id: string, label?: string) => void;
+  onChange: (id: string | number, label?: string) => void;
   /**
    * Color of the selected tab
    */
