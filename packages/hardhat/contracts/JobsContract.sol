@@ -46,7 +46,7 @@ contract JobsContract {
         string title;
         string description;
         string category;
-        string bannerImageUrl;
+        string bannerImageHash;
         uint256 minimumNoticeTime;
         uint256 averageWorkDuration;
         uint256 createdAt;
@@ -58,7 +58,7 @@ contract JobsContract {
         string title;
         string description;
         string category;
-        string bannerImageUrl;
+        string bannerImageHash;
         uint256 basePayment;
         uint256 minimumNoticeTime;
         uint256 averageWorkDuration;
@@ -77,7 +77,7 @@ contract JobsContract {
         string title,
         string description,
         string category,
-        string bannerImageUrl,
+        string bannerImageHash,
         uint256 minimumNoticeTime,
         uint256 averageWorkDuration
     );
@@ -91,7 +91,7 @@ contract JobsContract {
         string title,
         string description,
         string category,
-        string bannerImageUrl,
+        string bannerImageHash,
         uint256 jobDuration
     );
 
@@ -199,7 +199,7 @@ contract JobsContract {
         newPosting.title = params.title;
         newPosting.description = params.description;
         newPosting.category = params.category;
-        newPosting.bannerImageUrl = params.bannerImageUrl;
+        newPosting.bannerImageHash = params.bannerImageHash;
         newPosting.minimumNoticeTime = params.minimumNoticeTime;
         newPosting.averageWorkDuration = params.averageWorkDuration;
         newPosting.createdAt = block.timestamp;
@@ -213,7 +213,7 @@ contract JobsContract {
             params.title,
             params.description,
             params.category,
-            params.bannerImageUrl,
+            params.bannerImageHash,
             params.minimumNoticeTime,
             params.averageWorkDuration
         );
@@ -269,7 +269,7 @@ contract JobsContract {
             params.title,
             params.description,
             posting.category,
-            posting.bannerImageUrl,
+            posting.bannerImageHash,
             params.durationInHours
         );
      }

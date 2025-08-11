@@ -24,7 +24,7 @@ ponder.on("JobsContract:JobPostingCreated", async ({ event, context }) => {
         title: event.args.title || "",
         description: event.args.description || "",
         category: event.args.category || "",
-        bannerImageUrl: event.args.bannerImageUrl || "",
+        bannerImageHash: event.args.bannerImageHash || "",
         minimumNoticeTime: event.args.minimumNoticeTime || 0n,
         averageWorkDuration: event.args.averageWorkDuration || 0n,
         createdAt: BigInt(event.block.timestamp),
@@ -45,7 +45,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
         title: event.args.title || null,
         description: event.args.description || null,
         category: event.args.category || null,
-        bannerImageUrl: event.args.bannerImageUrl || "",
+        bannerImageHash: event.args.bannerImageHash || "",
         jobDuration: event.args.jobDuration || null,
         deadline: 0n, // Placeholder for deadline, will be updated on confirmation
         state: JobState.WaitingForApproval, // Initial job state
