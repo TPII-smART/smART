@@ -256,7 +256,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   return (
     <UniversalCard
-      bannerUrl={job.bannerImageUrl}
+      bannerUrl={job.bannerImageHash}
       avatarAddress={isFreelancer ? job.client : job.freelancer}
       title={job.title || "Untitled Job"}
       description={job.description || "No description provided"}

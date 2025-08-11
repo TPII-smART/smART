@@ -9,7 +9,7 @@ export interface Gig {
   acceptedFreelancer?: `0x${string}`;
 
   /** (Optional) Max payment amount or details for the gig. */
-  maxPayment?: string;
+  basePayment?: string;
 
   /** (Optional) Final payment amount or details for the gig. */
   finalPayment?: string;

@@ -80,7 +80,7 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
   return (
     <>
       <UniversalCard
-        bannerUrl={jobPosting?.bannerImageUrl}
+        bannerUrl={jobPosting?.bannerImageHash}
         avatarAddress={jobPosting?.freelancer}
         title={jobPosting?.title}
         description={jobPosting?.description}

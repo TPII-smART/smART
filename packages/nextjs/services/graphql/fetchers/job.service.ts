@@ -30,7 +30,7 @@ export const fetchJobPostings = async () => {
           title
           description
           category
-          bannerImageUrl
+          bannerImageHash
           minimumNoticeTime
           averageWorkDuration
           createdAt
@@ -56,7 +56,7 @@ export const fetchMyJobPostings = async (userAddress: string) => {
           title
           description
           category
-          bannerImageUrl
+          bannerImageHash
           minimumNoticeTime
           averageWorkDuration
           createdAt
@@ -84,7 +84,7 @@ export const fetchJobsFromPosting = async (postingId: string) => {
           title
           description
           category
-          bannerImageUrl
+          bannerImageHash
           jobDuration
           deadline
           state
@@ -116,7 +116,7 @@ export const fetchHires = async (userAddress: string) => {
           title
           description
           category
-          bannerImageUrl
+          bannerImageHash
           jobDuration
           deadline
           state

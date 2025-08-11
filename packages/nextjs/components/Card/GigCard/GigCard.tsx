@@ -58,9 +58,9 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   const paymentDisplay = (
     <span
       className="text-lg font-bold cursor-help text-content-primary"
-      title={gig?.maxPayment ? `${formatEther(BigInt(gig.maxPayment))} ETH` : "Free"}
+      title={gig?.basePayment ? `${formatEther(BigInt(gig.basePayment))} ETH` : "Free"}
     >
-      {gig?.maxPayment ? formatEthPrice(BigInt(gig.maxPayment)) : "Free"}
+      {gig?.basePayment ? formatEthPrice(BigInt(gig.basePayment)) : "Free"}
     </span>
   );
 

@@ -65,7 +65,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   };
 
   const handleSubmit = async () => {
-    const bannerImageUrl = await handleFileUpload(form.bannerImageFile);
+    const bannerImageHash = await handleFileUpload(form.bannerImageFile);
     try {
       if (type === "job") {
         await createPosting({
@@ -74,7 +74,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
             {
               title: form.title,
               description: form.description,
-              bannerImageUrl: bannerImageUrl || "",
+              bannerImageHash: bannerImageHash || "",
               basePayment: parseEther(form.paymentInEth),
               averageWorkDuration: BigInt(form.estimatedDurationHours),
               minimumNoticeTime: BigInt(24),
@@ -89,12 +89,12 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
             {
               title: form.title,
               description: form.description,
-              // bannerImageUrl: bannerImageUrl || "",
+              basePayment: parseEther(form.paymentInEth),
+              gigBannerImageHash: bannerImageHash || "",
               category: form.category,
               maxDurationInHours: BigInt(form.estimatedDurationHours),
             },
           ],
-          value: parseEther(form.paymentInEth),
         });
       }
       await reload();
@@ -112,26 +112,17 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
       return items;
     };
 
-    const getPriceFiltered = <T extends { basePayment?: string | number; maxPayment?: string | number }>(
-      items: T[],
-      maxPrice: number,
-      type: "job" | "gig",
-    ) => {
+    const getPriceFiltered = <T extends { basePayment?: string | number }>(items: T[], maxPrice: number) => {
       if (maxPrice > 0) {
         return items.filter(item => {
-          const payment =
-            type === "job"
-              ? Number((item as any).basePayment) / 1e18 || 0
-              : Number((item as any).maxPayment) / 1e18 || 0;
+          const payment = Number(item.basePayment) / 1e18 || 0;
           return payment <= maxPrice;
         });
       }
       return items;
     };
 
-    const getSorted = <
-      T extends { createdAt?: string; rating?: number; basePayment?: string | number; maxPayment?: string | number },
-    >(
+    const getSorted = <T extends { createdAt?: string; rating?: number; basePayment?: string | number }>(
       items: T[],
       sortBy: string,
       type: "job" | "gig",
@@ -141,21 +132,11 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
           case "recent":
             return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
           case "popular":
-            // Only jobs have rating
-            if (type === "job") {
-              return (b.rating ?? 0) - (a.rating ?? 0);
-            }
-            return 0;
+            return type === "job" ? (b.rating ?? 0) - (a.rating ?? 0) : 0;
           case "price-low":
-            return (
-              ((type === "job" ? Number(a.basePayment) : Number(a.maxPayment)) || 0) -
-              ((type === "job" ? Number(b.basePayment) : Number(b.maxPayment)) || 0)
-            );
+            return (Number(a.basePayment) || 0) - (Number(b.basePayment) || 0);
           case "price-high":
-            return (
-              ((type === "job" ? Number(b.basePayment) : Number(b.maxPayment)) || 0) -
-              ((type === "job" ? Number(a.basePayment) : Number(a.maxPayment)) || 0)
-            );
+            return (Number(b.basePayment) || 0) - (Number(a.basePayment) || 0);
           default:
             return 0;
         }
@@ -165,13 +146,13 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
     if (type === "job") {
       let items = (data as JobPostingData)?.jobPostings || [];
       items = getCategoryFiltered(items, categories);
-      items = getPriceFiltered(items, maxPrice, type);
+      items = getPriceFiltered(items, maxPrice);
       items = getSorted(items, sortBy, type);
       return items;
     } else {
       let items = (data as GigsData)?.gigs || [];
       items = getCategoryFiltered(items, categories);
-      items = getPriceFiltered(items, maxPrice, type);
+      items = getPriceFiltered(items, maxPrice);
       items = getSorted(items, sortBy, type);
       return items;
     }

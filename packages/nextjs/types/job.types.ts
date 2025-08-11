@@ -23,8 +23,8 @@ export interface Job {
   /** (Optional) Category or field of the job. */
   category?: string;
 
-  /** (Optional) URL of the banner image associated with the job. */
-  bannerImageUrl?: string;
+  /** (Optional) Hash of the banner image associated with the job. */
+  bannerImageHash?: string;
 
   /** (Optional) Estimated time required to complete the job. */
   jobDuration?: string;
@@ -67,8 +67,8 @@ export interface JobPosting {
   /** Category of the job posting. */
   category: string;
 
-  /** URL of the banner image associated with the job posting. */
-  bannerImageUrl: string;
+  /** Hash of the banner image associated with the job posting. */
+  bannerImageHash: string;
 
   /** Minimum notice time required before starting the job, in seconds. */
   minimumNoticeTime: number;

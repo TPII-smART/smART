@@ -7,14 +7,14 @@ export const fetchMaxGigPayment = async () => {
     query GetGigPayments {
       gigs {
         items {
-          maxPayment
+          basePayment
         }
       }
     }
   `;
 
   const res = await request<{ gigs: { items: Gig[] } }>(endpoint, query);
-  const payments = res.gigs.items.map(item => Number(item.maxPayment) || 0);
+  const payments = res.gigs.items.map(item => Number(item.basePayment) || 0);
   const max = payments.length > 0 ? Math.max(...payments) : 0;
   return max / 1e18; // Convert wei to ether
 };
@@ -27,7 +27,7 @@ export const fetchGigs = async () => {
           gigId
           client
           acceptedFreelancer
-          maxPayment
+          basePayment
           finalPayment
           title
           description
@@ -41,6 +41,7 @@ export const fetchGigs = async () => {
           clientReceived
           freelancerDelivered
           acceptedApplicationId
+          gigBannerImageHash
         }
       }
     }
@@ -58,7 +59,7 @@ export const fetchMyGigs = async (userAddress: string) => {
           gigId
           client
           acceptedFreelancer
-          maxPayment
+          basePayment
           finalPayment
           title
           description
@@ -72,6 +73,7 @@ export const fetchMyGigs = async (userAddress: string) => {
           clientReceived
           freelancerDelivered
           acceptedApplicationId
+          gigBannerImageHash
         }
       }
     }
@@ -139,7 +141,7 @@ export const fetchApplicationsWithGigDetails = async (userAddress: string) => {
           gigId
           client
           acceptedFreelancer
-          maxPayment
+          basePayment
           finalPayment
           title
           description
@@ -153,6 +155,7 @@ export const fetchApplicationsWithGigDetails = async (userAddress: string) => {
           clientReceived
           freelancerDelivered
           acceptedApplicationId
+          gigBannerImageHash
         }
       }
     }
@@ -200,7 +203,7 @@ export const fetchGigById = async (gigId: string) => {
         gigId
         client
         acceptedFreelancer
-        maxPayment
+        basePayment
         finalPayment
         title
         description
@@ -214,6 +217,7 @@ export const fetchGigById = async (gigId: string) => {
         clientReceived
         freelancerDelivered
         acceptedApplicationId
+        gigBannerImageHash
       }
     }
   `;
