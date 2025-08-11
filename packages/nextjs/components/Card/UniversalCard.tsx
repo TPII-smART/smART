@@ -51,6 +51,8 @@ export function UniversalCard({
       return (
         <Image
           src={typeof imageToShow === "string" ? imageToShow : ""}
+          width={96}
+          height={96}
           alt="User avatar"
           className="h-24 w-24 rounded-full object-cover"
           onError={e => {

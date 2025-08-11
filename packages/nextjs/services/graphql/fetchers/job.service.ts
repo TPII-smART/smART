@@ -118,7 +118,6 @@ export const fetchMyJobs = async (userAddress: string) => {
           title
           description
           category
-          bannerImageUrl
           jobDuration
           deadline
           state

@@ -322,7 +322,13 @@ export default function FileUpload({
                         damping: 20,
                       }}
                     >
-                      <Image src={previewUrl} alt={`Preview of ${file.name}`} className="w-full h-full object-cover" />
+                      <Image
+                        src={previewUrl}
+                        width={128}
+                        height={128}
+                        alt={`Preview of ${file.name}`}
+                        className="w-full h-full object-cover"
+                      />
                       <button
                         type="button"
                         onClick={handleRemoveFile}
