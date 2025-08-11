@@ -16,6 +16,7 @@ import {
   FlagIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+// Adjust the import to match the actual export from the module
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job.service";
 import { Job, JobState, JobsData } from "~~/types/job.types";
 

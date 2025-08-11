@@ -2,7 +2,7 @@ import { endpoint } from "../config";
 import request, { gql } from "graphql-request";
 import { Job, JobPosting } from "~~/types/job.types";
 
-export const fetchMaxPayment = async () => {
+export const fetchMaxJobPayment = async () => {
   const query = gql`
     query GetJobPostingsPayments {
       jobPostings {
@@ -30,7 +30,7 @@ export const fetchJobPostings = async () => {
           title
           description
           category
-          bannerImageUrl
+          bannerImageHash
           minimumNoticeTime
           averageWorkDuration
           createdAt
@@ -41,6 +41,66 @@ export const fetchJobPostings = async () => {
 
   const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, query);
   return { jobPostings: res.jobPostings.items };
+};
+
+export const fetchMyJobPostings = async (userAddress: string) => {
+  console.log("fetchMyJobPostings", userAddress);
+
+  const query = gql`
+    query GetJobPostings($userAddress: String!) {
+      jobPostings(where: { freelancer: $userAddress }, orderBy: "createdAt", orderDirection: "desc") {
+        items {
+          postingId
+          freelancer
+          basePayment
+          title
+          description
+          category
+          bannerImageHash
+          minimumNoticeTime
+          averageWorkDuration
+          createdAt
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, query, { userAddress: userAddress });
+  return { jobPostings: res.jobPostings.items };
+};
+
+export const fetchJobsFromPosting = async (postingId: string) => {
+  console.log("fetchJobsFromPosting", postingId);
+
+  const query = gql`
+    query GetJobs($postingId: BigInt!) {
+      jobs(where: { postingId: $postingId }, orderBy: "acceptedAt", orderDirection: "desc") {
+        items {
+          jobId
+          postingId
+          client
+          freelancer
+          payment
+          title
+          description
+          category
+          bannerImageHash
+          jobDuration
+          deadline
+          state
+          createdAt
+          acceptedAt
+          finishedAt
+          canceledAt
+          clientReceived
+          freelancerDelivered
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { postingId: postingId });
+  return { jobs: res.jobs.items };
 };
 
 export const fetchMyJobs = async (userAddress: string) => {
@@ -92,7 +152,7 @@ export const fetchHires = async (userAddress: string) => {
           title
           description
           category
-          bannerImageUrl
+          bannerImageHash
           jobDuration
           deadline
           state

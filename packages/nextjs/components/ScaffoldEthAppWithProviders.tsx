@@ -51,18 +51,33 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               icon: TableCellsIcon,
             },
             {
-              label: "My Jobs",
+              label: "My Job Postings",
               href: "/my-jobs",
               icon: BriefcaseIcon,
             },
             {
-              label: "My hires",
+              label: "My Hires",
               href: "/hires",
               icon: WrenchScrewdriverIcon,
             },
             {
-              label: "Browse jobs",
+              label: "Browse Jobs",
               href: "/browse-jobs",
+              icon: BookOpenIcon,
+            },
+            {
+              label: "My Gigs",
+              href: "/my-gigs",
+              icon: BriefcaseIcon,
+            },
+            {
+              label: "My Applications",
+              href: "/applications",
+              icon: WrenchScrewdriverIcon,
+            },
+            {
+              label: "Browse Gigs",
+              href: "/browse-gigs",
               icon: BookOpenIcon,
             },
             {

@@ -1,21 +1,16 @@
 "use client";
 
 import * as React from "react";
-import Modal from "./Modal/Modal";
-import { UniversalJobCard } from "@/components/JobCard/UniversalJobCard";
+import Modal from "../../Modal/Modal";
+import { JobPostingCardProps } from "./types";
+import { UniversalCard } from "@/components/Card/UniversalCard";
 import { InputBase } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { JobPosting } from "~~/types/job.types";
 
-interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  jobPosting?: JobPosting;
-  reload?: () => Promise<void>;
-}
-
-export function JobCard({ jobPosting, className, reload, ...props }: JobCardProps) {
+export function JobPostingCard({ jobPosting, className, reload, ...props }: JobPostingCardProps) {
   const { address } = useAccount();
   const [showModal, setShowModal] = React.useState(false);
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
@@ -37,7 +32,7 @@ export function JobCard({ jobPosting, className, reload, ...props }: JobCardProp
           {
             title: form.title,
             description: form.description,
-            payment: BigInt(jobPosting.basePayment),
+            payment: BigInt(jobPosting?.basePayment),
             durationInHours: BigInt(form.jobHours),
           },
         ],
@@ -76,12 +71,16 @@ export function JobCard({ jobPosting, className, reload, ...props }: JobCardProp
     <Button variant="primary" onClick={() => setShowModal(true)}>
       Hire
     </Button>
-  ) : null;
+  ) : (
+    <Button variant="outline" onClick={() => (window.location.href = `/job-posting/${jobPosting?.postingId}`)}>
+      Details
+    </Button>
+  );
 
   return (
     <>
-      <UniversalJobCard
-        bannerUrl={jobPosting?.bannerImageUrl}
+      <UniversalCard
+        bannerUrl={jobPosting?.bannerImageHash}
         avatarAddress={jobPosting?.freelancer}
         title={jobPosting?.title}
         description={jobPosting?.description}

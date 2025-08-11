@@ -4080,6 +4080,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@multiformats/base-x@npm:^4.0.1":
+  version: 4.0.1
+  resolution: "@multiformats/base-x@npm:4.0.1"
+  checksum: ecbf84bdd7613fd795e4a41f20f3e8cc7df8bbee84690b7feed383d45a638ed228a80ff6f5c930373cbf24539f64857b66023ee3c1e914f6bac9995c76414a87
+  languageName: node
+  linkType: hard
+
 "@multiformats/blake2@npm:^2.0.2":
   version: 2.0.2
   resolution: "@multiformats/blake2@npm:2.0.2"
@@ -6591,6 +6598,28 @@ __metadata:
   peerDependencies:
     react: ^18 || ^19
   checksum: 2f4740f13dc9cbbf3c4175ac2e4e2788d2df8643940dfd9cc62c8c3d7c8842b2aeda0f58b99cdd2d525c0c78d759a1adfb3118599ab64bd3ce7ce4f027ee6f6b
+  languageName: node
+  linkType: hard
+
+"@thirdweb-dev/crypto@npm:0.2.6":
+  version: 0.2.6
+  resolution: "@thirdweb-dev/crypto@npm:0.2.6"
+  dependencies:
+    "@noble/hashes": ^1.4.0
+    js-sha3: ^0.9.3
+  checksum: 375794f1d3b2e18cf0236260aa585dbbd87892c58765f518cb4181a0145d225af99afde83c99abbb3a74fda87428fc0c42258f4137cfaca6aa000a678f2d25bc
+  languageName: node
+  linkType: hard
+
+"@thirdweb-dev/storage@npm:^2.0.15":
+  version: 2.0.15
+  resolution: "@thirdweb-dev/storage@npm:2.0.15"
+  dependencies:
+    "@thirdweb-dev/crypto": 0.2.6
+    cid-tool: ^3.0.0
+    form-data: ^4.0.0
+    uuid: ^9.0.1
+  checksum: 73c9f5fb8eead3cbb5341d3e5a3862365fb332cf55b6c323feadab240314dcd085d0085f04e976e9d965d8da802c96415bb0a9b26f59d870ec1beeaf5c218317
   languageName: node
   linkType: hard
 
@@ -9474,12 +9503,41 @@ __metadata:
   languageName: node
   linkType: hard
 
+"cid-tool@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "cid-tool@npm:3.0.0"
+  dependencies:
+    cids: ^1.0.0
+    explain-error: ^1.0.4
+    multibase: ^4.0.2
+    multihashes: ^4.0.2
+    split2: ^3.1.1
+    uint8arrays: ^2.1.3
+    yargs: ^16.2.0
+  bin:
+    cid: src/cli/bin.js
+  checksum: 5a0f28d0be3531e6df1c82470dda07f2521739218009422361363cec1a58c89c9d3b9c71b866ea8620e60e9aa6c1ab05cea588e5a748ed37ad59426c5e3ede96
+  languageName: node
+  linkType: hard
+
 "cidr-regex@npm:^4.1.1":
   version: 4.1.3
   resolution: "cidr-regex@npm:4.1.3"
   dependencies:
     ip-regex: ^5.0.0
   checksum: ddc3c2c899480573273426f60e95af2fa1ecd39c750a8064ecda21a6ac434f7ef6b6fccb9d0d12564202ce541c2e8efb15df7d7b98ed1a897e580b5c2d92f69b
+  languageName: node
+  linkType: hard
+
+"cids@npm:^1.0.0":
+  version: 1.1.9
+  resolution: "cids@npm:1.1.9"
+  dependencies:
+    multibase: ^4.0.1
+    multicodec: ^3.0.1
+    multihashes: ^4.0.1
+    uint8arrays: ^3.0.0
+  checksum: 58ad9411b51c4f2d1568a3542578cf8c05028631ef8d9b0aa46db4ebbc812c4d7159216b310e333a81ff9f1b8e44c1c8ff3debdc0a8e9d83421af7f776677e41
   languageName: node
   linkType: hard
 
@@ -12290,6 +12348,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"explain-error@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "explain-error@npm:1.0.4"
+  checksum: 38afbe93c00aa313cd20d41d1103368090313765c86e2b2baf77f11979016fe862de1d05673aaf8297c5b1e67f0a68e95e5aee6df6a1e913766f506c00563c84
+  languageName: node
+  linkType: hard
+
 "exponential-backoff@npm:^3.1.1":
   version: 3.1.2
   resolution: "exponential-backoff@npm:3.1.2"
@@ -12693,6 +12758,28 @@ __metadata:
     react-dom:
       optional: true
   checksum: a07259ee22cee91138677d9fe89cc9e20b7ad85310f33945c695e67255a975c7546dc2ccf70cf047b893aea19c08a777e57589f5fc549d0e5af42009409cba3e
+  languageName: node
+  linkType: hard
+
+"framer-motion@npm:^12.23.12":
+  version: 12.23.12
+  resolution: "framer-motion@npm:12.23.12"
+  dependencies:
+    motion-dom: ^12.23.12
+    motion-utils: ^12.23.6
+    tslib: ^2.4.0
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: 85c2a64c12cd7d3dcaeed44ec11843b5c6955da97a82895f89355fe58bfbd8f876c6272585fff54ba661d7a54218efd44b8ca072c6988d414ab4577f4d28a135
   languageName: node
   linkType: hard
 
@@ -14768,7 +14855,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"js-sha3@npm:^0.9.1":
+"js-sha3@npm:^0.9.1, js-sha3@npm:^0.9.3":
   version: 0.9.3
   resolution: "js-sha3@npm:0.9.3"
   checksum: cfab12cdb3aa9c0c8e8466761d89cb9770653880910b920682fa676dd102868a827709c857cb089bdc0d6120542137f92a7c1699ab428c0f4057c823aef24601
@@ -16172,10 +16259,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"motion-dom@npm:^12.23.12":
+  version: 12.23.12
+  resolution: "motion-dom@npm:12.23.12"
+  dependencies:
+    motion-utils: ^12.23.6
+  checksum: 3fb9450a9a3312ff11a9d0f7e6d44474c2bc66409cd7a2b4a29fc0e2e641414a4e1f869c0110d92bbaf5b4663bb49edccc745fad077d03169d96c2a361f7dc73
+  languageName: node
+  linkType: hard
+
 "motion-utils@npm:^12.18.1":
   version: 12.18.1
   resolution: "motion-utils@npm:12.18.1"
   checksum: 789a10c6ddadaa0bcac9e49ecaad88b7543f25d11ac2362ac0d480a378bee2aa28ce27dfb0fe98d3cd95dc9df428b95eb0974c5821dd5981016e76d40022f50a
+  languageName: node
+  linkType: hard
+
+"motion-utils@npm:^12.23.6":
+  version: 12.23.6
+  resolution: "motion-utils@npm:12.23.6"
+  checksum: e7c0b1d7a893c5979eab529f2bd269031f71f8d23cbf8be2ec8785558544ee45b9ba7b23390f9a46f2f0a493903b6adc0666229de3b05e977a0bfc3c5fb13d8b
   languageName: node
   linkType: hard
 
@@ -16190,6 +16293,27 @@ __metadata:
     "@motionone/utils": ^10.15.1
     "@motionone/vue": ^10.16.2
   checksum: 0b91256808c2374d8b7f4ac5e7ed513f2ca8df2b7d1be4fbc00ec5baece5162ada648aedaa5bc1d60be9ad2e6c9bc1d3bb160333051c20ab79e241b8e02e3c92
+  languageName: node
+  linkType: hard
+
+"motion@npm:^12.23.12":
+  version: 12.23.12
+  resolution: "motion@npm:12.23.12"
+  dependencies:
+    framer-motion: ^12.23.12
+    tslib: ^2.4.0
+  peerDependencies:
+    "@emotion/is-prop-valid": "*"
+    react: ^18.0.0 || ^19.0.0
+    react-dom: ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/is-prop-valid":
+      optional: true
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: af9618bdd96a08bfafa847b70b7cb762b99f2bed225ce66c917e855c53b855fd63b3a14b2f1e778752e2476413fc5c0bf3e272ef21dfe755258e8f4bc766a6e4
   languageName: node
   linkType: hard
 
@@ -16221,6 +16345,25 @@ __metadata:
   languageName: node
   linkType: hard
 
+"multibase@npm:^4.0.1, multibase@npm:^4.0.2":
+  version: 4.0.6
+  resolution: "multibase@npm:4.0.6"
+  dependencies:
+    "@multiformats/base-x": ^4.0.1
+  checksum: 891ce47f509c6070d2306e7e00aef3ef41fbb50a848a1e1bec5e75ca63c5032015a436cf09e9e3939b5b2ca81e74804151eb410a388f10e9aabf7a2f5a35d272
+  languageName: node
+  linkType: hard
+
+"multicodec@npm:^3.0.1":
+  version: 3.2.1
+  resolution: "multicodec@npm:3.2.1"
+  dependencies:
+    uint8arrays: ^3.0.0
+    varint: ^6.0.0
+  checksum: 9b6d209c85e12ea3f66cad25671dd92b6be2eff1455669fbbd3c01a26e649c79f94b29f8228c0f9e4fdecb4137b6b6f0f4b0721fd2cb79ec74b1049c29101092
+  languageName: node
+  linkType: hard
+
 "multiformats@npm:^13.0.0, multiformats@npm:^13.0.1, multiformats@npm:^13.1.0, multiformats@npm:^13.2.3, multiformats@npm:^13.3.1, multiformats@npm:^13.3.4":
   version: 13.3.6
   resolution: "multiformats@npm:13.3.6"
@@ -16239,6 +16382,17 @@ __metadata:
   version: 13.1.3
   resolution: "multiformats@npm:13.1.3"
   checksum: afa163e9053061f9226ae7d70b80c89bc67ce7eb23eb4e07bef3bf1aff2b6d5ef982ae8f08c74fbb473066c889ac4d43da62cebf9c0628f21b1276eb1d57c5d0
+  languageName: node
+  linkType: hard
+
+"multihashes@npm:^4.0.1, multihashes@npm:^4.0.2":
+  version: 4.0.3
+  resolution: "multihashes@npm:4.0.3"
+  dependencies:
+    multibase: ^4.0.1
+    uint8arrays: ^3.0.0
+    varint: ^5.0.2
+  checksum: 57c978aa53f7144f8a146a486aa6aea96a73f21058f48ab80a8c5542854197aa63d33aae42b005bed1bbba9f70958b60f3287d90f1a47cf13e8ea7d75d6b8e34
   languageName: node
   linkType: hard
 
@@ -18443,7 +18597,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:^3.1.1, readable-stream@npm:^3.5.0, readable-stream@npm:^3.6.0, readable-stream@npm:^3.6.2":
+"readable-stream@npm:^3.0.0, readable-stream@npm:^3.1.1, readable-stream@npm:^3.5.0, readable-stream@npm:^3.6.0, readable-stream@npm:^3.6.2":
   version: 3.6.2
   resolution: "readable-stream@npm:3.6.2"
   dependencies:
@@ -19012,11 +19166,13 @@ __metadata:
     "@fontsource/roboto": ^5.2.6
     "@mui/icons-material": ^7.1.1
     "@mui/material": ^7.1.1
+    "@thirdweb-dev/storage": ^2.0.15
     class-variance-authority: ^0.7.1
     framer-motion: ^12.18.1
     husky: ~9.1.6
     lint-staged: ~13.2.2
     lucide-react: ^0.515.0
+    motion: ^12.23.12
     tailwind-merge: ^3.3.1
   languageName: unknown
   linkType: soft
@@ -19638,6 +19794,15 @@ __metadata:
   version: 1.1.0
   resolution: "split-on-first@npm:1.1.0"
   checksum: 16ff85b54ddcf17f9147210a4022529b343edbcbea4ce977c8f30e38408b8d6e0f25f92cd35b86a524d4797f455e29ab89eb8db787f3c10708e0b47ebf528d30
+  languageName: node
+  linkType: hard
+
+"split2@npm:^3.1.1":
+  version: 3.2.2
+  resolution: "split2@npm:3.2.2"
+  dependencies:
+    readable-stream: ^3.0.0
+  checksum: 8127ddbedd0faf31f232c0e9192fede469913aa8982aa380752e0463b2e31c2359ef6962eb2d24c125bac59eeec76873678d723b1c7ff696216a1cd071e3994a
   languageName: node
   linkType: hard
 
@@ -20796,6 +20961,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"uint8arrays@npm:^2.1.3":
+  version: 2.1.10
+  resolution: "uint8arrays@npm:2.1.10"
+  dependencies:
+    multiformats: ^9.4.2
+  checksum: 63ceb5fecc09de69641531c847e0b435d15a73587e40d4db23ed9b8a1ebbe839ae39fe81a15ea6079cdf642fcf2583983f9a5d32726edc4bc5e87634f34e3bd5
+  languageName: node
+  linkType: hard
+
 "uint8arrays@npm:^3.0.0":
   version: 3.1.1
   resolution: "uint8arrays@npm:3.1.1"
@@ -21251,6 +21425,13 @@ __metadata:
     react:
       optional: true
   checksum: cce2d9212aac9fc4bdeba2d381188cc831cfe8d2d03039024cfcd58ba1801f2a5b14d01c2bb21a2c9f12046d2ede64f1dd887175185f39bee553677a35592c30
+  languageName: node
+  linkType: hard
+
+"varint@npm:^5.0.2":
+  version: 5.0.2
+  resolution: "varint@npm:5.0.2"
+  checksum: e1a66bf9a6cea96d1f13259170d4d41b845833acf3a9df990ea1e760d279bd70d5b1f4c002a50197efd2168a2fd43eb0b808444600fd4d23651e8d42fe90eb05
   languageName: node
   linkType: hard
 
