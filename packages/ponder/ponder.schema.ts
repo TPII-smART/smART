@@ -45,7 +45,7 @@ export const gig = onchainTable("gig", (t) => ({
 	gigId: t.bigint().primaryKey(),
 	client: t.hex().notNull(),
 	acceptedFreelancer: t.hex(),
-	maxPayment: t.bigint().notNull(),
+	basePayment: t.bigint().notNull(),
 	finalPayment: t.bigint(),
 	title: t.text().notNull(),
 	description: t.text().notNull(),
@@ -59,6 +59,7 @@ export const gig = onchainTable("gig", (t) => ({
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
 	acceptedApplicationId: t.bigint(),
+	gigBannerImageHash: t.text(),
 }));
 
 // Gig Applications table
