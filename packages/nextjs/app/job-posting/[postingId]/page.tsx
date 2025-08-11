@@ -6,7 +6,7 @@ import MyJobsListing from "@/components/MyJobsListing";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 
-export default function MyJobs() {
+export default function JobPosting() {
   const { address: userAddress } = useAccount();
   const { postingId } = useParams();
   const queryClient = useQueryClient();
