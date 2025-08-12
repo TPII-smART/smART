@@ -12,7 +12,7 @@ import { UserProfile, newUserProfile } from "~~/types/user-profile.type";
 
 export default function Profile() {
   const { address } = useAccount();
-  const { address: profileAddress } = useParams();
+  const { address: profileAddress }: { address: `0x${string}` } = useParams();
   const [loading, setLoading] = useState(true);
 
   const [user, setUser] = useState<UserProfile>(newUserProfile());
@@ -43,9 +43,9 @@ export default function Profile() {
       {loading ? (
         <ProfileSkeleton />
       ) : profileAddress === address && editMode ? (
-        <OwnProfile user={user} setUser={setUser} onSave={() => setEditMode(false)} />
+        <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
       ) : (
-        <OthersProfile user={user} changeEditButton={changeEditMode} />
+        <OthersProfile user={user} address={profileAddress} changeEditButton={changeEditMode} />
       )}
     </div>
   );

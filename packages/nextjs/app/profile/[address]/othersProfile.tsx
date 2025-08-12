@@ -15,10 +15,11 @@ import { UserProfile } from "~~/types/user-profile.type";
 
 export interface OthersProfileProps {
   user: UserProfile;
+  address: `0x${string}`;
   changeEditButton?: JSX.Element;
 }
 
-export default function OthersProfile({ user, changeEditButton }: OthersProfileProps) {
+export default function OthersProfile({ user, changeEditButton, address }: OthersProfileProps) {
   const hasSocialNetworks = useMemo(() => {
     return (
       user.xUrl || user.instagramUrl || user.linkedinUrl || user.sketchfabUrl || user.artstationUrl || user.customUrl
@@ -42,12 +43,9 @@ export default function OthersProfile({ user, changeEditButton }: OthersProfileP
           <div className={styles.avatarImage}>
             <div className="relative">
               <AvatarImage
-                src={
-                  isImageUrl(user.profilePicture)
-                    ? user.profilePicture
-                    : `https://placehold.co/128x128/7c3aed/ffffff?text=${user.username.charAt(0).toUpperCase() || "U"}`
-                }
+                src={isImageUrl(user.profilePicture) ? user.profilePicture : undefined}
                 alt="Profile Picture"
+                address={address as `0x${string}`}
               />
             </div>
           </div>
