@@ -15,6 +15,7 @@ import {
   BugAntIcon,
   HomeIcon,
   MagnifyingGlassIcon,
+  TableCellsIcon,
   UserIcon,
   WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
@@ -43,6 +44,11 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               label: "Profile",
               href: `/profile/${address}`,
               icon: UserIcon,
+            },
+            {
+              label: "Dashboard",
+              href: "/dashboard",
+              icon: TableCellsIcon,
             },
             {
               label: "My Job Postings",

@@ -24,7 +24,7 @@ export default function Gig() {
     queryClient.invalidateQueries({
       queryKey: ["applicationsForGig", gigId],
     });
-  }, []);
+  });
 
   return (
     <div className="flex flex-col min-h-screen mt-4">

@@ -1,9 +1,9 @@
 import { ApplicationProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle, Clock, XCircle } from "lucide-react";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import { CheckCircleIcon, ClockIcon, ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { ApplicationState } from "~~/types/gig.types";
 
 export default function ApplicationCard({ application, className }: ApplicationProps) {
@@ -17,7 +17,7 @@ export default function ApplicationCard({ application, className }: ApplicationP
       return {
         label: "Waiting for Approval",
         color: "bg-amber-500",
-        icon: Clock,
+        icon: ClockIcon,
         description: isFreelancer ? "Waiting for client approval" : "Awaiting your approval",
       };
     }
@@ -26,7 +26,7 @@ export default function ApplicationCard({ application, className }: ApplicationP
       return {
         label: "Accepted",
         color: "bg-green-500",
-        icon: CheckCircle,
+        icon: CheckCircleIcon,
         description: "Application accepted by the client",
       };
     }
@@ -35,7 +35,7 @@ export default function ApplicationCard({ application, className }: ApplicationP
       return {
         label: "Rejected",
         color: "bg-red-500",
-        icon: XCircle,
+        icon: XCircleIcon,
         description: "Application rejected by the client",
       };
     }
@@ -43,7 +43,7 @@ export default function ApplicationCard({ application, className }: ApplicationP
     return {
       label: "Unknown",
       color: "bg-gray-500",
-      icon: AlertCircle,
+      icon: ExclamationCircleIcon,
       description: "Unknown status",
     };
   };

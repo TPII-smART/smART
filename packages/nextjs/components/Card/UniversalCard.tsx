@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { Badge } from "../Badge";
 import { jobCategories } from "./JobCategory/jobCategory.data";
 import { UniversalCardProps } from "./types";
@@ -48,8 +49,10 @@ export function UniversalCard({
 
     if (imageToShow) {
       return (
-        <img
-          src={typeof imageToShow === "string" ? imageToShow : undefined}
+        <Image
+          src={typeof imageToShow === "string" ? imageToShow : ""}
+          width={96}
+          height={96}
           alt="User avatar"
           className="h-24 w-24 rounded-full object-cover"
           onError={e => {
@@ -85,7 +88,7 @@ export function UniversalCard({
         {bannerUri ? (
           <>
             <div className="h-full w-full relative">
-              <img
+              <Image
                 src={bannerUri}
                 alt="Banner"
                 width={600}

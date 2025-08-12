@@ -15,7 +15,7 @@ export default function JobPosting() {
     queryClient.invalidateQueries({
       queryKey: ["jobPostingsFromUser", userAddress],
     });
-  }, []);
+  });
 
   return (
     <div className="flex flex-col min-h-screen mt-4">

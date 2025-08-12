@@ -13,7 +13,7 @@ export default function MyGigs() {
     queryClient.invalidateQueries({
       queryKey: ["gigsFromUser", userAddress],
     });
-  }, []);
+  });
 
   return (
     <div className="flex flex-col min-h-screen mt-4">

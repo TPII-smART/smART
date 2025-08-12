@@ -7,9 +7,14 @@ pragma solidity ^0.8.19;
  * @author SmArt
  */
 contract JobsContract {
-
     // Enums for job states
-    enum JobState { WaitingForApproval, Ongoing, Finished, Cancelled, Disputed }
+    enum JobState {
+        WaitingForApproval,
+        Ongoing,
+        Finished,
+        Cancelled,
+        Disputed
+    }
 
     // Struct for individual jobs
     // Each job is stored inside a JobPosting, containing details about the job and the people involved
@@ -26,6 +31,8 @@ contract JobsContract {
         JobState state;
         uint256 createdAt;
         uint256 acceptedAt; // When the job was accepted
+        uint256 finishedAt; // When the job was finished
+        uint256 canceledAt; // When the job was canceled
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
     }
@@ -95,12 +102,7 @@ contract JobsContract {
         uint256 jobDuration
     );
 
-    event JobAccepted(
-        uint256 indexed postingId,
-        uint256 indexed jobId,
-        address indexed client,
-        uint256 deadline
-    );
+    event JobAccepted(uint256 indexed postingId, uint256 indexed jobId, address indexed client, uint256 deadline);
 
     event FreelancerMarkedAsDelivered(
         uint256 indexed postingId,
@@ -109,27 +111,18 @@ contract JobsContract {
         uint256 timestamp
     );
 
-    event ClientMarkedAsReceived(
-        uint256 indexed postingId,
-        uint256 indexed jobId,
-        address client,
-        uint256 timestamp
-    );
+    event ClientMarkedAsReceived(uint256 indexed postingId, uint256 indexed jobId, address client, uint256 timestamp);
 
     event JobFinished(
         uint256 indexed postingId,
         uint256 indexed jobId,
         address freelancer,
         address client,
-        uint256 payment
-    );
-
-    event JobCancelled(
-        uint256 indexed postingId,
-        uint256 indexed jobId,
-        JobState state,
+        uint256 payment,
         uint256 timestamp
     );
+
+    event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
 
     // Modifiers
     modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
@@ -138,7 +131,10 @@ contract JobsContract {
     }
 
     modifier notFreelancer(uint256 _postingId) {
-        require(postedJobs[_postingId].freelancer != msg.sender, "Freelancer cannot create a job for their own posting");
+        require(
+            postedJobs[_postingId].freelancer != msg.sender,
+            "Freelancer cannot create a job for their own posting"
+        );
         _;
     }
 
@@ -149,7 +145,8 @@ contract JobsContract {
 
     modifier onlyJobParties(uint256 _postingId, uint256 _jobId) {
         require(
-            postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender || postedJobs[_postingId].jobs[_jobId].client == msg.sender,
+            postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender ||
+                postedJobs[_postingId].jobs[_jobId].client == msg.sender,
             "Only job parties can call this"
         );
         _;
@@ -178,9 +175,7 @@ contract JobsContract {
      * @dev Create a new job posting (Freelancer creates job offer)
      * @param params Struct containing all job posting parameters
      */
-    function createJobPosting(
-        JobPostingParams memory params
-    ) external  returns (uint256) {
+    function createJobPosting(JobPostingParams memory params) external returns (uint256) {
         require(params.basePayment > 0, "Payment must be greater than 0");
         require(params.averageWorkDuration > 0, "Duration must be greater than 0");
         require(params.minimumNoticeTime > 0, "Minimum notice time must be greater than 0");
@@ -193,17 +188,17 @@ contract JobsContract {
         // Create JobPosting with all required fields including empty jobs array
         JobPosting storage newPosting = postedJobs[postingId];
         {
-        newPosting.postingId = postingId;
-        newPosting.freelancer = msg.sender;
-        newPosting.basePayment = params.basePayment;
-        newPosting.title = params.title;
-        newPosting.description = params.description;
-        newPosting.category = params.category;
-        newPosting.bannerImageHash = params.bannerImageHash;
-        newPosting.minimumNoticeTime = params.minimumNoticeTime;
-        newPosting.averageWorkDuration = params.averageWorkDuration;
-        newPosting.createdAt = block.timestamp;
-        // jobs array is automatically initialized as empty
+            newPosting.postingId = postingId;
+            newPosting.freelancer = msg.sender;
+            newPosting.basePayment = params.basePayment;
+            newPosting.title = params.title;
+            newPosting.description = params.description;
+            newPosting.category = params.category;
+            newPosting.bannerImageHash = params.bannerImageHash;
+            newPosting.minimumNoticeTime = params.minimumNoticeTime;
+            newPosting.averageWorkDuration = params.averageWorkDuration;
+            newPosting.createdAt = block.timestamp;
+            // jobs array is automatically initialized as empty
         }
 
         emit JobPostingCreated(
@@ -226,10 +221,10 @@ contract JobsContract {
      * @param _postingId The ID of the job posting to create a job under
      * @param params Struct containing all job parameters
      */
-     function createJob(
+    function createJob(
         uint256 _postingId,
         JobParams memory params
-     ) external payable postingExists(_postingId) notFreelancer(_postingId) {
+    ) external payable postingExists(_postingId) notFreelancer(_postingId) {
         JobPosting storage posting = postedJobs[_postingId];
 
         require(msg.value == params.payment, "Must send exact payment amount");
@@ -253,6 +248,8 @@ contract JobsContract {
             state: JobState.WaitingForApproval,
             createdAt: block.timestamp,
             acceptedAt: 0,
+            finishedAt: 0,
+            canceledAt: 0,
             clientReceived: false,
             freelancerDelivered: false
         });
@@ -272,7 +269,7 @@ contract JobsContract {
             posting.bannerImageHash,
             params.durationInHours
         );
-     }
+    }
 
     /**
      * @dev Accept an available job and set deadline (Freelancer accepts job offered by client)
@@ -292,12 +289,7 @@ contract JobsContract {
         job.acceptedAt = block.timestamp;
         job.deadline = block.timestamp + (job.durationInHours * 1 hours); // Set deadline based on duration
 
-        emit JobAccepted(
-            _postingId,
-            _jobId,
-            job.client,
-            job.deadline
-        );
+        emit JobAccepted(_postingId, _jobId, job.client, job.deadline);
     }
 
     /**
@@ -307,7 +299,10 @@ contract JobsContract {
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
      */
-    function confirmCompletion(uint256 _postingId, uint256 _jobId) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
+    function confirmCompletion(
+        uint256 _postingId,
+        uint256 _jobId
+    ) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
@@ -339,17 +334,12 @@ contract JobsContract {
     function _completeJob(uint256 _postingId, uint256 _jobId) internal {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
         job.state = JobState.Finished;
+        job.finishedAt = block.timestamp;
 
         // Sends payment to freelancer
         payable(job.freelancer).transfer(job.payment);
 
-        emit JobFinished(
-            _postingId,
-            _jobId,
-            job.freelancer,
-            job.client,
-            job.payment
-        );
+        emit JobFinished(_postingId, _jobId, job.freelancer, job.client, job.payment, job.finishedAt);
     }
 
     /**
@@ -357,7 +347,10 @@ contract JobsContract {
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to cancel
      */
-    function cancelJob(uint256 _postingId, uint256 _jobId) external jobExists(_postingId, _jobId) onlyJobParties(_postingId, _jobId) {
+    function cancelJob(
+        uint256 _postingId,
+        uint256 _jobId
+    ) external jobExists(_postingId, _jobId) onlyJobParties(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         if (job.state == JobState.WaitingForApproval) {
@@ -375,8 +368,9 @@ contract JobsContract {
             revert("Job cannot be cancelled in its current state");
         }
 
-        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
+        job.canceledAt = block.timestamp;
 
+        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, job.canceledAt);
     }
 
     /**

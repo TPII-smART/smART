@@ -30,7 +30,7 @@ export interface Job {
   jobDuration?: string;
 
   /** (Optional) ISO date string representing the job's deadline. */
-  deadline?: string;
+  deadline?: string | number;
 
   /** Current state of the job, represented as an integer. */
   state: number;
@@ -40,6 +40,16 @@ export interface Job {
 
   /** (Optional) ISO date string representing when the job was accepted by a freelancer. */
   acceptedAt?: string;
+
+  /**
+   * (Optional) ISO date string representing when the job was finished.
+   */
+  finishedAt?: string;
+
+  /**
+   * (Optional) ISO date string representing when the job was canceled.
+   */
+  canceledAt?: string;
 
   /** (Optional) Boolean indicating if the client has marked they received the job deliverables. */
   clientReceived?: boolean;

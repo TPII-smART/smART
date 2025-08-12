@@ -13,7 +13,7 @@ export default function Applications() {
     queryClient.invalidateQueries({
       queryKey: ["applicationsFromUser", userAddress],
     });
-  }, []);
+  });
 
   return (
     <div className="flex flex-col min-h-screen mt-4">

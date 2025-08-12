@@ -7,10 +7,19 @@ pragma solidity ^0.8.19;
  * @author SmArt
  */
 contract GigsContract {
-
     // Enums for gig and application states
-    enum GigState { Open, InProgress, Completed, Cancelled, Disputed }
-    enum ApplicationState { Pending, Accepted, Rejected }
+    enum GigState {
+        Open,
+        InProgress,
+        Completed,
+        Cancelled,
+        Disputed
+    }
+    enum ApplicationState {
+        Pending,
+        Accepted,
+        Rejected
+    }
 
     // Struct for freelancer applications to gigs
     struct Application {
@@ -57,6 +66,8 @@ contract GigsContract {
         GigState state;
         uint256 createdAt;
         uint256 acceptedAt; // When an application was accepted
+        uint256 canceledAt; // When an application was canceled
+        uint256 finishedAt; // When an application was finished
         bool clientReceived; // Whether the client has received the work results
         bool freelancerDelivered; // Whether the freelancer has delivered the work results
         Application[] applications; // All applications for this gig
@@ -106,30 +117,13 @@ contract GigsContract {
         string rejectionComment
     );
 
-    event FreelancerMarkedAsDelivered(
-        uint256 indexed gigId,
-        address freelancer,
-        uint256 timestamp
-    );
+    event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
-    event ClientMarkedAsReceived(
-        uint256 indexed gigId,
-        address client,
-        uint256 timestamp
-    );
+    event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
 
-    event GigCompleted(
-        uint256 indexed gigId,
-        address freelancer,
-        address client,
-        uint256 payment
-    );
+    event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment, uint256 timestamp);
 
-    event GigCancelled(
-        uint256 indexed gigId,
-        GigState state,
-        uint256 timestamp
-    );
+    event GigCancelled(uint256 indexed gigId, GigState state, uint256 timestamp);
 
     // Modifiers
     modifier onlyClient(uint256 _gigId) {
@@ -169,9 +163,7 @@ contract GigsContract {
         owner = _owner;
     }
 
-    function createGig(
-        GigParams memory params
-    ) external returns (uint256) {
+    function createGig(GigParams memory params) external returns (uint256) {
         require(params.maxDurationInHours > 0, "Duration must be greater than 0");
         require(bytes(params.title).length > 0, "Title cannot be empty");
         require(bytes(params.description).length > 0, "Description cannot be empty");
@@ -181,24 +173,24 @@ contract GigsContract {
         uint256 gigId = postedGigsCounter++;
         Gig storage newGig = postedGigs[gigId];
         {
-        newGig.gigId = gigId;
-        newGig.client = msg.sender;
-        newGig.acceptedFreelancer = address(0);
-        newGig.basePayment = params.basePayment;
-        newGig.finalPayment = 0;
-        newGig.title = params.title;
-        newGig.description = params.description;
-        newGig.category = params.category;
-        newGig.maxDurationInHours = params.maxDurationInHours;
-        newGig.finalDurationInHours = 0;
-        newGig.deadline = 0;
-        newGig.state = GigState.Open;
-        newGig.createdAt = block.timestamp;
-        newGig.acceptedAt = 0;
-        newGig.clientReceived = false;
-        newGig.freelancerDelivered = false;
-        newGig.acceptedApplicationId = 0;
-        newGig.gigBannerImageHash = params.gigBannerImageHash;
+            newGig.gigId = gigId;
+            newGig.client = msg.sender;
+            newGig.acceptedFreelancer = address(0);
+            newGig.basePayment = params.basePayment;
+            newGig.finalPayment = 0;
+            newGig.title = params.title;
+            newGig.description = params.description;
+            newGig.category = params.category;
+            newGig.maxDurationInHours = params.maxDurationInHours;
+            newGig.finalDurationInHours = 0;
+            newGig.deadline = 0;
+            newGig.state = GigState.Open;
+            newGig.createdAt = block.timestamp;
+            newGig.acceptedAt = 0;
+            newGig.clientReceived = false;
+            newGig.freelancerDelivered = false;
+            newGig.acceptedApplicationId = 0;
+            newGig.gigBannerImageHash = params.gigBannerImageHash;
         }
 
         emit GigCreated(
@@ -220,10 +212,7 @@ contract GigsContract {
      * @param _gigId The ID of the gig to apply for
      * @param params struct containing proposed payment, duration, and proposal comment
      */
-    function applyToGig(
-        uint256 _gigId,
-        ApplicationParams memory params
-    ) external gigExists(_gigId) {
+    function applyToGig(uint256 _gigId, ApplicationParams memory params) external gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.Open, "Gig is not accepting applications");
@@ -277,13 +266,10 @@ contract GigsContract {
      * @param _gigId The ID of the gig
      * @param _applicationId The application ID to accept
      */
-    function acceptApplication(uint256 _gigId, uint256 _applicationId)
-    external
-    payable
-    gigExists(_gigId)
-    applicationExists(_gigId, _applicationId)
-    onlyClient(_gigId)
-    {
+    function acceptApplication(
+        uint256 _gigId,
+        uint256 _applicationId
+    ) external payable gigExists(_gigId) applicationExists(_gigId, _applicationId) onlyClient(_gigId) {
         Gig storage gig = postedGigs[_gigId];
         Application storage application = gig.applications[_applicationId];
 
@@ -329,7 +315,7 @@ contract GigsContract {
     }
 
     /**
-   * @dev Internal function to reject other pending applications
+     * @dev Internal function to reject other pending applications
      */
     function _rejectOtherApplications(uint256 _gigId, uint256 _acceptedId) internal {
         Gig storage gig = postedGigs[_gigId];
@@ -348,12 +334,11 @@ contract GigsContract {
      * @param _applicationId The application ID to reject
      * @param _rejectionComment Comment explaining why the application was rejected
      */
-    function rejectApplication(uint256 _gigId, uint256 _applicationId, string memory _rejectionComment)
-    external
-    gigExists(_gigId)
-    applicationExists(_gigId, _applicationId)
-    onlyClient(_gigId)
-    {
+    function rejectApplication(
+        uint256 _gigId,
+        uint256 _applicationId,
+        string memory _rejectionComment
+    ) external gigExists(_gigId) applicationExists(_gigId, _applicationId) onlyClient(_gigId) {
         Gig storage gig = postedGigs[_gigId];
         Application storage application = gig.applications[_applicationId];
 
@@ -363,12 +348,7 @@ contract GigsContract {
         application.state = ApplicationState.Rejected;
         application.rejectionComment = _rejectionComment;
 
-        emit ApplicationRejected(
-            _gigId,
-            _applicationId,
-            application.freelancer,
-            _rejectionComment
-        );
+        emit ApplicationRejected(_gigId, _applicationId, application.freelancer, _rejectionComment);
     }
 
     /**
@@ -405,16 +385,12 @@ contract GigsContract {
     function _completeGig(uint256 _gigId) internal {
         Gig storage gig = postedGigs[_gigId];
         gig.state = GigState.Completed;
+        gig.finishedAt = block.timestamp;
 
         // Send agreed payment to freelancer
         payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
 
-        emit GigCompleted(
-            _gigId,
-            gig.acceptedFreelancer,
-            gig.client,
-            gig.finalPayment
-        );
+        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
     }
 
     /**
@@ -435,7 +411,9 @@ contract GigsContract {
             revert("Gig cannot be cancelled in its current state");
         }
 
-        emit GigCancelled(_gigId, GigState.Cancelled, block.timestamp);
+        gig.canceledAt = block.timestamp;
+
+        emit GigCancelled(_gigId, GigState.Cancelled, gig.canceledAt);
     }
 
     /**
@@ -452,7 +430,9 @@ contract GigsContract {
             payable(gig.client).transfer(gig.basePayment);
         }
 
-        emit GigCancelled(_gigId, GigState.Cancelled, block.timestamp);
+        gig.canceledAt = block.timestamp;
+
+        emit GigCancelled(_gigId, GigState.Cancelled, gig.canceledAt);
     }
 
     function getTotalGigsPosted() external view returns (uint256) {

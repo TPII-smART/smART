@@ -90,6 +90,8 @@ export const fetchJobsFromPosting = async (postingId: string) => {
           state
           createdAt
           acceptedAt
+          finishedAt
+          canceledAt
           clientReceived
           freelancerDelivered
         }
@@ -98,6 +100,39 @@ export const fetchJobsFromPosting = async (postingId: string) => {
   `;
 
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { postingId: postingId });
+  return { jobs: res.jobs.items };
+};
+
+export const fetchMyJobs = async (userAddress: string) => {
+  console.log("fetchMyJobs", userAddress);
+
+  const query = gql`
+    query GetJobs($freelancer: String!) {
+      jobs(where: { freelancer: $freelancer }, orderBy: "acceptedAt", orderDirection: "desc") {
+        items {
+          jobId
+          postingId
+          client
+          freelancer
+          payment
+          title
+          description
+          category
+          jobDuration
+          deadline
+          state
+          createdAt
+          acceptedAt
+          finishedAt
+          canceledAt
+          clientReceived
+          freelancerDelivered
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, query, { freelancer: userAddress });
   return { jobs: res.jobs.items };
 };
 

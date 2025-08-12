@@ -160,7 +160,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
 
   const fetchMaxPaymentETH = useCallback(async () => {
     setMaxPaymentETH(await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment()));
-  }, []);
+  }, [type]);
 
   useEffect(() => {
     setFilteredItems(filterItems);

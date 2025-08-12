@@ -38,11 +38,12 @@ const EditButton = ({ onClick, isLoading = false }: { onClick: () => void; isLoa
 
 export interface OwnProfileProps {
   user: UserProfile;
+  address: `0x${string}`;
   setUser: Dispatch<SetStateAction<UserProfile>>;
   onSave: () => void;
 }
 
-export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
+export default function OwnProfile({ user, setUser, onSave, address }: OwnProfileProps) {
   const [hasChanged, setHasChanged] = useState(false);
 
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
@@ -106,7 +107,6 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
   const getAvatarSrc = () => {
     if (avatarPreview) return avatarPreview;
     if (user && isImageUrl(user.profilePicture || "")) return user.profilePicture; // IPFS URL
-    return `https://placehold.co/128x128/7c3aed/ffffff?text=${user?.username.charAt(0).toUpperCase() || "U"}`;
   };
 
   const handleFileUpload = async (file: File | null, type: "banner" | "avatar"): Promise<string | null> => {
@@ -238,7 +238,7 @@ export default function OwnProfile({ user, setUser, onSave }: OwnProfileProps) {
           </div>
           <div className={styles.avatarImage}>
             <div className="relative">
-              <AvatarImage src={getAvatarSrc()} alt="Profile Picture" />
+              <AvatarImage src={getAvatarSrc()} alt="Profile Picture" address={address} />
               <div className="absolute bottom-2 right-2 p-2 ">
                 <EditButton onClick={() => handleImageUpload("avatar")} />
               </div>

@@ -1,10 +1,11 @@
 "use client";
 
 import type React from "react";
-import { type DragEvent, useCallback, useEffect, useRef, useState } from "react";
+import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/Card";
-import { CheckCircle, File as FileIcon, UploadCloud, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { CheckCircleIcon, CloudArrowUpIcon, DocumentIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 type UploadStatus = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -45,7 +46,7 @@ const dropzoneVariants = {
     borderColor: "var(--color-accent)",
     backgroundColor: "color-mix(in srgb, var(--color-accent) 5%, transparent)",
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 25,
     },
@@ -61,7 +62,7 @@ const iconVariants = {
       repeat: Number.POSITIVE_INFINITY,
       repeatType: "reverse" as const,
       duration: 1,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };
@@ -71,7 +72,7 @@ const progressVariants = {
   animate: (progress: number) => ({
     pathLength: progress / 100,
     opacity: 1,
-    transition: { duration: 0.5, ease: "easeOut" },
+    transition: { duration: 0.5, ease: "easeOut" as const },
   }),
 };
 
@@ -81,7 +82,7 @@ const successIconVariants = {
     scale: 1,
     rotate: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 200,
       damping: 20,
     },
@@ -103,9 +104,11 @@ export default function FileUpload({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const acceptedFileTypes = acceptedFileType
-    ? (acceptedFileTypesMapper[acceptedFileType as keyof typeof acceptedFileTypesMapper] as string[])
-    : [];
+  const acceptedFileTypes = useMemo(() => {
+    return acceptedFileType
+      ? (acceptedFileTypesMapper[acceptedFileType as keyof typeof acceptedFileTypesMapper] as string[])
+      : [];
+  }, [acceptedFileType]);
 
   // Creates a preview of the file if it's an image
   useEffect(() => {
@@ -117,43 +120,93 @@ export default function FileUpload({
     return () => setPreviewUrl(null);
   }, [file]);
 
-  const handleFileValidation = (selectedFile: File): boolean => {
-    setError(null); // Reset error before validation
-    if (acceptedFileTypes && acceptedFileTypes.length > 0 && !acceptedFileTypes.includes(selectedFile.type)) {
-      const err = `Invalid file type. Accepted: ${acceptedFileTypes
-        .map(t => t.split("/")[1])
-        .join(", ")
-        .toUpperCase()}`;
-      setError(err);
-      setStatus("error");
-      if (onUploadError) onUploadError(err);
-      return false;
-    }
-    if (maxFileSize && selectedFile.size > maxFileSize) {
-      const err = `File size exceeds the limit of ${formatBytes(maxFileSize)}.`;
-      setError(err);
-      setStatus("error");
-      if (onUploadError) onUploadError(err);
-      return false;
-    }
-    return true;
-  };
+  const formatBytes = useCallback((bytes: number, decimals = 2): string => {
+    if (!+bytes) return "0 Bytes"; // Use !+bytes to handle possible non-numeric input gracefully
 
-  const handleFileSelect = (selectedFile: File | null) => {
-    if (!selectedFile) return;
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
 
-    if (!handleFileValidation(selectedFile)) {
-      setFile(null); // Clear invalid file
-      // Keep the error state active
-      return;
-    }
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-    setFile(selectedFile);
-    setError(null);
-    setStatus("uploading");
-    setProgress(0);
-    onFileSelected(selectedFile);
-  };
+    // Ensure index is within bounds
+    const unit = sizes[i] || sizes[sizes.length - 1];
+
+    return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${unit}`;
+  }, []);
+
+  const handleFileValidation = useCallback(
+    (selectedFile: File): boolean => {
+      setError(null); // Reset error before validation
+      if (acceptedFileTypes && acceptedFileTypes.length > 0 && !acceptedFileTypes.includes(selectedFile.type)) {
+        const err = `Invalid file type. Accepted: ${acceptedFileTypes
+          .map(t => t.split("/")[1])
+          .join(", ")
+          .toUpperCase()}`;
+        setError(err);
+        setStatus("error");
+        if (onUploadError) onUploadError(err);
+        return false;
+      }
+      if (maxFileSize && selectedFile.size > maxFileSize) {
+        const err = `File size exceeds the limit of ${formatBytes(maxFileSize)}.`;
+        setError(err);
+        setStatus("error");
+        if (onUploadError) onUploadError(err);
+        return false;
+      }
+      return true;
+    },
+    [acceptedFileTypes, maxFileSize, onUploadError, formatBytes],
+  );
+
+  const onFileSelected = useCallback(
+    (uploadingFile: File) => {
+      let currentProgress = 0;
+      const interval = setInterval(() => {
+        currentProgress += Math.random() * 10 + 10; // Simulate progress increments
+        if (currentProgress >= 100) {
+          clearInterval(interval);
+          setProgress(100);
+          setStatus("success");
+          if (onUploadSuccess) {
+            onUploadSuccess(uploadingFile);
+          }
+        } else {
+          // Check if still in uploading state before updating progress
+          setStatus(prevStatus => {
+            if (prevStatus === "uploading") {
+              setProgress(currentProgress);
+              return "uploading";
+            }
+            // If status changed (e.g., user clicked reset), stop the simulation
+            clearInterval(interval);
+            return prevStatus;
+          });
+        }
+      }, 200); // Adjust interval for simulation speed
+    },
+    [onUploadSuccess],
+  );
+
+  const handleFileSelect = useCallback(
+    (selectedFile: File | null) => {
+      if (!selectedFile) return;
+
+      if (!handleFileValidation(selectedFile)) {
+        setFile(null); // Clear invalid file
+        // Keep the error state active
+        return;
+      }
+
+      setFile(selectedFile);
+      setError(null);
+      setStatus("uploading");
+      setProgress(0);
+      onFileSelected(selectedFile);
+    },
+    [handleFileValidation, onFileSelected],
+  );
 
   const handleDragOver = useCallback(
     (e: DragEvent<HTMLDivElement>) => {
@@ -192,42 +245,19 @@ export default function FileUpload({
     [status, handleFileSelect],
   ); // Add dependencies
 
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    handleFileSelect(selectedFile || null);
-    // Reset input value to allow selecting the same file again
-    if (e.target) e.target.value = "";
-  };
+  const handleFileInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const selectedFile = e.target.files?.[0];
+      handleFileSelect(selectedFile || null);
+      // Reset input value to allow selecting the same file again
+      if (e.target) e.target.value = "";
+    },
+    [handleFileSelect],
+  );
 
   const triggerFileInput = () => {
     if (status === "uploading" || status === "success") return; // Prevent opening dialog when not idle/error
     fileInputRef.current?.click();
-  };
-
-  const onFileSelected = (uploadingFile: File) => {
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += Math.random() * 10 + 10; // Simulate progress increments
-      if (currentProgress >= 100) {
-        clearInterval(interval);
-        setProgress(100);
-        setStatus("success");
-        if (onUploadSuccess) {
-          onUploadSuccess(uploadingFile);
-        }
-      } else {
-        // Check if still in uploading state before updating progress
-        setStatus(prevStatus => {
-          if (prevStatus === "uploading") {
-            setProgress(currentProgress);
-            return "uploading";
-          }
-          // If status changed (e.g., user clicked reset), stop the simulation
-          clearInterval(interval);
-          return prevStatus;
-        });
-      }
-    }, 200); // Adjust interval for simulation speed
   };
 
   const resetState = () => {
@@ -247,21 +277,6 @@ export default function FileUpload({
     setPreviewUrl(null);
     if (onFileRemove) onFileRemove();
   }, [onFileRemove]);
-
-  const formatBytes = (bytes: number, decimals = 2): string => {
-    if (!+bytes) return "0 Bytes"; // Use !+bytes to handle possible non-numeric input gracefully
-
-    const k = 1024;
-    const dm = decimals < 0 ? 0 : decimals;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
-
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-
-    // Ensure index is within bounds
-    const unit = sizes[i] || sizes[sizes.length - 1];
-
-    return `${Number.parseFloat((bytes / k ** i).toFixed(dm))} ${unit}`;
-  };
 
   return (
     <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit" className="relative">
@@ -293,9 +308,9 @@ export default function FileUpload({
                   {previewUrl && (
                     <motion.div
                       className="relative w-32 h-32 mb-4 rounded-lg overflow-hidden ring-2"
-                      style={{
-                        ringColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
-                      }}
+                      // style={{
+                      // ringColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
+                      // }}
                       initial={{
                         rotate: -10,
                         scale: 0.9,
@@ -307,7 +322,13 @@ export default function FileUpload({
                         damping: 20,
                       }}
                     >
-                      <img src={previewUrl} alt={`Preview of ${file.name}`} className="w-full h-full object-cover" />
+                      <Image
+                        src={previewUrl}
+                        width={128}
+                        height={128}
+                        alt={`Preview of ${file.name}`}
+                        className="w-full h-full object-cover"
+                      />
                       <button
                         type="button"
                         onClick={handleRemoveFile}
@@ -315,12 +336,16 @@ export default function FileUpload({
                         aria-label="Remove file"
                         style={{ lineHeight: 0 }}
                       >
-                        <X className="w-5 h-5 text-white" />
+                        <XMarkIcon className="w-5 h-5 text-white" />
                       </button>
                     </motion.div>
                   )}
                   {!previewUrl && (
-                    <FileIcon className="w-16 h-16 mb-4" style={{ color: "var(--color-accent)" }} aria-hidden="true" />
+                    <DocumentIcon
+                      className="w-16 h-16 mb-4"
+                      style={{ color: "var(--color-accent)" }}
+                      aria-hidden="true"
+                    />
                   )}
                   <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--color-primary-content)" }}>
                     Current File
@@ -397,7 +422,7 @@ export default function FileUpload({
                         : "color-mix(in srgb, var(--color-border) 50%, transparent)",
                     backgroundColor:
                       status === "dragging" ? "color-mix(in srgb, var(--color-accent) 5%, transparent)" : "transparent",
-                    "--hover-border-color": "var(--color-accent)",
+                    // "--hover-border-color": "var(--color-accent)",
                   }}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -457,7 +482,7 @@ export default function FileUpload({
                     animate={status === "dragging" ? "dragging" : "idle"}
                     className="group-hover:scale-110 group-hover:-translate-y-0.5 transition-transform duration-500"
                   >
-                    <UploadCloud
+                    <CloudArrowUpIcon
                       className="w-12 h-12 mb-4 transition-all duration-500 ease-out upload-icon"
                       style={{
                         color:
@@ -566,7 +591,7 @@ export default function FileUpload({
                         damping: 25,
                       }}
                     >
-                      <FileIcon
+                      <DocumentIcon
                         className="w-8 h-8 absolute"
                         style={{ color: "var(--color-accent)" }}
                         aria-hidden="true"
@@ -626,7 +651,7 @@ export default function FileUpload({
                       }}
                     />
                     <motion.div variants={successIconVariants} initial="initial" animate="animate">
-                      <CheckCircle
+                      <CheckCircleIcon
                         className="w-16 h-16 relative z-10 drop-shadow-lg"
                         style={{ color: "var(--color-success)" }}
                         aria-label="Success"
@@ -699,7 +724,7 @@ export default function FileUpload({
                       ease: "easeInOut",
                     }}
                   >
-                    <X className="w-12 h-12 mb-3" aria-hidden="true" />
+                    <XMarkIcon className="w-12 h-12 mb-3" aria-hidden="true" />
                   </motion.div>
                   <p className="text-sm font-medium mb-1">Upload Failed</p>
                   <p className="text-xs mb-4 max-w-xs">{error || "An unknown error occurred."}</p>

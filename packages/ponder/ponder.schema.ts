@@ -3,7 +3,7 @@ import { onchainTable, primaryKey } from "ponder";
 // JobPosting table
 export const jobPosting = onchainTable("jobPosting", (t) => ({
 	postingId: t.bigint().primaryKey(),
-	freelancer: t.hex().notNull(),
+	freelancer: t.text().notNull(),
 	basePayment: t.bigint().notNull(),
 	title: t.text().notNull(),
 	description: t.text().notNull(),
@@ -20,8 +20,8 @@ export const job = onchainTable(
 	(t) => ({
 		jobId: t.bigint().notNull(),
 		postingId: t.bigint().notNull(),
-		client: t.hex().notNull(),
-		freelancer: t.hex().notNull(),
+		client: t.text().notNull(),
+		freelancer: t.text().notNull(),
 		payment: t.bigint().notNull(),
 		title: t.text().notNull(),
 		description: t.text().notNull(),
@@ -32,6 +32,8 @@ export const job = onchainTable(
 		state: t.integer().notNull(),
 		createdAt: t.bigint().notNull(),
 		acceptedAt: t.bigint(),
+		finishedAt: t.bigint(), // When the job was finished
+		canceledAt: t.bigint(), // When the job was canceled
 		clientReceived: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 	}),
@@ -43,8 +45,8 @@ export const job = onchainTable(
 // Gigs table
 export const gig = onchainTable("gig", (t) => ({
 	gigId: t.bigint().primaryKey(),
-	client: t.hex().notNull(),
-	acceptedFreelancer: t.hex(),
+	client: t.text().notNull(),
+	acceptedFreelancer: t.text(),
 	basePayment: t.bigint().notNull(),
 	finalPayment: t.bigint(),
 	title: t.text().notNull(),
@@ -56,6 +58,8 @@ export const gig = onchainTable("gig", (t) => ({
 	state: t.integer().notNull(),
 	createdAt: t.bigint().notNull(),
 	acceptedAt: t.bigint(),
+	finishedAt: t.bigint(),
+	canceledAt: t.bigint(),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
 	acceptedApplicationId: t.bigint(),
@@ -68,7 +72,7 @@ export const gigApplication = onchainTable(
 	(t) => ({
 		applicationId: t.bigint().notNull(),
 		gigId: t.bigint().notNull(),
-		freelancer: t.hex().notNull(),
+		freelancer: t.text().notNull(),
 		proposedPayment: t.bigint().notNull(),
 		proposedDurationInHours: t.bigint().notNull(),
 		state: t.integer().notNull(),
