@@ -66,6 +66,8 @@ contract GigsContract {
         GigState state;
         uint256 createdAt;
         uint256 acceptedAt; // When an application was accepted
+        uint256 canceledAt; // When an application was canceled
+        uint256 finishedAt; // When an application was finished
         bool clientReceived; // Whether the client has received the work results
         bool freelancerDelivered; // Whether the freelancer has delivered the work results
         Application[] applications; // All applications for this gig
@@ -119,7 +121,7 @@ contract GigsContract {
 
     event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
 
-    event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment);
+    event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment, uint256 timestamp);
 
     event GigCancelled(uint256 indexed gigId, GigState state, uint256 timestamp);
 
@@ -383,11 +385,12 @@ contract GigsContract {
     function _completeGig(uint256 _gigId) internal {
         Gig storage gig = postedGigs[_gigId];
         gig.state = GigState.Completed;
+        gig.finishedAt = block.timestamp;
 
         // Send agreed payment to freelancer
         payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
 
-        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment);
+        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
     }
 
     /**
@@ -408,7 +411,9 @@ contract GigsContract {
             revert("Gig cannot be cancelled in its current state");
         }
 
-        emit GigCancelled(_gigId, GigState.Cancelled, block.timestamp);
+        gig.canceledAt = block.timestamp;
+
+        emit GigCancelled(_gigId, GigState.Cancelled, gig.canceledAt);
     }
 
     /**
@@ -425,7 +430,9 @@ contract GigsContract {
             payable(gig.client).transfer(gig.basePayment);
         }
 
-        emit GigCancelled(_gigId, GigState.Cancelled, block.timestamp);
+        gig.canceledAt = block.timestamp;
+
+        emit GigCancelled(_gigId, GigState.Cancelled, gig.canceledAt);
     }
 
     function getTotalGigsPosted() external view returns (uint256) {

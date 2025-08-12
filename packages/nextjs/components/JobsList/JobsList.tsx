@@ -101,9 +101,9 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState):
   }
 
   infoIcons.push({
-    title: `Payment: ${item.payment} ETH`,
+    title: `Payment: ${item.payment} Ethereum`,
     icon: <CurrencyDollarIcon className="w-4 h-4" />,
-    info: item.payment + " ETH",
+    info: "Ξ " + item.payment,
   });
 
   return infoIcons;

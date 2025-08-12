@@ -30,7 +30,7 @@ export interface Gig {
   finalDurationInHours?: string;
 
   /** (Optional) ISO date string representing the gig's deadline. */
-  deadline?: string;
+  deadline?: string | number;
 
   /** Current state of the gig, represented as an integer. */
   state: number;
@@ -40,6 +40,16 @@ export interface Gig {
 
   /** (Optional) ISO date string representing when the gig was accepted by a freelancer. */
   acceptedAt?: string;
+
+  /**
+   * (Optional) ISO date string representing when the gig was finished.
+   */
+  finishedAt?: string;
+
+  /**
+   * (Optional) ISO date string representing when the gig was canceled.
+   */
+  canceledAt?: string;
 
   /** (Optional) Boolean indicating if the client has marked they received the gig deliverables. */
   clientReceived?: boolean;
@@ -91,4 +101,8 @@ export enum ApplicationState {
 }
 export interface GigsData {
   gigs: Gig[];
+}
+
+export interface ApplicationsData {
+  applications: Application[];
 }

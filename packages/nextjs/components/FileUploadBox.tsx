@@ -4,8 +4,8 @@ import type React from "react";
 import { type DragEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/Card";
-import { CheckCircle, File as FileIcon, UploadCloud, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
+import { CheckCircleIcon, CloudArrowUpIcon, DocumentIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 type UploadStatus = "idle" | "dragging" | "uploading" | "success" | "error";
 
@@ -46,7 +46,7 @@ const dropzoneVariants = {
     borderColor: "var(--color-accent)",
     backgroundColor: "color-mix(in srgb, var(--color-accent) 5%, transparent)",
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 400,
       damping: 25,
     },
@@ -62,7 +62,7 @@ const iconVariants = {
       repeat: Number.POSITIVE_INFINITY,
       repeatType: "reverse" as const,
       duration: 1,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };
@@ -72,7 +72,7 @@ const progressVariants = {
   animate: (progress: number) => ({
     pathLength: progress / 100,
     opacity: 1,
-    transition: { duration: 0.5, ease: "easeOut" },
+    transition: { duration: 0.5, ease: "easeOut" as const },
   }),
 };
 
@@ -82,7 +82,7 @@ const successIconVariants = {
     scale: 1,
     rotate: 0,
     transition: {
-      type: "spring",
+      type: "spring" as const,
       stiffness: 200,
       damping: 20,
     },
@@ -308,9 +308,9 @@ export default function FileUpload({
                   {previewUrl && (
                     <motion.div
                       className="relative w-32 h-32 mb-4 rounded-lg overflow-hidden ring-2"
-                      style={{
-                        ringColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
-                      }}
+                      // style={{
+                      // ringColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
+                      // }}
                       initial={{
                         rotate: -10,
                         scale: 0.9,
@@ -336,12 +336,16 @@ export default function FileUpload({
                         aria-label="Remove file"
                         style={{ lineHeight: 0 }}
                       >
-                        <X className="w-5 h-5 text-white" />
+                        <XMarkIcon className="w-5 h-5 text-white" />
                       </button>
                     </motion.div>
                   )}
                   {!previewUrl && (
-                    <FileIcon className="w-16 h-16 mb-4" style={{ color: "var(--color-accent)" }} aria-hidden="true" />
+                    <DocumentIcon
+                      className="w-16 h-16 mb-4"
+                      style={{ color: "var(--color-accent)" }}
+                      aria-hidden="true"
+                    />
                   )}
                   <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--color-primary-content)" }}>
                     Current File
@@ -418,7 +422,7 @@ export default function FileUpload({
                         : "color-mix(in srgb, var(--color-border) 50%, transparent)",
                     backgroundColor:
                       status === "dragging" ? "color-mix(in srgb, var(--color-accent) 5%, transparent)" : "transparent",
-                    "--hover-border-color": "var(--color-accent)",
+                    // "--hover-border-color": "var(--color-accent)",
                   }}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -478,7 +482,7 @@ export default function FileUpload({
                     animate={status === "dragging" ? "dragging" : "idle"}
                     className="group-hover:scale-110 group-hover:-translate-y-0.5 transition-transform duration-500"
                   >
-                    <UploadCloud
+                    <CloudArrowUpIcon
                       className="w-12 h-12 mb-4 transition-all duration-500 ease-out upload-icon"
                       style={{
                         color:
@@ -587,7 +591,7 @@ export default function FileUpload({
                         damping: 25,
                       }}
                     >
-                      <FileIcon
+                      <DocumentIcon
                         className="w-8 h-8 absolute"
                         style={{ color: "var(--color-accent)" }}
                         aria-hidden="true"
@@ -647,7 +651,7 @@ export default function FileUpload({
                       }}
                     />
                     <motion.div variants={successIconVariants} initial="initial" animate="animate">
-                      <CheckCircle
+                      <CheckCircleIcon
                         className="w-16 h-16 relative z-10 drop-shadow-lg"
                         style={{ color: "var(--color-success)" }}
                         aria-label="Success"
@@ -720,7 +724,7 @@ export default function FileUpload({
                       ease: "easeInOut",
                     }}
                   >
-                    <X className="w-12 h-12 mb-3" aria-hidden="true" />
+                    <XMarkIcon className="w-12 h-12 mb-3" aria-hidden="true" />
                   </motion.div>
                   <p className="text-sm font-medium mb-1">Upload Failed</p>
                   <p className="text-xs mb-4 max-w-xs">{error || "An unknown error occurred."}</p>

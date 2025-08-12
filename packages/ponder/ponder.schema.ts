@@ -58,6 +58,8 @@ export const gig = onchainTable("gig", (t) => ({
 	state: t.integer().notNull(),
 	createdAt: t.bigint().notNull(),
 	acceptedAt: t.bigint(),
+	finishedAt: t.bigint(),
+	canceledAt: t.bigint(),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
 	acceptedApplicationId: t.bigint(),

@@ -37,6 +37,8 @@ export const fetchGigs = async () => {
           deadline
           createdAt
           acceptedAt
+          finishedAt
+          canceledAt
           state
           clientReceived
           freelancerDelivered
@@ -69,6 +71,8 @@ export const fetchMyGigs = async (userAddress: string) => {
           deadline
           createdAt
           acceptedAt
+          finishedAt
+          canceledAt
           state
           clientReceived
           freelancerDelivered
@@ -151,6 +155,8 @@ export const fetchApplicationsWithGigDetails = async (userAddress: string) => {
           deadline
           createdAt
           acceptedAt
+          finishedAt
+          canceledAt
           state
           clientReceived
           freelancerDelivered
@@ -213,6 +219,8 @@ export const fetchGigById = async (gigId: string) => {
         deadline
         createdAt
         acceptedAt
+        finishedAt
+        canceledAt
         state
         clientReceived
         freelancerDelivered
