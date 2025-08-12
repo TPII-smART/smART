@@ -22,7 +22,7 @@ export default function Profile() {
     if (!profileAddress) return;
 
     setLoading(true);
-    const user = await fetchUserProfile(address);
+    const user = await fetchUserProfile(profileAddress);
     setUser(user ?? newUserProfile());
     setLoading(false);
   }, [address, profileAddress]);
