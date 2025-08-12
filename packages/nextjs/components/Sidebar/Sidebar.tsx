@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
+import { RedirectType, redirect } from "next/navigation";
+import SmartIcon from "../../app/favicon.ico";
 import { SwitchTheme } from "../SwitchTheme/SwitchTheme";
 import { SidebarElementProps, SidebarProps } from "./types";
 import { styled } from "@mui/material";
 import Box from "@mui/material/Box";
-import { Bars3Icon } from "@heroicons/react/24/outline";
 
 const MAX_WIDTH = 240; // Maximum width of the sidebar when open
 const MIN_WIDTH = 80; // Minimum width of the sidebar when closed
@@ -36,7 +38,7 @@ const SidebarContent = styled(Box, {
   display: "grid",
   gridTemplateRows: "auto 1fr auto",
   gap: 2,
-  backgroundColor: "inherit",
+  backgroundColor: "var(--color-primary)",
   color: "var(--color-primary-content)",
   padding: 20,
   top: 0,
@@ -99,10 +101,10 @@ const SidebarItem = (props: SidebarElementProps) => {
       }}
       onMouseEnter={e => (e.currentTarget.style.backgroundColor = "var(--color-secondary)")}
       onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
-      onClick={props.onClick ? props.onClick : () => (window.location.href = props.href || "#")}
+      onClick={props.onClick ? props.onClick : () => redirect(props.href || "/", RedirectType.push)}
     >
       {props.icon && <props.icon className="min-h-6 max-h-6 min-w-6 max-w-6 text-primary-content" />}
-
+      {props.imgSrc && <Image src={props.imgSrc} alt="" width={24} height={24} />}
       <span
         className="whitespace-nowrap overflow-hidden text-ellipsis"
         style={{
@@ -119,13 +121,13 @@ const SidebarItem = (props: SidebarElementProps) => {
 };
 
 const Sidebar = (props: SidebarProps) => {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
 
   return (
-    <SidebarContainer open={open}>
-      <SidebarContent open={open}>
+    <SidebarContainer open={false}>
+      <SidebarContent open={open} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
         <Header>
-          <SidebarItem customLabel={SmartLogo()} icon={Bars3Icon} open={open} onClick={() => setOpen(!open)} />
+          <SidebarItem customLabel={SmartLogo()} open={open} imgSrc={SmartIcon} disabled />
         </Header>
 
         <Content>
