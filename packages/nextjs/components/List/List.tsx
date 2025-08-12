@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { ListProps } from "./types";
 import {
   Avatar as MUIAvatar,
@@ -35,8 +35,11 @@ const List = <T,>({ items, secondaryAction, paddingY = 4, descriptionLines = 3 }
             }}
           >
             <MUIListItemButton>
-              <MUIListItemAvatar onClick={i.userAddress ? () => redirect(`profile/${i.userAddress}`) : undefined}>
+              <MUIListItemAvatar
+                onClick={i.userAddress ? () => redirect(`profile/${i.userAddress}`, RedirectType.push) : undefined}
+              >
                 <MUIAvatar
+                  className="hover:scale-[1.2]"
                   alt={`${i.id} avatar`}
                   src={
                     i.userProfilePictureURL ? i.userProfilePictureURL : i.userAddress ? blo(i.userAddress) : undefined
