@@ -35,7 +35,7 @@ const List = <T,>({ items, secondaryAction, paddingY = 4, descriptionLines = 3 }
             }}
           >
             <MUIListItemButton>
-              <MUIListItemAvatar>
+              <MUIListItemAvatar onClick={i.userAddress ? () => redirect(`profile/${i.userAddress}`) : undefined}>
                 <MUIAvatar
                   alt={`${i.id} avatar`}
                   src={
