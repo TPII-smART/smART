@@ -390,6 +390,15 @@ contract JobsContract {
         emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
     }
 
+    /**
+    * @dev Get the number of jobs in a posting
+    * @param _postingId The ID of the job posting
+    * @return Number of jobs in the posting
+    */
+    function getJobCount(uint256 _postingId) external view postingExists(_postingId) returns (uint256) {
+        return postedJobs[_postingId].jobs.length;
+    }
+
     function getTotalJobsPosted() external view returns (uint256) {
         return postedJobsCounter;
     }
