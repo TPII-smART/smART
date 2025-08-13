@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Accordion from "./Accordion/Accordion";
 import ComboBox from "@/components/ComboBox/ComboBox";
 import FileUploadBox from "@/components/FileUploadBox";
 import Modal from "@/components/Modal/Modal";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
+import { Chip } from "@mui/material";
 import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
 import { parseEther } from "viem";
 import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
@@ -37,12 +39,13 @@ interface BrowsePageProps {
 
 export default function BrowsePage({ type, data, isLoading, reload }: BrowsePageProps) {
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
-  const [categories, setCategories] = useState<string[]>(["all"]);
+  const [categories, setCategories] = useState<Set<string>>(new Set(["all"]));
   const [sortBy, setSortBy] = useState<string>("recent");
   const [filteredItems, setFilteredItems] = useState(
     type === "job" ? (data as JobPostingData)?.jobPostings || [] : (data as GigsData)?.gigs || [],
   );
-  const [maxPrice, setMaxPrice] = useState<number>(0);
+
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
@@ -105,18 +108,22 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   };
 
   const filterItems = useMemo((): JobPosting[] | Gig[] => {
-    const getCategoryFiltered = <T extends { category?: string }>(items: T[], categories: string[]) => {
-      if (categories && !categories.includes("all")) {
-        return items.filter(item => categories.includes(item.category ?? ""));
+    const getCategoryFiltered = <T extends { category?: string }>(items: T[], categories: Set<string>) => {
+      if (categories && !categories.has("all")) {
+        return items.filter(item => categories.has(item.category ?? ""));
       }
       return items;
     };
 
-    const getPriceFiltered = <T extends { basePayment?: string | number }>(items: T[], maxPrice: number) => {
+    const getPriceFiltered = <T extends { basePayment?: string | number }>(
+      items: T[],
+      priceRange: [number, number],
+    ) => {
+      const [minPrice, maxPrice] = priceRange;
       if (maxPrice > 0) {
         return items.filter(item => {
           const payment = Number(item.basePayment) / 1e18 || 0;
-          return payment <= maxPrice;
+          return payment >= minPrice && payment <= maxPrice;
         });
       }
       return items;
@@ -146,67 +153,104 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
     if (type === "job") {
       let items = (data as JobPostingData)?.jobPostings || [];
       items = getCategoryFiltered(items, categories);
-      items = getPriceFiltered(items, maxPrice);
+      items = getPriceFiltered(items, priceRange);
       items = getSorted(items, sortBy, type);
       return items;
     } else {
       let items = (data as GigsData)?.gigs || [];
       items = getCategoryFiltered(items, categories);
-      items = getPriceFiltered(items, maxPrice);
+      items = getPriceFiltered(items, priceRange);
       items = getSorted(items, sortBy, type);
       return items;
     }
-  }, [data, categories, sortBy, maxPrice, type]);
+  }, [data, categories, sortBy, priceRange, type]);
 
   const fetchMaxPaymentETH = useCallback(async () => {
-    setMaxPaymentETH(await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment()));
+    const maxPayment = await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment());
+    setMaxPaymentETH(maxPayment);
+    setPriceRange([0, maxPayment]);
   }, [type]);
 
   useEffect(() => {
-    setFilteredItems(filterItems);
     fetchMaxPaymentETH();
-  }, [filterItems, fetchMaxPaymentETH, data]);
+  }, [fetchMaxPaymentETH]);
+
+  useEffect(() => {
+    setFilteredItems(filterItems);
+  }, [filterItems, data]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main className="flex-1 container py-8">
-        <div className="flex flex-col md:flex-row gap-8 pl-4">
+    <div className="min-h-full flex flex-col">
+      <main className="flex">
+        <div className="flex flex-1 flex-row py-8">
           {/* Filters Sidebar */}
-          <aside className="w-full md:w-64">
-            <div className="space-y-6">
-              <h2 className="text-lg font-semibold flex items-center gap-2 px-4">
-                <FunnelIcon className="h-5 w-5" />
-                Filters
-              </h2>
+          <aside className="w-64 mx-4">
+            <div className="w-64" style={{ position: "fixed" }}>
+              <Accordion title="Categories">
+                {optionsCategories.map(value => (
+                  <Chip
+                    key={value.id}
+                    label={value.label}
+                    sx={{
+                      ".MuiChip-label": {
+                        color: "var(--color-primary-content)",
+                      },
+                      borderRadius: "6px",
+                      backgroundColor: categories.has(value.id) ? "var(--color-accent)" : "var(--color-secondary)",
+                      margin: "4px",
+                    }}
+                    clickable
+                    onClick={() => {
+                      setCategories(prev => {
+                        if (value.id === "all") {
+                          return new Set(["all"]);
+                        } else if (categories.has("all")) {
+                          categories.delete("all");
+                        }
 
-              <ComboBox
-                id="categories"
-                label="Categories"
-                variant="outlined"
-                multiple
-                value={categories}
-                onChange={setCategories}
-                options={optionsCategories}
-                resetKey="all"
-                icon={<FunnelIcon className={"h-[1.125rem] w-[1.125rem]"} />}
-              />
+                        const newCategories = new Set(prev);
 
-              <div className="space-y-3">
-                <label className="text-sm font-medium block px-4">Price Range (ETH)</label>
-                <div className="px-4">
-                  <Slider max={maxPaymentETH} defaultValue={maxPrice} onChange={setMaxPrice} />
-                </div>
-              </div>
+                        if (newCategories.has(value.id)) {
+                          newCategories.delete(value.id);
+                        } else {
+                          newCategories.add(value.id);
+                        }
 
-              <ComboBox
-                id="sort-by"
-                label="Sort by"
-                variant="outlined"
-                value={sortBy}
-                onChange={setSortBy}
-                options={optionsSorts}
-                icon={<FunnelIcon className={"h-[1.125rem] w-[1.125rem]"} />}
-              />
+                        if (newCategories.size === 0) {
+                          newCategories.add("all");
+                        }
+
+                        return newCategories;
+                      });
+                    }}
+                  />
+                ))}
+              </Accordion>
+              <Accordion title="Price range (ETH)">
+                <Slider
+                  max={maxPaymentETH}
+                  defaultValue={priceRange}
+                  onChange={v => setPriceRange(v as [number, number])}
+                />
+              </Accordion>
+              <Accordion title="Sort by">
+                {optionsSorts.map(value => (
+                  <Chip
+                    key={value.id}
+                    label={value.label}
+                    sx={{
+                      ".MuiChip-label": {
+                        color: "var(--color-primary-content)",
+                      },
+                      borderRadius: "6px",
+                      backgroundColor: sortBy === value.id ? "var(--color-accent)" : "var(--color-secondary)",
+                      margin: "4px",
+                    }}
+                    clickable
+                    onClick={() => setSortBy(value.id)}
+                  />
+                ))}
+              </Accordion>
             </div>
           </aside>
 
@@ -216,7 +260,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
               <Spinner />
             </div>
           ) : (
-            <div className="flex-1 space-y-6">
+            <div className="flex-1 space-y-6 pr-4">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredItems.map(item =>
                   type === "job" ? (
