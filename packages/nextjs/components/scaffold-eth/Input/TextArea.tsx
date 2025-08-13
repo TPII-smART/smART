@@ -128,7 +128,7 @@ export const TextArea = ({
       <label
         className={`
             absolute
-            ${variant === "outlined" ? outlinedLabel : "left-2 top-5 text-lg"}
+            ${variant === "outlined" && isLabelActive ? outlinedLabel : "left-2 top-2 text-lg"}
             pointer-events-none
             ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
             transition-all duration-300
