@@ -179,80 +179,79 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
     setFilteredItems(filterItems);
   }, [filterItems, data]);
 
+  const Filters = (
+    <aside className="w-64 mx-4">
+      <div className="w-64" style={{ position: "fixed" }}>
+        <Accordion title="Categories">
+          {optionsCategories.map(value => (
+            <Chip
+              key={value.id}
+              label={value.label}
+              sx={{
+                ".MuiChip-label": {
+                  color: "var(--color-primary-content)",
+                },
+                borderRadius: "6px",
+                backgroundColor: categories.has(value.id) ? "var(--color-accent)" : "var(--color-secondary)",
+                margin: "4px",
+              }}
+              clickable
+              onClick={() => {
+                setCategories(prev => {
+                  if (value.id === "all") {
+                    return new Set(["all"]);
+                  } else if (categories.has("all")) {
+                    categories.delete("all");
+                  }
+
+                  const newCategories = new Set(prev);
+
+                  if (newCategories.has(value.id)) {
+                    newCategories.delete(value.id);
+                  } else {
+                    newCategories.add(value.id);
+                  }
+
+                  if (newCategories.size === 0) {
+                    newCategories.add("all");
+                  }
+
+                  return newCategories;
+                });
+              }}
+            />
+          ))}
+        </Accordion>
+        <Accordion title="Price range (ETH)">
+          <Slider max={maxPaymentETH} defaultValue={priceRange} onChange={v => setPriceRange(v as [number, number])} />
+        </Accordion>
+        <Accordion title="Sort by">
+          {optionsSorts.map(value => (
+            <Chip
+              key={value.id}
+              label={value.label}
+              sx={{
+                ".MuiChip-label": {
+                  color: "var(--color-primary-content)",
+                },
+                borderRadius: "6px",
+                backgroundColor: sortBy === value.id ? "var(--color-accent)" : "var(--color-secondary)",
+                margin: "4px",
+              }}
+              clickable
+              onClick={() => setSortBy(value.id)}
+            />
+          ))}
+        </Accordion>
+      </div>
+    </aside>
+  );
+
   return (
     <div className="min-h-full flex flex-col">
       <main className="flex">
         <div className="flex flex-1 flex-row py-8">
-          {/* Filters Sidebar */}
-          <aside className="w-64 mx-4">
-            <div className="w-64" style={{ position: "fixed" }}>
-              <Accordion title="Categories">
-                {optionsCategories.map(value => (
-                  <Chip
-                    key={value.id}
-                    label={value.label}
-                    sx={{
-                      ".MuiChip-label": {
-                        color: "var(--color-primary-content)",
-                      },
-                      borderRadius: "6px",
-                      backgroundColor: categories.has(value.id) ? "var(--color-accent)" : "var(--color-secondary)",
-                      margin: "4px",
-                    }}
-                    clickable
-                    onClick={() => {
-                      setCategories(prev => {
-                        if (value.id === "all") {
-                          return new Set(["all"]);
-                        } else if (categories.has("all")) {
-                          categories.delete("all");
-                        }
-
-                        const newCategories = new Set(prev);
-
-                        if (newCategories.has(value.id)) {
-                          newCategories.delete(value.id);
-                        } else {
-                          newCategories.add(value.id);
-                        }
-
-                        if (newCategories.size === 0) {
-                          newCategories.add("all");
-                        }
-
-                        return newCategories;
-                      });
-                    }}
-                  />
-                ))}
-              </Accordion>
-              <Accordion title="Price range (ETH)">
-                <Slider
-                  max={maxPaymentETH}
-                  defaultValue={priceRange}
-                  onChange={v => setPriceRange(v as [number, number])}
-                />
-              </Accordion>
-              <Accordion title="Sort by">
-                {optionsSorts.map(value => (
-                  <Chip
-                    key={value.id}
-                    label={value.label}
-                    sx={{
-                      ".MuiChip-label": {
-                        color: "var(--color-primary-content)",
-                      },
-                      borderRadius: "6px",
-                      backgroundColor: sortBy === value.id ? "var(--color-accent)" : "var(--color-secondary)",
-                      margin: "4px",
-                    }}
-                    clickable
-                    onClick={() => setSortBy(value.id)}
-                  />
-                ))}
-              </Accordion>
-            </div>
-          </aside>
+          {Filters}
 
           {/* Jobs Listing */}
           {isLoading ? (
