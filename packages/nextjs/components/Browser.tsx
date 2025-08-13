@@ -41,11 +41,12 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
   const [categories, setCategories] = useState<Set<string>>(new Set(["all"]));
   const [sortBy, setSortBy] = useState<string>("recent");
-  const [filteredItems, setFilteredItems] = useState(
+  const [filteredItems, setFilteredItems] = useState<(JobPosting | Gig)[]>(
     type === "job" ? (data as JobPostingData)?.jobPostings || [] : (data as GigsData)?.gigs || [],
   );
 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
+  const [search, setSearch] = useState<string>("");
 
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({
@@ -107,7 +108,19 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
     }
   };
 
-  const filterItems = useMemo((): JobPosting[] | Gig[] => {
+  const filterItems = useMemo((): (JobPosting | Gig)[] => {
+    const getSearchFiltered = <T extends { title?: string; description?: string }>(items: T[]) => {
+      if (!search) return items;
+      const lowercasedSearch = search.toLowerCase();
+      return items.filter(
+        item =>
+          item.title?.toLowerCase().includes(lowercasedSearch) ||
+          false ||
+          item.description?.toLowerCase().includes(lowercasedSearch) ||
+          false,
+      );
+    };
+
     const getCategoryFiltered = <T extends { category?: string }>(items: T[], categories: Set<string>) => {
       if (categories && !categories.has("all")) {
         return items.filter(item => categories.has(item.category ?? ""));
@@ -150,20 +163,15 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
       });
     };
 
-    if (type === "job") {
-      let items = (data as JobPostingData)?.jobPostings || [];
-      items = getCategoryFiltered(items, categories);
-      items = getPriceFiltered(items, priceRange);
-      items = getSorted(items, sortBy, type);
-      return items;
-    } else {
-      let items = (data as GigsData)?.gigs || [];
-      items = getCategoryFiltered(items, categories);
-      items = getPriceFiltered(items, priceRange);
-      items = getSorted(items, sortBy, type);
-      return items;
-    }
-  }, [data, categories, sortBy, priceRange, type]);
+    let items: (JobPosting | Gig)[] =
+      type === "job" ? (data as JobPostingData)?.jobPostings || [] : (data as GigsData)?.gigs || [];
+
+    items = getCategoryFiltered(items, categories);
+    items = getPriceFiltered(items, priceRange);
+    items = getSearchFiltered(items);
+    items = getSorted(items, sortBy, type);
+    return items;
+  }, [data, categories, sortBy, priceRange, search, type]);
 
   const fetchMaxPaymentETH = useCallback(async () => {
     const maxPayment = await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment());
@@ -182,6 +190,12 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   const Filters = (
     <aside className="w-64 mx-4">
       <div className="w-64" style={{ position: "fixed" }}>
+        <InputBase
+          variant="outlined"
+          placeholder={`Search ${type === "job" ? "jobs" : "gigs"}...`}
+          value={search}
+          onChange={setSearch}
+        />
         <Accordion title="Categories">
           {optionsCategories.map(value => (
             <Chip
@@ -250,7 +264,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   return (
     <div className="min-h-full flex flex-col">
       <main className="flex">
-        <div className="flex flex-1 flex-row py-8">
+        <div className="flex flex-1 flex-row py-10">
           {Filters}
 
           {/* Jobs Listing */}
