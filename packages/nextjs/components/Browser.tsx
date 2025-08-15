@@ -2,24 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Accordion from "./Accordion/Accordion";
-import ComboBox from "@/components/ComboBox/ComboBox";
-import FileUploadBox from "@/components/FileUploadBox";
-import Modal from "@/components/Modal/Modal";
+import WorkPostingForm from "./WorkPostingForm/WorkPostingForm";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
-import { EtherInput, InputBase } from "@/components/scaffold-eth";
+import { InputBase } from "@/components/scaffold-eth";
 import { Chip } from "@mui/material";
-import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
-import { parseEther } from "viem";
-import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon } from "@heroicons/react/24/outline";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
 import { jobCategories } from "~~/components/Card/JobCategory/jobCategory.data";
 import { JobPostingCard } from "~~/components/Card/JobPostingCard/JobPostingCard";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig.service";
-import { fetchMaxJobPayment } from "~~/services/graphql/fetchers/job.service";
-import { Gig, GigsData } from "~~/types/gig.types";
-import { JobPosting, JobPostingData } from "~~/types/job.types";
+import { fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig/gig.service";
+import { fetchMaxJobPayment } from "~~/services/graphql/fetchers/job";
+import { Gig, GigsData } from "~~/types/gig/gig.types";
+import { JobPosting, JobPostingData } from "~~/types/job";
 
 const optionsCategories = [{ id: "all", label: "All", icon: FunnelIcon, color: "#a3a3a3" }, ...jobCategories];
 
@@ -44,69 +39,18 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   const [filteredItems, setFilteredItems] = useState<(JobPosting | Gig)[]>(
     type === "job" ? (data as JobPostingData)?.jobPostings || [] : (data as GigsData)?.gigs || [],
   );
+  // const [loading, setLoading] = useState<boolean>(false);
+
+  // const fetchFunction = useMemo(() => (type === "job" ? fetchJobPostingsPaginated : fetchJobPostingsPaginated), [type]);
+
+  // const { totalItems, handleScroll } = usePagination({
+  //   fetchFunction,
+  //   loadingFunction: setLoading,
+  //   setDataFunction: setFilteredItems,
+  // });
 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
   const [search, setSearch] = useState<string>("");
-
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    bannerImageFile: undefined as File | undefined,
-    paymentInEth: "",
-    estimatedDurationHours: "",
-    category: "",
-  });
-
-  const { writeContractAsync: createPosting, isMining } = useScaffoldWriteContract({
-    contractName: type === "job" ? "JobsContract" : "GigsContract",
-  });
-
-  const handleFileUpload = async (file: File | undefined) => {
-    if (!file) return;
-
-    return await uploadToIPFS(file);
-  };
-
-  const handleSubmit = async () => {
-    const bannerImageHash = await handleFileUpload(form.bannerImageFile);
-    try {
-      if (type === "job") {
-        await createPosting({
-          functionName: "createJobPosting",
-          args: [
-            {
-              title: form.title,
-              description: form.description,
-              bannerImageHash: bannerImageHash || "",
-              basePayment: parseEther(form.paymentInEth),
-              averageWorkDuration: BigInt(form.estimatedDurationHours),
-              minimumNoticeTime: BigInt(24),
-              category: form.category,
-            },
-          ],
-        });
-      } else {
-        await createPosting({
-          functionName: "createGig",
-          args: [
-            {
-              title: form.title,
-              description: form.description,
-              basePayment: parseEther(form.paymentInEth),
-              gigBannerImageHash: bannerImageHash || "",
-              category: form.category,
-              maxDurationInHours: BigInt(form.estimatedDurationHours),
-            },
-          ],
-        });
-      }
-      await reload();
-      setShowModal(false);
-    } catch (err) {
-      console.error("Failed to create job:", err);
-    }
-  };
 
   const filterItems = useMemo((): (JobPosting | Gig)[] => {
     const getSearchFiltered = <T extends { title?: string; description?: string }>(items: T[]) => {
@@ -262,9 +206,12 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   );
 
   return (
-    <div className="min-h-full flex flex-col">
-      <main className="flex">
-        <div className="flex flex-1 flex-row py-10">
+    <div className="min-h-full max-h-full flex flex-col">
+      <main className="flex max-h-full">
+        <div
+          className="flex  max-h-full flex-1 flex-row py-10 overflow-scroll h-[93vh]"
+          onScroll={() => console.log("asd")}
+        >
           {Filters}
 
           {/* Jobs Listing */}
@@ -273,7 +220,7 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
               <Spinner />
             </div>
           ) : (
-            <div className="flex-1 space-y-6 pr-4">
+            <div className="flex-1 space-y-6 pr-4 mb-10">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredItems.map(item =>
                   type === "job" ? (
@@ -287,66 +234,12 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
                   ),
                 )}
               </div>
+              <div className="h-6" />
             </div>
           )}
         </div>
       </main>
-
-      {/* Floating + Button */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-10 right-15 w-14 h-14 rounded-full text-white text-3xl shadow-lg hover:brightness-90 transition-all z-50 flex items-center justify-center"
-        style={{ backgroundColor: "var(--color-accent)" }}
-        aria-label={`Create ${type === "job" ? "Job Posting" : "Gig Posting"}`}
-      >
-        <PlusIcon className="h-5 w-5" />
-      </button>
-
-      <Modal
-        title={`Create ${type === "job" ? "Job Posting" : "Gig Posting"}`}
-        variant="form"
-        onClose={() => setShowModal(false)}
-        onSubmit={handleSubmit}
-        isOpen={showModal}
-        loading={isMining}
-        description={
-          type === "job"
-            ? "Offer your services to the community by creating a job posting."
-            : "Create a gig and look for freelancers to work on your project."
-        }
-      >
-        <div className="space-y-4">
-          <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
-          <InputBase
-            placeholder="Description"
-            value={form.description}
-            onChange={val => setForm({ ...form, description: val })}
-          />
-          <FileUploadBox
-            onUploadSuccess={(val: File) => setForm({ ...form, bannerImageFile: val })}
-            //onUploadError={Render error message}
-            acceptedFileType={"Image"}
-          />
-          <EtherInput
-            placeholder="Payment"
-            value={form.paymentInEth}
-            onChange={val => setForm({ ...form, paymentInEth: val })}
-          />
-          <InputBase
-            placeholder="Estimated Duration (hours)"
-            value={form.estimatedDurationHours}
-            onChange={val => setForm({ ...form, estimatedDurationHours: val })}
-          />
-          <ComboBox
-            id="category-combo"
-            label="Category"
-            value={form.category}
-            onChange={val => setForm({ ...form, category: val })}
-            options={jobCategories}
-            variant="standard"
-          />
-        </div>
-      </Modal>
+      <WorkPostingForm type={type} />
     </div>
   );
 }

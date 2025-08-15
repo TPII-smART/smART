@@ -19,7 +19,6 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               className="w-full border-t border-l main-body rounded-tl-2xl"
               style={{
                 height: "93vh",
-                overflow: "auto",
               }}
             >
               {children}
