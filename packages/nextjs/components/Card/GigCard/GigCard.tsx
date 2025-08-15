@@ -3,13 +3,25 @@
 import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
-import Modal from "@/components/Modal/Modal";
 import { EtherInput, InputBase } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
+import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+
+class FormData {
+  proposedPayment: string;
+  proposedDurationInHours: string;
+  proposalComment: string;
+
+  constructor() {
+    this.proposedPayment = "";
+    this.proposedDurationInHours = "48"; // Default to 48 hours
+    this.proposalComment = "";
+  }
+}
 
 export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   const { address } = useAccount();
@@ -17,13 +29,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
-  const [form, setForm] = React.useState({
-    proposedPayment: "",
-    proposedDurationInHours: "48",
-    proposalComment: "",
-  });
 
-  const handleApplyToGig = async () => {
+  const handleApplyToGig = async (form: FormData) => {
     try {
       await writeContractAsync({
         functionName: "applyToGig",
@@ -91,37 +98,38 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
       />
 
       {/* Confirm Modal */}
-      <Modal
-        title="Hire this Freelancer"
-        variant="form"
-        onClose={() => setShowApplyModal(false)}
-        onSubmit={handleApplyToGig}
-        isOpen={showApplyModal}
-        loading={isMining}
-        description={
-          form.proposedPayment === "" || form.proposedPayment === "0" || form.proposedPayment === undefined
-            ? `You are about to apply to this gig for Free with a duration of ${form.proposedDurationInHours} hours.`
-            : `You are about to apply to this gig with a proposed payment of ${form.proposedPayment} ETH and a duration of ${form.proposedDurationInHours} hours.`
-        }
+      <FormModal
+        modalProps={{
+          title: "Hire this Freelancer",
+          onClose: () => setShowApplyModal(false),
+          isOpen: showApplyModal,
+          loading: isMining,
+        }}
+        formikProps={{
+          initialValues: new FormData(),
+          onSubmit: handleApplyToGig,
+        }}
       >
-        <div className="space-y-4">
-          <EtherInput
-            placeholder="Proposed Payment"
-            value={form.proposedPayment}
-            onChange={val => setForm({ ...form, proposedPayment: val })}
-          />
-          <InputBase
-            placeholder="Proposed Duration (in hours)"
-            value={form.proposedDurationInHours}
-            onChange={val => setForm({ ...form, proposedDurationInHours: val })}
-          />
-          <InputBase
-            placeholder="Proposal"
-            value={form.proposalComment}
-            onChange={val => setForm({ ...form, proposalComment: val })}
-          />
-        </div>
-      </Modal>
+        {({ values, setFieldValue }) => (
+          <div className="space-y-4">
+            <EtherInput
+              placeholder="Proposed Payment"
+              value={values.proposedPayment}
+              onChange={val => setFieldValue("proposedPayment", val)}
+            />
+            <InputBase
+              placeholder="Proposed Duration (in hours)"
+              value={values.proposedDurationInHours}
+              onChange={val => setFieldValue("proposedDurationInHours", val)}
+            />
+            <InputBase
+              placeholder="Proposal"
+              value={values.proposalComment}
+              onChange={val => setFieldValue("proposalComment", val)}
+            />
+          </div>
+        )}
+      </FormModal>
     </>
   );
 }

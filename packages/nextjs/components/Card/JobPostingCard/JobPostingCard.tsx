@@ -1,14 +1,26 @@
 "use client";
 
 import * as React from "react";
-import Modal from "../../Modal/Modal";
 import { JobPostingCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { InputBase } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
+import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+
+class PostingFormData {
+  title: string;
+  description: string;
+  jobHours: string;
+
+  constructor() {
+    this.title = "";
+    this.description = "";
+    this.jobHours = "";
+  }
+}
 
 export function JobPostingCard({ jobPosting, className, reload, ...props }: JobPostingCardProps) {
   const { address } = useAccount();
@@ -16,13 +28,8 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
-  const [form, setForm] = React.useState({
-    title: "",
-    description: "",
-    jobHours: "48",
-  });
 
-  const handleCreateJob = async () => {
+  const handleCreateJob = async (form: PostingFormData) => {
     try {
       if (!jobPosting?.basePayment || !jobPosting?.postingId) return;
       await writeContractAsync({
@@ -95,29 +102,39 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
       />
 
       {/* Confirm Modal */}
-      <Modal
-        title="Hire this Freelancer"
-        variant="form"
-        onClose={() => setShowModal(false)}
-        onSubmit={handleCreateJob}
-        isOpen={showModal}
-        loading={isMining}
-        description={`You are about to create a job based on this posting. The price will be deducted from your wallet: ${jobPosting?.basePayment ? `${formatEther(BigInt(jobPosting.basePayment))} ETH` : "Free"}`}
+      <FormModal
+        modalProps={{
+          title: "Hire this Freelancer",
+          onClose: () => setShowModal(false),
+          isOpen: showModal,
+          loading: isMining,
+          description: `
+            You are about to create a job based on this posting. 
+            The price will be deducted from your wallet: 
+            ${jobPosting?.basePayment ? `${formatEther(BigInt(jobPosting.basePayment))} ETH` : "Free"}
+          `,
+        }}
+        formikProps={{
+          onSubmit: handleCreateJob,
+          initialValues: new PostingFormData(),
+        }}
       >
-        <div className="space-y-4">
-          <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
-          <InputBase
-            placeholder="Description"
-            value={form.description}
-            onChange={val => setForm({ ...form, description: val })}
-          />
-          <InputBase
-            placeholder="Job Duration (hours)"
-            value={form.jobHours}
-            onChange={val => setForm({ ...form, jobHours: val })}
-          />
-        </div>
-      </Modal>
+        {({ values, setFieldValue }) => (
+          <div className="space-y-4">
+            <InputBase placeholder="Title" value={values.title} onChange={val => setFieldValue("title", val)} />
+            <InputBase
+              placeholder="Description"
+              value={values.description}
+              onChange={val => setFieldValue("description", val)}
+            />
+            <InputBase
+              placeholder="Job Duration (hours)"
+              value={values.jobHours}
+              onChange={val => setFieldValue("jobHours", val)}
+            />
+          </div>
+        )}
+      </FormModal>
     </>
   );
 }
