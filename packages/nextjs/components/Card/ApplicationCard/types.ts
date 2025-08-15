@@ -1,4 +1,4 @@
-import { Application } from "~~/types/gig.types";
+import { Application } from "~~/types/gig/gig.types";
 
 export interface ApplicationProps {
   application: Application;

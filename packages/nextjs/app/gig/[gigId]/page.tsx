@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import { useParams } from "next/dist/client/components/navigation";
 import Spinner from "@/components/Spinner/Spinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchApplicationsForGig } from "~~/services/graphql/fetchers/gig.service";
-import { Application } from "~~/types/gig.types";
+import { fetchApplicationsForGig } from "~~/services/graphql/fetchers/gig/gig.service";
+import { Application } from "~~/types/gig/gig.types";
 
 type ApplicationsData = {
   applications: Application[];

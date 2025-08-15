@@ -2,8 +2,8 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import BrowsePage from "~~/components/Browser";
-import { fetchGigs } from "~~/services/graphql/fetchers/gig.service";
-import { GigsData } from "~~/types/gig.types";
+import { fetchGigs } from "~~/services/graphql/fetchers/gig/gig.service";
+import { GigsData } from "~~/types/gig/gig.types";
 
 export default function BrowseGigsPage() {
   const queryClient = useQueryClient();

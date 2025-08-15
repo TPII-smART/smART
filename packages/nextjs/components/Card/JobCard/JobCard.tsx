@@ -14,7 +14,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { JobState } from "~~/types/job.types";
+import { JobState } from "~~/types/job/job.types";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();

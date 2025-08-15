@@ -3,8 +3,8 @@
 import Spinner from "@/components//Spinner/Spinner";
 import { useQuery } from "@tanstack/react-query";
 import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
-import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig.service";
-import { Application } from "~~/types/gig.types";
+import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
+import { Application } from "~~/types/gig/gig.types";
 
 type ApplicationsData = {
   applications: Application[];

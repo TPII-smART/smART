@@ -2,8 +2,8 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import BrowsePage from "~~/components/Browser";
-import { fetchJobPostings } from "~~/services/graphql/fetchers/job.service";
-import { JobPostingData } from "~~/types/job.types";
+import { fetchJobPostings } from "~~/services/graphql/fetchers/job/job.service";
+import { JobPostingData } from "~~/types/job";
 
 export default function BrowseJobsPage() {
   const queryClient = useQueryClient();

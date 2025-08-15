@@ -3,8 +3,8 @@
 import Spinner from "@/components//Spinner/Spinner";
 import JobCard from "@/components/Card/JobCard/JobCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchJobsFromPosting } from "~~/services/graphql/fetchers/job.service";
-import { JobsData } from "~~/types/job.types";
+import { fetchJobsFromPosting } from "~~/services/graphql/fetchers/job/job.service";
+import { JobsData } from "~~/types/job/job.types";
 
 export default function MyJobsListing({ postingId }: { postingId: string }) {
   const queryClient = useQueryClient();
