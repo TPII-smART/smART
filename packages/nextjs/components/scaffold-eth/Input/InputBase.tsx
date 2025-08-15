@@ -9,6 +9,7 @@ export const InputBase = ({
   onBlur = () => {},
   placeholder,
   error,
+  errorMessage = null,
   disabled,
   prefix,
   suffix,
@@ -45,7 +46,7 @@ export const InputBase = ({
     handleFocus();
   };
   useEffect(() => {
-    if (reFocus !== undefined && reFocus === true) inputReft.current?.focus();
+    if (reFocus !== undefined && reFocus) inputReft.current?.focus();
   }, [reFocus]);
 
   // Outlined variant classes
@@ -64,10 +65,10 @@ export const InputBase = ({
     <div className={`relative w-full`}>
       <div
         className={`
-          relative 
-          w-full 
-          flex 
-          flex-row 
+          relative
+          w-full
+          flex
+          flex-row
           ${variant === "outlined" ? outlinedWrapper : "border-b"}
           ${modifier ? modifier : variant !== "outlined" ? (isLabelActive ? "border-primary-content" : "border-secondary-content") : ""}
           focus:outline-none
@@ -125,7 +126,7 @@ export const InputBase = ({
           absolute
           ${variant === "outlined" && isLabelActive ? outlinedLabel : "left-2 top-2 text-lg"}
           pointer-events-none
-          ${modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
+          ${error ? (isLabelActive ? "text-primary-content" : "text-secondary-content") : modifier ? modifier : isLabelActive ? "text-primary-content" : "text-secondary-content"}
           transition-all duration-300
           ${variant !== "outlined" && isLabelActive ? "top-6 transform -translate-y-6 scale-73 origin-top-left" : ""}
         `}
@@ -136,13 +137,33 @@ export const InputBase = ({
       {variant !== "outlined" && (
         <div
           className={`
-            absolute bottom-0 left-0 w-full h-[2px] 
+            absolute bottom-0 left-0 w-full h-[2px]
             ${modifier ? modifier : "bg-accent"}
             transform scale-x-0
             transition-transform duration-300 ease-out
             ${isFocused ? "scale-x-100" : ""}
           `}
         ></div>
+      )}
+      {/* Floating error message */}
+      {error && errorMessage && (
+        <div
+          className={`
+            absolute
+            ${variant === "outlined" ? "top-full mt-1" : "top-full mt-2"}
+            left-2
+            text-xs
+            text-error
+            opacity-0
+            transform translate-y-[-4px]
+            transition-all duration-300 ease-out
+            ${error ? "opacity-100 translate-y-0" : ""}
+            pointer-events-none
+            z-10
+          `}
+        >
+          {errorMessage}
+        </div>
       )}
     </div>
   );

@@ -68,6 +68,11 @@ export type InputBaseProps = {
    * If true, the input will be read-only and not editable.
    */
   readOnly?: boolean;
+  /**
+   * Error message to display when the input value is invalid.
+   * If not provided, no error message will be shown.
+   */
+  errorMessage?: string | null;
 };
 
 export type IntegerInputProps = CommonInputProps<string> & {
@@ -95,4 +100,9 @@ export type IntegerInputProps = CommonInputProps<string> & {
    * Set this to true to disable the button.
    */
   disableMultiplyBy1e18?: boolean;
+  /**
+   * Error message to display when the input value is invalid.
+   * If not provided, a default error message will be shown.
+   */
+  errorMessage?: string | null;
 };

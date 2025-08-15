@@ -7,7 +7,7 @@ import FileUploadBox from "@/components/FileUploadBox";
 import Modal from "@/components/Modal/Modal";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
-import { EtherInput, InputBase } from "@/components/scaffold-eth";
+import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
 import { Chip } from "@mui/material";
 import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
 import { parseEther } from "viem";
@@ -332,10 +332,12 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
             value={form.paymentInEth}
             onChange={val => setForm({ ...form, paymentInEth: val })}
           />
-          <InputBase
+          <IntegerInput
             placeholder="Estimated Duration (hours)"
             value={form.estimatedDurationHours}
             onChange={val => setForm({ ...form, estimatedDurationHours: val })}
+            errorMessage="Please enter a valid number of hours."
+            disableMultiplyBy1e18
           />
           <ComboBox
             id="category-combo"
