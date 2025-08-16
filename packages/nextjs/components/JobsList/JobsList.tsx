@@ -1,8 +1,8 @@
-import { JSX, useEffect, useState } from "react";
+import { JSX, useMemo, useState } from "react";
+import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
-import Tabs from "../Tabs/Tabs";
-import { Tab, TabProps } from "../Tabs/types";
+import { jobState } from "@/components/Card/JobState/jobState.data";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -16,7 +16,6 @@ import {
   FlagIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-// Adjust the import to match the actual export from the module
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job.service";
 import { Job, JobStateEnum, JobsData } from "~~/types/job.types";
 
@@ -26,41 +25,16 @@ interface InfoIcons {
   info: string | number | undefined;
 }
 
-const tabs: TabProps[] = [
-  {
-    id: JobStateEnum.WaitingForApproval,
-    label: "Waiting for Approval",
-  },
-  {
-    id: JobStateEnum.Ongoing,
-    label: "Ongoing",
-  },
-  {
-    id: JobStateEnum.Finished,
-    label: "Finished",
-  },
-  {
-    id: JobStateEnum.Cancelled,
-    label: "Cancelled",
-  },
-  {
-    id: JobStateEnum.Disputed,
-    label: "Disputed",
-  },
-];
-
-const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobStateEnum): InfoIcons[] => {
+const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobStateEnum): InfoIcons[] => {
   const infoIcons = [];
 
-  console.log(item);
-
-  if (currentTab === JobStateEnum.WaitingForApproval) {
+  if (currentState === JobStateEnum.WaitingForApproval) {
     infoIcons.push({
       title: `Job Duration: ${item.jobDuration} hours`,
       icon: <ClockIcon className="w-4 h-4" />,
       info: item.jobDuration + " hours",
     });
-  } else if (currentTab === JobStateEnum.Ongoing) {
+  } else if (currentState === JobStateEnum.Ongoing) {
     infoIcons.push({
       title: `Deadline: ${item.deadline}`,
       icon: <FlagIcon className="w-4 h-4" />,
@@ -74,7 +48,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobStateEn
       icon: item.freelancerDelivered ? <EnvelopeIcon className="w-4 h-4" /> : <EnvelopeOpenIcon className="w-4 h-4" />,
       info: item.freelancerDelivered ? "Submitted" : "Not submitted",
     });
-  } else if (currentTab === JobStateEnum.Finished) {
+  } else if (currentState === JobStateEnum.Finished) {
     if (item.finishedAt) {
       infoIcons.push({
         title: "Finished At",
@@ -90,7 +64,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobStateEn
       icon: item.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
       info: item.clientReceived ? "Received" : "Not received",
     });
-  } else if (currentTab === JobStateEnum.Cancelled) {
+  } else if (currentState === JobStateEnum.Cancelled) {
     if (item.canceledAt) {
       infoIcons.push({
         title: "Canceled At",
@@ -117,41 +91,48 @@ const JobsList = () => {
     refetchInterval: 1000 * 60 * 5,
   });
 
-  const [selectedTab, setSelectedTab] = useState<Tab>(tabs[0]);
-  const [filteredData, setFilteredData] = useState<(Job & ListItemProps)[]>([]);
+  const [selectedState, setSelectedState] = useState<JobStateEnum>(JobStateEnum.WaitingForApproval);
 
-  const handleTabChange = (id: string | number, label?: string) => {
-    setSelectedTab({ id, label: label ?? "" });
+  const filteredData = useMemo(() => {
+    if (!data?.jobs) return [];
+
+    return data.jobs
+      .filter(job => job.state === selectedState)
+      .map(job => ({
+        ...job,
+        payment: formatEther(BigInt(job.payment ?? "0")).toString(),
+        deadline:
+          job.deadline && job.deadline != 0
+            ? new Date(+job.deadline * 1000).toLocaleDateString(window.navigator.language, { dateStyle: "medium" })
+            : undefined,
+        id: job.postingId + "-" + job.jobId,
+        title: job.title ?? "",
+        description: job.description ?? "",
+        userAddress: job.client,
+      }));
+  }, [data, selectedState]);
+
+  const handleStateChange = (state: number) => {
+    setSelectedState(state as JobStateEnum);
   };
-
-  useEffect(() => {
-    if (data) {
-      setFilteredData(
-        data.jobs
-          .filter(job => job.state === selectedTab.id)
-          .map(job => ({
-            ...job,
-            payment: formatEther(BigInt(job.payment ?? "0")).toString(),
-            deadline:
-              job.deadline && job.deadline != 0
-                ? new Date(+job.deadline * 1000).toLocaleDateString(window.navigator.language, { dateStyle: "medium" })
-                : undefined,
-            id: job.postingId + "-" + job.jobId,
-            title: job.title ?? "",
-            description: job.description ?? "",
-            userAddress: job.client,
-          })),
-      );
-    }
-  }, [data, selectedTab]);
 
   return (
     <div className="flex flex-col h-full w-full px-10">
-      <Tabs tabs={tabs} onChange={handleTabChange} />
+      <div className="mb-6">
+        <ComboBox
+          id="job-state-filter"
+          label="Filter by Job State"
+          onChange={handleStateChange}
+          value={selectedState}
+          options={jobState}
+          variant="outlined"
+        />
+      </div>
+
       <div className="p-10 w-full">
         <List<Job>
           secondaryAction={item => {
-            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedTab.id as JobStateEnum);
+            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedState);
 
             return (
               <div className="flex flex-col h-full place-items-center">

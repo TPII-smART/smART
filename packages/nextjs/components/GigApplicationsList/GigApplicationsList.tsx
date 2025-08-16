@@ -1,8 +1,8 @@
-import { JSX, useEffect, useState } from "react";
+import { JSX, useMemo, useState } from "react";
+import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
-import Tabs from "../Tabs/Tabs";
-import { Tab, TabProps } from "../Tabs/types";
+import { gigState } from "@/components/Card/GigState/gigState.data";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -16,9 +16,8 @@ import {
   FlagIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-// Adjust the import to match the actual export from the module
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig.service";
-import { Application, ApplicationsData, Gig, GigState } from "~~/types/gig.types";
+import { Application, ApplicationsData, Gig, GigStateEnum } from "~~/types/gig.types";
 
 interface InfoIcons {
   title: string;
@@ -26,34 +25,10 @@ interface InfoIcons {
   info: string | number | undefined;
 }
 
-const tabs: TabProps[] = [
-  {
-    id: GigState.Open,
-    label: "Pending",
-  },
-  {
-    id: GigState.InProgress,
-    label: "In Progress",
-  },
-  {
-    id: GigState.Completed,
-    label: "Finished",
-  },
-  {
-    id: GigState.Cancelled,
-    label: "Cancelled",
-  },
-  {
-    id: GigState.Disputed,
-    label: "Disputed",
-  },
-];
-
-const getInfoIcons = (item: Partial<Application> & ListItemProps, currentTab: GigState): InfoIcons[] => {
+const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: GigStateEnum): InfoIcons[] => {
   const infoIcons: InfoIcons[] = [];
-  console.log(item);
 
-  if (currentTab === GigState.Open) {
+  if (currentState === GigStateEnum.Open) {
     infoIcons.push({
       title:
         "Gig duration, original: " +
@@ -64,7 +39,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentTab: Gi
       icon: <ClockIcon className="w-4 h-4" />,
       info: item.gig?.maxDurationInHours + " hours / " + item.proposedDurationInHours + " hours",
     });
-  } else if (currentTab === GigState.InProgress) {
+  } else if (currentState === GigStateEnum.InProgress) {
     infoIcons.push({
       title: `Deadline: ${item.gig?.deadline}`,
       icon: <FlagIcon className="w-4 h-4" />,
@@ -82,7 +57,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentTab: Gi
       ),
       info: item.gig?.freelancerDelivered ? "Submitted" : "Not submitted",
     });
-  } else if (currentTab === GigState.Completed) {
+  } else if (currentState === GigStateEnum.Completed) {
     if (item.gig?.finishedAt) {
       infoIcons.push({
         title: "Finished At",
@@ -100,7 +75,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentTab: Gi
       icon: item.gig?.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
       info: item.gig?.clientReceived ? "Received" : "Not received",
     });
-  } else if (currentTab === GigState.Cancelled) {
+  } else if (currentState === GigStateEnum.Cancelled) {
     if (item.gig?.canceledAt) {
       infoIcons.push({
         title: "Canceled At",
@@ -126,7 +101,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentTab: Gi
   return infoIcons;
 };
 
-const GigsList = () => {
+const GigApplicationsList = () => {
   const { address: userAddress } = useAccount();
   const { data } = useQuery<ApplicationsData>({
     queryKey: ["gigsFromUser", userAddress],
@@ -134,49 +109,55 @@ const GigsList = () => {
     refetchInterval: 1000 * 60 * 5,
   });
 
-  const [selectedTab, setSelectedTab] = useState<Tab>(tabs[0]);
-  const [filteredData, setFilteredData] = useState<(Application & ListItemProps)[]>([]);
+  const [selectedState, setSelectedState] = useState<GigStateEnum>(GigStateEnum.Open);
 
-  const handleTabChange = (id: string | number, label?: string) => {
-    setSelectedTab({ id, label: label ?? "" });
+  const filteredData = useMemo(() => {
+    if (!data?.applications) return [];
+
+    return data.applications
+      .filter(app => app.gig?.state === selectedState)
+      .map(app => ({
+        ...app,
+        gig: {
+          ...(app.gig ?? ({} as Gig)),
+          basePayment: formatEther(BigInt(app.gig?.basePayment ?? "0")).toString(),
+          finalPayment: formatEther(BigInt(app.gig?.finalPayment ?? "0")).toString(),
+        },
+        proposedPayment: formatEther(BigInt(app.proposedPayment ?? "0")).toString(),
+        deadline:
+          app.gig?.deadline && app.gig?.deadline != 0
+            ? new Date(+app.gig?.deadline * 1000).toLocaleDateString(window.navigator.language, {
+                dateStyle: "medium",
+              })
+            : undefined,
+        id: app.gigId,
+        title: app.gig?.title ?? "",
+        description: app.gig?.description ?? "",
+        userAddress: app.gig?.client,
+      }));
+  }, [data, selectedState]);
+
+  const handleStateChange = (state: number) => {
+    setSelectedState(state as GigStateEnum);
   };
-
-  useEffect(() => {
-    if (data) {
-      console.log(data);
-      setFilteredData(
-        data.applications
-          .filter(app => app.gig?.state === selectedTab.id)
-          .map(app => ({
-            ...app,
-            gig: {
-              ...(app.gig ?? ({} as Gig)),
-              basePayment: formatEther(BigInt(app.gig?.basePayment ?? "0")).toString(),
-              finalPayment: formatEther(BigInt(app.gig?.finalPayment ?? "0")).toString(),
-            },
-            proposedPayment: formatEther(BigInt(app.proposedPayment ?? "0")).toString(),
-            deadline:
-              app.gig?.deadline && app.gig?.deadline != 0
-                ? new Date(+app.gig?.deadline * 1000).toLocaleDateString(window.navigator.language, {
-                    dateStyle: "medium",
-                  })
-                : undefined,
-            id: app.gigId,
-            title: app.gig?.title ?? "",
-            description: app.gig?.description ?? "",
-            userAddress: app.gig?.client,
-          })),
-      );
-    }
-  }, [data, selectedTab]);
 
   return (
     <div className="flex flex-col h-full w-full px-10">
-      <Tabs tabs={tabs} onChange={handleTabChange} />
+      <div className="mb-6">
+        <ComboBox
+          id="gig-state-filter"
+          label="Filter by Application State"
+          onChange={handleStateChange}
+          value={selectedState}
+          options={gigState}
+          variant="outlined"
+        />
+      </div>
+
       <div className="p-10 w-full">
         <List<Gig>
           secondaryAction={item => {
-            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedTab.id as GigState);
+            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedState);
 
             return (
               <div className="flex flex-col h-full place-items-center">
@@ -196,4 +177,4 @@ const GigsList = () => {
   );
 };
 
-export default GigsList;
+export default GigApplicationsList;
