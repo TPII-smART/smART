@@ -6,6 +6,7 @@ import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import {
   ArrowDownTrayIcon,
+  CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
@@ -175,14 +176,13 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       })
     : undefined;
 
-  const timeText =
-    jobStatus === JobState.Ongoing
-      ? deadlineFormatted
-        ? `Deadline: ${deadlineFormatted}`
-        : "Deadline not set"
-      : jobStatus === JobState.WaitingForApproval
-        ? `Client expected duration: ${job.jobDuration} hours`
-        : undefined;
+  const deadlineText =
+    jobStatus === JobState.Ongoing && deadlineFormatted ? (
+      <span className="inline-flex items-center gap-1 cursor-help" title={`Deadline: ${deadlineFormatted}`}>
+        {deadlineFormatted}
+        <CalendarIcon className="h-4 w-4 text-content-tertiary" />
+      </span>
+    ) : undefined;
 
   // Action buttons based on user role and job state
   const getActionButtons = () => {
@@ -260,7 +260,9 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       avatarAddress={isFreelancer ? job.client : job.freelancer}
       title={job.title || "Untitled Job"}
       description={job.description || "No description provided"}
-      extraInfo={timeText}
+      extraInfo={deadlineText}
+      time={job.jobDuration}
+      timeLabel="Client expected duration"
       category={job.category}
       paymentDisplay={paymentDisplay}
       footerLeft={statusDisplay}

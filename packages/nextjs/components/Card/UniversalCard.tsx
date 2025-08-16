@@ -9,8 +9,84 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
-import { DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
+
+// Component for displaying time information
+const TimeDisplay = ({
+  time,
+  timeLabel,
+  className,
+}: {
+  time?: string | number;
+  timeLabel?: string;
+  className?: string;
+}) => {
+  if (!time) return null;
+
+  return (
+    <div
+      className={cn("flex items-center gap-1.5 text-sm text-muted-foreground relative cursor-help", className)}
+      title={timeLabel ? `${timeLabel}: ${time} hrs` : undefined}
+    >
+      <span className="select-none pointer-events-none">{time} hrs</span>
+      <ClockIcon className="h-4 w-4" />
+    </div>
+  );
+};
+
+// Component for displaying rating
+const RatingDisplay = ({ rating, className }: { rating?: number; className?: string }) => {
+  if (rating === undefined) return null;
+
+  return (
+    <div className={cn("flex items-center gap-1.5", className)}>
+      <span className="text-sm font-medium text-yellow-600">{rating}</span>
+      <StarIcon className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+    </div>
+  );
+};
+
+// Component for displaying category badge
+const CategoryDisplay = ({ category, className }: { category?: string; className?: string }) => {
+  if (!category) return null;
+
+  return (
+    <div className={cn("w-fit", className)}>
+      <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
+    </div>
+  );
+};
+
+// Main metadata row component
+const MetadataRow = ({
+  rating,
+  category,
+  time,
+  timeLabel,
+  extraInfo,
+  className,
+}: {
+  rating?: number;
+  category?: string;
+  time?: string | number;
+  timeLabel?: string;
+  extraInfo?: React.ReactNode;
+  className?: string;
+}) => {
+  const hasContent = rating !== undefined || category || time || extraInfo;
+
+  if (!hasContent) return null;
+
+  return (
+    <div className={cn("flex flex-wrap items-center gap-3", className)}>
+      <TimeDisplay time={time} timeLabel={timeLabel} />
+      <CategoryDisplay category={category} />
+      <RatingDisplay rating={rating} />
+      {extraInfo && <span className="text-sm text-muted-foreground">{extraInfo}</span>}
+    </div>
+  );
+};
 
 export function UniversalCard({
   bannerUrl,
@@ -21,6 +97,8 @@ export function UniversalCard({
   extraInfo,
   category,
   rating,
+  time,
+  timeLabel,
   paymentDisplay,
   footerLeft,
   footerRight,
@@ -33,14 +111,12 @@ export function UniversalCard({
     if (avatarAddress) {
       try {
         await navigator.clipboard.writeText(avatarAddress);
-        // You could add a toast notification here
       } catch (err) {
         console.error("Failed to copy address:", err);
       }
     }
   };
 
-  // ! Cambiar junto con el contract por bannerHash y en los lugares que corresponda, porque ahora guardamos el hash del IPFS !
   const bannerUri = bannerUrl ? resolveIPFSHash(bannerUrl) : undefined;
 
   const renderAvatar = () => {
@@ -93,7 +169,7 @@ export function UniversalCard({
                 alt="Banner"
                 width={600}
                 height={144}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm"
+                className="h-full w-full object-cover transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-[3px]"
                 style={{ willChange: "transform, filter" }}
               />
               {/* Overlay for better text readability, not blurred */}
@@ -103,7 +179,7 @@ export function UniversalCard({
         ) : (
           // Glassmorphism banner when no image
           <div
-            className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:blur-sm"
+            className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-[3px]"
             style={{ willChange: "transform, filter" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
@@ -116,7 +192,7 @@ export function UniversalCard({
         )}
       </div>
 
-      <CardHeader className="relative overflow-visible">
+      <CardHeader className="relative overflow-visible pb-4">
         {avatarAddress && (
           <div className="absolute -top-18 right-6 z-20 group/avatar">
             <div
@@ -142,35 +218,31 @@ export function UniversalCard({
         )}
       </CardHeader>
 
-      <CardContent className="space-y-3 h-60">
-        <div className={cn("space-y-2 h-7/12", avatarAddress ? "mt-2" : "pt-4")}>
-          <CardTitle
-            className="transition-colors duration-200 h-5/12 max-h-5/12 text-justify overflow-hidden text-ellipsis"
-            style={{ lineHeight: "1.15" }}
-          >
-            {title}
-          </CardTitle>
-          <CardDescription className="whitespace-normal h-7/12 max-h-7/12 text-ellipsis line-clamp-4">
-            {description}
-          </CardDescription>
-        </div>
-        {extraInfo && <span className="relative text-sm text-muted-foreground">{extraInfo}</span>}
-        <div className="flex gap-3 items-center">
-          {rating !== undefined && (
-            <div className="flex items-center gap-1 text-yellow-500">
-              <StarIcon className="h-4 w-4 fill-current" />
-              <span className="text-sm font-medium">{rating}</span>
-            </div>
-          )}
-          {category && (
-            <div className="w-fit">
-              <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
-            </div>
-          )}
+      {/* Content section */}
+      <CardContent className="flex-1 px-6 pb-4">
+        <div className="space-y-4">
+          {/* Title and Description Section */}
+          <div className="space-y-3">
+            <CardTitle className="text-lg font-semibold leading-tight line-clamp-2" style={{ minHeight: "2.5rem" }}>
+              {title}
+            </CardTitle>
+
+            <CardDescription className="text-sm leading-relaxed line-clamp-3">{description}</CardDescription>
+          </div>
+
+          {/* Metadata Section */}
+          <MetadataRow
+            rating={rating}
+            category={category}
+            time={time}
+            timeLabel={timeLabel}
+            extraInfo={extraInfo}
+            className="pt-2"
+          />
         </div>
       </CardContent>
 
-      <CardFooter className="flex justify-between items-center h-2/12">
+      <CardFooter className="flex justify-between items-center px-6 py-4 mt-auto">
         <div className="flex items-center">{footerLeft ?? paymentDisplay}</div>
         <div className="flex items-center">{footerRight}</div>
       </CardFooter>

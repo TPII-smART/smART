@@ -10,11 +10,15 @@ export interface UniversalCardProps extends React.HTMLAttributes<HTMLDivElement>
   /** Description of the card. */
   description?: string;
   /** Extra information about the card. */
-  extraInfo?: string;
+  extraInfo?: React.ReactNode;
   /** Category on the card. */
   category?: string;
   /** Rating on the card, displayed as stars. */
   rating?: number;
+  /** Time information for the card. */
+  time?: string | number;
+  /** Label for the time information. */
+  timeLabel?: string;
   /** Display component for payment information. */
   paymentDisplay?: React.ReactNode;
   /** Left content for the card footer. */
