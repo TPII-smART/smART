@@ -3,8 +3,8 @@
 import Spinner from "@/components//Spinner/Spinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
-import { fetchMyGigs } from "~~/services/graphql/fetchers/gig.service";
-import { GigsData } from "~~/types/gig.types";
+import { fetchMyGigs } from "~~/services/graphql/fetchers/gig/gig.service";
+import { GigsData } from "~~/types/gig/gig.types";
 
 export default function MyGigsListing({ userAddress }: { userAddress: string }) {
   const queryClient = useQueryClient();

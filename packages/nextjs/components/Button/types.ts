@@ -1,4 +1,4 @@
-export interface ButtonProps {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   /**
    * Optional variant for the button, can be "primary", "outline", or "danger".
    * - "primary": Default button style, typically used for main actions.

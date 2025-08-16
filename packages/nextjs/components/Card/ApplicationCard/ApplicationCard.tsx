@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { CheckCircleIcon, ClockIcon, ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
-import { ApplicationState } from "~~/types/gig.types";
+import { ApplicationState } from "~~/types/gig/gig.types";
 
 export default function ApplicationCard({ application, className }: ApplicationProps) {
   const { address: userAddress } = useAccount();

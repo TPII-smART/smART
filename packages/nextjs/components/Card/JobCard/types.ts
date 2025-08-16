@@ -1,4 +1,4 @@
-import { Job } from "~~/types/job.types";
+import { Job } from "~~/types/job/job.types";
 
 export type JobCardProps = React.HTMLAttributes<HTMLDivElement> & {
   /**

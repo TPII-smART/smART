@@ -16,8 +16,9 @@ import {
   FlagIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig.service";
-import { Application, ApplicationsData, Gig, GigStateEnum } from "~~/types/gig.types";
+// Adjust the import to match the actual export from the module
+import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
+import { Application, ApplicationsData, Gig, GigStateEnum } from "~~/types/gig/gig.types";
 
 interface InfoIcons {
   title: string;

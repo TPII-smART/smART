@@ -3,8 +3,8 @@
 import Spinner from "@/components//Spinner/Spinner";
 import JobCard from "@/components/Card/JobCard/JobCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchHires } from "~~/services/graphql/fetchers/job.service";
-import { Job } from "~~/types/job.types";
+import { fetchHires } from "~~/services/graphql/fetchers/job/job.service";
+import { Job } from "~~/types/job/job.types";
 
 type HiresData = {
   jobs: Job[];

@@ -16,14 +16,9 @@ export interface ModalProps {
    */
   onClose?: () => void;
   /**
-   * Callback function to be called when the form is submitted.
-   * Only applicable if variant is "form".
-   */
-  onSubmit?: () => void;
-  /**
    * Optional variant for the modal, can be "form" or "custom".
    */
-  variant?: "form" | "custom";
+  variant?: "custom";
   /**
    * Optional children to be rendered inside the modal.
    */
@@ -32,12 +27,4 @@ export interface ModalProps {
    * Optional loading state for the modal, used to indicate processing.
    */
   loading?: boolean;
-  /**
-   * Optional label for the cancel button.
-   */
-  cancelLabel?: string;
-  /**
-   * Optional label for the submit button.
-   */
-  submitLabel?: string;
 }

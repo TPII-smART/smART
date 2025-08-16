@@ -13,6 +13,7 @@ const Button: React.FC<ButtonProps> = ({
   tooltip,
   size = "md",
   disabled = false,
+  ...props
 }) => {
   const getSizeStyles = (size: string): React.CSSProperties => {
     switch (size) {
@@ -99,6 +100,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      {...props}
       title={tooltip}
       style={{ ..._style, ...style }}
       onClick={onClick}

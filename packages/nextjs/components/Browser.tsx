@@ -1,177 +1,76 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Accordion from "./Accordion/Accordion";
-import ComboBox from "@/components/ComboBox/ComboBox";
-import FileUploadBox from "@/components/FileUploadBox";
-import Modal from "@/components/Modal/Modal";
+import WorkPostingForm from "./WorkPostingForm/WorkPostingForm";
 import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
-import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
+import { InputBase } from "@/components/scaffold-eth";
 import { Chip } from "@mui/material";
-import { uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
-import { parseEther } from "viem";
-import { FunnelIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
 import { jobCategories } from "~~/components/Card/JobCategory/jobCategory.data";
 import { JobPostingCard } from "~~/components/Card/JobPostingCard/JobPostingCard";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig.service";
-import { fetchMaxJobPayment } from "~~/services/graphql/fetchers/job.service";
-import { Gig, GigsData } from "~~/types/gig.types";
-import { JobPosting, JobPostingData } from "~~/types/job.types";
+import { usePagination } from "~~/hooks/use-pagination";
+import { fetchGigsPaginated, fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig/gig.service";
+import { fetchJobPostingsPaginated, fetchMaxJobPayment } from "~~/services/graphql/fetchers/job";
+import { Gig } from "~~/types/gig/gig.types";
+import { JobPosting } from "~~/types/job";
 
-const optionsCategories = [{ id: "all", label: "All", icon: FunnelIcon, color: "#a3a3a3" }, ...jobCategories];
+const optionsCategories = [{ id: "all", label: "All" }, ...jobCategories];
 
 const optionsSorts = [
-  { id: "recent", label: "Most Recent", icon: FunnelIcon, color: "#a3a3a3" },
-  { id: "popular", label: "Most Popular", icon: FunnelIcon, color: "#38bdf8" },
-  { id: "price-low", label: "Price: Low to High", icon: FunnelIcon, color: "#fbbf24" },
-  { id: "price-high", label: "Price: High to Low", icon: FunnelIcon, color: "#f472b6" },
+  { id: "recent", label: "Most Recent", key: "createdAt", order: "desc" },
+  // { id: "popular", label: "Most Popular", key: "rating", order: "desc" },
+  { id: "price-low", label: "Price: Low to High", key: "basePayment", order: "asc" },
+  { id: "price-high", label: "Price: High to Low", key: "basePayment", order: "desc" },
 ];
 
 interface BrowsePageProps {
   type: "job" | "gig";
-  data: JobPostingData | GigsData;
-  isLoading: boolean;
-  reload: () => Promise<void>;
 }
 
-export default function BrowsePage({ type, data, isLoading, reload }: BrowsePageProps) {
+export default function BrowsePage({ type }: BrowsePageProps) {
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
   const [categories, setCategories] = useState<Set<string>>(new Set(["all"]));
   const [sortBy, setSortBy] = useState<string>("recent");
-  const [filteredItems, setFilteredItems] = useState<(JobPosting | Gig)[]>(
-    type === "job" ? (data as JobPostingData)?.jobPostings || [] : (data as GigsData)?.gigs || [],
-  );
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const [data, setData] = useState<(JobPosting | Gig)[]>([]);
+
+  const fetchFunction = useMemo(() => (type === "job" ? fetchJobPostingsPaginated : fetchGigsPaginated), [type]);
+
+  const { handleScroll, fetchPaginatedData, reloadStart } = usePagination<JobPosting | Gig>({
+    fetchFunction,
+    loadingFunction: setLoading,
+    setDataFunction: setData,
+  });
 
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
   const [search, setSearch] = useState<string>("");
 
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    bannerImageFile: undefined as File | undefined,
-    paymentInEth: "",
-    estimatedDurationHours: "",
-    category: "",
-  });
+  const filterItems = useCallback(
+    async (fromStart: boolean = false): Promise<void> => {
+      const fetchFunc = fromStart ? reloadStart : fetchPaginatedData;
+      const sort = optionsSorts.find(option => option.id === sortBy);
 
-  const { writeContractAsync: createPosting, isMining } = useScaffoldWriteContract({
-    contractName: type === "job" ? "JobsContract" : "GigsContract",
-  });
-
-  const handleFileUpload = async (file: File | undefined) => {
-    if (!file) return;
-
-    return await uploadToIPFS(file);
-  };
-
-  const handleSubmit = async () => {
-    const bannerImageHash = await handleFileUpload(form.bannerImageFile);
-    try {
-      if (type === "job") {
-        await createPosting({
-          functionName: "createJobPosting",
-          args: [
-            {
-              title: form.title,
-              description: form.description,
-              bannerImageHash: bannerImageHash || "",
-              basePayment: parseEther(form.paymentInEth),
-              averageWorkDuration: BigInt(form.estimatedDurationHours),
-              minimumNoticeTime: BigInt(24),
-              category: form.category,
-            },
-          ],
-        });
-      } else {
-        await createPosting({
-          functionName: "createGig",
-          args: [
-            {
-              title: form.title,
-              description: form.description,
-              basePayment: parseEther(form.paymentInEth),
-              gigBannerImageHash: bannerImageHash || "",
-              category: form.category,
-              maxDurationInHours: BigInt(form.estimatedDurationHours),
-            },
-          ],
-        });
-      }
-      await reload();
-      setShowModal(false);
-    } catch (err) {
-      console.error("Failed to create job:", err);
-    }
-  };
-
-  const filterItems = useMemo((): (JobPosting | Gig)[] => {
-    const getSearchFiltered = <T extends { title?: string; description?: string }>(items: T[]) => {
-      if (!search) return items;
-      const lowercasedSearch = search.toLowerCase();
-      return items.filter(
-        item =>
-          item.title?.toLowerCase().includes(lowercasedSearch) ||
-          false ||
-          item.description?.toLowerCase().includes(lowercasedSearch) ||
-          false,
+      await fetchFunc(
+        type,
+        search,
+        sort?.key,
+        sort?.order,
+        priceRange[0],
+        priceRange[1],
+        categories.has("all") ? undefined : Array.from(categories),
       );
-    };
 
-    const getCategoryFiltered = <T extends { category?: string }>(items: T[], categories: Set<string>) => {
-      if (categories && !categories.has("all")) {
-        return items.filter(item => categories.has(item.category ?? ""));
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = 0;
       }
-      return items;
-    };
-
-    const getPriceFiltered = <T extends { basePayment?: string | number }>(
-      items: T[],
-      priceRange: [number, number],
-    ) => {
-      const [minPrice, maxPrice] = priceRange;
-      if (maxPrice > 0) {
-        return items.filter(item => {
-          const payment = Number(item.basePayment) / 1e18 || 0;
-          return payment >= minPrice && payment <= maxPrice;
-        });
-      }
-      return items;
-    };
-
-    const getSorted = <T extends { createdAt?: string; rating?: number; basePayment?: string | number }>(
-      items: T[],
-      sortBy: string,
-      type: "job" | "gig",
-    ) => {
-      return [...items].sort((a, b) => {
-        switch (sortBy) {
-          case "recent":
-            return new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime();
-          case "popular":
-            return type === "job" ? (b.rating ?? 0) - (a.rating ?? 0) : 0;
-          case "price-low":
-            return (Number(a.basePayment) || 0) - (Number(b.basePayment) || 0);
-          case "price-high":
-            return (Number(b.basePayment) || 0) - (Number(a.basePayment) || 0);
-          default:
-            return 0;
-        }
-      });
-    };
-
-    let items: (JobPosting | Gig)[] =
-      type === "job" ? (data as JobPostingData)?.jobPostings || [] : (data as GigsData)?.gigs || [];
-
-    items = getCategoryFiltered(items, categories);
-    items = getPriceFiltered(items, priceRange);
-    items = getSearchFiltered(items);
-    items = getSorted(items, sortBy, type);
-    return items;
-  }, [data, categories, sortBy, priceRange, search, type]);
+    },
+    [type, priceRange, sortBy, search, fetchPaginatedData, reloadStart, scrollRef, categories],
+  );
 
   const fetchMaxPaymentETH = useCallback(async () => {
     const maxPayment = await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment());
@@ -184,8 +83,8 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   }, [fetchMaxPaymentETH]);
 
   useEffect(() => {
-    setFilteredItems(filterItems);
-  }, [filterItems, data]);
+    filterItems();
+  }, [filterItems]);
 
   const Filters = (
     <aside className="w-64 mx-4">
@@ -262,93 +161,40 @@ export default function BrowsePage({ type, data, isLoading, reload }: BrowsePage
   );
 
   return (
-    <div className="min-h-full flex flex-col">
-      <main className="flex">
-        <div className="flex flex-1 flex-row py-10">
+    <div className="min-h-full max-h-full flex flex-col">
+      <main className="flex max-h-full">
+        <div
+          ref={scrollRef}
+          className="flex max-h-full flex-1 flex-row py-10 overflow-scroll h-[93vh]"
+          onScroll={event => handleScroll(event, type, search, "createdAt", "desc", priceRange[0], priceRange[1])}
+        >
           {Filters}
 
           {/* Jobs Listing */}
-          {isLoading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <Spinner />
+          <div className="flex-1 flex flex-col space-y-6 pr-4 mb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {data.map(item =>
+                type === "job" ? (
+                  <JobPostingCard
+                    jobPosting={item as JobPosting}
+                    key={(item as JobPosting).postingId}
+                    reload={() => filterItems(true)}
+                  />
+                ) : (
+                  <GigCard gig={item as Gig} key={(item as Gig).gigId} reload={() => filterItems(true)} />
+                ),
+              )}
+              <div className="h-6" />
+              {loading && (
+                <div className="flex-1 flex items-center justify-center mb-6">
+                  <Spinner />
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="flex-1 space-y-6 pr-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredItems.map(item =>
-                  type === "job" ? (
-                    <JobPostingCard
-                      jobPosting={item as JobPosting}
-                      key={(item as JobPosting).postingId}
-                      reload={reload}
-                    />
-                  ) : (
-                    <GigCard gig={item as Gig} key={(item as Gig).gigId} reload={reload} />
-                  ),
-                )}
-              </div>
-            </div>
-          )}
+          </div>
         </div>
       </main>
-
-      {/* Floating + Button */}
-      <button
-        onClick={() => setShowModal(true)}
-        className="fixed bottom-10 right-15 w-14 h-14 rounded-full text-white text-3xl shadow-lg hover:brightness-90 transition-all z-50 flex items-center justify-center"
-        style={{ backgroundColor: "var(--color-accent)" }}
-        aria-label={`Create ${type === "job" ? "Job Posting" : "Gig Posting"}`}
-      >
-        <PlusIcon className="h-5 w-5" />
-      </button>
-
-      <Modal
-        title={`Create ${type === "job" ? "Job Posting" : "Gig Posting"}`}
-        variant="form"
-        onClose={() => setShowModal(false)}
-        onSubmit={handleSubmit}
-        isOpen={showModal}
-        loading={isMining}
-        description={
-          type === "job"
-            ? "Offer your services to the community by creating a job posting."
-            : "Create a gig and look for freelancers to work on your project."
-        }
-      >
-        <div className="space-y-4">
-          <InputBase placeholder="Title" value={form.title} onChange={val => setForm({ ...form, title: val })} />
-          <InputBase
-            placeholder="Description"
-            value={form.description}
-            onChange={val => setForm({ ...form, description: val })}
-          />
-          <FileUploadBox
-            onUploadSuccess={(val: File) => setForm({ ...form, bannerImageFile: val })}
-            //onUploadError={Render error message}
-            acceptedFileType={"Image"}
-          />
-          <EtherInput
-            placeholder="Payment"
-            value={form.paymentInEth}
-            onChange={val => setForm({ ...form, paymentInEth: val })}
-          />
-          <IntegerInput
-            placeholder="Estimated Duration (hours)"
-            value={form.estimatedDurationHours}
-            onChange={val => setForm({ ...form, estimatedDurationHours: val })}
-            errorMessage="Please enter a valid number of hours."
-            disableMultiplyBy1e18
-          />
-          <ComboBox
-            id="category-combo"
-            label="Category"
-            value={form.category}
-            onChange={val => setForm({ ...form, category: val })}
-            options={jobCategories}
-            variant="standard"
-          />
-        </div>
-      </Modal>
+      <WorkPostingForm type={type} refresh={() => filterItems(true)} />
     </div>
   );
 }

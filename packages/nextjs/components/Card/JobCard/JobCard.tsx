@@ -6,7 +6,6 @@ import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import {
   ArrowDownTrayIcon,
-  CalendarIcon,
   CheckCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
@@ -15,7 +14,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { JobStateEnum } from "~~/types/job.types";
+import { JobStateEnum } from "~~/types/job/job.types";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
@@ -177,12 +176,13 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     : undefined;
 
   const deadlineText =
-    jobStatus === JobStateEnum.Ongoing && deadlineFormatted ? (
-      <span className="inline-flex items-center gap-1 cursor-help" title={`Deadline: ${deadlineFormatted}`}>
-        {deadlineFormatted}
-        <CalendarIcon className="h-4 w-4 text-content-tertiary" />
-      </span>
-    ) : undefined;
+    jobStatus === JobStateEnum.Ongoing
+      ? deadlineFormatted
+        ? `Deadline: ${deadlineFormatted}`
+        : "Deadline not set"
+      : jobStatus === JobStateEnum.WaitingForApproval
+        ? `Client expected duration: ${job.jobDuration} hours`
+        : undefined;
 
   // Action buttons based on user role and job state
   const getActionButtons = () => {

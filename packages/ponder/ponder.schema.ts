@@ -12,6 +12,7 @@ export const jobPosting = onchainTable("jobPosting", (t) => ({
 	minimumNoticeTime: t.bigint().notNull(),
 	averageWorkDuration: t.bigint().notNull(),
 	createdAt: t.bigint().notNull(),
+	lastTransactionHash: t.text().notNull(),
 }));
 
 // Job table
@@ -36,6 +37,7 @@ export const job = onchainTable(
 		canceledAt: t.bigint(), // When the job was canceled
 		clientReceived: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
+		lastTransactionHash: t.text().notNull(),
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.jobId, table.postingId] }),
@@ -64,6 +66,7 @@ export const gig = onchainTable("gig", (t) => ({
 	freelancerDelivered: t.boolean().notNull(),
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.text(),
+	lastTransactionHash: t.text().notNull(),
 }));
 
 // Gig Applications table
@@ -79,6 +82,7 @@ export const gigApplication = onchainTable(
 		createdAt: t.bigint().notNull(),
 		proposalComment: t.text().notNull(),
 		rejectionComment: t.text(),
+		lastTransactionHash: t.text().notNull(),
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.applicationId, table.gigId] }),
@@ -100,6 +104,7 @@ export const userProfile = onchainTable(
 		artstationUrl: t.varchar({ length: 256 }),
 		sketchfabUrl: t.varchar({ length: 256 }),
 		customUrl: t.varchar({ length: 256 }),
+		lastTransactionHash: t.text().notNull(),
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.address] }),

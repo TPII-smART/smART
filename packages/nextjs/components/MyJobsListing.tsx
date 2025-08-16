@@ -8,9 +8,8 @@ import { jobState } from "@/components/Card/JobState/jobState.data";
 import ComboBox from "@/components/ComboBox/ComboBox";
 import { InputBase } from "@/components/scaffold-eth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchJobsFromPosting } from "~~/services/graphql/fetchers/job.service";
-import { JobsData } from "~~/types/job.types";
-import { JobStateEnum } from "~~/types/job.types";
+import { fetchJobsFromPosting } from "~~/services/graphql/fetchers/job/job.service";
+import { JobStateEnum, JobsData } from "~~/types/job/job.types";
 
 export default function MyJobsListing({ postingId }: { postingId: string }) {
   const searchParams = useSearchParams();
