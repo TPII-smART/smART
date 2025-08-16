@@ -21,6 +21,7 @@ export const fetchJobPostingsPaginated = async (
   orderDirection: "asc" | "desc" = "desc",
   minPrice?: number,
   maxPrice?: number,
+  categories?: string[],
 ): Promise<Paginated<JobPosting>> => {
   const res = await request<{ jobPostings: PaginationQueryResponse<JobPosting> }>(
     endpoint,
@@ -34,6 +35,7 @@ export const fetchJobPostingsPaginated = async (
       orderDirection,
       minPrice: minPrice ? minPrice * 1e18 : undefined, // Convert ether to wei
       maxPrice: maxPrice ? maxPrice * 1e18 : undefined, // Convert ether to wei
+      categories,
     },
   );
 

@@ -21,6 +21,7 @@ export const fetchGigsPaginated = async (
   orderDirection: "asc" | "desc" = "desc",
   minPayment?: number,
   maxPayment?: number,
+  categories?: string[],
 ): Promise<Paginated<Gig>> => {
   const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getGigsPaginated, {
     limit: meta.limit,
@@ -31,6 +32,7 @@ export const fetchGigsPaginated = async (
     orderDirection,
     minPayment: minPayment ? minPayment * 1e18 : undefined, // Convert ether to wei
     maxPayment: maxPayment ? maxPayment * 1e18 : undefined, // Convert ether to wei
+    categories,
   });
 
   return {

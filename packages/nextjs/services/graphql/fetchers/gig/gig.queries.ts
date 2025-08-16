@@ -49,6 +49,7 @@ export const getGigsPaginated = gql`
     $orderDirection: String!
     $minPrice: BigInt
     $maxPrice: BigInt
+    $categories: [String]
   ) {
     gigs(
       limit: $limit
@@ -59,7 +60,7 @@ export const getGigsPaginated = gql`
       where: {
         AND: [
           { OR: [{ title_contains: $search }, { description_contains: $search }] }
-          { basePayment_gte: $minPrice, basePayment_lte: $maxPrice }
+          { basePayment_gte: $minPrice, basePayment_lte: $maxPrice, category_in: $categories }
         ]
       }
     ) {

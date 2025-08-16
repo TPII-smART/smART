@@ -39,6 +39,7 @@ export const getJobPostingsPaginated = gql`
     $orderDirection: String!
     $minPrice: BigInt
     $maxPrice: BigInt
+    $categories: [String]
   ) {
     jobPostings(
       limit: $limit
@@ -49,7 +50,7 @@ export const getJobPostingsPaginated = gql`
       where: {
         AND: [
           { OR: [{ title_contains: $search }, { description_contains: $search }] }
-          { basePayment_gte: $minPrice, basePayment_lte: $maxPrice }
+          { basePayment_gte: $minPrice, basePayment_lte: $maxPrice, category_in: $categories }
         ]
       }
     ) {
