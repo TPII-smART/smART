@@ -2,7 +2,7 @@ import { endpoint } from "../../config";
 import * as JobQueries from "./job.queries";
 import request from "graphql-request";
 import { Job, JobPosting } from "~~/types/job";
-import { Paginated, PaginationQueryResponse } from "~~/types/paginated.types";
+import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
 
 export const fetchMaxJobPayment = async () => {
   const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, JobQueries.maxPayment);
@@ -17,6 +17,7 @@ export const fetchJobPostings = async () => {
 };
 
 export const fetchJobPostingsPaginated = async (
+  meta: PaginationMetaArg,
   search: string = "",
   orderBy: keyof JobPosting = "createdAt",
   orderDirection: "asc" | "desc" = "desc",
@@ -26,7 +27,16 @@ export const fetchJobPostingsPaginated = async (
   const res = await request<{ jobPostings: PaginationQueryResponse<JobPosting> }>(
     endpoint,
     JobQueries.getJobPostingsPaginated,
-    { search, orderBy, orderDirection, minPrice, maxPrice },
+    {
+      limit: meta.limit,
+      startCursor: meta.startCursor,
+      endCursor: meta.endCursor,
+      search,
+      orderBy,
+      orderDirection,
+      minPrice: minPrice ? minPrice * 1e18 : undefined, // Convert ether to wei
+      maxPrice: maxPrice ? maxPrice * 1e18 : undefined, // Convert ether to wei
+    },
   );
 
   return {
@@ -35,6 +45,8 @@ export const fetchJobPostingsPaginated = async (
       endCursor: res.jobPostings.pageInfo.endCursor,
       hasNextPage: res.jobPostings.pageInfo.hasNextPage,
       totalCount: res.jobPostings.totalCount,
+      startCursor: res.jobPostings.pageInfo.startCursor,
+      // hasPreviousPage: res.jobPostings.pageInfo.hasPreviousPage,
     },
   };
 };

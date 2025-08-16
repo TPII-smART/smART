@@ -39,6 +39,63 @@ export const getGigs = gql`
   }
 `;
 
+export const getGigsPaginated = gql`
+  query GetGigsPaginated(
+    $limit: Int!
+    $startCursor: String
+    $endCursor: String
+    $search: String!
+    $orderBy: String!
+    $orderDirection: String!
+    $minPrice: BigInt
+    $maxPrice: BigInt
+  ) {
+    gigs(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      orderBy: $orderBy
+      orderDirection: $orderDirection
+      where: {
+        AND: [
+          { OR: [{ title_contains: $search }, { description_contains: $search }] }
+          { basePayment_gte: $minPrice, basePayment_lte: $maxPrice }
+        ]
+      }
+    ) {
+      items {
+        gigId
+        client
+        acceptedFreelancer
+        basePayment
+        finalPayment
+        title
+        description
+        category
+        maxDurationInHours
+        finalDurationInHours
+        deadline
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        state
+        clientReceived
+        freelancerDelivered
+        acceptedApplicationId
+        gigBannerImageHash
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
 export const getMyGigs = gql`
   query GetMyGigs($userAddress: String!) {
     gigs(where: { client: $userAddress }) {

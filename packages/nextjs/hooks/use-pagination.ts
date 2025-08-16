@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { Paginated, PaginationMetadata, SearchParams } from "~~/types/paginated.types";
+import { Paginated, PaginationMetaArg, PaginationMetadata, SearchParams } from "~~/types/paginated.types";
 
 type ScrollEvent = {
   currentTarget: {
@@ -23,10 +23,33 @@ const compareParams = (a: SearchParams[], b: SearchParams[]) => {
 };
 
 export interface PaginationHookParams<T> {
-  fetchFunction: (...any: SearchParams[]) => Promise<Paginated<T>>;
+  fetchFunction: (meta: PaginationMetaArg, ...any: SearchParams[]) => Promise<Paginated<T>>;
   loadingFunction: (value: React.SetStateAction<boolean>) => void;
   setDataFunction: (value: React.SetStateAction<T[]>) => void;
 }
+
+const setCacheMetaData = (key: string, meta: PaginationMetadata, cache: MetadataCache, end: boolean = true) => {
+  if (!cache[key]) {
+    cache[key] = { meta };
+    return cache;
+  }
+
+  if (end) {
+    cache[key].meta.endCursor = meta.endCursor;
+    cache[key].meta.hasNextPage = meta.hasNextPage;
+    if (cache[key].meta.startCursor === undefined) {
+      cache[key].meta.startCursor = meta.startCursor;
+    }
+  } else {
+    cache[key].meta.startCursor = meta.startCursor;
+    if (cache[key].meta.endCursor === undefined) {
+      cache[key].meta.endCursor = meta.endCursor;
+    }
+    // cache[key].meta.hasPreviousPage = meta.hasPreviousPage;
+  }
+
+  return cache;
+};
 
 export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFunction }: PaginationHookParams<T>) => {
   // states
@@ -38,15 +61,45 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
   const lastScrollTop = useRef<number>(0);
   const loading = useRef<boolean>(false);
 
-  const fetchData = useCallback(
-    async (hasParamNotChanged: boolean, key: string, ...params: SearchParams[]): Promise<void> => {
+  const fetchStart = useCallback(
+    async (key: string, ...params: SearchParams[]): Promise<void> => {
       loading.current = true;
       loadingFunction(true);
 
-      const response: Paginated<T> = await fetchFunction(...params);
+      const response: Paginated<T> = await fetchFunction(
+        { limit: FILES_PER_PAGE, startCursor: cache.current[key]?.meta?.startCursor },
+        ...params,
+      );
       setTotalItems(response.meta?.totalCount || FILES_PER_PAGE);
 
-      cache.current[key] = { meta: response.meta };
+      cache.current = setCacheMetaData(key, response.meta, cache.current, false);
+      setDataFunction(prev => (prev.length === 0 ? response.data : response.data.concat(prev)));
+
+      setTimeout(() => {
+        loadingFunction(false);
+        loading.current = false;
+      }, 100);
+      lastSearch.current = params ?? [];
+    },
+    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction],
+  );
+
+  const fetchData = useCallback(
+    async (hasParamNotChanged: boolean, key: string, ...params: SearchParams[]): Promise<void> => {
+      if (hasParamNotChanged && cache.current[key]?.meta?.hasNextPage === false) {
+        return;
+      }
+
+      loading.current = true;
+      loadingFunction(true);
+
+      const response: Paginated<T> = await fetchFunction(
+        { limit: FILES_PER_PAGE, endCursor: hasParamNotChanged ? cache.current[key]?.meta?.endCursor : undefined },
+        ...params,
+      );
+      setTotalItems(response.meta?.totalCount || FILES_PER_PAGE);
+
+      cache.current = setCacheMetaData(key, response.meta, cache.current);
       setDataFunction(prev => (prev.length === 0 || !hasParamNotChanged ? response.data : prev.concat(response.data)));
 
       setTimeout(() => {
@@ -99,7 +152,7 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
       const scrollHeight = listboxNode.scrollHeight;
 
       // Check if we are at 50% of the scroll height and not currently loading
-      if (scrollHeight * 0.5 <= position && loading.current && cache.current[key]?.meta?.hasNextPage !== false) {
+      if (scrollHeight * 0.5 <= position && !loading.current && cache.current[key]?.meta?.hasNextPage !== false) {
         fetchPaginatedData(key, ...searchParams);
       }
     },
@@ -108,6 +161,7 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
 
   return {
     totalItems,
+    reloadStart: fetchStart,
     fetchPaginatedData,
     handleScroll,
   };

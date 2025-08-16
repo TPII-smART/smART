@@ -6,13 +6,17 @@ export interface Paginated<T> {
 export interface PaginationMetadata {
   totalCount: number;
   endCursor: string;
+  startCursor: string;
   hasNextPage: boolean;
+  // hasPreviousPage: boolean;
 }
 
 export interface PaginationQueryResponse<T> {
   items: T[];
-  pageInfo: { endCursor: string; hasNextPage: boolean };
+  pageInfo: Omit<PaginationMetadata, "totalCount">;
   totalCount: number;
 }
+
+export type PaginationMetaArg = Partial<Pick<PaginationMetadata, "endCursor" | "startCursor">> & { limit: number };
 
 export type SearchParams = any | undefined;

@@ -31,6 +31,9 @@ export const getJobPostings = gql`
 
 export const getJobPostingsPaginated = gql`
   query GetJobPostings(
+    $limit: Int!
+    $startCursor: String
+    $endCursor: String
     $search: String!
     $orderBy: String!
     $orderDirection: String!
@@ -38,6 +41,9 @@ export const getJobPostingsPaginated = gql`
     $maxPrice: BigInt
   ) {
     jobPostings(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
       orderBy: $orderBy
       orderDirection: $orderDirection
       where: {
@@ -62,6 +68,8 @@ export const getJobPostingsPaginated = gql`
       pageInfo {
         endCursor
         hasNextPage
+        startCursor
+        hasPreviousPage
       }
       totalCount
     }

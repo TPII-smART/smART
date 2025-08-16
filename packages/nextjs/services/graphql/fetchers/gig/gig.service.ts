@@ -2,6 +2,7 @@ import { endpoint } from "../../config";
 import * as GigQueries from "./gig.queries";
 import request from "graphql-request";
 import { Application, Gig } from "~~/types/gig";
+import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
 
 export const fetchMaxGigPayment = async () => {
   const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.maxPayment);
@@ -13,6 +14,36 @@ export const fetchMaxGigPayment = async () => {
 export const fetchGigs = async () => {
   const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getGigs);
   return { gigs: res.gigs.items };
+};
+
+export const fetchGigsPaginated = async (
+  meta: PaginationMetaArg,
+  search: string = "",
+  orderBy: keyof Gig = "createdAt",
+  orderDirection: "asc" | "desc" = "desc",
+  minPayment?: number,
+  maxPayment?: number,
+): Promise<Paginated<Gig>> => {
+  const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getGigsPaginated, {
+    limit: meta.limit,
+    startCursor: meta.startCursor,
+    endCursor: meta.endCursor,
+    search,
+    orderBy,
+    orderDirection,
+    minPayment: minPayment ? minPayment * 1e18 : undefined, // Convert ether to wei
+    maxPayment: maxPayment ? maxPayment * 1e18 : undefined, // Convert ether to wei
+  });
+
+  return {
+    data: res.gigs.items,
+    meta: {
+      endCursor: res.gigs.pageInfo.endCursor,
+      hasNextPage: res.gigs.pageInfo.hasNextPage,
+      totalCount: res.gigs.totalCount,
+      startCursor: res.gigs.pageInfo.startCursor,
+    },
+  };
 };
 
 export const fetchMyGigs = async (userAddress: string) => {
