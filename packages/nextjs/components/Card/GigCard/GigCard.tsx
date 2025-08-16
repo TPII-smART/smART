@@ -88,7 +88,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
         avatarAddress={gig?.client}
         title={gig?.title}
         description={gig?.description}
-        extraInfo={`Max work duration: ${gig?.maxDurationInHours} hours`}
+        time={gig?.maxDurationInHours}
+        timeLabel="Max work duration"
         category={gig?.category}
         paymentDisplay={paymentDisplay}
         footerLeft={<div className="flex items-center gap-4">{paymentDisplay}</div>}

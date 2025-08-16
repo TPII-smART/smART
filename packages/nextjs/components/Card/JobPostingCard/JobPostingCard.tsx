@@ -91,7 +91,8 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
         avatarAddress={jobPosting?.freelancer}
         title={jobPosting?.title}
         description={jobPosting?.description}
-        extraInfo={`Average work duration: ${jobPosting?.averageWorkDuration} hours`}
+        time={jobPosting?.averageWorkDuration}
+        timeLabel="Average work duration"
         category={jobPosting?.category}
         rating={jobPosting?.rating ? jobPosting.rating : 0}
         paymentDisplay={paymentDisplay}
