@@ -16,44 +16,46 @@ export enum JobState {
 // -------------------------------------------------------------
 // This event is triggered when a new job posting is created.
 ponder.on("JobsContract:JobPostingCreated", async ({ event, context }) => {
-    // Creates a new Job Posting
-    await context.db.insert(jobPosting).values({
-        postingId: event.args.postingId,
-        freelancer: event.args.freelancer || null,
-        basePayment: event.args.basePayment || null,
-        title: event.args.title || "",
-        description: event.args.description || "",
-        category: event.args.category || "",
-        bannerImageHash: event.args.bannerImageHash || "",
-        minimumNoticeTime: event.args.minimumNoticeTime || 0n,
-        averageWorkDuration: event.args.averageWorkDuration || 0n,
-        createdAt: BigInt(event.block.timestamp),
-    });
+	// Creates a new Job Posting
+	await context.db.insert(jobPosting).values({
+		postingId: event.args.postingId,
+		freelancer: event.args.freelancer || null,
+		basePayment: event.args.basePayment || null,
+		title: event.args.title || "",
+		description: event.args.description || "",
+		category: event.args.category || "",
+		bannerImageHash: event.args.bannerImageHash || "",
+		minimumNoticeTime: event.args.minimumNoticeTime || 0n,
+		averageWorkDuration: event.args.averageWorkDuration || 0n,
+		createdAt: BigInt(event.block.timestamp),
+		lastTransactionHash: event.transaction.hash,
+	});
 });
 
 // Job handlers
 // -------------------------------------------------------------
 // This event is triggered when a new job is created.
 ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
-    // Creates a new Job
-    await context.db.insert(job).values({
-        jobId: event.args.jobId,
-        postingId: event.args.postingId,
-        client: event.args.client || null,
-        freelancer: event.args.freelancer || null,
-        payment: event.args.payment || null,
-        title: event.args.title || null,
-        description: event.args.description || null,
-        category: event.args.category || null,
-        bannerImageHash: event.args.bannerImageHash || "",
-        jobDuration: event.args.jobDuration || null,
-        deadline: 0n, // Placeholder for deadline, will be updated on confirmation
-        state: JobState.WaitingForApproval, // Initial job state
-        createdAt: BigInt(event.block.timestamp),
-        acceptedAt: null,
-        clientReceived: false,
-        freelancerDelivered: false,
-    });
+	// Creates a new Job
+	await context.db.insert(job).values({
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+		client: event.args.client || null,
+		freelancer: event.args.freelancer || null,
+		payment: event.args.payment || null,
+		title: event.args.title || null,
+		description: event.args.description || null,
+		category: event.args.category || null,
+		bannerImageHash: event.args.bannerImageHash || "",
+		jobDuration: event.args.jobDuration || null,
+		deadline: 0n, // Placeholder for deadline, will be updated on confirmation
+		state: JobState.WaitingForApproval, // Initial job state
+		createdAt: BigInt(event.block.timestamp),
+		acceptedAt: null,
+		clientReceived: false,
+		freelancerDelivered: false,
+		lastTransactionHash: event.transaction.hash,
+	});
 });
 
 // This event is triggered when a job is accepted by a freelancer.
@@ -69,6 +71,7 @@ ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
 			acceptedAt: BigInt(event.block.timestamp),
 			state: JobState.Ongoing,
 			deadline: event.args.deadline || 0n,
+			lastTransactionHash: event.transaction.hash,
 		});
 });
 
@@ -82,7 +85,10 @@ ponder.on(
 				jobId: event.args.jobId,
 				postingId: event.args.postingId,
 			})
-			.set({ freelancerDelivered: true });
+			.set({
+				freelancerDelivered: true,
+				lastTransactionHash: event.transaction.hash,
+			});
 	}
 );
 
@@ -94,7 +100,10 @@ ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 			jobId: event.args.jobId,
 			postingId: event.args.postingId,
 		})
-		.set({ clientReceived: true });
+		.set({
+			clientReceived: true,
+			lastTransactionHash: event.transaction.hash,
+		});
 });
 
 // This event is triggered when a job is marked as finished.
@@ -108,6 +117,7 @@ ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
 		.set({
 			state: JobState.Finished,
 			finishedAt: BigInt(event.args.timestamp),
+			lastTransactionHash: event.transaction.hash,
 		});
 });
 
@@ -122,5 +132,6 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 		.set({
 			state: JobState.Cancelled,
 			canceledAt: BigInt(event.args.timestamp),
+			lastTransactionHash: event.transaction.hash,
 		});
 });

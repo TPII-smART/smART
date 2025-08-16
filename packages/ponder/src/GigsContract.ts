@@ -37,6 +37,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		freelancerDelivered: false,
 		acceptedApplicationId: null,
 		gigBannerImageHash: event.args.gigBannerImageHash,
+		lastTransactionHash: event.transaction.hash,
 	});
 });
 
@@ -52,6 +53,7 @@ ponder.on("GigsContract:ApplicationSubmitted", async ({ event, context }) => {
 		state: ApplicationState.Pending,
 		createdAt: BigInt(event.block.timestamp),
 		rejectionComment: null,
+		lastTransactionHash: event.transaction.hash,
 	});
 });
 
@@ -64,6 +66,7 @@ ponder.on("GigsContract:ApplicationAccepted", async ({ event, context }) => {
 		})
 		.set({
 			state: ApplicationState.Accepted,
+			lastTransactionHash: event.transaction.hash,
 		});
 
 	await context.db
@@ -78,6 +81,7 @@ ponder.on("GigsContract:ApplicationAccepted", async ({ event, context }) => {
 			finalDurationInHours: event.args.finalDurationInHours,
 			deadline: event.args.deadline,
 			acceptedAt: BigInt(event.block.timestamp),
+			lastTransactionHash: event.transaction.hash,
 		});
 });
 
@@ -91,6 +95,7 @@ ponder.on("GigsContract:ApplicationRejected", async ({ event, context }) => {
 		.set({
 			state: ApplicationState.Rejected,
 			rejectionComment: event.args.rejectionComment,
+			lastTransactionHash: event.transaction.hash,
 		});
 });
 
@@ -104,6 +109,7 @@ ponder.on(
 			})
 			.set({
 				freelancerDelivered: true,
+				lastTransactionHash: event.transaction.hash,
 			});
 	}
 );
@@ -116,6 +122,7 @@ ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		})
 		.set({
 			clientReceived: true,
+			lastTransactionHash: event.transaction.hash,
 		});
 });
 
@@ -128,6 +135,7 @@ ponder.on("GigsContract:GigCompleted", async ({ event, context }) => {
 		.set({
 			state: GigState.Completed,
 			finishedAt: event.args.timestamp,
+			lastTransactionHash: event.transaction.hash,
 		});
 });
 
@@ -140,5 +148,6 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 		.set({
 			state: GigState.Cancelled,
 			canceledAt: event.args.timestamp,
+			lastTransactionHash: event.transaction.hash,
 		});
 });

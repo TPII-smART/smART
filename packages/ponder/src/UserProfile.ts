@@ -12,9 +12,11 @@ ponder.on(
 			.values({
 				address: event.args.user,
 				...event.args.profile,
+				lastTransactionHash: event.transaction.hash,
 			})
 			.onConflictDoUpdate({
 				...event.args.profile,
+				lastTransactionHash: event.transaction.hash,
 			});
 	}
 );
