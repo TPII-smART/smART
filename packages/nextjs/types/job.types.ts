@@ -94,7 +94,7 @@ export interface JobPosting {
 }
 
 /** Enum representing the possible states of a job. */
-export enum JobState {
+export enum JobStateEnum {
   WaitingForApproval = 0,
   Ongoing = 1,
   Finished = 2,

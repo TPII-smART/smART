@@ -4,7 +4,7 @@ import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import Modal from "@/components/Modal/Modal";
-import { EtherInput, InputBase } from "@/components/scaffold-eth";
+import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -111,10 +111,12 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
             value={form.proposedPayment}
             onChange={val => setForm({ ...form, proposedPayment: val })}
           />
-          <InputBase
+          <IntegerInput
             placeholder="Proposed Duration (in hours)"
             value={form.proposedDurationInHours}
             onChange={val => setForm({ ...form, proposedDurationInHours: val })}
+            errorMessage="Please enter a valid number of hours."
+            disableMultiplyBy1e18
           />
           <InputBase
             placeholder="Proposal"
