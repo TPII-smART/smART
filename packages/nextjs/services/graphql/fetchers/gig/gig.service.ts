@@ -6,9 +6,7 @@ import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/
 
 export const fetchMaxGigPayment = async () => {
   const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.maxPayment);
-  const payments = res.gigs.items.map(item => Number(item.basePayment) || 0);
-  const max = payments.length > 0 ? Math.max(...payments) : 0;
-  return max / 1e18; // Convert wei to ether
+  return (Number(res.gigs.items[0]?.basePayment) ?? 0) / 1e18; // Convert wei to ether
 };
 
 export const fetchGigs = async () => {

@@ -2,7 +2,7 @@ import { gql } from "graphql-request";
 
 export const maxPayment = gql`
   query GetJobPostingsPayments {
-    jobPostings {
+    jobPostings(orderBy: "basePayment", limit: 1, orderDirection: "desc") {
       items {
         basePayment
       }
