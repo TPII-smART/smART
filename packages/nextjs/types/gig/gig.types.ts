@@ -90,7 +90,7 @@ export class Gig {
 }
 
 /** Enum representing the possible states of a gig. */
-export enum GigState {
+export enum GigStateEnum {
   Open = 0,
   InProgress = 1,
   Completed = 2,
