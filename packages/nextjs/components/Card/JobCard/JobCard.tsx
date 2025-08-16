@@ -14,11 +14,11 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { JobState } from "~~/types/job.types";
+import { JobStateEnum } from "~~/types/job.types";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
-  const jobStatus = job.state as JobState;
+  const jobStatus = job.state as JobStateEnum;
 
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
@@ -28,7 +28,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
 
   const getJobStatus = () => {
-    if (jobStatus === JobState.WaitingForApproval) {
+    if (jobStatus === JobStateEnum.WaitingForApproval) {
       return {
         label: "Waiting for Approval",
         color: "bg-amber-500",
@@ -37,7 +37,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       };
     }
 
-    if (jobStatus === JobState.Ongoing) {
+    if (jobStatus === JobStateEnum.Ongoing) {
       // Check delivery status for ongoing jobs
       if (job.freelancerDelivered && job.clientReceived) {
         return {
@@ -70,7 +70,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       }
     }
 
-    if (jobStatus === JobState.Finished) {
+    if (jobStatus === JobStateEnum.Finished) {
       return {
         label: "Completed",
         color: "bg-emerald-500",
@@ -79,7 +79,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       };
     }
 
-    if (jobStatus === JobState.Cancelled) {
+    if (jobStatus === JobStateEnum.Cancelled) {
       return {
         label: "Cancelled",
         color: "bg-red-500",
@@ -101,7 +101,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const handleAccept = async () => {
     try {
-      if (job.state !== JobState.WaitingForApproval) return;
+      if (job.state !== JobStateEnum.WaitingForApproval) return;
       await writeContract({
         functionName: "acceptJob",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
@@ -176,11 +176,11 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     : undefined;
 
   const timeText =
-    jobStatus === JobState.Ongoing
+    jobStatus === JobStateEnum.Ongoing
       ? deadlineFormatted
         ? `Deadline: ${deadlineFormatted}`
         : "Deadline not set"
-      : jobStatus === JobState.WaitingForApproval
+      : jobStatus === JobStateEnum.WaitingForApproval
         ? `Client expected duration: ${job.jobDuration} hours`
         : undefined;
 
@@ -189,7 +189,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     const buttons = [];
 
     // Cancel button - available for both parties until job is finished
-    if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
+    if (jobStatus !== JobStateEnum.Finished && jobStatus !== JobStateEnum.Cancelled) {
       buttons.push(
         <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
           <XCircleIcon className="h-5 w-5" />
@@ -199,7 +199,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
     // Freelancer actions
     if (isFreelancer) {
-      if (jobStatus === JobState.WaitingForApproval) {
+      if (jobStatus === JobStateEnum.WaitingForApproval) {
         buttons.push(
           <Button
             variant="primary"
@@ -213,7 +213,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           </Button>,
         );
       }
-      if (jobStatus === JobState.Ongoing && !job.freelancerDelivered) {
+      if (jobStatus === JobStateEnum.Ongoing && !job.freelancerDelivered) {
         buttons.push(
           <Button
             variant="primary"
@@ -231,7 +231,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
     // Client actions
     if (isClient) {
-      if (jobStatus === JobState.Ongoing) {
+      if (jobStatus === JobStateEnum.Ongoing) {
         if (job.freelancerDelivered && !job.clientReceived) {
           buttons.push(
             <Button
