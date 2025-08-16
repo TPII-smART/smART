@@ -70,7 +70,7 @@ export class Gig {
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;
-    this.state = GigState.Open;
+    this.state = GigStateEnum.Open;
   }
 
   static mapFormDataToContractArgs(

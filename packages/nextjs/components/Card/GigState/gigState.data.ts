@@ -1,4 +1,4 @@
-import { GigStateEnum } from "~~/types/gig.types";
+import { GigStateEnum } from "~~/types/gig/gig.types";
 
 export const gigState = [
   { id: GigStateEnum.Open, label: "Hearing Offers" },

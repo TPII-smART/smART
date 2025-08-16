@@ -1,4 +1,4 @@
-import { JobStateEnum } from "~~/types/job.types";
+import { JobStateEnum } from "~~/types/job/job.types";
 
 export const jobState = [
   { id: JobStateEnum.WaitingForApproval, label: "Waiting For Approval" },
