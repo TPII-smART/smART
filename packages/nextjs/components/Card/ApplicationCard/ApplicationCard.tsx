@@ -78,13 +78,15 @@ export default function ApplicationCard({ application, className }: ApplicationP
     </div>
   );
 
-  const extraInfo = `Proposal: ${application.proposalComment || "No proposal provided"}  |  Duration: ${application.proposedDurationInHours} hours`;
+  const extraInfo = `Proposal: ${application.proposalComment || "No proposal provided"}`;
 
   return (
     <UniversalCard
       avatarAddress={application.gig?.client}
       title={application.gig?.title || "Gig Title Not Available"}
       description={application.gig?.description || "Description not available"}
+      time={application.proposedDurationInHours}
+      timeLabel="Proposed Duration"
       extraInfo={extraInfo}
       category={application.gig?.category || "Category not available"}
       paymentDisplay={paymentDisplay}
