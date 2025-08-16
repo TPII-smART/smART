@@ -33,25 +33,27 @@ export async function waitTransaction(schema: Schemas, transactionHash: `0x${str
 
   const poll = async () => {
     const baseSleep = 200;
-    const maxSleep = 10000;
+    const maxSleep = 5000;
 
     let sleepTime = baseSleep;
-    for (let i = 1; i <= 10; i++) {
-      const result = await pollTransactionQuery(transactionHash, schema);
+    for (let i = 1; i <= 5; i++) {
+      // Poll the transaction status with schema + "s" to use where clause
+      const result = await pollTransactionQuery(transactionHash, schema + "s");
       if (result) {
         return true;
       }
       await new Promise(resolve => setTimeout(resolve, sleepTime));
       sleepTime = Math.min(baseSleep * 2 ** i, maxSleep);
     }
+
+    console.error("No transaction found with hash:", transactionHash);
+    return false;
   };
 
   try {
-    await poll();
+    return await poll();
   } catch (error) {
     console.error(`Error occurred while waiting for transaction, is the schema name '${schema}' ok??:`, error);
+    return false;
   }
-
-  console.error("No transaction found with hash:", transactionHash);
-  return false;
 }

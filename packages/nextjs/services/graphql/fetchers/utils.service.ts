@@ -4,7 +4,7 @@ import request, { gql } from "graphql-request";
 export async function pollTransactionQuery(transactionHash: string, schema: string): Promise<boolean> {
   const query = gql`
     query PollTransaction ($transactionHash: String!) {
-      ${schema}s(where: { lastTransactionHash: $transactionHash }) {
+      ${schema}(where: { lastTransactionHash: $transactionHash }) {
         items {
           lastTransactionHash
         }
