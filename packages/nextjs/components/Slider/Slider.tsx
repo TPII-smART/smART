@@ -16,7 +16,8 @@ interface InputBaseProps {
 const InputBase = ({ variant, value, onChange, placeholder }: InputBaseProps) => {
   const baseClasses =
     "w-full px-4 py-2 text-sm rounded-lg border border-[var(--color-surface)] focus:outline-none focus:ring-2 focus:ring-accent";
-  const variantClasses = variant === "background" ? "bg-[var(--color-surface)] text-white placeholder-gray-400" : "";
+  const variantClasses =
+    variant === "background" ? "bg-[var(--color-surface)] text-primary-content placeholder-gray-400" : "";
 
   return (
     <input
