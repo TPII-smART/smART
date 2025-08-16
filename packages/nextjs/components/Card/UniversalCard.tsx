@@ -93,7 +93,7 @@ export function UniversalCard({
                 alt="Banner"
                 width={600}
                 height={144}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 group-hover:blur-sm"
+                className="h-full w-full object-cover transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-[3px]"
                 style={{ willChange: "transform, filter" }}
               />
               {/* Overlay for better text readability, not blurred */}
@@ -103,7 +103,7 @@ export function UniversalCard({
         ) : (
           // Glassmorphism banner when no image
           <div
-            className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm transition-all duration-300 group-hover:scale-105 group-hover:blur-sm"
+            className="h-full w-full bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-[3px]"
             style={{ willChange: "transform, filter" }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
