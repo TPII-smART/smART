@@ -9,6 +9,7 @@ import { EtherInput, InputBase } from "../scaffold-eth";
 import { WorkPostingFormData, WorkPostingFormProps } from "./types";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { waitTransaction } from "~~/lib/utils";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { Gig } from "~~/types/gig/gig.types";
 import { JobPosting } from "~~/types/job";
@@ -51,7 +52,7 @@ function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
   }
 }
 
-const WorkPostingForm = ({ type }: WorkPostingFormProps) => {
+const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   const [showModal, setShowModal] = useState(false);
 
   const { contract, formMapper } = useMemo(() => getVariant(type), [type]);
@@ -70,9 +71,9 @@ const WorkPostingForm = ({ type }: WorkPostingFormProps) => {
     form.bannerImageHash = await handleFileUpload(form.bannerImageFile);
 
     try {
-      await createPosting(formMapper(form));
-
-      //   await reload();
+      const transactionHash = await createPosting(formMapper(form));
+      await waitTransaction("jobPosting", transactionHash);
+      await refresh();
       setShowModal(false);
     } catch (err) {
       console.error("Failed to create job:", err);

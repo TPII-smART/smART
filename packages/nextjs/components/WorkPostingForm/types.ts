@@ -1,5 +1,6 @@
 export interface WorkPostingFormProps {
   type: "job" | "gig";
+  refresh: () => Promise<void>;
 }
 
 export class WorkPostingFormData {
