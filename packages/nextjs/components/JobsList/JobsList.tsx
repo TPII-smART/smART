@@ -1,4 +1,5 @@
 import { JSX, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
@@ -14,6 +15,7 @@ import {
   EnvelopeIcon,
   EnvelopeOpenIcon,
   FlagIcon,
+  MagnifyingGlassIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job.service";
@@ -84,6 +86,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobState
 };
 
 const JobsList = () => {
+  const router = useRouter();
   const { address: userAddress } = useAccount();
   const { data } = useQuery<JobsData>({
     queryKey: ["jobsFromUser", userAddress],
@@ -116,6 +119,15 @@ const JobsList = () => {
     setSelectedState(state as JobStateEnum);
   };
 
+  const handleInspectJob = (job: Job) => {
+    const searchParams = new URLSearchParams({
+      search: job.title || "",
+      state: selectedState.toString(),
+    });
+
+    router.push(`/job-posting/${job.postingId}?${searchParams.toString()}`);
+  };
+
   return (
     <div className="flex flex-col h-full w-full px-10">
       <div className="mb-6">
@@ -135,13 +147,24 @@ const JobsList = () => {
             const infoIcons: InfoIcons[] = getInfoIcons(item, selectedState);
 
             return (
-              <div className="flex flex-col h-full place-items-center">
-                {infoIcons.map(({ title, icon, info }) => (
-                  <div className="flex flex-row h-full place-items-center place-self-start" title={title} key={title}>
-                    {icon}
-                    <span className="ml-2">{info}</span>
-                  </div>
-                ))}
+              <div className="flex flex-row h-full place-items-center space-x-6 justify-end">
+                <div className="flex flex-col h-full place-items-center">
+                  {infoIcons.map(({ title, icon, info }) => (
+                    <div className="flex flex-row h-full place-items-center place-self-start" title={title} key={title}>
+                      {icon}
+                      <span className="ml-2">{info}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-row h-full place-items-center place-self-start mb-2">
+                  <button
+                    onClick={() => handleInspectJob(item as Job)}
+                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                    title="Inspect job in posting"
+                  >
+                    <MagnifyingGlassIcon className="w-5 h-5 text-[color:var(--color-accent)]" />
+                  </button>
+                </div>
               </div>
             );
           }}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Spinner from "@/components//Spinner/Spinner";
 import JobCard from "@/components/Card/JobCard/JobCard";
 import { jobState } from "@/components/Card/JobState/jobState.data";
@@ -12,6 +13,7 @@ import { JobsData } from "~~/types/job.types";
 import { JobStateEnum } from "~~/types/job.types";
 
 export default function MyJobsListing({ postingId }: { postingId: string }) {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const { data, isLoading, refetch } = useQuery<JobsData>({
     queryKey: ["jobsFromJobPosting", postingId],
@@ -20,7 +22,7 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
 
   const reload = async () => {
     queryClient.invalidateQueries({ queryKey: ["jobsFromJobPosting", postingId] });
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay to ensure UI updates
+    await new Promise(resolve => setTimeout(resolve, 1000));
     await refetch();
   };
 
@@ -32,12 +34,18 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
     [data],
   );
 
+  // Initialize state from URL parameters
+  const initialSearch = searchParams?.get("search") || "";
+  const initialState = searchParams?.get("state")
+    ? parseInt(searchParams.get("state") as string)
+    : JobStateEnum.WaitingForApproval;
+
   const [form, setForm] = useState({
-    currentSelectedState: JobStateEnum.WaitingForApproval, // Defaults to pending Jobs
+    currentSelectedState: initialState,
     filteredJobs: data?.jobs || [],
   });
 
-  const [search, setSearch] = useState<string>("");
+  const [search, setSearch] = useState<string>(initialSearch);
 
   useEffect(() => {
     setForm(prev => ({
