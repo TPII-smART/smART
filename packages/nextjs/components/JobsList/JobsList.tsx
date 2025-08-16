@@ -18,7 +18,7 @@ import {
 } from "@heroicons/react/24/outline";
 // Adjust the import to match the actual export from the module
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job/job.service";
-import { Job, JobState, JobsData } from "~~/types/job/job.types";
+import { Job, JobStateEnum, JobsData } from "~~/types/job/job.types";
 
 interface InfoIcons {
   title: string;
@@ -28,39 +28,39 @@ interface InfoIcons {
 
 const tabs: TabProps[] = [
   {
-    id: JobState.WaitingForApproval,
+    id: JobStateEnum.WaitingForApproval,
     label: "Waiting for Approval",
   },
   {
-    id: JobState.Ongoing,
+    id: JobStateEnum.Ongoing,
     label: "Ongoing",
   },
   {
-    id: JobState.Finished,
+    id: JobStateEnum.Finished,
     label: "Finished",
   },
   {
-    id: JobState.Cancelled,
+    id: JobStateEnum.Cancelled,
     label: "Cancelled",
   },
   {
-    id: JobState.Disputed,
+    id: JobStateEnum.Disputed,
     label: "Disputed",
   },
 ];
 
-const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState): InfoIcons[] => {
+const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobStateEnum): InfoIcons[] => {
   const infoIcons = [];
 
   console.log(item);
 
-  if (currentTab === JobState.WaitingForApproval) {
+  if (currentTab === JobStateEnum.WaitingForApproval) {
     infoIcons.push({
       title: `Job Duration: ${item.jobDuration} hours`,
       icon: <ClockIcon className="w-4 h-4" />,
       info: item.jobDuration + " hours",
     });
-  } else if (currentTab === JobState.Ongoing) {
+  } else if (currentTab === JobStateEnum.Ongoing) {
     infoIcons.push({
       title: `Deadline: ${item.deadline}`,
       icon: <FlagIcon className="w-4 h-4" />,
@@ -74,7 +74,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState):
       icon: item.freelancerDelivered ? <EnvelopeIcon className="w-4 h-4" /> : <EnvelopeOpenIcon className="w-4 h-4" />,
       info: item.freelancerDelivered ? "Submitted" : "Not submitted",
     });
-  } else if (currentTab === JobState.Finished) {
+  } else if (currentTab === JobStateEnum.Finished) {
     if (item.finishedAt) {
       infoIcons.push({
         title: "Finished At",
@@ -90,7 +90,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentTab: JobState):
       icon: item.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
       info: item.clientReceived ? "Received" : "Not received",
     });
-  } else if (currentTab === JobState.Cancelled) {
+  } else if (currentTab === JobStateEnum.Cancelled) {
     if (item.canceledAt) {
       infoIcons.push({
         title: "Canceled At",
@@ -151,7 +151,7 @@ const JobsList = () => {
       <div className="p-10 w-full">
         <List<Job>
           secondaryAction={item => {
-            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedTab.id as JobState);
+            const infoIcons: InfoIcons[] = getInfoIcons(item, selectedTab.id as JobStateEnum);
 
             return (
               <div className="flex flex-col h-full place-items-center">
