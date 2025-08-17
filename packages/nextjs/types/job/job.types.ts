@@ -53,6 +53,11 @@ export interface Job {
    */
   canceledAt?: string;
 
+  /**
+   * (Optional) Number between 1 and 5 representing the job rating.
+   */
+  rating?: number;
+
   /** (Optional) Boolean indicating if the client has marked they received the job deliverables. */
   clientReceived?: boolean;
 

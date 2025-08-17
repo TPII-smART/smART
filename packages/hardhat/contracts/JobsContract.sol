@@ -33,7 +33,7 @@ contract JobsContract {
         uint256 acceptedAt; // When the job was accepted
         uint256 finishedAt; // When the job was finished
         uint256 canceledAt; // When the job was canceled
-        uint256 rating; // Rating given by the client, should be between 1 and 5
+        uint8 rating; // Rating given by the client, should be between 1 and 5
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
     }
@@ -318,7 +318,7 @@ contract JobsContract {
     function confirmCompletion(
         uint256 _postingId,
         uint256 _jobId,
-        uint256 _rating
+        uint8 _rating
     ) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
@@ -371,7 +371,7 @@ contract JobsContract {
     function _rateJob(
         uint256 _postingId,
         uint256 _jobId,
-        uint256 _rating
+        uint8 _rating
     ) internal {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
         job.rating = _rating;
