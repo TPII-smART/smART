@@ -33,6 +33,7 @@ contract JobsContract {
         uint256 acceptedAt; // When the job was accepted
         uint256 finishedAt; // When the job was finished
         uint256 canceledAt; // When the job was canceled
+        uint256 rating; // Rating given by the client, should be between 1 and 5
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
     }
@@ -121,6 +122,8 @@ contract JobsContract {
         uint256 payment,
         uint256 timestamp
     );
+
+    event JobRated(uint256 indexed postingId, uint256 indexed jobId, address client, uint256 rating, uint256 timestamp);
 
     event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
 
@@ -260,6 +263,7 @@ contract JobsContract {
             acceptedAt: 0,
             finishedAt: 0,
             canceledAt: 0,
+            rating: 0, // Rating is not set until job is finished
             clientReceived: false,
             freelancerDelivered: false
         });
@@ -306,12 +310,15 @@ contract JobsContract {
      * @dev Confirm job completion (both parties must confirm in order to complete the job)
      * This function allows either the client or freelancer to confirm that the job has been completed.
      * If both parties confirm, the job is marked as finished and payment is released.
+     * A rating must be provided by the client.
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
+     * @param _rating The rating for the job (must be 0 if freelancer is calling)
      */
     function confirmCompletion(
         uint256 _postingId,
-        uint256 _jobId
+        uint256 _jobId,
+        uint256 _rating
     ) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
@@ -322,10 +329,13 @@ contract JobsContract {
         // Set confirmation based on who is calling
         if (msg.sender == job.client) {
             require(!job.clientReceived, "Client already confirmed job reception");
+            require(_rating >= 1 && _rating <= 5, "Invalid rating");
             job.clientReceived = true;
             emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
+            _rateJob(_postingId, _jobId, _rating);
         } else {
             require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
+            require(_rating == 0, "Rating must be 0 for freelancer");
             job.freelancerDelivered = true;
             emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, block.timestamp);
         }
@@ -350,6 +360,22 @@ contract JobsContract {
         payable(job.freelancer).transfer(job.payment);
 
         emit JobFinished(_postingId, _jobId, job.freelancer, job.client, job.payment, job.finishedAt);
+    }
+
+    /**
+     * @dev Internal function to rate a job
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to rate
+     * @param _rating The rating given by the client (1-5)
+     */
+    function _rateJob(
+        uint256 _postingId,
+        uint256 _jobId,
+        uint256 _rating
+    ) internal {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        job.rating = _rating;
+        emit JobRated(_postingId, _jobId, msg.sender, _rating, block.timestamp);
     }
 
     /**
