@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { InputBaseProps } from "./types";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
-import { CommonInputProps, InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
+import { InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { useGlobalState } from "~~/services/store/store";
 
@@ -51,7 +52,8 @@ export const EtherInput = ({
   onChange,
   disabled,
   usdMode,
-}: CommonInputProps & { usdMode?: boolean }) => {
+  ...props
+}: InputBaseProps & { usdMode?: boolean }) => {
   const [transitoryDisplayValue, setTransitoryDisplayValue] = useState<string>();
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
@@ -98,6 +100,7 @@ export const EtherInput = ({
 
   return (
     <InputBase
+      {...props}
       name={name}
       value={displayValue}
       placeholder={placeholder + (displayUsdMode ? " (USD)" : " (ETH)")}

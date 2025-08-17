@@ -9,7 +9,7 @@ export const InputBase = ({
   onBlur = () => {},
   placeholder,
   error,
-  errorMessage = null,
+  errorMessage,
   disabled,
   prefix,
   suffix,

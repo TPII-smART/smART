@@ -1,8 +1,9 @@
 import { useCallback } from "react";
+import { InputBaseProps } from "./types";
 import { bytesToString, isHex, toBytes, toHex } from "viem";
-import { CommonInputProps, InputBase } from "~~/components/scaffold-eth";
+import { InputBase } from "~~/components/scaffold-eth";
 
-export const BytesInput = ({ value, onChange, name, placeholder, disabled }: CommonInputProps) => {
+export const BytesInput = ({ value, onChange, name, placeholder, disabled }: InputBaseProps) => {
   const convertStringToBytes = useCallback(() => {
     onChange(isHex(value) ? bytesToString(toBytes(value)) : toHex(toBytes(value)));
   }, [onChange, value]);

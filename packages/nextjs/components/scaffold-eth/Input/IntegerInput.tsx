@@ -4,14 +4,11 @@ import { parseEther } from "viem";
 import { InputBase, IntegerVariant, isValidInteger } from "~~/components/scaffold-eth";
 
 export const IntegerInput = ({
+  intVariant = IntegerVariant.UINT256,
+  disableMultiplyBy1e18 = false,
   value,
   onChange,
-  name,
-  placeholder,
-  disabled,
-  variant = IntegerVariant.UINT256,
-  disableMultiplyBy1e18 = false,
-  errorMessage = null,
+  ...props
 }: IntegerInputProps) => {
   const [inputError, setInputError] = useState(false);
   const multiplyBy1e18 = useCallback(() => {
@@ -22,22 +19,19 @@ export const IntegerInput = ({
   }, [onChange, value]);
 
   useEffect(() => {
-    if (isValidInteger(variant, value)) {
+    if (isValidInteger(intVariant, value)) {
       setInputError(false);
     } else {
       setInputError(true);
     }
-  }, [value, variant]);
+  }, [value, intVariant]);
 
   return (
     <InputBase
-      name={name}
+      {...props}
       value={value}
-      placeholder={placeholder}
       error={inputError}
-      errorMessage={errorMessage}
       onChange={onChange}
-      disabled={disabled}
       suffix={
         !inputError &&
         !disableMultiplyBy1e18 && (
@@ -46,9 +40,9 @@ export const IntegerInput = ({
             data-tip="Multiply by 1e18 (wei)"
           >
             <button
-              className={`${disabled ? "cursor-not-allowed" : "cursor-pointer"} font-semibold px-4 text-accent`}
+              className={`${props.disabled ? "cursor-not-allowed" : "cursor-pointer"} font-semibold px-4 text-accent`}
               onClick={multiplyBy1e18}
-              disabled={disabled}
+              disabled={props.disabled}
               type="button"
             >
               ∗

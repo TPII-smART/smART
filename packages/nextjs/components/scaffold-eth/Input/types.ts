@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { CommonInputProps, IntegerVariant } from "..";
+import { IntegerVariant } from "..";
 
 export type InputBaseProps = {
   /**
@@ -72,10 +72,10 @@ export type InputBaseProps = {
    * Error message to display when the input value is invalid.
    * If not provided, no error message will be shown.
    */
-  errorMessage?: string | null;
+  errorMessage?: string;
 };
 
-export type IntegerInputProps = CommonInputProps<string> & {
+export type IntegerInputProps = InputBaseProps & {
   /**
    * The variant of the integer input.
    * Determines how the input value is interpreted and validated.
@@ -92,7 +92,7 @@ export type IntegerInputProps = CommonInputProps<string> & {
    * - `UINT128`: Unsigned 128-bit integer.
    * - `INT128`: Signed 128-bit integer.
    */
-  variant?: IntegerVariant;
+  intVariant?: IntegerVariant;
   /**
    * If true, the input will not have a button to multiply the value by 1e18.
    * This is useful for cases where the input is not meant to represent a value in wei (the smallest unit of Ether).
@@ -100,9 +100,4 @@ export type IntegerInputProps = CommonInputProps<string> & {
    * Set this to true to disable the button.
    */
   disableMultiplyBy1e18?: boolean;
-  /**
-   * Error message to display when the input value is invalid.
-   * If not provided, a default error message will be shown.
-   */
-  errorMessage?: string | null;
 };
