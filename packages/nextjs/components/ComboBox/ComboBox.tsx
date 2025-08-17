@@ -14,14 +14,14 @@ const _style: React.CSSProperties = {
   margin: "1px",
 };
 
-const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
+const _sx = (variant: ComboBoxProps["variant"], error?: boolean): SxProps<Theme> => ({
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--color-accent)",
+    borderColor: error ? "var(--color-error)" : "var(--color-accent)",
   },
   "& .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline": {
-    borderColor: "var(--color-border)",
+    borderColor: error ? "var(--color-error)" : "var(--color-border)",
     "&:hover": {
-      borderColor: "var(--color-border)",
+      borderColor: error ? "var(--color-error)" : "var(--color-border)",
     },
   },
   ".MuiSelect-select": {
@@ -44,7 +44,7 @@ const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
     ...(variant === "standard" && { px: "11px !important" }),
   },
   "& .MuiSelect-icon": {
-    color: "var(--color-accent)",
+    color: error ? "var(--color-error)" : "var(--color-accent)",
   },
   ".MuiSelect-filled": {
     backgroundColor: "var(--color-surface)",
@@ -53,33 +53,33 @@ const _sx = (variant: ComboBoxProps["variant"]): SxProps<Theme> => ({
   ".MuiFilledInput-underline": {
     // Default (unfocused) line color
     "&:before": {
-      borderColor: "var(--color-border)", // Your desired unfocused line color
+      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired unfocused line color
     },
     // Focused line color
     "&:after": {
-      borderColor: "var(--color-accent)", // Your desired focused line color
+      borderColor: error ? "var(--color-error)" : "var(--color-accent)", // Your desired focused line color
     },
     // Hover line color
     "&:hover:not(.Mui-disabled):before": {
-      borderColor: "var(--color-border)", // Your desired hover line color
+      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired hover line color
     },
   },
   ".MuiInput-underline": {
     // Default (unfocused) line color
     "&:before": {
-      borderColor: "var(--color-border)", // Your desired unfocused line color
+      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired unfocused line color
     },
     // Focused line color
     "&:after": {
-      borderColor: "var(--color-accent)", // Your desired focused line color
+      borderColor: error ? "var(--color-error)" : "var(--color-accent)", // Your desired focused line color
     },
     // Hover line color
     "&:hover:not(.Mui-disabled):before": {
-      borderColor: "var(--color-border)", // Your desired hover line color
+      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired hover line color
     },
   },
   "& .Mui-focused .MuiSelect-icon": {
-    color: "var(--color-accent)",
+    color: error ? "var(--color-error)" : "var(--color-accent)",
   },
 });
 
@@ -107,6 +107,7 @@ export default function ComboBox({
   multiple = false, // Default to single selection
   resetKey,
   icon,
+  helperText,
 }: ComboBoxProps) {
   const handleChange = (event: SelectChangeEvent) => {
     if (multiple) {
@@ -131,7 +132,7 @@ export default function ComboBox({
   };
 
   const __style = { ..._style, ...style };
-  const __sx = { ..._sx(variant), ...sx };
+  const __sx = { ..._sx(variant, error), ...sx };
 
   return (
     <div>
@@ -204,6 +205,7 @@ export default function ComboBox({
             ))}
           </Select>
         )}
+        {error && <label className="text-error text-xs pl-2 pt-1">{helperText}</label>}
       </FormControl>
     </div>
   );

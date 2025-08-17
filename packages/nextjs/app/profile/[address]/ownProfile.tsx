@@ -13,7 +13,6 @@ import LinkedInIcon from "~~/components/assets/Logos/linkedin";
 import SketchfabIcon from "~~/components/assets/Logos/sketchfab";
 import XIcon from "~~/components/assets/Logos/x";
 import { InputBase } from "~~/components/scaffold-eth";
-import { TextArea } from "~~/components/scaffold-eth/Input/TextArea";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useUserContext } from "~~/context/UserProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
@@ -262,8 +261,10 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
                 value={user?.email}
                 onChange={v => handleChange(v, "email")}
               />
-              <TextArea
-                rows={4}
+              <InputBase
+                multiline
+                minRows={4}
+                maxRows={4}
                 value={user?.biography}
                 onChange={v => handleChange(v, "biography")}
                 placeholder="Biography"

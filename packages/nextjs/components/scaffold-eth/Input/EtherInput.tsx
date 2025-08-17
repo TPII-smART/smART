@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
+import { InputBaseProps } from "./types";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
-import { CommonInputProps, InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
+import { InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { useGlobalState } from "~~/services/store/store";
 
@@ -44,14 +45,7 @@ function displayValueToEtherValue(usdMode: boolean, displayValue: string, native
  *
  * onChange will always be called with the value in ETH
  */
-export const EtherInput = ({
-  value,
-  name,
-  placeholder,
-  onChange,
-  disabled,
-  usdMode,
-}: CommonInputProps & { usdMode?: boolean }) => {
+export const EtherInput = ({ value, onChange, usdMode, ...props }: InputBaseProps & { usdMode?: boolean }) => {
   const [transitoryDisplayValue, setTransitoryDisplayValue] = useState<string>();
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
@@ -98,15 +92,14 @@ export const EtherInput = ({
 
   return (
     <InputBase
-      name={name}
+      {...props}
       value={displayValue}
-      placeholder={placeholder + (displayUsdMode ? " (USD)" : " (ETH)")}
+      placeholder={props.placeholder ?? "" + (displayUsdMode ? " (USD)" : " (ETH)")}
       onChange={handleChangeNumber}
-      disabled={disabled}
       prefix={<span className="text-accent self-center">{displayUsdMode ? "$" : "Ξ"}</span>}
       suffix={
         <div
-          className={`${
+          className={`px-2 ${
             nativeCurrencyPrice > 0
               ? ""
               : "tooltip tooltip-secondary before:content-[attr(data-tip)] before:right-[-10px] before:left-auto before:transform-none"
@@ -114,7 +107,7 @@ export const EtherInput = ({
           data-tip={isNativeCurrencyPriceFetching ? "Fetching price" : "Unable to fetch price"}
         >
           <button
-            className="hover:text-accent text-primary-content"
+            className="text-accent flex place-items-center"
             onClick={toggleDisplayUsdMode}
             disabled={!displayUsdMode && !nativeCurrencyPrice}
             type="button"

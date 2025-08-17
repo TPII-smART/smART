@@ -56,7 +56,7 @@ export const ContractInput = ({ setForm, form, stateObjectKey, paramType }: Cont
       default:
         // Handling 'int' types and 'tuple[]' types
         if (paramType.type.includes("int") && !paramType.type.includes("[")) {
-          return <IntegerInput {...inputProps} variant={paramType.type as IntegerVariant} />;
+          return <IntegerInput {...inputProps} intVariant={paramType.type as IntegerVariant} />;
         } else if (paramType.type.startsWith("tuple[")) {
           return (
             <TupleArray

@@ -6,6 +6,7 @@ import { UniversalCard } from "@/components/Card/UniversalCard";
 import { InputBase } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -84,6 +85,20 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
     </Button>
   );
 
+  // Validation schema for the form fields using yup
+
+  const validationSchema = Yup.object().shape({
+    title: Yup.string().required("Title is required").max(64, "Title must be at most 64 characters"),
+    description: Yup.string()
+      .required("Description is required")
+      .max(512, "Description must be at most 512 characters"),
+    jobHours: Yup.number()
+      .typeError("Job duration must be a number")
+      .integer("Job duration must be an integer")
+      .positive("Job duration must be a positive integer")
+      .required("Job duration is required"),
+  });
+
   return (
     <>
       <UniversalCard
@@ -118,20 +133,31 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
         formikProps={{
           onSubmit: handleCreateJob,
           initialValues: new PostingFormData(),
+          validationSchema,
         }}
       >
-        {({ values, setFieldValue }) => (
+        {({ values, setFieldValue, touched, errors }) => (
           <div className="space-y-4">
-            <InputBase placeholder="Title" value={values.title} onChange={val => setFieldValue("title", val)} />
+            <InputBase
+              placeholder="Title"
+              value={values.title}
+              onChange={val => setFieldValue("title", val)}
+              error={touched.title && !!errors.title}
+              helperText={touched.title && errors.title ? errors.title : ""}
+            />
             <InputBase
               placeholder="Description"
               value={values.description}
               onChange={val => setFieldValue("description", val)}
+              error={touched.description && !!errors.description}
+              helperText={touched.description && errors.description ? errors.description : ""}
             />
             <InputBase
               placeholder="Job Duration (hours)"
               value={values.jobHours}
               onChange={val => setFieldValue("jobHours", val)}
+              error={touched.jobHours && !!errors.jobHours}
+              helperText={touched.jobHours && errors.jobHours ? errors.jobHours : ""}
             />
           </div>
         )}

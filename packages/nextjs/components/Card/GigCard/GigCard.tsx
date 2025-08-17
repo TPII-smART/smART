@@ -7,6 +7,7 @@ import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
+import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -82,6 +83,12 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
     </Button>
   );
 
+  const validationSchema = Yup.object().shape({
+    proposedPayment: Yup.number().positive().required("Proposed payment is required"),
+    proposedDurationInHours: Yup.number().positive().required("Duration is required").integer("Must be a whole number"),
+    proposalComment: Yup.string().required("Proposal comment is required").max(512, "Maximum 512 characters"),
+  });
+
   return (
     <>
       <UniversalCard
@@ -109,26 +116,34 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
         formikProps={{
           initialValues: new FormData(),
           onSubmit: handleApplyToGig,
+          validationSchema,
         }}
       >
-        {({ values, setFieldValue }) => (
+        {({ values, setFieldValue, errors, touched }) => (
           <div className="space-y-4">
             <EtherInput
               placeholder="Proposed Payment"
               value={values.proposedPayment}
               onChange={val => setFieldValue("proposedPayment", val)}
+              error={touched.proposedPayment && !!errors.proposedPayment}
+              helperText={touched.proposedPayment && errors.proposedPayment ? errors.proposedPayment : ""}
             />
             <IntegerInput
               placeholder="Proposed Duration (in hours)"
               value={values.proposedDurationInHours}
               onChange={val => setFieldValue("proposedDurationInHours", val)}
-              errorMessage="Please enter a valid number of hours."
+              error={touched.proposedDurationInHours && !!errors.proposedDurationInHours}
+              helperText={
+                touched.proposedDurationInHours && errors.proposedDurationInHours ? errors.proposedDurationInHours : ""
+              }
               disableMultiplyBy1e18
             />
             <InputBase
               placeholder="Proposal"
               value={values.proposalComment}
               onChange={val => setFieldValue("proposalComment", val)}
+              error={touched.proposalComment && !!errors.proposalComment}
+              helperText={touched.proposalComment && errors.proposalComment ? errors.proposalComment : ""}
             />
           </div>
         )}
