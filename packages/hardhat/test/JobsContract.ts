@@ -478,4 +478,50 @@ describe("JobsContract", function () {
       // This test verifies the state transitions work correctly
     });
   });
+
+  describe("Length Validation", function () {
+    it("Should revert if job posting title exceeds 64 characters", async function () {
+      const invalidPosting = { ...sampleJobPosting, title: "a".repeat(65) };
+      await expect(jobsContract.connect(freelancer).createJobPosting(invalidPosting)).to.be.revertedWith(
+        "Title must be up to 64 characters",
+      );
+    });
+
+    it("Should revert if job posting description exceeds 512 characters", async function () {
+      const invalidPosting = { ...sampleJobPosting, description: "a".repeat(513) };
+      await expect(jobsContract.connect(freelancer).createJobPosting(invalidPosting)).to.be.revertedWith(
+        "Description must be up to 512 characters",
+      );
+    });
+
+    it("Should revert if job posting category exceeds 64 characters", async function () {
+      const invalidPosting = { ...sampleJobPosting, category: "a".repeat(65) };
+      await expect(jobsContract.connect(freelancer).createJobPosting(invalidPosting)).to.be.revertedWith(
+        "Category must be up to 64 characters",
+      );
+    });
+
+    it("Should revert if job posting banner image hash exceeds 128 characters", async function () {
+      const invalidPosting = { ...sampleJobPosting, bannerImageHash: "a".repeat(129) };
+      await expect(jobsContract.connect(freelancer).createJobPosting(invalidPosting)).to.be.revertedWith(
+        "Banner image hash must be up to 128 characters",
+      );
+    });
+
+    it("Should revert if job title exceeds 64 characters", async function () {
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      const invalidJob = { ...sampleJob, title: "a".repeat(65) };
+      await expect(
+        jobsContract.connect(client).createJob(0, invalidJob, { value: invalidJob.payment }),
+      ).to.be.revertedWith("Title exceeds 64 characters");
+    });
+
+    it("Should revert if job description exceeds 512 characters", async function () {
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      const invalidJob = { ...sampleJob, description: "a".repeat(513) };
+      await expect(
+        jobsContract.connect(client).createJob(0, invalidJob, { value: invalidJob.payment }),
+      ).to.be.revertedWith("Description exceeds 512 characters");
+    });
+  });
 });

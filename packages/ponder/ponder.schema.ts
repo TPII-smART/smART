@@ -3,16 +3,16 @@ import { onchainTable, primaryKey } from "ponder";
 // JobPosting table
 export const jobPosting = onchainTable("jobPosting", (t) => ({
 	postingId: t.bigint().primaryKey(),
-	freelancer: t.text().notNull(),
+	freelancer: t.varchar({ length: 128 }).notNull(),
 	basePayment: t.bigint().notNull(),
-	title: t.text().notNull(),
-	description: t.text().notNull(),
-	category: t.text().notNull(),
-	bannerImageHash: t.text().notNull(), // Optional, can be null if not provided
+	title: t.varchar({ length: 64 }).notNull(),
+	description: t.varchar({ length: 512 }).notNull(),
+	category: t.varchar({ length: 64 }).notNull(),
+	bannerImageHash: t.varchar({ length: 128 }).notNull(), // Optional, can be null if not provided
 	minimumNoticeTime: t.bigint().notNull(),
 	averageWorkDuration: t.bigint().notNull(),
 	createdAt: t.bigint().notNull(),
-	lastTransactionHash: t.text().notNull(),
+	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 
 // Job table
@@ -21,13 +21,13 @@ export const job = onchainTable(
 	(t) => ({
 		jobId: t.bigint().notNull(),
 		postingId: t.bigint().notNull(),
-		client: t.text().notNull(),
-		freelancer: t.text().notNull(),
+		client: t.varchar({ length: 128 }).notNull(),
+		freelancer: t.varchar({ length: 128 }).notNull(),
 		payment: t.bigint().notNull(),
-		title: t.text().notNull(),
-		description: t.text().notNull(),
-		category: t.text().notNull(),
-		bannerImageHash: t.text().notNull(),
+		title: t.varchar({ length: 64 }).notNull(),
+		description: t.varchar({ length: 512 }).notNull(),
+		category: t.varchar({ length: 64 }).notNull(),
+		bannerImageHash: t.varchar({ length: 128 }).notNull(),
 		jobDuration: t.bigint().notNull(),
 		deadline: t.bigint(),
 		state: t.integer().notNull(),
@@ -37,7 +37,7 @@ export const job = onchainTable(
 		canceledAt: t.bigint(), // When the job was canceled
 		clientReceived: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
-		lastTransactionHash: t.text().notNull(),
+		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.jobId, table.postingId] }),
@@ -47,13 +47,13 @@ export const job = onchainTable(
 // Gigs table
 export const gig = onchainTable("gig", (t) => ({
 	gigId: t.bigint().primaryKey(),
-	client: t.text().notNull(),
-	acceptedFreelancer: t.text(),
+	client: t.varchar({ length: 128 }).notNull(),
+	acceptedFreelancer: t.varchar({ length: 128 }),
 	basePayment: t.bigint().notNull(),
 	finalPayment: t.bigint(),
-	title: t.text().notNull(),
-	description: t.text().notNull(),
-	category: t.text().notNull(),
+	title: t.varchar({ length: 64 }).notNull(),
+	description: t.varchar({ length: 512 }).notNull(),
+	category: t.varchar({ length: 64 }).notNull(),
 	maxDurationInHours: t.bigint().notNull(),
 	finalDurationInHours: t.bigint(),
 	deadline: t.bigint(),
@@ -65,8 +65,8 @@ export const gig = onchainTable("gig", (t) => ({
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
 	acceptedApplicationId: t.bigint(),
-	gigBannerImageHash: t.text(),
-	lastTransactionHash: t.text().notNull(),
+	gigBannerImageHash: t.varchar({ length: 128 }),
+	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 
 // Gig Applications table
@@ -75,14 +75,14 @@ export const gigApplication = onchainTable(
 	(t) => ({
 		applicationId: t.bigint().notNull(),
 		gigId: t.bigint().notNull(),
-		freelancer: t.text().notNull(),
+		freelancer: t.varchar({ length: 128 }).notNull(),
 		proposedPayment: t.bigint().notNull(),
 		proposedDurationInHours: t.bigint().notNull(),
 		state: t.integer().notNull(),
 		createdAt: t.bigint().notNull(),
-		proposalComment: t.text().notNull(),
-		rejectionComment: t.text(),
-		lastTransactionHash: t.text().notNull(),
+		proposalComment: t.varchar({ length: 512 }).notNull(),
+		rejectionComment: t.varchar({ length: 512 }),
+		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.applicationId, table.gigId] }),
@@ -92,7 +92,7 @@ export const gigApplication = onchainTable(
 export const userProfile = onchainTable(
 	"userProfile",
 	(t) => ({
-		address: t.text().notNull(),
+		address: t.varchar({ length: 128 }).notNull(),
 		username: t.varchar({ length: 64 }),
 		biography: t.varchar({ length: 512 }),
 		email: t.varchar({ length: 128 }),
@@ -104,7 +104,7 @@ export const userProfile = onchainTable(
 		artstationUrl: t.varchar({ length: 256 }),
 		sketchfabUrl: t.varchar({ length: 256 }),
 		customUrl: t.varchar({ length: 256 }),
-		lastTransactionHash: t.text().notNull(),
+		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.address] }),

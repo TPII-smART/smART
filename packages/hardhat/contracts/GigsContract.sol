@@ -169,6 +169,10 @@ contract GigsContract {
         require(bytes(params.description).length > 0, "Description cannot be empty");
         require(bytes(params.category).length > 0, "Category cannot be empty");
         require(params.basePayment > 0, "Base payment must be greater than 0");
+        require(bytes(params.title).length <= 64, "Title must be up to 64 characters");
+        require(bytes(params.description).length <= 512, "Description must be up to 512 characters");
+        require(bytes(params.category).length <= 64, "Category must be up to 64 characters");
+        require(bytes(params.gigBannerImageHash).length <= 128, "Banner image hash must be up to 128 characters");
 
         uint256 gigId = postedGigsCounter++;
         Gig storage newGig = postedGigs[gigId];
@@ -220,6 +224,7 @@ contract GigsContract {
         require(params.proposedPayment > 0, "Proposed payment must be greater than 0");
         require(params.proposedDurationInHours > 0, "Duration must be greater than 0");
         require(bytes(params.proposal).length > 0, "Proposal comment cannot be empty");
+        require(bytes(params.proposal).length <= 512, "Proposal comment must be up to 512 characters");
 
         _validateApplication(_gigId);
 
@@ -344,6 +349,7 @@ contract GigsContract {
 
         require(gig.state == GigState.Open, "Gig is not accepting applications");
         require(application.state == ApplicationState.Pending, "Application is not pending");
+        require(bytes(_rejectionComment).length <= 512, "Rejection comment must be up to 512 characters");
 
         application.state = ApplicationState.Rejected;
         application.rejectionComment = _rejectionComment;

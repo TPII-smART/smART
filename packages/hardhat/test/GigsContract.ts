@@ -569,4 +569,51 @@ describe("GigsContract", function () {
       expect(gig.finalPayment).to.equal(app2.proposedPayment);
     });
   });
+
+  describe("Length Validation", function () {
+    it("Should revert if gig title exceeds 64 characters", async function () {
+      const invalidGig = { ...sampleGig, title: "a".repeat(65) };
+      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+        "Title must be up to 64 characters",
+      );
+    });
+
+    it("Should revert if gig description exceeds 512 characters", async function () {
+      const invalidGig = { ...sampleGig, description: "a".repeat(513) };
+      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+        "Description must be up to 512 characters",
+      );
+    });
+
+    it("Should revert if gig category exceeds 64 characters", async function () {
+      const invalidGig = { ...sampleGig, category: "a".repeat(65) };
+      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+        "Category must be up to 64 characters",
+      );
+    });
+
+    it("Should revert if gig banner image hash exceeds 128 characters", async function () {
+      const invalidGig = { ...sampleGig, gigBannerImageHash: "a".repeat(129) };
+      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+        "Banner image hash must be up to 128 characters",
+      );
+    });
+
+    it("Should revert if application proposal exceeds 512 characters", async function () {
+      await gigsContract.connect(client).createGig(sampleGig);
+      const invalidApplication = { ...sampleApplication, proposal: "a".repeat(513) };
+      await expect(gigsContract.connect(freelancer1).applyToGig(0, invalidApplication)).to.be.revertedWith(
+        "Proposal comment must be up to 512 characters",
+      );
+    });
+
+    it("Should revert if rejection comment exceeds 512 characters", async function () {
+      await gigsContract.connect(client).createGig(sampleGig);
+      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+      const longComment = "a".repeat(513);
+      await expect(gigsContract.connect(client).rejectApplication(0, 0, longComment)).to.be.revertedWith(
+        "Rejection comment must be up to 512 characters",
+      );
+    });
+  });
 });

@@ -182,6 +182,10 @@ contract JobsContract {
         require(bytes(params.title).length > 0, "Title cannot be empty");
         require(bytes(params.description).length > 0, "Description cannot be empty");
         require(bytes(params.category).length > 0, "Category cannot be empty");
+        require(bytes(params.title).length <= 64, "Title must be up to 64 characters");
+        require(bytes(params.description).length <= 512, "Description must be up to 512 characters");
+        require(bytes(params.category).length <= 64, "Category must be up to 64 characters");
+        require(bytes(params.bannerImageHash).length <= 128, "Banner image hash must be up to 128 characters");
 
         uint256 postingId = postedJobsCounter++;
 
@@ -232,6 +236,12 @@ contract JobsContract {
         require(params.durationInHours > 0, "Duration must be greater than 0");
         require(bytes(params.title).length > 0, "Title cannot be empty");
         require(bytes(params.description).length > 0, "Description cannot be empty");
+        require(bytes(params.title).length <= 64, "Title exceeds 64 characters");
+        require(bytes(params.description).length <= 512, "Description exceeds 512 characters");
+        require(bytes(posting.category).length <= 64, "Category exceeds 64 characters");
+        require(bytes(posting.bannerImageHash).length <= 128, "Banner image hash exceeds 128 characters");
+        require(posting.freelancer != address(0), "Freelancer address must not be zero");
+        require(msg.sender != address(0), "Client address must not be zero");
 
         // Create new job
         uint256 jobId = posting.jobs.length;
