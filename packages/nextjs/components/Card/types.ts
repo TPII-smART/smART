@@ -5,6 +5,8 @@ export interface UniversalCardProps extends React.HTMLAttributes<HTMLDivElement>
   avatarAddress?: string;
   /** Custom avatar element for the card. */
   customAvatar?: React.ReactNode;
+  /** Variant of the card, either reduced or complete. */
+  cardVariant?: string;
   /** Title of the card. */
   title?: string;
   /** Description of the card. */
