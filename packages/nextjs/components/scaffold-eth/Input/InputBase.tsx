@@ -19,8 +19,16 @@ const _sx = (variant: Pick<InputBaseProps, "variant">["variant"], error: boolean
     "& .MuiInputLabel-root.Mui-focused": {
       color: error ? "var(--color-error)" : "var(--color-accent)",
     },
+    "&:hover .MuiInputBase-root:not(.Mui-disabled)": {
+      color: "var(--color-primary-content)",
+      borderBottomColor: error ? "var(--color-error)" : "var(--color-accent)",
+      "::before": {
+        borderBottomColor: error ? "var(--color-error)" : "var(--color-accent)",
+      },
+    },
     "&:hover .MuiInputBase-root": {
       color: "var(--color-primary-content)",
+      borderBottomColor: error ? "var(--color-error)" : "var(--color-accent)",
       "::before": {
         borderBottomColor: error ? "var(--color-error)" : "var(--color-accent)",
       },
