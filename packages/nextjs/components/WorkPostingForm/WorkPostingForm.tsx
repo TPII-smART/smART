@@ -140,20 +140,20 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
         }}
       >
         {({ values, errors, touched, setFieldValue }) => (
-          <div className="space-y-4">
+          <div className="">
             <InputBase
               placeholder="Title"
               value={values.title}
               onChange={val => setFieldValue("title", val)}
               error={touched.title && !!errors.title}
-              errorMessage={touched.title && errors.title ? errors.title : undefined}
+              helperText={touched.title && errors.title ? errors.title : undefined}
             />
             <InputBase
               placeholder="Description"
               value={values.description}
               onChange={val => setFieldValue("description", val)}
               error={touched.description && !!errors.description}
-              errorMessage={touched.description && errors.description ? errors.description : undefined}
+              helperText={touched.description && errors.description ? errors.description : undefined}
             />
             <FileUploadBox
               onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
@@ -165,7 +165,7 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               value={values.paymentInEth}
               onChange={val => setFieldValue("paymentInEth", val)}
               error={touched.paymentInEth && !!errors.paymentInEth}
-              errorMessage={touched.paymentInEth && errors.paymentInEth ? errors.paymentInEth : undefined}
+              helperText={touched.paymentInEth && errors.paymentInEth ? errors.paymentInEth : undefined}
             />
             <IntegerInput
               placeholder="Estimated Duration (hours)"
@@ -173,7 +173,7 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               onChange={val => setFieldValue("estimatedDurationHours", val)}
               disableMultiplyBy1e18
               error={touched.estimatedDurationHours && !!errors.estimatedDurationHours}
-              errorMessage={
+              helperText={
                 touched.estimatedDurationHours && errors.estimatedDurationHours
                   ? errors.estimatedDurationHours
                   : undefined
@@ -187,7 +187,7 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               options={jobCategories}
               variant="standard"
               error={touched.category && !!errors.category}
-              errorMessage={touched.category && errors.category ? errors.category : undefined}
+              helperText={touched.category && errors.category ? errors.category : undefined}
             />
           </div>
         )}

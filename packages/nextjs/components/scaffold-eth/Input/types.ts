@@ -1,78 +1,41 @@
 import { ReactNode } from "react";
 import { IntegerVariant } from "..";
+import { TextFieldProps } from "@mui/material";
 
-export type InputBaseProps = {
-  /**
-   * Indicates whether the input is in an error state.
-   */
-  error?: boolean;
-
-  /**
-   * Element to display before the input (e.g., an icon or label).
-   */
-  prefix?: ReactNode;
-
-  /**
-   * Element to display after the input (e.g., an icon or button).
-   */
-  suffix?: ReactNode;
-
-  /**
-   * If true, the input will be refocused after certain actions.
-   */
-  reFocus?: boolean;
-
-  /**
-   * Maximum number of characters allowed in the input.
-   */
-  maxLength?: number;
-
-  /**
-   * Visual style variant of the input.
-   * - "default": Standard appearance.
-   * - "background": Input with background styling.
-   */
-  variant?: "default" | "background" | "outlined";
-
+export type InputBaseProps = TextFieldProps & {
   /**
    * Current value of the input.
    */
   value: string;
-
+  /**
+   * Indicates whether the input is in an error state.
+   */
+  error?: boolean;
+  /**
+   * Element to display before the input (e.g., an icon or label).
+   */
+  prefix?: ReactNode;
+  /**
+   * Element to display after the input (e.g., an icon or button).
+   */
+  suffix?: ReactNode;
+  /**
+   * If true, the input will be refocused after certain actions.
+   */
+  reFocus?: boolean;
+  /**
+   * Maximum number of characters allowed in the input.
+   */
+  maxLength?: number;
   /**
    * Callback fired when the input value changes.
    * @param newValue - The updated value of the input.
    */
   onChange: (newValue: string) => void;
-
-  /**
-   * Callback fired when the input loses focus.
-   */
-  onBlur?: () => void;
-
-  /**
-   * Name attribute for the input element.
-   */
-  name?: string;
-
-  /**
-   * Placeholder text displayed when the input is empty.
-   */
-  placeholder?: string;
-
-  /**
-   * If true, the input will be disabled and not editable.
-   */
-  disabled?: boolean;
   /**
    * If true, the input will be read-only and not editable.
    */
   readOnly?: boolean;
-  /**
-   * Error message to display when the input value is invalid.
-   * If not provided, no error message will be shown.
-   */
-  errorMessage?: string;
 };
 
 export type IntegerInputProps = InputBaseProps & {

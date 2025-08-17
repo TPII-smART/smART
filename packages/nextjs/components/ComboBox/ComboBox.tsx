@@ -107,7 +107,7 @@ export default function ComboBox({
   multiple = false, // Default to single selection
   resetKey,
   icon,
-  errorMessage,
+  helperText,
 }: ComboBoxProps) {
   const handleChange = (event: SelectChangeEvent) => {
     if (multiple) {
@@ -205,7 +205,7 @@ export default function ComboBox({
             ))}
           </Select>
         )}
-        {error && <label className="text-error text-xs pl-2 pt-1">{errorMessage}</label>}
+        {error && <label className="text-error text-xs pl-2 pt-1">{helperText}</label>}
       </FormControl>
     </div>
   );

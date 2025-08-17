@@ -67,5 +67,5 @@ export interface ComboBoxProps {
   /**
    * Error message to display when the ComboBox is in an error state.
    */
-  errorMessage?: string;
+  helperText?: string;
 }

@@ -10,7 +10,7 @@ import { InputBase, isENS } from "~~/components/scaffold-eth";
 /**
  * Address input with ENS name resolution
  */
-export const AddressInput = ({ value, name, placeholder, onChange, disabled }: InputBaseProps) => {
+export const AddressInput = ({ value, onChange, ...props }: InputBaseProps) => {
   // Debounce the input to keep clean RPC calls when resolving ENS names
   // If the input is an address, we don't need to debounce it
   const [_debouncedValue] = useDebounceValue(value, 500);
@@ -81,15 +81,14 @@ export const AddressInput = ({ value, name, placeholder, onChange, disabled }: I
 
   return (
     <InputBase
-      name={name}
-      placeholder={placeholder}
+      {...props}
       error={ensAddress === null}
       value={value}
       onChange={onChange}
-      disabled={isEnsAddressLoading || isEnsNameLoading || disabled}
+      disabled={isEnsAddressLoading || isEnsNameLoading || props.disabled}
       reFocus={reFocus}
       prefix={
-        ensName ? (
+        true ? (
           <div className="flex bg-border rounded-l-full items-center">
             {isEnsAvatarLoading && <div className="skeleton bg-primary w-[35px] h-[35px] rounded-full shrink-0"></div>}
             {ensAvatar ? (
@@ -100,7 +99,7 @@ export const AddressInput = ({ value, name, placeholder, onChange, disabled }: I
                 }
               </span>
             ) : null}
-            <span className="text-accent px-2">{enteredEnsName ?? ensName}</span>
+            <span className="text-accent">{enteredEnsName ?? ensName}</span>
           </div>
         ) : (
           (isEnsNameLoading || isEnsAddressLoading) && (

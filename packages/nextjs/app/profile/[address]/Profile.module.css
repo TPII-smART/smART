@@ -3,6 +3,7 @@
   height: 100%;
   display: flex;
   place-content: center;
+  overflow: auto;
 
   .profileContainer {
     padding: 1.5rem;
