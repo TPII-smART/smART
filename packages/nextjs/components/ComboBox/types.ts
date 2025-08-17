@@ -64,4 +64,8 @@ export interface ComboBoxProps {
    * Can be a React node, such as an SVG or icon component.
    */
   icon?: React.ReactNode;
+  /**
+   * Error message to display when the ComboBox is in an error state.
+   */
+  errorMessage?: string;
 }
