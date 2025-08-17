@@ -5,8 +5,9 @@ import { jobCategories } from "../Card/JobCategory/jobCategory.data";
 import ComboBox from "../ComboBox/ComboBox";
 import FileUploadBox from "../FileUploadBox";
 import FormModal from "../Modal/FormModal/FormModal";
-import { EtherInput, InputBase } from "../scaffold-eth";
+import { EtherInput, InputBase, IntegerInput } from "../scaffold-eth";
 import { WorkPostingFormData, WorkPostingFormProps } from "./types";
+import * as yup from "yup";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/utils";
@@ -80,6 +81,36 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
     }
   };
 
+  const validationSchema = yup.object().shape({
+    title: yup.string().required("Title is required").max(64, "Title must be at most 64 characters"),
+    description: yup
+      .string()
+      .required("Description is required")
+      .max(512, "Description must be at most 512 characters"),
+    bannerImageHash: yup.string().optional().max(128, "Banner image hash must be at most 128 characters"),
+    paymentInEth: yup
+      .string()
+      .required("Payment is required")
+      .test("is-positive", "Payment must be positive", value => {
+        if (!value) return false;
+        return Number(value) > 0;
+      }),
+    estimatedDurationHours: yup
+      .number()
+      .typeError("Estimated duration must be a number")
+      .required("Estimated duration is required")
+      .integer("Estimated duration must be an integer")
+      .min(1, "Estimated duration must be at least 1 hour"),
+    category: yup
+      .string()
+      .required("Category is required")
+      .oneOf(
+        jobCategories.map(cat => cat.id),
+        `Category must be one of [${jobCategories.map(cat => cat.label).join(", ")}]`,
+      )
+      .max(64, "Category must be at most 64 characters"),
+  });
+
   return (
     <>
       <button
@@ -105,15 +136,24 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
         formikProps={{
           onSubmit: handleSubmit,
           initialValues: new WorkPostingFormData(),
+          validationSchema,
         }}
       >
-        {({ values, setFieldValue }) => (
+        {({ values, errors, touched, setFieldValue }) => (
           <div className="space-y-4">
-            <InputBase placeholder="Title" value={values.title} onChange={val => setFieldValue("title", val)} />
+            <InputBase
+              placeholder="Title"
+              value={values.title}
+              onChange={val => setFieldValue("title", val)}
+              error={touched.title && !!errors.title}
+              errorMessage={touched.title && errors.title ? errors.title : undefined}
+            />
             <InputBase
               placeholder="Description"
               value={values.description}
               onChange={val => setFieldValue("description", val)}
+              error={touched.description && !!errors.description}
+              errorMessage={touched.description && errors.description ? errors.description : undefined}
             />
             <FileUploadBox
               onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
@@ -124,11 +164,20 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               placeholder="Payment"
               value={values.paymentInEth}
               onChange={val => setFieldValue("paymentInEth", val)}
+              error={touched.paymentInEth && !!errors.paymentInEth}
+              errorMessage={touched.paymentInEth && errors.paymentInEth ? errors.paymentInEth : undefined}
             />
-            <InputBase
+            <IntegerInput
               placeholder="Estimated Duration (hours)"
               value={values.estimatedDurationHours}
               onChange={val => setFieldValue("estimatedDurationHours", val)}
+              disableMultiplyBy1e18
+              error={touched.estimatedDurationHours && !!errors.estimatedDurationHours}
+              errorMessage={
+                touched.estimatedDurationHours && errors.estimatedDurationHours
+                  ? errors.estimatedDurationHours
+                  : undefined
+              }
             />
             <ComboBox
               id="category-combo"
@@ -137,6 +186,8 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               onChange={val => setFieldValue("category", val)}
               options={jobCategories}
               variant="standard"
+              error={touched.category && !!errors.category}
+              errorMessage={touched.category && errors.category ? errors.category : undefined}
             />
           </div>
         )}
