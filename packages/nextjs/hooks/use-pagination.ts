@@ -15,8 +15,6 @@ type MetadataCache = {
   };
 };
 
-const FILES_PER_PAGE: number = 10;
-
 const compareParams = (a: SearchParams[], b: SearchParams[]) => {
   if (a.length !== b.length) return false;
   return a.every((param, index) => param === b[index]);
@@ -26,6 +24,7 @@ export interface PaginationHookParams<T> {
   fetchFunction: (meta: PaginationMetaArg, ...any: SearchParams[]) => Promise<Paginated<T>>;
   loadingFunction: (value: React.SetStateAction<boolean>) => void;
   setDataFunction: (value: React.SetStateAction<T[]>) => void;
+  itemsPerPage?: number;
 }
 
 const setCacheMetaData = (key: string, meta: PaginationMetadata, cache: MetadataCache, end: boolean = true) => {
@@ -51,9 +50,14 @@ const setCacheMetaData = (key: string, meta: PaginationMetadata, cache: Metadata
   return cache;
 };
 
-export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFunction }: PaginationHookParams<T>) => {
+export const usePagination = <T>({
+  fetchFunction,
+  loadingFunction,
+  setDataFunction,
+  itemsPerPage = 20,
+}: PaginationHookParams<T>) => {
   // states
-  const [totalItems, setTotalItems] = useState<number>(FILES_PER_PAGE);
+  const [totalItems, setTotalItems] = useState<number>(itemsPerPage);
   // refs
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const lastSearch = useRef<SearchParams[]>([]);
@@ -67,10 +71,10 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
       loadingFunction(true);
 
       const response: Paginated<T> = await fetchFunction(
-        { limit: FILES_PER_PAGE, startCursor: cache.current[key]?.meta?.startCursor },
+        { limit: itemsPerPage, startCursor: cache.current[key]?.meta?.startCursor },
         ...params,
       );
-      setTotalItems(response.meta?.totalCount || FILES_PER_PAGE);
+      setTotalItems(response.meta?.totalCount || itemsPerPage);
 
       cache.current = setCacheMetaData(key, response.meta, cache.current, false);
       setDataFunction(prev => (prev.length === 0 ? response.data : response.data.concat(prev)));
@@ -81,7 +85,7 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
       }, 100);
       lastSearch.current = params ?? [];
     },
-    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction],
+    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction, itemsPerPage],
   );
 
   const fetchData = useCallback(
@@ -94,10 +98,10 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
       loadingFunction(true);
 
       const response: Paginated<T> = await fetchFunction(
-        { limit: FILES_PER_PAGE, endCursor: hasParamNotChanged ? cache.current[key]?.meta?.endCursor : undefined },
+        { limit: itemsPerPage, endCursor: hasParamNotChanged ? cache.current[key]?.meta?.endCursor : undefined },
         ...params,
       );
-      setTotalItems(response.meta?.totalCount || FILES_PER_PAGE);
+      setTotalItems(response.meta?.totalCount || itemsPerPage);
 
       cache.current = setCacheMetaData(key, response.meta, cache.current);
       setDataFunction(prev => (prev.length === 0 || !hasParamNotChanged ? response.data : prev.concat(response.data)));
@@ -108,7 +112,7 @@ export const usePagination = <T>({ fetchFunction, loadingFunction, setDataFuncti
       }, 100);
       lastSearch.current = params ?? [];
     },
-    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction],
+    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction, itemsPerPage],
   );
 
   const fetchPaginatedData = useCallback(
