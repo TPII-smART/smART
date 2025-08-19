@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
-import { ClockIcon, DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
 
 // Component for displaying time information
@@ -112,13 +112,10 @@ export function UniversalCard({
   const avatarSize = cardVariant === "Reduced" ? 64 : 96;
   const avatarClasses = cardVariant === "Reduced" ? "h-16 w-16" : "h-24 w-24";
 
-  const handleCopyAddress = async () => {
+  const handleNavigateToProfile = async () => {
     if (avatarAddress) {
-      try {
-        await navigator.clipboard.writeText(avatarAddress);
-      } catch (err) {
-        console.error("Failed to copy address:", err);
-      }
+      // Navigate to the user profile page
+      window.location.href = `/profile/${avatarAddress}`;
     }
   };
 
@@ -167,17 +164,9 @@ export function UniversalCard({
       {/* Content section */}
       <CardContent className="flex-1 flex flex-row px-6 py-4 items-start gap-6">
         {avatarAddress && (
-          <div className="relative group/avatar flex-shrink-0">
-            <div
-              className={`${avatarClasses} rounded-full transition-all duration-300 group-hover:scale-105 cursor-pointer`}
-              onClick={handleCopyAddress}
-            >
-              {renderAvatar()}
-              {/* TODO: Go to profile page on click, for now just copy address */}
-              <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <DocumentDuplicateIcon className="h-6 w-6 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
-              </div>
-            </div>
+          <div className="relative group/avatar flex-shrink-0 cursor-pointer" onClick={handleNavigateToProfile}>
+            {renderAvatar()}
+            <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center" />
           </div>
         )}
 
@@ -250,21 +239,10 @@ export function UniversalCard({
           <div className="absolute -top-18 right-6 z-20 group/avatar">
             <div
               className={`${avatarClasses} rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer`}
-              onClick={handleCopyAddress}
+              onClick={handleNavigateToProfile}
             >
               {renderAvatar()}
-              {/* TODO: Go to profile page on click, for now just copy address */}
-              <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <DocumentDuplicateIcon className="h-6 w-6 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
-              </div>
-              {/* Address tooltip that slides up from avatar */}
-              <div className="absolute -top-12 right-0 opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 ease-out translate-y-2 group-hover/avatar:translate-y-0 z-30 pointer-events-none">
-                <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap font-mono shadow-lg backdrop-blur-sm">
-                  {avatarAddress}
-                  {/* Arrow pointing down to avatar */}
-                  <div className="absolute -bottom-1 right-6 w-2 h-2 bg-black/90 rotate-45"></div>
-                </div>
-              </div>
+              <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center" />
             </div>
           </div>
         )}
