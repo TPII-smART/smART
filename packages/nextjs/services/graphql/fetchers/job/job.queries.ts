@@ -96,6 +96,18 @@ export const getMyJobPostings = gql`
   }
 `;
 
+export const getRatingsByPostingIds = gql`
+  query GetRatingsByPostingIds($postingIds: [BigInt!]!) {
+    jobs(where: { postingId_in: $postingIds }) {
+      items {
+        jobId
+        postingId
+        rating
+      }
+    }
+  }
+`;
+
 export const getJobsFromPosting = gql`
   query GetJobs($postingId: BigInt!) {
     jobs(where: { postingId: $postingId }, orderBy: "acceptedAt", orderDirection: "desc") {

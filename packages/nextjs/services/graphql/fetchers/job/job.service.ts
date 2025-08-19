@@ -44,8 +44,16 @@ export const fetchJobPostingsPaginated = async (
     },
   );
 
+  const postingIds = res.jobPostings.items.map(item => item.postingId);
+  const ratings = await fetchRatingsGroupedByPosting(postingIds);
+  // Calculate average rating for each job posting
+  const jobPostingsWithRatings = res.jobPostings.items.map(item => ({
+    ...item,
+    rating: ratings[item.postingId]?.reduce((acc, r) => acc + r, 0) / (ratings[item.postingId]?.length || 1),
+  }));
+
   return {
-    data: res.jobPostings.items,
+    data: jobPostingsWithRatings,
     meta: {
       endCursor: res.jobPostings.pageInfo.endCursor,
       hasNextPage: res.jobPostings.pageInfo.hasNextPage,
@@ -54,6 +62,25 @@ export const fetchJobPostingsPaginated = async (
       // hasPreviousPage: res.jobPostings.pageInfo.hasPreviousPage,
     },
   };
+};
+
+export const fetchRatingsGroupedByPosting = async (postingIds: string[]) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getRatingsByPostingIds, {
+    postingIds,
+  });
+  const groupedRatings = res.jobs.items.reduce(
+    (acc, job) => {
+      if (!acc[job.postingId]) {
+        acc[job.postingId] = [];
+      }
+      if (job.rating) {
+        acc[job.postingId].push(job.rating);
+      }
+      return acc;
+    },
+    {} as Record<string, number[]>,
+  );
+  return groupedRatings;
 };
 
 export const fetchMyJobPostings = async (userAddress: string) => {
