@@ -9,6 +9,7 @@ import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiProvider, useAccount } from "wagmi";
+import { NewspaperIcon } from "@heroicons/react/24/outline";
 import {
   BookOpenIcon,
   BriefcaseIcon,
@@ -89,6 +90,11 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               label: "Debug Contracts",
               href: "/debug",
               icon: BugAntIcon,
+            },
+            {
+              label: "Feed",
+              href: "/feed",
+              icon: NewspaperIcon,
             },
           ]}
         />

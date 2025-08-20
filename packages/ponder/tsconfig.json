@@ -18,6 +18,9 @@
     "lib": ["ES2022"],
     "target": "ES2022",
 
+    // Specify type definitions
+    "types": ["node", "estree"],
+
     // Skip type checking for node modules
     "skipLibCheck": true
   },

@@ -65,10 +65,10 @@
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@fontsource/roboto": "^5.2.6",
     "@mui/icons-material": "^7.1.1",
-    "@mui/material": "^7.1.1",
+    "@mui/material": "^7.3.1",
     "@thirdweb-dev/storage": "^2.0.15",
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.18.1",
