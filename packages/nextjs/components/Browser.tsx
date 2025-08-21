@@ -166,7 +166,19 @@ export default function BrowsePage({ type }: BrowsePageProps) {
         <div
           ref={scrollRef}
           className="flex max-h-full flex-1 flex-row py-10 overflow-scroll h-[93vh]"
-          onScroll={event => handleScroll(event, type, search, "createdAt", "desc", priceRange[0], priceRange[1])}
+          onScroll={async event => {
+            const sort = optionsSorts.find(option => option.id === sortBy);
+            await handleScroll(
+              event,
+              type,
+              search,
+              sort?.key,
+              sort?.order,
+              priceRange[0],
+              priceRange[1],
+              categories.has("all") ? undefined : Array.from(categories),
+            );
+          }}
         >
           {Filters}
 
