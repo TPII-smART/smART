@@ -139,6 +139,19 @@ ponder.on("GigsContract:GigCompleted", async ({ event, context }) => {
 		});
 });
 
+// Listen for gig rating
+ponder.on("GigsContract:GigRated", async ({ event, context }) => {
+	// Updates the gig to add the rating
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			rating: event.args.rating || 0n,
+			lastTransactionHash: event.transaction.hash,
+		});
+});
+
 // Listen for gig cancellation
 ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 	await context.db
