@@ -70,6 +70,7 @@ contract GigsContract {
         uint256 finishedAt; // When an application was finished
         bool clientReceived; // Whether the client has received the work results
         bool freelancerDelivered; // Whether the freelancer has delivered the work results
+        uint8 rating; // Rating given by the client (1-5)
         Application[] applications; // All applications for this gig
         uint256 acceptedApplicationId; // ID of the accepted application
         string gigBannerImageHash; // IPFS hash of the gig banner image
@@ -120,6 +121,8 @@ contract GigsContract {
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
     event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
+
+    event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
 
     event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment, uint256 timestamp);
 
@@ -193,6 +196,7 @@ contract GigsContract {
             newGig.acceptedAt = 0;
             newGig.clientReceived = false;
             newGig.freelancerDelivered = false;
+            newGig.rating = 0;
             newGig.acceptedApplicationId = 0;
             newGig.gigBannerImageHash = params.gigBannerImageHash;
         }
@@ -360,8 +364,9 @@ contract GigsContract {
     /**
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
+     * @param _rating Rating given by the client (1-5)
      */
-    function confirmCompletion(uint256 _gigId) external gigExists(_gigId) onlyGigParties(_gigId) {
+    function confirmCompletion(uint256 _gigId, uint8 _rating) external gigExists(_gigId) onlyGigParties(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
@@ -371,10 +376,14 @@ contract GigsContract {
         if (msg.sender == gig.client) {
             require(!gig.clientReceived, "Client already confirmed reception");
             gig.clientReceived = true;
+            require(_rating >= 1 && _rating <= 5, "Invalid rating");
+            gig.rating = _rating;
             emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
+            emit GigRated(_gigId, msg.sender, _rating, block.timestamp);
         } else {
             require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
             gig.freelancerDelivered = true;
+            require(_rating == 0, "Rating must be 0 for freelancer");
             emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
         }
 

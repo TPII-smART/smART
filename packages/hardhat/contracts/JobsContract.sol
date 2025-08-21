@@ -123,7 +123,7 @@ contract JobsContract {
         uint256 timestamp
     );
 
-    event JobRated(uint256 indexed postingId, uint256 indexed jobId, address client, uint256 rating, uint256 timestamp);
+    event JobRated(uint256 indexed postingId, uint256 indexed jobId, address client, uint8 rating, uint256 timestamp);
 
     event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
 
