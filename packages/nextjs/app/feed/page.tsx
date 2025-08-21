@@ -49,7 +49,7 @@ const mockActivities: ActivityItem[] = [
     timestamp: "1 day ago",
     status: "completed",
     amount: 2500,
-    client: { name: "Digital Agency Pro" },
+    client: { name: "Digital Agency Pro", avatar: "https://ui-avatars.com/api/?name=User&background=random" },
   },
   {
     id: "5",
@@ -57,7 +57,7 @@ const mockActivities: ActivityItem[] = [
     title: "Profile Viewed",
     description: "Your profile was viewed by a potential client",
     timestamp: "1 day ago",
-    client: { name: "Anonymous Client" },
+    client: { name: "Anonymous Client", avatar: "https://ui-avatars.com/api/?name=User&background=random" },
   },
   {
     id: "6",
@@ -74,24 +74,25 @@ const mockActivities: ActivityItem[] = [
     description: 'Your proposal for "Logo Design Contest" was not selected',
     timestamp: "3 days ago",
     status: "rejected",
-    client: { name: "Creative Studio" },
+    client: { name: "Creative Studio", avatar: "https://ui-avatars.com/api/?name=User&background=random" },
   },
 ];
 
 export default function ActivityFeed() {
   return (
-    <div className="h-full flex flex-col overflow-hidden space-y-4">
+    <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between mt-12 px-10">
         <h2 className="text-2xl font-semibold text-foreground">Activity Feed</h2>
         <Button variant="outline" size="sm">
           Mark All as Read
         </Button>
       </div>
-
-      <div className=" flex-1 overflow-y-auto space-y-4 mx-10 max-w-full">
-        {mockActivities.map(activity => (
-          <FeedActivityCard key={activity.id} activity={activity} />
-        ))}
+      <div className="overflow-y-auto mx-30">
+        <div className="space-y-4 py-4 px-5  overflow-visible">
+          {mockActivities.map(activity => (
+            <FeedActivityCard key={activity.id} activity={activity} />
+          ))}
+        </div>
       </div>
       {/* 
       <div className="text-center py-8">
