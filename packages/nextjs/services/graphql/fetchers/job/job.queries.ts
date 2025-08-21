@@ -108,6 +108,18 @@ export const getRatingsByPostingIds = gql`
   }
 `;
 
+export const getMyJobRatings = gql`
+  query GetMyJobRatings($userAddress: String!) {
+    jobs(where: { freelancer: $userAddress }) {
+      items {
+        jobId
+        postingId
+        rating
+      }
+    }
+  }
+`;
+
 export const getJobsFromPosting = gql`
   query GetJobs($postingId: BigInt!) {
     jobs(where: { postingId: $postingId }, orderBy: "acceptedAt", orderDirection: "desc") {
