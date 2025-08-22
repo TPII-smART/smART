@@ -43,7 +43,7 @@ const getStatusBadge = (status: ActivityItem["status"]) => {
     case ActivityItemStatus.completed:
       return <Badge className="bg-[var(--color-success)] text-white">Completed</Badge>;
     case ActivityItemStatus.waitingForReview:
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Waiting For Review</Badge>;
+      return <Badge className="bg-purple-500 text-white">Waiting For Review</Badge>;
     default:
       return null;
   }

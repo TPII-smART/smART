@@ -14,6 +14,7 @@ export enum ActivityItemStatus {
   cancelled = "cancelled",
   completed = "completed",
   waitingForReview = "waitingForReview",
+  unknown = "",
 }
 
 export interface ActivityItem {
