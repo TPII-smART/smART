@@ -1,19 +1,26 @@
 import { Badge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
-import { CheckCircle, Clock, DollarSign, Eye, FileText, MessageSquare, Star } from "lucide-react";
-import AvatarImage from "~~/components/AvatarImage/AvatarImage";
-import Button from "~~/components/Button/Button";
+import { BlockieAvatar } from "@/components/scaffold-eth";
+import { CheckCircle, Clock, DollarSign, Eye, FileText, MessageSquare, Star, XCircle } from "lucide-react";
 import { cn } from "~~/lib/utils";
-import { ActivityItem } from "~~/types/feed/activityItem.type";
+import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.type";
 
-const getActivityIcon = (type: ActivityItem["type"]) => {
+const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["status"]) => {
   switch (type) {
     case "application":
       return <FileText className="h-5 w-5" />;
     case "message":
       return <MessageSquare className="h-5 w-5" />;
     case "status":
-      return <CheckCircle className="h-5 w-5" />;
+      if (status === ActivityItemStatus.pending) {
+        return <Clock className="h-5 w-5" />;
+      } else if (status === ActivityItemStatus.accepted || status === ActivityItemStatus.completed) {
+        return <CheckCircle className="h-5 w-5" />;
+      } else if (status === ActivityItemStatus.cancelled) {
+        return <XCircle className="h-5 w-5" />;
+      } else if (status === ActivityItemStatus.waitingForReview) {
+        return <Clock className="h-5 w-5" />;
+      }
     case "payment":
       return <DollarSign className="h-5 w-5" />;
     case "view":
@@ -27,24 +34,26 @@ const getActivityIcon = (type: ActivityItem["type"]) => {
 
 const getStatusBadge = (status: ActivityItem["status"]) => {
   switch (status) {
-    case "pending":
+    case ActivityItemStatus.pending:
       return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
-    case "accepted":
+    case ActivityItemStatus.accepted:
       return <Badge className="bg-[var(--color-success)] text-white">Accepted</Badge>;
-    case "rejected":
-      return <Badge className="bg-[var(--color-error)] text-white">Rejected</Badge>;
-    case "completed":
+    case ActivityItemStatus.cancelled:
+      return <Badge className="bg-[var(--color-error)] text-white">Cancelled</Badge>;
+    case ActivityItemStatus.completed:
       return <Badge className="bg-[var(--color-success)] text-white">Completed</Badge>;
+    case ActivityItemStatus.waitingForReview:
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Waiting For Review</Badge>;
     default:
       return null;
   }
 };
 
 const getActivityColor = (type: ActivityItem["type"], status?: ActivityItem["status"]) => {
-  if (status === "accepted" || type === "payment" || type === "review") {
+  if (status === ActivityItemStatus.accepted || type === "payment" || type === "review") {
     return "color-primary-content";
   }
-  if (status === "rejected") {
+  if (status === ActivityItemStatus.cancelled) {
     return "text-destructive";
   }
   if (type === "message") {
@@ -67,7 +76,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
       <CardContent>
         <div className="flex items-start gap-4">
           <div className={`p-2 rounded-full bg-muted ${getActivityColor(activity.type, activity.status)}`}>
-            {getActivityIcon(activity.type)}
+            {getActivityIcon(activity.type, activity.status)}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -84,15 +93,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
                 <div className="flex items-center gap-4 text-sm">
                   {activity.client && (
                     <div className="flex items-center gap-2 ">
-                      <div className="relative">
-                        <AvatarImage
-                          src={activity.client.avatar || "/placeholder.svg"}
-                          alt={activity.client.name}
-                          width={32}
-                          height={32}
-                        />
-                      </div>
-                      <span className="text-muted-foreground">{activity.client.name}</span>
+                      <BlockieAvatar address={activity.client ? activity.client : ""} size={32} />
                     </div>
                   )}
 
@@ -103,18 +104,11 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
                     </div>
                   )}
 
-                  <span className="text-muted-foreground">{activity.timestamp}</span>
+                  <span className="text-muted-foreground ">{activity.timestamp}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                {activity.status && getStatusBadge(activity.status)}
-                {(activity.type === "message" || activity.type === "application") && (
-                  <Button size="sm" variant="outline" className="text-muted-foreground">
-                    {activity.type === "message" ? "Reply" : "View"}
-                  </Button>
-                )}
-              </div>
+              <div className="flex items-center gap-2">{activity.status && getStatusBadge(activity.status)}</div>
             </div>
           </div>
         </div>
