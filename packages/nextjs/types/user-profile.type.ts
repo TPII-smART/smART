@@ -31,3 +31,14 @@ export function newUserProfile(): UserProfile {
     customUrl: "",
   } as UserProfile;
 }
+
+export interface RatingData {
+  jobRatings: {
+    [rank: number]: number;
+  };
+  gigRatings: {
+    [rank: number]: number;
+  };
+  averageRating: number;
+  totalRatings: number;
+}

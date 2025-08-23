@@ -10,7 +10,7 @@ import Button from "~~/components/Button/Button";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab, TabProps } from "~~/components/Tabs/types";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
-import { UserProfile, newUserProfile } from "~~/types/user-profile.type";
+import { RatingData, UserProfile, newUserProfile } from "~~/types/user-profile.type";
 
 const MyJobPostingsListing = lazy(() => import("@/components/MyJobPostingsListing"));
 const MyGigsListing = lazy(() => import("@/components/MyGigsListing"));
@@ -29,12 +29,28 @@ const getPage = (tab: Tab, userAddress: string): React.ReactNode => {
   }
 };
 
+const ratingsPlaceholder = {
+  jobRatings: {
+    1: 5,
+    2: 4,
+    3: 3,
+  },
+  gigRatings: {
+    1: 4,
+    2: 5,
+    3: 2,
+  },
+  averageRating: 1.61,
+  totalRatings: 23,
+};
+
 export default function Profile() {
   const { address } = useAccount();
   const { address: profileAddress }: { address: `0x${string}` } = useParams();
   const [loading, setLoading] = useState(true);
 
   const [user, setUser] = useState<UserProfile>(newUserProfile());
+  const [ratingData] = useState<RatingData>(ratingsPlaceholder);
   const [editMode, setEditMode] = useState(false);
   const fetchUser = useCallback(async () => {
     if (!address) return;
@@ -70,15 +86,20 @@ export default function Profile() {
       ) : profileAddress === address && editMode ? (
         <div>
           <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
-          <div style={{ width: "66%", placeSelf: "center" }}>
+          <div style={{ width: "50%", placeSelf: "center" }}>
             <Tabs tabs={tabs} onChange={handleTabChange} />
           </div>
           <Suspense>{getPage(selectedTab, profileAddress)}</Suspense>
         </div>
       ) : (
         <div>
-          <OthersProfile user={user} address={profileAddress} changeEditButton={changeEditMode} />
-          <div style={{ width: "66%", placeSelf: "center" }}>
+          <OthersProfile
+            user={user}
+            address={profileAddress}
+            changeEditButton={changeEditMode}
+            ratingData={ratingData}
+          />
+          <div style={{ width: "50%", placeSelf: "center" }}>
             <Tabs tabs={tabs} onChange={handleTabChange} />
           </div>
           <Suspense>{getPage(selectedTab, profileAddress)}</Suspense>
