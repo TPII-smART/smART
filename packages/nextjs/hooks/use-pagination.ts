@@ -71,13 +71,11 @@ export const usePagination = <T>({
 
   const fetchData = useCallback(
     async (hasParamNotChanged: boolean, key: string, ...params: SearchParams[]): Promise<void> => {
-      console.log(cache.current[key]);
       if (!hasParamNotChanged) {
         // If search params changed, reinitialize cache
         delete cache.current[key];
       }
 
-      console.log(cache.current[key]);
       if (cache.current[key]?.meta?.hasNextPage === false) {
         cache.current = setData(cache.current, key, []);
         return;
@@ -98,7 +96,6 @@ export const usePagination = <T>({
 
       cache.current = setCacheMetaData(key, response.meta, cache.current);
       cache.current = setData(cache.current, key, response.data);
-      console.log("cache", cache.current);
 
       setTimeout(() => {
         loadingFunction(false);
