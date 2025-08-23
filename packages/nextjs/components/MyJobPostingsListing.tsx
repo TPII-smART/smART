@@ -3,10 +3,12 @@
 import Spinner from "@/components//Spinner/Spinner";
 import { JobPostingCard } from "@/components/Card/JobPostingCard/JobPostingCard";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
 import { fetchMyJobPostings } from "~~/services/graphql/fetchers/job/job.service";
 import { JobPostingData } from "~~/types/job/job.types";
 
 export default function MyJobPostingListing({ userAddress }: { userAddress: string }) {
+  const { address } = useAccount();
   const queryClient = useQueryClient();
   const { data, isLoading, refetch } = useQuery<JobPostingData>({
     queryKey: ["jobPostingsFromUser", userAddress],
@@ -14,6 +16,8 @@ export default function MyJobPostingListing({ userAddress }: { userAddress: stri
   });
 
   console.log(data);
+
+  const isOwner = userAddress === address;
 
   const reload = async () => {
     queryClient.invalidateQueries({ queryKey: ["jobPostingsFromUser", userAddress] });
@@ -23,11 +27,6 @@ export default function MyJobPostingListing({ userAddress }: { userAddress: stri
 
   return (
     <div className="w-full px-4 md:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-content-primary mb-2">My Job Postings</h1>
-        <p className="text-content-secondary">Manage your job postings</p>
-      </div>
-
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
@@ -44,7 +43,17 @@ export default function MyJobPostingListing({ userAddress }: { userAddress: stri
             <div className="text-center py-12">
               <p className="text-content-secondary text-lg">No job postings found.</p>
               <p className="text-content-tertiary mt-2">
-                Start by browsing available job postings or creating your own.
+                {isOwner ? (
+                  <span>
+                    Go to the{" "}
+                    <a href={`/browse-jobs`} className="underline">
+                      Browse Jobs
+                    </a>{" "}
+                    page to create your first job posting.
+                  </span>
+                ) : (
+                  <span>This user has not posted any jobs yet.</span>
+                )}
               </p>
             </div>
           )}

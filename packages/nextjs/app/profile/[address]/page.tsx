@@ -1,14 +1,33 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import ProfileSkeleton from "./ProfileSkeleton";
 import OthersProfile from "./othersProfile";
 import OwnProfile from "./ownProfile";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
+import Tabs from "~~/components/Tabs/Tabs";
+import { Tab, TabProps } from "~~/components/Tabs/types";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { UserProfile, newUserProfile } from "~~/types/user-profile.type";
+
+const MyJobPostingsListing = lazy(() => import("@/components/MyJobPostingsListing"));
+const MyGigsListing = lazy(() => import("@/components/MyGigsListing"));
+
+const tabs: TabProps[] = [
+  { id: "job-postings", label: "Job Postings" },
+  { id: "gigs", label: "Gigs" },
+];
+
+const getPage = (tab: Tab, userAddress: string): React.ReactNode => {
+  switch (tab.id) {
+    case tabs[0].id:
+      return <MyJobPostingsListing userAddress={userAddress} />;
+    case tabs[1].id:
+      return <MyGigsListing userAddress={userAddress} />;
+  }
+};
 
 export default function Profile() {
   const { address } = useAccount();
@@ -27,6 +46,12 @@ export default function Profile() {
     setLoading(false);
   }, [address, profileAddress]);
 
+  const [selectedTab, setSelectedTab] = useState<Tab>(tabs[0]);
+
+  const handleTabChange = (id: string | number, label?: string) => {
+    setSelectedTab({ id, label: label ?? "" });
+  };
+
   const changeEditMode =
     profileAddress === address ? (
       <Button variant="primary" onClick={() => setEditMode(true)}>
@@ -39,13 +64,25 @@ export default function Profile() {
   }, [fetchUser]);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full overflow-auto">
       {loading ? (
         <ProfileSkeleton />
       ) : profileAddress === address && editMode ? (
-        <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
+        <div>
+          <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
+          <div style={{ width: "66%", placeSelf: "center" }}>
+            <Tabs tabs={tabs} onChange={handleTabChange} />
+          </div>
+          <Suspense>{getPage(selectedTab, profileAddress)}</Suspense>
+        </div>
       ) : (
-        <OthersProfile user={user} address={profileAddress} changeEditButton={changeEditMode} />
+        <div>
+          <OthersProfile user={user} address={profileAddress} changeEditButton={changeEditMode} />
+          <div style={{ width: "66%", placeSelf: "center" }}>
+            <Tabs tabs={tabs} onChange={handleTabChange} />
+          </div>
+          <Suspense>{getPage(selectedTab, profileAddress)}</Suspense>
+        </div>
       )}
     </div>
   );
