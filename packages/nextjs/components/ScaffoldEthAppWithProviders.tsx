@@ -62,8 +62,8 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               icon: WrenchScrewdriverIcon,
             },
             {
-              label: "Browse Jobs",
-              href: "/browse-jobs",
+              label: "Browse",
+              href: "/browse",
               icon: BookOpenIcon,
             },
             {
@@ -75,11 +75,6 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
               label: "My Applications",
               href: "/applications",
               icon: WrenchScrewdriverIcon,
-            },
-            {
-              label: "Browse Gigs",
-              href: "/browse-gigs",
-              icon: BookOpenIcon,
             },
             {
               label: "Ponder",
