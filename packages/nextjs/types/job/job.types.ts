@@ -53,11 +53,19 @@ export interface Job {
    */
   canceledAt?: string;
 
+  /**
+   * (Optional) ISO date string representing when the job was delivered.
+   */
+  deliveredAt?: string;
+
   /** (Optional) Boolean indicating if the client has marked they received the job deliverables. */
   clientReceived?: boolean;
 
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
   freelancerDelivered?: boolean;
+
+  /** (Optional) Ethereum address of the user who emitted the job event, formatted as a hexadecimal string. */
+  emitBy?: `0x${string}`;
 }
 
 /** Enum representing the possible states of a job. */

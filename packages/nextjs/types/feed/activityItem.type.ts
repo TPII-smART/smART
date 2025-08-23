@@ -28,4 +28,5 @@ export interface ActivityItem {
   freelancer?: string;
   amount?: number;
   isNew?: boolean;
+  emitBy?: string;
 }

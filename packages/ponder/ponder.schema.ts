@@ -35,6 +35,8 @@ export const job = onchainTable(
 		acceptedAt: t.bigint(),
 		finishedAt: t.bigint(), // When the job was finished
 		canceledAt: t.bigint(), // When the job was canceled
+		deliveredAt: t.bigint(), // When the job was delivered
+		emitBy: t.varchar({ length: 128 }),
 		clientReceived: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),

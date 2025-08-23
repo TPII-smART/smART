@@ -142,6 +142,8 @@ export const getMyJobs = gql`
         acceptedAt
         finishedAt
         canceledAt
+        deliveredAt
+        emitBy
         clientReceived
         freelancerDelivered
       }
@@ -167,6 +169,10 @@ export const getHires = gql`
         state
         createdAt
         acceptedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
         clientReceived
         freelancerDelivered
       }

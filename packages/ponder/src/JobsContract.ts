@@ -52,6 +52,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 		state: JobState.WaitingForApproval, // Initial job state
 		createdAt: BigInt(event.block.timestamp),
 		acceptedAt: null,
+		emitBy: event.transaction.from,
 		clientReceived: false,
 		freelancerDelivered: false,
 		lastTransactionHash: event.transaction.hash,
@@ -72,6 +73,7 @@ ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
 			state: JobState.Ongoing,
 			deadline: event.args.deadline || 0n,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
 });
 
@@ -87,6 +89,8 @@ ponder.on(
 			})
 			.set({
 				freelancerDelivered: true,
+				emitBy: event.transaction.from,
+				deliveredAt: BigInt(event.args.timestamp),
 				lastTransactionHash: event.transaction.hash,
 			});
 	}
@@ -102,6 +106,7 @@ ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		})
 		.set({
 			clientReceived: true,
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });
@@ -117,6 +122,7 @@ ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
 		.set({
 			state: JobState.Finished,
 			finishedAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });
@@ -124,6 +130,8 @@ ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
 // This event is triggered when a job is cancelled.
 ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 	// Updates the job to mark it as cancelled
+
+	console.log("Cancelling job from:", event.transaction.from);
 	await context.db
 		.update(job, {
 			jobId: event.args.jobId,
@@ -132,6 +140,7 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 		.set({
 			state: JobState.Cancelled,
 			canceledAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });

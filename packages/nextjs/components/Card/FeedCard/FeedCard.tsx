@@ -1,7 +1,9 @@
+import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { CheckCircle, Clock, DollarSign, Eye, FileText, MessageSquare, Star, XCircle } from "lucide-react";
+import { useUserProfile } from "~~/hooks/use-user-profile";
 import { cn } from "~~/lib/utils";
 import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.type";
 
@@ -33,17 +35,18 @@ const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["statu
 };
 
 const getStatusBadge = (status: ActivityItem["status"]) => {
+  const badgeClass = "min-w-[140px] text-center justify-center"; // Puedes ajustar el valor
   switch (status) {
     case ActivityItemStatus.pending:
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Pending</Badge>;
+      return <Badge className={`bg-yellow-100 text-yellow-800 hover:bg-yellow-100 ${badgeClass}`}>Pending</Badge>;
     case ActivityItemStatus.accepted:
-      return <Badge className="bg-[var(--color-success)] text-white">Accepted</Badge>;
+      return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Accepted</Badge>;
     case ActivityItemStatus.cancelled:
-      return <Badge className="bg-[var(--color-error)] text-white">Cancelled</Badge>;
+      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Cancelled</Badge>;
     case ActivityItemStatus.completed:
-      return <Badge className="bg-[var(--color-success)] text-white">Completed</Badge>;
+      return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Completed</Badge>;
     case ActivityItemStatus.waitingForReview:
-      return <Badge className="bg-purple-500 text-white">Waiting For Review</Badge>;
+      return <Badge className={`bg-purple-500 text-white ${badgeClass}`}>Waiting For Review</Badge>;
     default:
       return null;
   }
@@ -63,6 +66,37 @@ const getActivityColor = (type: ActivityItem["type"], status?: ActivityItem["sta
 };
 
 export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
+  const { profilePicture: profilePicture, username: username, isLoading: isLoading } = useUserProfile(activity.emitBy);
+  console.log("Actor", activity.emitBy);
+
+  const renderAvatar = () => {
+    const imageToShow = profilePicture;
+
+    if (imageToShow) {
+      return (
+        <Image
+          src={typeof imageToShow === "string" ? imageToShow : ""}
+          width={32}
+          height={32}
+          alt="User avatar"
+          className=" rounded-full object-cover"
+          onError={e => {
+            // ✅ Fallback al BlockieAvatar si la imagen falla
+            const target = e.target as HTMLImageElement;
+            target.style.display = "none";
+            const fallback = target.nextElementSibling as HTMLElement;
+            if (fallback) fallback.style.display = "block";
+          }}
+        />
+      );
+    }
+
+    if (isLoading) {
+      return <div className="h-32 w-32 rounded-full bg-gray-300 animate-pulse" />;
+    }
+
+    return <BlockieAvatar address={activity.emitBy ? activity.emitBy : ""} size={32} />;
+  };
   return (
     <Card
       data-slot="card"
@@ -74,7 +108,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
       )}
     >
       <CardContent>
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-9">
           <div className={`p-2 rounded-full bg-muted ${getActivityColor(activity.type, activity.status)}`}>
             {getActivityIcon(activity.type, activity.status)}
           </div>
@@ -82,7 +116,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground inline-flex items-center gap-2">
+                <h3 className="font-semibold text-xl text-foreground inline-flex items-center gap-2">
                   {activity.title}
                   {activity.isNew && (
                     <span className="inline-block h-2 w-2 bg-[var(--color-success)] rounded-full self-center"></span>
@@ -91,11 +125,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
                 <p className="text-muted-foreground text-sm mb-2">{activity.description}</p>
 
                 <div className="flex items-center gap-4 text-sm">
-                  {activity.client && (
-                    <div className="flex items-center gap-2 ">
-                      <BlockieAvatar address={activity.client ? activity.client : ""} size={32} />
-                    </div>
-                  )}
+                  {activity.client && <div className="flex items-center gap-2 ">{renderAvatar()}</div>}
 
                   {activity.amount && (
                     <div className="flex items-center gap-1 text-muted-foreground font-medium">
@@ -104,7 +134,17 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
                     </div>
                   )}
 
-                  <span className="text-muted-foreground ">{activity.timestamp}</span>
+                  <span className="text-muted-foreground ">
+                    {username ? (
+                      <span>{username}</span>
+                    ) : (
+                      <span>
+                        {activity.emitBy ? `${activity.emitBy.slice(0, 6)}...${activity.emitBy.slice(-4)}` : ""}
+                      </span>
+                    )}
+                  </span>
+
+                  <span className="text-muted-foreground">{activity.timestamp}</span>
                 </div>
               </div>
 
