@@ -104,6 +104,7 @@ export function UniversalCard({
   footerLeft,
   footerRight,
   className,
+  onClickCardAction = () => {},
   ...props
 }: UniversalCardProps) {
   const { profilePicture, isLoading } = useUserProfile(avatarAddress);
@@ -159,6 +160,7 @@ export function UniversalCard({
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
         className,
       )}
+      onClick={onClickCardAction}
       {...props}
     >
       {/* Content section */}
@@ -200,6 +202,7 @@ export function UniversalCard({
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
         className,
       )}
+      onClick={onClickCardAction}
       {...props}
     >
       {/* Banner with glassmorphism effect */}

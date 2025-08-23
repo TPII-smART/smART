@@ -20,6 +20,9 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
 
+  const postingId = job.postingId ? BigInt(job.postingId) : undefined;
+  const jobId = job.jobId ? BigInt(job.jobId) : undefined;
+
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
@@ -135,6 +138,12 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm job completion failed:", err);
+    }
+  };
+
+  const handleCardClick = () => {
+    if (postingId != null && jobId != null) {
+      window.location.href = `/job-posting/${postingId}/${jobId}`;
     }
   };
 
@@ -269,6 +278,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
       className={className}
       cardVariant="Reduced"
+      onClickCardAction={handleCardClick}
     />
   );
 }

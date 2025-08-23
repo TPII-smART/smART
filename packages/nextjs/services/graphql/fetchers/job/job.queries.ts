@@ -173,3 +173,29 @@ export const getHires = gql`
     }
   }
 `;
+
+export const getJob = gql`
+  query GetJob($jobId: BigInt!, $postingId: BigInt!) {
+    job(jobId: $jobId, postingId: $postingId) {
+      jobId
+      postingId
+      client
+      freelancer
+      payment
+      title
+      description
+      category
+      bannerImageHash
+      jobDuration
+      deadline
+      state
+      createdAt
+      acceptedAt
+      finishedAt
+      canceledAt
+      clientReceived
+      freelancerDelivered
+      lastTransactionHash
+    }
+  }
+`;

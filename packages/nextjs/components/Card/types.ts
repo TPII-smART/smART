@@ -27,4 +27,6 @@ export interface UniversalCardProps extends React.HTMLAttributes<HTMLDivElement>
   footerLeft?: React.ReactNode;
   /** Right content for the card footer. */
   footerRight?: React.ReactNode;
+  /** Callback function when the card action is clicked. */
+  onClickCardAction?: () => void;
 }
