@@ -33,7 +33,7 @@ export default function OthersProfile({ user, changeEditButton, address, ratingD
   }, [user, hasSocialNetworks]);
 
   const isRatingEmpty = useMemo(() => {
-    return ratingData.totalRatings === 0;
+    return ratingData.totalRatings == 0;
   }, [ratingData]);
 
   return (

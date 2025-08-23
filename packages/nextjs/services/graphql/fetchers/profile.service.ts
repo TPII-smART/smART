@@ -1,6 +1,8 @@
 import { endpoint } from "../config";
+import { fetchMyGigRatings } from "./gig/gig.service";
+import { fetchMyJobRatings } from "./job/job.service";
 import request, { gql } from "graphql-request";
-import { UserProfile } from "~~/types/user-profile.type";
+import { UserProfile, newRatingData } from "~~/types/user-profile.type";
 
 export const fetchUserProfile = async (address: string) => {
   const query = gql`
@@ -25,4 +27,12 @@ export const fetchUserProfile = async (address: string) => {
   const variables = { address };
   const res = await request<{ userProfile: UserProfile }>(endpoint, query, variables);
   return res.userProfile;
+};
+
+export const fetchUserRatingData = async (address: string) => {
+  const jobRatings = await fetchMyJobRatings(address);
+  const gigRatings = await fetchMyGigRatings(address);
+  console.log(jobRatings, gigRatings);
+
+  return newRatingData(jobRatings.jobs, gigRatings.gigs);
 };

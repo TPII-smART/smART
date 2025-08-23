@@ -225,7 +225,7 @@ export const getGigById = gql`
 
 export const getMyGigRatings = gql`
   query GetMyGigRatings($userAddress: String!) {
-    gigs(where: { client: $userAddress }) {
+    gigs(where: { acceptedFreelancer: $userAddress }) {
       items {
         gigId
         rating

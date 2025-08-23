@@ -51,8 +51,17 @@ export const fetchGigsPaginated = async (
   };
 };
 
+export const fetchMyGigRatings = async (userAddress: string) => {
+  const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getMyGigRatings, {
+    userAddress: userAddress,
+  });
+  return { gigs: res.gigs.items };
+};
+
 export const fetchMyGigs = async (userAddress: string) => {
-  const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getMyGigs, { userAddress: userAddress });
+  const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getMyGigs, {
+    userAddress: userAddress,
+  });
   return { gigs: res.gigs.items };
 };
 

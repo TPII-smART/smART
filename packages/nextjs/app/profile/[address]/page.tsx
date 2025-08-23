@@ -9,7 +9,7 @@ import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab, TabProps } from "~~/components/Tabs/types";
-import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
+import { fetchUserProfile, fetchUserRatingData } from "~~/services/graphql/fetchers/profile.service";
 import { RatingData, UserProfile, newUserProfile } from "~~/types/user-profile.type";
 
 const MyJobPostingsListing = lazy(() => import("@/components/MyJobPostingsListing"));
@@ -50,7 +50,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
 
   const [user, setUser] = useState<UserProfile>(newUserProfile());
-  const [ratingData] = useState<RatingData>(ratingsPlaceholder);
+  const [ratingData, setRatingData] = useState<RatingData>(ratingsPlaceholder);
   const [editMode, setEditMode] = useState(false);
   const fetchUser = useCallback(async () => {
     if (!address) return;
@@ -59,6 +59,8 @@ export default function Profile() {
     setLoading(true);
     const user = await fetchUserProfile(profileAddress);
     setUser(user ?? newUserProfile());
+    const ratingData = await fetchUserRatingData(profileAddress);
+    setRatingData(ratingData ?? ratingsPlaceholder);
     setLoading(false);
   }, [address, profileAddress]);
 

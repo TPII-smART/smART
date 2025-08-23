@@ -83,11 +83,25 @@ export const fetchRatingsGroupedByPosting = async (postingIds: string[]) => {
   return groupedRatings;
 };
 
+export const fetchMyJobRatings = async (userAddress: string) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getMyJobRatings, {
+    userAddress: userAddress,
+  });
+  return { jobs: res.jobs.items };
+};
+
 export const fetchMyJobPostings = async (userAddress: string) => {
   const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, JobQueries.getMyJobPostings, {
     userAddress: userAddress,
   });
-  return { jobPostings: res.jobPostings.items };
+  const postingIds = res.jobPostings.items.map(item => item.postingId);
+  const ratings = await fetchRatingsGroupedByPosting(postingIds);
+  // Calculate average rating for each job posting
+  const jobPostingsWithRatings = res.jobPostings.items.map(item => ({
+    ...item,
+    rating: ratings[item.postingId]?.reduce((acc, r) => acc + r, 0) / (ratings[item.postingId]?.length || 1),
+  }));
+  return { jobPostings: jobPostingsWithRatings };
 };
 
 export const fetchJobsFromPosting = async (postingId: string) => {
