@@ -11,6 +11,7 @@ import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { waitTransaction } from "~~/lib/waitTransaction.util";
 
 class FormData {
   proposedPayment: string;
@@ -33,7 +34,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   const handleApplyToGig = async (form: FormData) => {
     try {
-      await writeContractAsync({
+      const transactionHash = await writeContractAsync({
         functionName: "applyToGig",
         args: [
           BigInt(gig.gigId),
@@ -44,7 +45,9 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
           },
         ],
       });
-      if (reload) await reload();
+
+      await waitTransaction("gigApplication", transactionHash);
+      await reload?.();
       setShowApplyModal(false);
     } catch (err) {
       console.error("Create gig application failed:", err);

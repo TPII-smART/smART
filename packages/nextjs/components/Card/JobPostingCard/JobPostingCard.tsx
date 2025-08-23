@@ -10,6 +10,7 @@ import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { waitTransaction } from "~~/lib/waitTransaction.util";
 
 class PostingFormData {
   title: string;
@@ -33,7 +34,7 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
   const handleCreateJob = async (form: PostingFormData) => {
     try {
       if (!jobPosting?.basePayment || !jobPosting?.postingId) return;
-      await writeContractAsync({
+      const transactionHash = await writeContractAsync({
         functionName: "createJob",
         args: [
           BigInt(jobPosting?.postingId),
@@ -46,7 +47,9 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
         ],
         value: BigInt(jobPosting?.basePayment),
       });
-      if (reload) await reload();
+      await waitTransaction("job", transactionHash);
+      await reload?.();
+
       setShowModal(false);
     } catch (err) {
       console.error("Create job failed:", err);

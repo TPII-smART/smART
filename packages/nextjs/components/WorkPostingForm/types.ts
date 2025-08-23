@@ -1,6 +1,9 @@
+import { Gig } from "~~/types/gig";
+import { JobPosting } from "~~/types/job";
+
 export interface WorkPostingFormProps {
   type: "job" | "gig";
-  refresh: () => Promise<void>;
+  refresh: (created: JobPosting | Gig) => void;
 }
 
 export class WorkPostingFormData {

@@ -41,21 +41,21 @@ export default function BrowsePage({ type }: BrowsePageProps) {
 
   const fetchFunction = useMemo(() => (type === "job" ? fetchJobPostingsPaginated : fetchGigsPaginated), [type]);
 
-  const { handleScroll, fetchPaginatedData, reloadStart } = usePagination<JobPosting | Gig>({
+  const { handleScroll, fetchPaginatedData } = usePagination<JobPosting | Gig>({
     fetchFunction,
     loadingFunction: setLoading,
     setDataFunction: setData,
   });
 
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
   const [search, setSearch] = useState<string>("");
 
   const filterItems = useCallback(
-    async (fromStart: boolean = false): Promise<void> => {
-      const fetchFunc = fromStart ? reloadStart : fetchPaginatedData;
+    async ({ instantFetch = false }: { instantFetch?: boolean }): Promise<void> => {
       const sort = optionsSorts.find(option => option.id === sortBy);
 
-      await fetchFunc(
+      await fetchPaginatedData(
+        instantFetch,
         type,
         search,
         sort?.key,
@@ -69,10 +69,15 @@ export default function BrowsePage({ type }: BrowsePageProps) {
         scrollRef.current.scrollTop = 0;
       }
     },
-    [type, priceRange, sortBy, search, fetchPaginatedData, reloadStart, scrollRef, categories],
+    [type, priceRange, sortBy, search, fetchPaginatedData, scrollRef, categories],
   );
 
   const fetchMaxPaymentETH = useCallback(async () => {
+    setData([]);
+    setPriceRange([0, 0]);
+    setSearch("");
+    setCategories(new Set(["all"]));
+    setSortBy("recent");
     const maxPayment = await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment());
     setMaxPaymentETH(maxPayment);
     setPriceRange([0, maxPayment]);
@@ -83,7 +88,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
   }, [fetchMaxPaymentETH]);
 
   useEffect(() => {
-    filterItems();
+    filterItems({ instantFetch: true });
   }, [filterItems]);
 
   const Filters = (
@@ -165,7 +170,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
       <main className="flex max-h-full">
         <div
           ref={scrollRef}
-          className="flex max-h-full flex-1 flex-row py-10 overflow-scroll h-[93vh]"
+          className="flex max-h-full flex-1 flex-row pb-10 overflow-scroll h-[87.5vh]"
           onScroll={async event => {
             const sort = optionsSorts.find(option => option.id === sortBy);
             await handleScroll(
@@ -183,19 +188,17 @@ export default function BrowsePage({ type }: BrowsePageProps) {
           {Filters}
 
           {/* Jobs Listing */}
-          <div className="flex-1 flex flex-col space-y-6 pr-4 mb-10">
+          <div className="flex-1 flex flex-col space-y-6 pr-4 mb-10 pt-[0.85rem] pb-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {data.map(item =>
-                type === "job" ? (
-                  <JobPostingCard
-                    jobPosting={item as JobPosting}
-                    key={(item as JobPosting).postingId}
-                    reload={() => filterItems(true)}
-                  />
-                ) : (
-                  <GigCard gig={item as Gig} key={(item as Gig).gigId} reload={() => filterItems(true)} />
-                ),
-              )}
+              {data
+                .filter(item => (type === "job" ? (item as JobPosting).postingId : (item as Gig).gigId))
+                .map(item =>
+                  type === "job" ? (
+                    <JobPostingCard jobPosting={item as JobPosting} key={(item as JobPosting).postingId} />
+                  ) : (
+                    <GigCard gig={item as Gig} key={(item as Gig).gigId} />
+                  ),
+                )}
               <div className="h-6" />
               {loading && (
                 <div className="flex-1 flex items-center justify-center mb-6">
@@ -206,7 +209,13 @@ export default function BrowsePage({ type }: BrowsePageProps) {
           </div>
         </div>
       </main>
-      <WorkPostingForm type={type} refresh={() => filterItems(true)} />
+      <WorkPostingForm
+        type={type}
+        refresh={(created: JobPosting | Gig) => {
+          fetchMaxPaymentETH();
+          setData(prev => [created, ...prev]);
+        }}
+      />
     </div>
   );
 }

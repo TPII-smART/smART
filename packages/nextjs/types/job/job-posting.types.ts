@@ -48,7 +48,7 @@ export class JobPosting {
     this.minimumNoticeTime = 24;
     this.averageWorkDuration = 0;
     this.createdAt = "";
-    this.rating = 0;
+    // this.rating = 0;
   }
 
   static mapFormDataToContractArgs(

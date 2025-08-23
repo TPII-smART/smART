@@ -127,7 +127,7 @@ const Sidebar = (props: SidebarProps) => {
     <SidebarContainer open={false}>
       <SidebarContent open={open} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
         <Header>
-          <SidebarItem customLabel={SmartLogo()} open={open} imgSrc={SmartIcon} disabled />
+          <SidebarItem customLabel={SmartLogo()} open={open} imgSrc={SmartIcon} href="/" />
         </Header>
 
         <Content>
