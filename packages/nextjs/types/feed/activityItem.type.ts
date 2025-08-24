@@ -14,6 +14,8 @@ export enum ActivityItemStatus {
   cancelled = "cancelled",
   completed = "completed",
   waitingForReview = "waitingForReview",
+  rejected = "rejected",
+  disputed = "disputed",
   unknown = "",
 }
 

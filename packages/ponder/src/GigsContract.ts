@@ -33,6 +33,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		finalDurationInHours: null,
 		deadline: null,
 		acceptedAt: null,
+		emitBy: event.transaction.from,
 		clientReceived: false,
 		freelancerDelivered: false,
 		acceptedApplicationId: null,
@@ -52,6 +53,7 @@ ponder.on("GigsContract:ApplicationSubmitted", async ({ event, context }) => {
 		proposalComment: event.args.proposalComment,
 		state: ApplicationState.Pending,
 		createdAt: BigInt(event.block.timestamp),
+		emitBy: event.transaction.from,
 		rejectionComment: null,
 		lastTransactionHash: event.transaction.hash,
 	});
@@ -66,6 +68,7 @@ ponder.on("GigsContract:ApplicationAccepted", async ({ event, context }) => {
 		})
 		.set({
 			state: ApplicationState.Accepted,
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 
@@ -81,12 +84,15 @@ ponder.on("GigsContract:ApplicationAccepted", async ({ event, context }) => {
 			finalDurationInHours: event.args.finalDurationInHours,
 			deadline: event.args.deadline,
 			acceptedAt: BigInt(event.block.timestamp),
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });
 
 // Listen for gigApplication rejection
 ponder.on("GigsContract:ApplicationRejected", async ({ event, context }) => {
+	const blockTimestamp = event.block.timestamp; 
+
 	await context.db
 		.update(gigApplication, {
 			gigId: event.args.gigId,
@@ -96,6 +102,17 @@ ponder.on("GigsContract:ApplicationRejected", async ({ event, context }) => {
 			state: ApplicationState.Rejected,
 			rejectionComment: event.args.rejectionComment,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
+			rejectAt: blockTimestamp,
+		});
+
+		await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
 });
 
@@ -110,12 +127,15 @@ ponder.on(
 			.set({
 				freelancerDelivered: true,
 				lastTransactionHash: event.transaction.hash,
+				emitBy: event.transaction.from,
+				deliveredAt: event.args.timestamp,	
 			});
 	}
 );
 
 // Listen for client reception
 ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
+
 	await context.db
 		.update(gig, {
 			gigId: event.args.gigId,
@@ -123,6 +143,7 @@ ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		.set({
 			clientReceived: true,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
 });
 
@@ -136,6 +157,7 @@ ponder.on("GigsContract:GigCompleted", async ({ event, context }) => {
 			state: GigState.Completed,
 			finishedAt: event.args.timestamp,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
 });
 
@@ -149,5 +171,6 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 			state: GigState.Cancelled,
 			canceledAt: event.args.timestamp,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
 });

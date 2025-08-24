@@ -1,4 +1,5 @@
 import { onchainTable, primaryKey } from "ponder";
+import { emit } from "process";
 
 // JobPosting table
 export const jobPosting = onchainTable("jobPosting", (t) => ({
@@ -64,6 +65,8 @@ export const gig = onchainTable("gig", (t) => ({
 	acceptedAt: t.bigint(),
 	finishedAt: t.bigint(),
 	canceledAt: t.bigint(),
+	deliveredAt: t.bigint(), // When the job was delivered
+	emitBy: t.varchar({ length: 128 }),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
 	acceptedApplicationId: t.bigint(),
@@ -82,6 +85,8 @@ export const gigApplication = onchainTable(
 		proposedDurationInHours: t.bigint().notNull(),
 		state: t.integer().notNull(),
 		createdAt: t.bigint().notNull(),
+		rejectAt: t.bigint(),
+		emitBy: t.varchar({ length: 128 }).notNull(),
 		proposalComment: t.varchar({ length: 512 }).notNull(),
 		rejectionComment: t.varchar({ length: 512 }),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),

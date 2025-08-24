@@ -58,6 +58,14 @@ export class Gig {
    */
   canceledAt?: string;
 
+  /**
+   * (Optional) ISO date string representing when the job was delivered.
+   */
+  deliveredAt?: string;
+
+  /** Ethereum address of the user who emitted the last update of the gig. */
+  emitBy?: string;
+
   /** (Optional) Boolean indicating if the client has marked they received the gig deliverables. */
   clientReceived?: boolean;
 

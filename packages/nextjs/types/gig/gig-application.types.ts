@@ -15,6 +15,10 @@ export interface Application {
   state: number;
   /** ISO date string representing when the application was created. */
   createdAt: string;
+  /** ISO date string representing when the application was rejected. */
+  rejectAt?: string;
+  /** Ethereum address of the user who emitted the last update of the application. */
+  emitBy: string;
   /** Comment or message included with the application proposal. */
   proposalComment: string;
   /** (Optional) Comment or message included if the application was rejected. */

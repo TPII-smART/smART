@@ -6,11 +6,17 @@ import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
 import Spinner from "~~/components/Spinner/Spinner";
+import {
+  fetchApplicationsForMyGigs,
+  fetchApplicationsWithGigDetails,
+} from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchHires, fetchMyJobs } from "~~/services/graphql/fetchers/job/job.service";
 import { ActivityItemStatus, ActivityItemType } from "~~/types/feed/activityItem.type";
+import { Application, ApplicationState, ApplicationsData } from "~~/types/gig/gig-application.types";
+import { GigStateEnum } from "~~/types/gig/gig.types";
 import { Job, JobStateEnum, JobsData } from "~~/types/job/job.types";
 
-const getJobFeedInfo = (job: Job, userAddress: string) => {
+const getJobInfo = (job: Job, userAddress: string) => {
   const isClient = job.client === userAddress;
 
   switch (job.state) {
@@ -152,6 +158,183 @@ const getJobFeedInfo = (job: Job, userAddress: string) => {
   }
 };
 
+const getGigInfo = (application: Application, userAddress: string) => {
+  const gig = application.gig;
+  const isClient = gig?.client === userAddress;
+  const isFreelancer = application.freelancer === userAddress;
+
+  switch (gig?.state) {
+    case GigStateEnum.Open:
+      // Solo cliente ve esto, porque el gig está esperando aplicaciones
+      if (isClient) {
+        return {
+          title: "Gig Published",
+          description: `Your gig "${gig.title}" is published and waiting for freelancer proposals.`,
+          type: ActivityItemType.status,
+          timestamp: castDateToTimestampNum(gig.createdAt),
+          status: ActivityItemStatus.pending,
+        };
+      }
+      break;
+
+    case GigStateEnum.InProgress:
+      if (isFreelancer) {
+        if (!gig.freelancerDelivered && !gig.clientReceived) {
+          return {
+            title: "You Were Selected for a Gig",
+            description: `You were chosen to work on "${gig.title}". Start working and deliver when ready.`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.acceptedAt),
+            status: ActivityItemStatus.accepted,
+          };
+        }
+        if (gig.freelancerDelivered && !gig.clientReceived) {
+          return {
+            title: "Work Delivered - Awaiting Client Approval",
+            description: `You delivered the gig "${gig.title}". Waiting for client review.`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.deliveredAt),
+            status: ActivityItemStatus.waitingForReview,
+          };
+        }
+      }
+      if (isClient) {
+        if (!gig.freelancerDelivered && !gig.clientReceived) {
+          return {
+            title: "Freelancer Selected",
+            description: `You selected a freelancer for "${gig.title}". Work is in progress.`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.acceptedAt),
+            status: ActivityItemStatus.accepted,
+          };
+        }
+        if (gig.freelancerDelivered && !gig.clientReceived) {
+          return {
+            title: "Work Delivered by Freelancer",
+            description: `The freelancer delivered the gig "${gig.title}". Please review and approve.`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.deliveredAt),
+            status: ActivityItemStatus.waitingForReview,
+          };
+        }
+      }
+      break;
+
+    case GigStateEnum.Completed:
+      return {
+        title: isClient ? "Gig Completed" : "You Completed a Gig",
+        description: isClient
+          ? `You approved the work for "${gig.title}". The gig is now completed.`
+          : `The client approved your work for "${gig.title}". The gig is now completed.`,
+        type: ActivityItemType.status,
+        status: ActivityItemStatus.completed,
+        timestamp: castDateToTimestampNum(gig.finishedAt),
+      };
+
+    case GigStateEnum.Cancelled: {
+      const client = gig.client?.toLowerCase();
+      const freelancer = application.freelancer?.toLowerCase();
+      const cancelledBy = gig.emitBy?.toLowerCase();
+      const user = userAddress?.toLowerCase();
+
+      if (cancelledBy === client) {
+        if (user === client) {
+          return {
+            title: "You Cancelled the Gig",
+            description: `You cancelled your gig "${gig.title}".`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.canceledAt),
+            status: ActivityItemStatus.cancelled,
+          };
+        } else if (user === freelancer) {
+          return {
+            title: "Client Cancelled the Gig",
+            description: `The client cancelled the gig "${gig.title}".`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.canceledAt),
+            status: ActivityItemStatus.cancelled,
+          };
+        }
+      } else if (cancelledBy === freelancer) {
+        if (user === client) {
+          return {
+            title: "Freelancer Cancelled the Gig",
+            description: `The freelancer cancelled the gig "${gig.title}".`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.canceledAt),
+            status: ActivityItemStatus.cancelled,
+          };
+        } else if (user === freelancer) {
+          return {
+            title: "You Cancelled the Gig",
+            description: `You cancelled your participation in the gig "${gig.title}".`,
+            type: ActivityItemType.status,
+            timestamp: castDateToTimestampNum(gig.canceledAt),
+            status: ActivityItemStatus.cancelled,
+          };
+        }
+      }
+
+      return {
+        title: "Gig Cancelled",
+        description: `The gig "${gig.title}" was cancelled.`,
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(gig.canceledAt),
+        status: ActivityItemStatus.cancelled,
+      };
+    }
+
+    default:
+      return {
+        title: "Unknown Gig State",
+        description: "Unknown gig state",
+        type: ActivityItemType.unknown,
+        timestamp: 0,
+        status: ActivityItemStatus.unknown,
+      };
+  }
+};
+
+const getApplicationInfo = (application: Application, userAddress: string) => {
+  const isFreelancer = application.freelancer === userAddress;
+
+  switch (application.state) {
+    case ApplicationState.Pending:
+      return {
+        title: isFreelancer ? "You Applied to a Gig" : "New Application Received",
+        description: isFreelancer
+          ? `You applied to the gig "${application.gig?.title}". Waiting for client selection.`
+          : `A freelancer applied to your gig "${application.gig?.title}".`,
+        type: ActivityItemType.application,
+        timestamp: castDateToTimestampNum(application.createdAt),
+        status: ActivityItemStatus.pending,
+      };
+
+    case ApplicationState.Accepted:
+      return getGigInfo(application, userAddress);
+
+    case ApplicationState.Rejected:
+      return {
+        title: isFreelancer ? "Your Application Was Rejected" : "Application Rejected",
+        description: isFreelancer
+          ? `Your application for "${application.gig?.title}" was rejected.`
+          : `You rejected an application for "${application.gig?.title}".`,
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(application.rejectAt),
+        status: ActivityItemStatus.rejected,
+      };
+
+    default:
+      return {
+        title: "Unknown Application State",
+        description: "Unknown application state",
+        type: ActivityItemType.unknown,
+        timestamp: 0,
+        status: ActivityItemStatus.unknown,
+      };
+  }
+};
+
 const castDateToTimestamp = (date: string | undefined): string => {
   if (!date) return "N/A";
   const timestamp = Number(date) * 1000;
@@ -199,39 +382,90 @@ export default function ActivityFeed() {
     refetchInterval: 1000 * 60 * 5,
   });
 
+  const { data: applicationData, isLoading: isLoadingApplications } = useQuery<ApplicationsData>({
+    queryKey: ["applicationsFromFreelancer", userAddress],
+    queryFn: async () => {
+      const result = await fetchApplicationsWithGigDetails(userAddress || "");
+      console.log("Applications with gig details:", result);
+      return result;
+    },
+    enabled: !!userAddress, // Only run query if userAddress exists
+    staleTime: 0, // Force fresh data
+  });
+
+  const { data: gigApplicationData, isLoading: isLoadingGigApplications } = useQuery<ApplicationsData>({
+    queryKey: ["applicationsForUserGigs", userAddress],
+    queryFn: async () => {
+      const result = await fetchApplicationsForMyGigs(userAddress || "");
+      console.log("Applications for user gigs", result);
+      return result;
+    },
+    enabled: !!userAddress, // Only run query if userAddress exists
+    staleTime: 0, // Force fresh data
+  });
+
   const filteredJobData = useMemo(() => {
     if (!jobData?.jobs) return [];
 
     return jobData.jobs.map(job => {
-      const feedInfo = getJobFeedInfo(job, userAddress ?? "");
+      const feedInfo = getJobInfo(job, userAddress ?? "");
       return {
-        id: job.postingId + "-" + job.jobId,
+        id: "job-" + job.postingId + "-" + job.jobId,
         ...feedInfo,
         client: job.client,
         freelancer: job.freelancer,
         emitBy: job.emitBy,
       };
     });
-  }, [jobData]);
+  }, [jobData, userAddress]);
 
   const filteredHireData = useMemo(() => {
     if (!hireData?.jobs) return [];
 
     return hireData.jobs.map(job => {
-      const feedInfo = getJobFeedInfo(job, userAddress ?? "");
+      const feedInfo = getJobInfo(job, userAddress ?? "");
       return {
-        id: job.postingId + "-" + job.jobId,
+        id: "job-" + job.postingId + "-" + job.jobId,
         ...feedInfo,
         client: job.client,
         freelancer: job.freelancer,
         emitBy: job.emitBy,
       };
     });
-  }, [hireData]);
+  }, [hireData, userAddress]);
+
+  const filteredApplicationData = useMemo(() => {
+    if (!applicationData?.applications) return [];
+
+    return applicationData.applications.map(application => {
+      const applicationInfo = getApplicationInfo(application, userAddress ?? "");
+      return {
+        id: "application-" + application.applicationId + "-" + application.gigId,
+        ...applicationInfo,
+        client: application.gig ? application.gig.client : userAddress,
+        freelancer: application.freelancer,
+        emitBy: application.state !== ApplicationState.Accepted ? application.emitBy : application.gig?.emitBy,
+      };
+    });
+  }, [applicationData, userAddress]);
+
+  const filteredGigApplicationData = useMemo(() => {
+    if (!gigApplicationData?.applications) return [];
+    return gigApplicationData.applications.map(application => {
+      const applicationInfo = getApplicationInfo(application, userAddress ?? "");
+      return {
+        id: "application-" + application.applicationId + "-" + application.gigId,
+        ...applicationInfo,
+        client: application.gig ? application.gig.client : userAddress,
+        freelancer: application.freelancer,
+        emitBy: application.state !== ApplicationState.Accepted ? application.emitBy : application.gig?.emitBy,
+      };
+    });
+  }, [gigApplicationData, userAddress]);
 
   const filteredData = useMemo(() => {
-    return [...filteredJobData, ...filteredHireData];
-  }, [filteredJobData, filteredHireData]);
+    return [...filteredJobData, ...filteredHireData, ...filteredApplicationData, ...filteredGigApplicationData];
+  }, [filteredJobData, filteredHireData, filteredApplicationData, filteredGigApplicationData]);
 
   const orderedData = useMemo(() => {
     return filteredData.sort((a, b) => {
@@ -247,7 +481,7 @@ export default function ActivityFeed() {
           Mark All as Read
         </Button>
       </div>
-      {isLoadingJobs && isLoadingHires ? (
+      {isLoadingJobs && isLoadingHires && isLoadingApplications && isLoadingGigApplications ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
         </div>

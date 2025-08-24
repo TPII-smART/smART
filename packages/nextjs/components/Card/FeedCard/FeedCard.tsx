@@ -18,7 +18,7 @@ const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["statu
         return <Clock className="h-5 w-5" />;
       } else if (status === ActivityItemStatus.accepted || status === ActivityItemStatus.completed) {
         return <CheckCircle className="h-5 w-5" />;
-      } else if (status === ActivityItemStatus.cancelled) {
+      } else if (status === ActivityItemStatus.cancelled || status === ActivityItemStatus.rejected) {
         return <XCircle className="h-5 w-5" />;
       } else if (status === ActivityItemStatus.waitingForReview) {
         return <Clock className="h-5 w-5" />;
@@ -47,6 +47,8 @@ const getStatusBadge = (status: ActivityItem["status"]) => {
       return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Completed</Badge>;
     case ActivityItemStatus.waitingForReview:
       return <Badge className={`bg-purple-500 text-white ${badgeClass}`}>Waiting For Review</Badge>;
+    case ActivityItemStatus.rejected:
+      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
     default:
       return null;
   }
@@ -56,7 +58,7 @@ const getActivityColor = (type: ActivityItem["type"], status?: ActivityItem["sta
   if (status === ActivityItemStatus.accepted || type === "payment" || type === "review") {
     return "color-primary-content";
   }
-  if (status === ActivityItemStatus.cancelled) {
+  if (status === ActivityItemStatus.cancelled || status === ActivityItemStatus.rejected) {
     return "text-destructive";
   }
   if (type === "message") {
@@ -67,7 +69,6 @@ const getActivityColor = (type: ActivityItem["type"], status?: ActivityItem["sta
 
 export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
   const { profilePicture: profilePicture, username: username, isLoading: isLoading } = useUserProfile(activity.emitBy);
-  console.log("Actor", activity.emitBy);
 
   const renderAvatar = () => {
     const imageToShow = profilePicture;

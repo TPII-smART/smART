@@ -121,6 +121,7 @@ export const getMyGigs = gql`
         freelancerDelivered
         acceptedApplicationId
         gigBannerImageHash
+        emitBy
       }
     }
   }
@@ -139,6 +140,8 @@ export const getMyApplications = gql`
         createdAt
         proposalComment
         rejectionComment
+        emitBy
+        rejectAt
       }
     }
   }
@@ -163,6 +166,8 @@ export const getGigByIds = gql`
         acceptedAt
         finishedAt
         canceledAt
+        deliveredAt
+        emitBy
         state
         clientReceived
         freelancerDelivered
@@ -186,6 +191,26 @@ export const getApplicationsForGig = gql`
         createdAt
         proposalComment
         rejectionComment
+      }
+    }
+  }
+`;
+
+export const getApplicationsForGigs = gql`
+  query GetApplicationsForGigs($gigIds: [BigInt!]!) {
+    gigApplications(where: { gigId_in: $gigIds }) {
+      items {
+        applicationId
+        gigId
+        freelancer
+        proposedPayment
+        proposedDurationInHours
+        state
+        createdAt
+        proposalComment
+        rejectionComment
+        emitBy
+        rejectAt
       }
     }
   }
