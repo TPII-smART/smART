@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { FeedActivityCard } from "@/components/Card/FeedCard/FeedCard";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
-import Button from "~~/components/Button/Button";
+//import Button from "~~/components/Button/Button";
 import Spinner from "~~/components/Spinner/Spinner";
 import { castDateToTimestamp, castDateToTimestampNum } from "~~/lib/utils";
 import {
@@ -12,7 +12,7 @@ import {
   fetchApplicationsWithGigDetails,
 } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchHires, fetchMyJobs } from "~~/services/graphql/fetchers/job/job.service";
-import { ActivityItemStatus, ActivityItemType } from "~~/types/feed/activityItem.type";
+import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
 import { Application, ApplicationState, ApplicationsData } from "~~/types/gig/gig-application.types";
 import { GigStateEnum } from "~~/types/gig/gig.types";
 import { Job, JobStateEnum, JobsData } from "~~/types/job/job.types";
@@ -30,6 +30,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
         type: ActivityItemType.application,
         timestamp: castDateToTimestampNum(job.createdAt),
         status: ActivityItemStatus.pending,
+        interactionType: InteractionType.job,
       };
 
     case JobStateEnum.Cancelled: {
@@ -37,22 +38,25 @@ const getJobInfo = (job: Job, userAddress: string) => {
       const client = job.client;
       const freelancer = job.freelancer;
 
+      const cancelledActivity = {
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(job.canceledAt),
+        status: ActivityItemStatus.cancelled,
+        interactionType: InteractionType.job,
+      };
+
       if (cancelledBy === client) {
         if (client === userAddress) {
           return {
             title: "You Cancelled the Job Request",
             description: `You cancelled your request for "${job.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...cancelledActivity,
           };
         } else if (freelancer === userAddress) {
           return {
             title: "User Cancelled the Job",
             description: `User cancelled the job "${job.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...cancelledActivity,
           };
         }
       } else if (cancelledBy === freelancer) {
@@ -60,50 +64,54 @@ const getJobInfo = (job: Job, userAddress: string) => {
           return {
             title: "Freelancer Cancelled the Job",
             description: `The freelancer cancelled the job "${job.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...cancelledActivity,
           };
         } else if (freelancer == userAddress) {
           return {
             title: "You Cancelled the Job Request",
             description: `You cancelled your request for "${job.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...cancelledActivity,
           };
         }
       } else {
-        // Caso desconocido o datos faltantes
         return {
           title: "Job Cancelled",
           description: `The job "${job.title}" was cancelled.`,
-          type: ActivityItemType.status,
-          timestamp: castDateToTimestampNum(job.canceledAt),
-          status: ActivityItemStatus.cancelled,
+          ...cancelledActivity,
         };
       }
     }
 
     case JobStateEnum.Ongoing:
       // Freelancer
+
+      const acceptedActivity = {
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(job.acceptedAt),
+        status: ActivityItemStatus.accepted,
+        interactionType: InteractionType.job,
+      };
+
+      const deliveredActivity = {
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(job.deliveredAt),
+        status: ActivityItemStatus.waitingForReview,
+        interactionType: InteractionType.job,
+      };
+
       if (!isClient) {
         if (!job.freelancerDelivered && !job.clientReceived) {
           return {
             title: "You Accepted a New Job",
             description: `You accepted the job "${job.title}". Service is ongoing.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.acceptedAt),
-            status: ActivityItemStatus.accepted,
+            ...acceptedActivity,
           };
         }
         if (job.freelancerDelivered && !job.clientReceived) {
           return {
             title: "Waiting for Client Approval",
             description: `You delivered the job "${job.title}". Waiting for client review.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.deliveredAt),
-            status: ActivityItemStatus.waitingForReview,
+            ...deliveredActivity,
           };
         }
       }
@@ -113,18 +121,14 @@ const getJobInfo = (job: Job, userAddress: string) => {
           return {
             title: "Freelancer Accepted Your Proposal",
             description: `Your request for "${job.title}" was accepted. Service is ongoing.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.acceptedAt),
-            status: ActivityItemStatus.accepted,
+            ...acceptedActivity,
           };
         }
         if (job.freelancerDelivered && !job.clientReceived) {
           return {
             title: "Work Delivered - Awaiting Your Approval",
             description: `The freelancer delivered the job "${job.title}". Please review and approve.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(job.deliveredAt),
-            status: ActivityItemStatus.waitingForReview,
+            ...deliveredActivity,
           };
         }
       }
@@ -137,6 +141,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
         type: ActivityItemType.status,
         timestamp: castDateToTimestampNum(job.finishedAt),
         status: ActivityItemStatus.completed,
+        interactionType: InteractionType.job,
       };
 
     case JobStateEnum.Disputed:
@@ -146,6 +151,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
         type: ActivityItemType.status,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
+        interactionType: InteractionType.job,
       };
 
     default:
@@ -155,6 +161,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
         type: ActivityItemType.unknown,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
+        interactionType: InteractionType.job,
       };
   }
 };
@@ -173,28 +180,31 @@ const getGigInfo = (application: Application, userAddress: string) => {
           type: ActivityItemType.status,
           timestamp: castDateToTimestampNum(gig.createdAt),
           status: ActivityItemStatus.pending,
+          interactionType: InteractionType.gig,
         };
       }
       break;
 
     case GigStateEnum.InProgress:
+      const activity = {
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(gig.acceptedAt),
+        status: ActivityItemStatus.accepted,
+        interactionType: InteractionType.gig,
+      };
       if (isFreelancer) {
         if (!gig.freelancerDelivered && !gig.clientReceived) {
           return {
             title: "You Were Selected for a Gig",
             description: `You were chosen to work on "${gig.title}". Start working and deliver when ready.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.acceptedAt),
-            status: ActivityItemStatus.accepted,
+            ...activity,
           };
         }
         if (gig.freelancerDelivered && !gig.clientReceived) {
           return {
             title: "Work Delivered - Awaiting Client Approval",
             description: `You delivered the gig "${gig.title}". Waiting for client review.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.deliveredAt),
-            status: ActivityItemStatus.waitingForReview,
+            ...activity,
           };
         }
       }
@@ -203,18 +213,14 @@ const getGigInfo = (application: Application, userAddress: string) => {
           return {
             title: "Freelancer Selected",
             description: `You selected a freelancer for "${gig.title}". Work is in progress.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.acceptedAt),
-            status: ActivityItemStatus.accepted,
+            ...activity,
           };
         }
         if (gig.freelancerDelivered && !gig.clientReceived) {
           return {
             title: "Work Delivered by Freelancer",
             description: `The freelancer delivered the gig "${gig.title}". Please review and approve.`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.deliveredAt),
-            status: ActivityItemStatus.waitingForReview,
+            ...activity,
           };
         }
       }
@@ -229,6 +235,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
         type: ActivityItemType.status,
         status: ActivityItemStatus.completed,
         timestamp: castDateToTimestampNum(gig.finishedAt),
+        interactionType: InteractionType.gig,
       };
 
     case GigStateEnum.Cancelled: {
@@ -237,22 +244,31 @@ const getGigInfo = (application: Application, userAddress: string) => {
       const cancelledBy = gig.emitBy?.toLowerCase();
       const user = userAddress?.toLowerCase();
 
+      const activity = {
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(gig.canceledAt),
+        status: ActivityItemStatus.cancelled,
+        interactionType: InteractionType.gig,
+      };
+
       if (cancelledBy === client) {
         if (user === client) {
           return {
             title: "You Cancelled the Gig",
             description: `You cancelled your gig "${gig.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...activity,
           };
         } else if (user === freelancer) {
           return {
             title: "Client Cancelled the Gig",
             description: `The client cancelled the gig "${gig.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...activity,
+          };
+        } else if (user === freelancer) {
+          return {
+            title: "Client Cancelled the Gig",
+            description: `The client cancelled the gig "${gig.title}".`,
+            ...activity,
           };
         }
       } else if (cancelledBy === freelancer) {
@@ -260,17 +276,13 @@ const getGigInfo = (application: Application, userAddress: string) => {
           return {
             title: "Freelancer Cancelled the Gig",
             description: `The freelancer cancelled the gig "${gig.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...activity,
           };
         } else if (user === freelancer) {
           return {
             title: "You Cancelled the Gig",
             description: `You cancelled your participation in the gig "${gig.title}".`,
-            type: ActivityItemType.status,
-            timestamp: castDateToTimestampNum(gig.canceledAt),
-            status: ActivityItemStatus.cancelled,
+            ...activity,
           };
         }
       }
@@ -278,9 +290,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
       return {
         title: "Gig Cancelled",
         description: `The gig "${gig.title}" was cancelled.`,
-        type: ActivityItemType.status,
-        timestamp: castDateToTimestampNum(gig.canceledAt),
-        status: ActivityItemStatus.cancelled,
+        ...activity,
       };
     }
 
@@ -291,6 +301,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
         type: ActivityItemType.unknown,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
+        interactionType: InteractionType.gig,
       };
   }
 };
@@ -308,6 +319,7 @@ const getApplicationInfo = (application: Application, userAddress: string) => {
         type: ActivityItemType.application,
         timestamp: castDateToTimestampNum(application.createdAt),
         status: ActivityItemStatus.pending,
+        interactionType: InteractionType.gig,
       };
 
     case ApplicationState.Accepted:
@@ -322,6 +334,7 @@ const getApplicationInfo = (application: Application, userAddress: string) => {
         type: ActivityItemType.status,
         timestamp: castDateToTimestampNum(application.rejectAt),
         status: ActivityItemStatus.rejected,
+        interactionType: InteractionType.gig,
       };
 
     default:
@@ -331,6 +344,7 @@ const getApplicationInfo = (application: Application, userAddress: string) => {
         type: ActivityItemType.unknown,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
+        interactionType: InteractionType.gig,
       };
   }
 };
@@ -445,9 +459,9 @@ export default function ActivityFeed() {
     <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between mt-12 px-10">
         <h2 className="text-2xl font-semibold text-foreground">Activity Feed</h2>
-        <Button variant="outline" size="sm">
+        {/* <Button variant="outline" size="sm">
           Mark All as Read
-        </Button>
+        </Button> */}
       </div>
       {isLoadingJobs && isLoadingHires && isLoadingApplications && isLoadingGigApplications ? (
         <div className="flex items-center justify-center w-full h-64">
@@ -467,6 +481,7 @@ export default function ActivityFeed() {
                 activity={{
                   ...activity,
                   type: activity.type ?? ActivityItemType.unknown,
+                  interactionType: activity.interactionType ?? InteractionType.unknown,
                   timestamp: castDateToTimestamp(String((activity.timestamp ?? 0) / 1000)),
                 }}
               />
