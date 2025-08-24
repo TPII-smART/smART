@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Badge } from "@/components/Badge";
+import { StatusBadge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { CheckCircle, Clock, DollarSign, Eye, FileText, MessageSquare, Star, XCircle } from "lucide-react";
@@ -31,26 +31,6 @@ const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["statu
       return <Star className="h-5 w-5" />;
     default:
       return <Clock className="h-5 w-5" />;
-  }
-};
-
-const getStatusBadge = (status: ActivityItem["status"]) => {
-  const badgeClass = "min-w-[140px] text-center justify-center"; // Puedes ajustar el valor
-  switch (status) {
-    case ActivityItemStatus.pending:
-      return <Badge className={`bg-yellow-100 text-yellow-800 hover:bg-yellow-100 ${badgeClass}`}>Pending</Badge>;
-    case ActivityItemStatus.accepted:
-      return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Accepted</Badge>;
-    case ActivityItemStatus.cancelled:
-      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Cancelled</Badge>;
-    case ActivityItemStatus.completed:
-      return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Completed</Badge>;
-    case ActivityItemStatus.waitingForReview:
-      return <Badge className={`bg-purple-500 text-white ${badgeClass}`}>Waiting For Review</Badge>;
-    case ActivityItemStatus.rejected:
-      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
-    default:
-      return null;
   }
 };
 
@@ -149,7 +129,9 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">{activity.status && getStatusBadge(activity.status)}</div>
+              <div className="flex items-center gap-2">
+                {activity.status && <StatusBadge status={activity.status} />}
+              </div>
             </div>
           </div>
         </div>

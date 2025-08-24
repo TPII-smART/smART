@@ -57,3 +57,35 @@ export async function waitTransaction(schema: Schemas, transactionHash: `0x${str
     return false;
   }
 }
+
+export function castDateToTimestamp(date: string | undefined): string {
+  if (!date) return "N/A";
+  const timestamp = Number(date) * 1000;
+  const now = Date.now();
+  const diffMs = now - timestamp;
+
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffHour < 24) {
+    if (diffHour < 1) {
+      if (diffMin < 1) {
+        return "0 minutes ago";
+      }
+      return `${diffMin} minutes ago`;
+    }
+    return `${diffHour} hours ago`;
+  } else if (diffDay < 7) {
+    return `${diffDay} days ago`;
+  } else {
+    return new Date(timestamp).toLocaleDateString();
+  }
+}
+
+export function castDateToTimestampNum(date: string | undefined): number {
+  if (!date) return 0;
+  const timestamp = Number(date) * 1000;
+  return isNaN(timestamp) ? 0 : timestamp;
+}
