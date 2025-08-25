@@ -256,25 +256,25 @@ describe("JobsContract", function () {
     });
 
     it("Should allow freelancer to mark job as delivered", async function () {
-      const tx = await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
+      const tx = await jobsContract.connect(freelancer).confirmCompletion(0, 0);
       await expect(tx)
         .to.emit(jobsContract, "FreelancerMarkedAsDelivered")
         .withArgs(0, 0, freelancer.address, anyValue);
     });
 
     it("Should allow client to mark job as received", async function () {
-      const tx = await jobsContract.connect(client).confirmCompletion(0, 0, 1);
+      const tx = await jobsContract.connect(client).confirmCompletion(0, 0);
       await expect(tx).to.emit(jobsContract, "ClientMarkedAsReceived").withArgs(0, 0, client.address, anyValue);
     });
 
     it("Should complete job when both parties confirm", async function () {
       // First confirmation
-      await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
 
       // Second confirmation should complete the job
       const freelancerBalanceBefore = await ethers.provider.getBalance(freelancer.address);
 
-      const tx = await jobsContract.connect(client).confirmCompletion(0, 0, 1);
+      const tx = await jobsContract.connect(client).confirmCompletion(0, 0);
 
       await expect(tx)
         .to.emit(jobsContract, "JobFinished")
@@ -285,9 +285,9 @@ describe("JobsContract", function () {
     });
 
     it("Should revert if same party tries to confirm twice", async function () {
-      await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
 
-      await expect(jobsContract.connect(freelancer).confirmCompletion(0, 0, 0)).to.be.revertedWith(
+      await expect(jobsContract.connect(freelancer).confirmCompletion(0, 0)).to.be.revertedWith(
         "Freelancer already marked the job as delivered",
       );
     });
@@ -303,11 +303,11 @@ describe("JobsContract", function () {
         { value: sampleJob.payment },
       );
 
-      await expect(jobsContract.connect(client).confirmCompletion(0, 1, 1)).to.be.revertedWith("Job is not ongoing");
+      await expect(jobsContract.connect(client).confirmCompletion(0, 1)).to.be.revertedWith("Job is not ongoing");
     });
 
     it("Should revert if called by non-party", async function () {
-      await expect(jobsContract.connect(other).confirmCompletion(0, 0, 0)).to.be.revertedWith(
+      await expect(jobsContract.connect(other).confirmCompletion(0, 0)).to.be.revertedWith(
         "Only job parties can call this",
       );
     });
@@ -315,12 +315,14 @@ describe("JobsContract", function () {
 
   describe("Job Rating", function () {
     beforeEach(async function () {
-      // Create job posting, job, and accept it
+      // Create job posting, job, accept it, and confirm completion
       await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
       await jobsContract.connect(client).createJob(0, sampleJob, {
         value: sampleJob.payment,
       });
       await jobsContract.connect(freelancer).acceptJob(0, 0);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
+      await jobsContract.connect(client).confirmCompletion(0, 0);
     });
 
     it("Should allow client to rate job with valid rating (1-5)", async function () {
@@ -339,7 +341,10 @@ describe("JobsContract", function () {
 
         await jobsContract.connect(freelancer).acceptJob(0, i + 1);
 
-        const tx = await jobsContract.connect(client).confirmCompletion(0, i + 1, validRatings[i]);
+        await jobsContract.connect(freelancer).confirmCompletion(0, i + 1);
+        await jobsContract.connect(client).confirmCompletion(0, i + 1);
+
+        const tx = await jobsContract.connect(client).rateJob(0, i + 1, validRatings[i]);
 
         await expect(tx)
           .to.emit(jobsContract, "JobRated")
@@ -348,77 +353,27 @@ describe("JobsContract", function () {
     });
 
     it("Should revert when client provides invalid rating (0)", async function () {
-      await expect(jobsContract.connect(client).confirmCompletion(0, 0, 0)).to.be.revertedWith("Invalid rating");
+      await expect(jobsContract.connect(client).rateJob(0, 0, 0)).to.be.revertedWith("Invalid rating");
     });
 
     it("Should revert when client provides invalid rating (6)", async function () {
-      await expect(jobsContract.connect(client).confirmCompletion(0, 0, 6)).to.be.revertedWith("Invalid rating");
+      await expect(jobsContract.connect(client).rateJob(0, 0, 6)).to.be.revertedWith("Invalid rating");
     });
 
     it("Should revert when client provides invalid rating (100)", async function () {
-      await expect(jobsContract.connect(client).confirmCompletion(0, 0, 100)).to.be.revertedWith("Invalid rating");
+      await expect(jobsContract.connect(client).rateJob(0, 0, 100)).to.be.revertedWith("Invalid rating");
     });
 
-    it("Should revert when freelancer tries to provide non-zero rating", async function () {
-      await expect(jobsContract.connect(freelancer).confirmCompletion(0, 0, 3)).to.be.revertedWith(
-        "Rating must be 0 for freelancer",
-      );
-    });
-
-    it("Should allow freelancer to confirm with zero rating", async function () {
-      const tx = await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
-
-      await expect(tx)
-        .to.emit(jobsContract, "FreelancerMarkedAsDelivered")
-        .withArgs(0, 0, freelancer.address, anyValue);
-
-      // Should not emit JobRated event for freelancer
-      await expect(tx).to.not.emit(jobsContract, "JobRated");
-    });
-
-    it("Should complete job with rating when both parties confirm", async function () {
-      const rating = 4;
-
-      // Freelancer confirms first
-      await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
-
-      // Client confirms with rating
-      const tx = await jobsContract.connect(client).confirmCompletion(0, 0, rating);
-
-      await expect(tx).to.emit(jobsContract, "JobRated").withArgs(0, 0, client.address, rating, anyValue);
-
-      await expect(tx)
-        .to.emit(jobsContract, "JobFinished")
-        .withArgs(0, 0, freelancer.address, client.address, sampleJob.payment, anyValue);
-    });
-
-    it("Should complete job with rating when client confirms first", async function () {
-      const rating = 3;
-
-      // Client confirms first with rating
-      const tx1 = await jobsContract.connect(client).confirmCompletion(0, 0, rating);
-
-      await expect(tx1).to.emit(jobsContract, "JobRated").withArgs(0, 0, client.address, rating, anyValue);
-
-      // Job should not be finished yet
-      await expect(tx1).to.not.emit(jobsContract, "JobFinished");
-
-      // Freelancer confirms to complete the job
-      const tx2 = await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
-
-      await expect(tx2)
-        .to.emit(jobsContract, "JobFinished")
-        .withArgs(0, 0, freelancer.address, client.address, sampleJob.payment, anyValue);
+    it("Should revert when freelancer tries to rate", async function () {
+      await expect(jobsContract.connect(freelancer).rateJob(0, 0, 3)).to.be.revertedWith("Only client can call this");
     });
 
     it("Should prevent client from rating twice", async function () {
       // Client rates first
-      await jobsContract.connect(client).confirmCompletion(0, 0, 4);
+      await jobsContract.connect(client).rateJob(0, 0, 4);
 
       // Try to rate again - should fail
-      await expect(jobsContract.connect(client).confirmCompletion(0, 0, 3)).to.be.revertedWith(
-        "Client already confirmed job reception",
-      );
+      await expect(jobsContract.connect(client).rateJob(0, 0, 3)).to.be.revertedWith("Job already rated");
     });
 
     it("Should emit correct rating values in events", async function () {
@@ -436,8 +391,10 @@ describe("JobsContract", function () {
         );
 
         await jobsContract.connect(freelancer).acceptJob(0, i + 1);
+        await jobsContract.connect(freelancer).confirmCompletion(0, i + 1);
+        await jobsContract.connect(client).confirmCompletion(0, i + 1);
 
-        const tx = await jobsContract.connect(client).confirmCompletion(0, i + 1, testRatings[i]);
+        const tx = await jobsContract.connect(client).rateJob(0, i + 1, testRatings[i]);
 
         // Verify the exact rating value is emitted
         const receipt = await tx.wait();
@@ -508,8 +465,8 @@ describe("JobsContract", function () {
     it("Should revert if job cannot be cancelled", async function () {
       // Accept job and complete it
       await jobsContract.connect(freelancer).acceptJob(0, 0);
-      await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
-      await jobsContract.connect(client).confirmCompletion(0, 0, 1);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
+      await jobsContract.connect(client).confirmCompletion(0, 0);
 
       await expect(jobsContract.connect(client).cancelJob(0, 0)).to.be.revertedWith(
         "Job cannot be cancelled in its current state",
@@ -624,8 +581,8 @@ describe("JobsContract", function () {
       await jobsContract.connect(freelancer).acceptJob(0, 0);
 
       // Complete it to move to Finished (2)
-      await jobsContract.connect(freelancer).confirmCompletion(0, 0, 0);
-      await jobsContract.connect(client).confirmCompletion(0, 0, 1);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
+      await jobsContract.connect(client).confirmCompletion(0, 0);
 
       // Job should now be in Finished state
       // This test verifies the state transitions work correctly

@@ -310,15 +310,12 @@ contract JobsContract {
      * @dev Confirm job completion (both parties must confirm in order to complete the job)
      * This function allows either the client or freelancer to confirm that the job has been completed.
      * If both parties confirm, the job is marked as finished and payment is released.
-     * A rating must be provided by the client.
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
-     * @param _rating The rating for the job (must be 0 if freelancer is calling)
      */
     function confirmCompletion(
         uint256 _postingId,
-        uint256 _jobId,
-        uint8 _rating
+        uint256 _jobId
     ) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
@@ -329,13 +326,10 @@ contract JobsContract {
         // Set confirmation based on who is calling
         if (msg.sender == job.client) {
             require(!job.clientReceived, "Client already confirmed job reception");
-            require(_rating >= 1 && _rating <= 5, "Invalid rating");
             job.clientReceived = true;
             emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
-            _rateJob(_postingId, _jobId, _rating);
         } else {
             require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
-            require(_rating == 0, "Rating must be 0 for freelancer");
             job.freelancerDelivered = true;
             emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, block.timestamp);
         }
@@ -368,12 +362,16 @@ contract JobsContract {
      * @param _jobId The job ID to rate
      * @param _rating The rating given by the client (1-5)
      */
-    function _rateJob(
+    function rateJob(
         uint256 _postingId,
         uint256 _jobId,
         uint8 _rating
-    ) internal {
+    ) external onlyClient(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
+        require(job.state == JobState.Finished, "Job is not finished");
+        require(job.rating == 0, "Job already rated");
+        require(_rating >= 1 && _rating <= 5, "Invalid rating");
+        require(_rating % 1 == 0, "Rating must be an integer");
         job.rating = _rating;
         emit JobRated(_postingId, _jobId, msg.sender, _rating, block.timestamp);
     }

@@ -364,9 +364,8 @@ contract GigsContract {
     /**
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
-     * @param _rating Rating given by the client (1-5)
      */
-    function confirmCompletion(uint256 _gigId, uint8 _rating) external gigExists(_gigId) onlyGigParties(_gigId) {
+    function confirmCompletion(uint256 _gigId) external gigExists(_gigId) onlyGigParties(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
@@ -376,14 +375,10 @@ contract GigsContract {
         if (msg.sender == gig.client) {
             require(!gig.clientReceived, "Client already confirmed reception");
             gig.clientReceived = true;
-            require(_rating >= 1 && _rating <= 5, "Invalid rating");
-            gig.rating = _rating;
             emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
-            emit GigRated(_gigId, msg.sender, _rating, block.timestamp);
         } else {
             require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
             gig.freelancerDelivered = true;
-            require(_rating == 0, "Rating must be 0 for freelancer");
             emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
         }
 
@@ -391,6 +386,22 @@ contract GigsContract {
         if (gig.clientReceived && gig.freelancerDelivered) {
             _completeGig(_gigId);
         }
+    }
+
+    /**
+     * @dev Rate the gig (only client can rate after completion)
+     * @param _gigId The gig ID to rate
+     * @param _rating The rating to give (1-5)
+     */
+    function rateGig(uint256 _gigId, uint8 _rating) external gigExists(_gigId) onlyClient(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+        require(gig.state == GigState.Completed, "Gig is not completed");
+        require(gig.rating == 0, "Gig already rated");
+        require(_rating >= 1 && _rating <= 5, "Invalid rating");
+        require(_rating % 1 == 0, "Rating must be an integer");
+
+        gig.rating = _rating;
+        emit GigRated(_gigId, msg.sender, _rating, block.timestamp);
     }
 
     /**

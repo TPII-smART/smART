@@ -349,23 +349,23 @@ describe("GigsContract", function () {
     });
 
     it("Should allow freelancer to mark gig as delivered", async function () {
-      const tx = await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
+      const tx = await gigsContract.connect(freelancer1).confirmCompletion(0);
       await expect(tx).to.emit(gigsContract, "FreelancerMarkedAsDelivered").withArgs(0, freelancer1.address, anyValue);
     });
 
     it("Should allow client to mark gig as received", async function () {
-      const tx = await gigsContract.connect(client).confirmCompletion(0, 1);
+      const tx = await gigsContract.connect(client).confirmCompletion(0);
       await expect(tx).to.emit(gigsContract, "ClientMarkedAsReceived").withArgs(0, client.address, anyValue);
     });
 
     it("Should complete gig when both parties confirm", async function () {
       // First confirmation
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
+      await gigsContract.connect(freelancer1).confirmCompletion(0);
 
       // Second confirmation should complete the gig
       const freelancerBalanceBefore = await ethers.provider.getBalance(freelancer1.address);
 
-      const tx = await gigsContract.connect(client).confirmCompletion(0, 1);
+      const tx = await gigsContract.connect(client).confirmCompletion(0);
 
       await expect(tx)
         .to.emit(gigsContract, "GigCompleted")
@@ -376,9 +376,9 @@ describe("GigsContract", function () {
     });
 
     it("Should revert if same party tries to confirm twice", async function () {
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
+      await gigsContract.connect(freelancer1).confirmCompletion(0);
 
-      await expect(gigsContract.connect(freelancer1).confirmCompletion(0, 0)).to.be.revertedWith(
+      await expect(gigsContract.connect(freelancer1).confirmCompletion(0)).to.be.revertedWith(
         "Freelancer already marked as delivered",
       );
     });
@@ -390,11 +390,11 @@ describe("GigsContract", function () {
         title: "Second Gig",
       });
 
-      await expect(gigsContract.connect(client).confirmCompletion(1, 1)).to.be.revertedWith("Gig is not in progress");
+      await expect(gigsContract.connect(client).confirmCompletion(1)).to.be.revertedWith("Gig is not in progress");
     });
 
     it("Should revert if called by non-party", async function () {
-      await expect(gigsContract.connect(other).confirmCompletion(0, 0)).to.be.revertedWith(
+      await expect(gigsContract.connect(other).confirmCompletion(0)).to.be.revertedWith(
         "Only gig parties can call this",
       );
     });
@@ -402,12 +402,14 @@ describe("GigsContract", function () {
 
   describe("Gig Rating", function () {
     beforeEach(async function () {
-      // Create gig, application, and accept it
+      // Create gig, application, accept it and confirm completion
       await gigsContract.connect(client).createGig(sampleGig);
       await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
       await gigsContract.connect(client).acceptApplication(0, 0, {
         value: sampleApplication.proposedPayment,
       });
+      await gigsContract.connect(freelancer1).confirmCompletion(0);
+      await gigsContract.connect(client).confirmCompletion(0);
     });
 
     it("Should allow client to rate gig with valid rating (1-5)", async function () {
@@ -425,7 +427,10 @@ describe("GigsContract", function () {
           value: sampleApplication.proposedPayment,
         });
 
-        const tx = await gigsContract.connect(client).confirmCompletion(i + 1, validRatings[i]);
+        await gigsContract.connect(freelancer1).confirmCompletion(i + 1);
+        await gigsContract.connect(client).confirmCompletion(i + 1);
+
+        const tx = await gigsContract.connect(client).rateGig(i + 1, validRatings[i]);
 
         await expect(tx)
           .to.emit(gigsContract, "GigRated")
@@ -434,75 +439,27 @@ describe("GigsContract", function () {
     });
 
     it("Should revert when client provides invalid rating (0)", async function () {
-      await expect(gigsContract.connect(client).confirmCompletion(0, 0)).to.be.revertedWith("Invalid rating");
+      await expect(gigsContract.connect(client).rateGig(0, 0)).to.be.revertedWith("Invalid rating");
     });
 
     it("Should revert when client provides invalid rating (6)", async function () {
-      await expect(gigsContract.connect(client).confirmCompletion(0, 6)).to.be.revertedWith("Invalid rating");
+      await expect(gigsContract.connect(client).rateGig(0, 6)).to.be.revertedWith("Invalid rating");
     });
 
     it("Should revert when client provides invalid rating (100)", async function () {
-      await expect(gigsContract.connect(client).confirmCompletion(0, 100)).to.be.revertedWith("Invalid rating");
+      await expect(gigsContract.connect(client).rateGig(0, 100)).to.be.revertedWith("Invalid rating");
     });
 
-    it("Should revert when freelancer tries to provide non-zero rating", async function () {
-      await expect(gigsContract.connect(freelancer1).confirmCompletion(0, 3)).to.be.revertedWith(
-        "Rating must be 0 for freelancer",
-      );
-    });
-
-    it("Should allow freelancer to confirm with zero rating", async function () {
-      const tx = await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-
-      await expect(tx).to.emit(gigsContract, "FreelancerMarkedAsDelivered").withArgs(0, freelancer1.address, anyValue);
-
-      // Should not emit GigRated event for freelancer
-      await expect(tx).to.not.emit(gigsContract, "GigRated");
-    });
-
-    it("Should complete gig with rating when both parties confirm", async function () {
-      const rating = 4;
-
-      // Freelancer confirms first
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-
-      // Client confirms with rating
-      const tx = await gigsContract.connect(client).confirmCompletion(0, rating);
-
-      await expect(tx).to.emit(gigsContract, "GigRated").withArgs(0, client.address, rating, anyValue);
-
-      await expect(tx)
-        .to.emit(gigsContract, "GigCompleted")
-        .withArgs(0, freelancer1.address, client.address, sampleApplication.proposedPayment, anyValue);
-    });
-
-    it("Should complete gig with rating when client confirms first", async function () {
-      const rating = 3;
-
-      // Client confirms first with rating
-      const tx1 = await gigsContract.connect(client).confirmCompletion(0, rating);
-
-      await expect(tx1).to.emit(gigsContract, "GigRated").withArgs(0, client.address, rating, anyValue);
-
-      // Gig should not be completed yet
-      await expect(tx1).to.not.emit(gigsContract, "GigCompleted");
-
-      // Freelancer confirms to complete the gig
-      const tx2 = await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-
-      await expect(tx2)
-        .to.emit(gigsContract, "GigCompleted")
-        .withArgs(0, freelancer1.address, client.address, sampleApplication.proposedPayment, anyValue);
+    it("Should revert when freelancer tries to rate", async function () {
+      await expect(gigsContract.connect(freelancer1).rateGig(0, 0)).to.be.revertedWith("Only client can call this");
     });
 
     it("Should prevent client from rating twice", async function () {
       // Client rates first
-      await gigsContract.connect(client).confirmCompletion(0, 4);
+      await gigsContract.connect(client).rateGig(0, 4);
 
       // Try to rate again - should fail
-      await expect(gigsContract.connect(client).confirmCompletion(0, 3)).to.be.revertedWith(
-        "Client already confirmed reception",
-      );
+      await expect(gigsContract.connect(client).rateGig(0, 3)).to.be.revertedWith("Gig already rated");
     });
 
     it("Should emit correct rating values in events", async function () {
@@ -520,7 +477,10 @@ describe("GigsContract", function () {
           value: sampleApplication.proposedPayment,
         });
 
-        const tx = await gigsContract.connect(client).confirmCompletion(i + 1, testRatings[i]);
+        await gigsContract.connect(freelancer1).confirmCompletion(i + 1);
+        await gigsContract.connect(client).confirmCompletion(i + 1);
+
+        const tx = await gigsContract.connect(client).rateGig(i + 1, testRatings[i]);
 
         // Verify the exact rating value is emitted
         const receipt = await tx.wait();
@@ -552,89 +512,21 @@ describe("GigsContract", function () {
       const rating = 5;
 
       // Complete gig with rating
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-      await gigsContract.connect(client).confirmCompletion(0, rating);
+      await gigsContract.connect(client).rateGig(0, rating);
 
       // Check that rating is stored in the gig
       const gig = await gigsContract.postedGigs(0);
       expect(gig.rating).to.equal(rating);
     });
 
-    it("Should not allow rating on non-InProgress gigs", async function () {
+    it("Should not allow rating on non-Completed gigs", async function () {
       // Create a new gig but don't accept any application (stays in Open state)
       await gigsContract.connect(client).createGig({
         ...sampleGig,
         title: "Open Gig for Rating Test",
       });
 
-      await expect(gigsContract.connect(client).confirmCompletion(1, 4)).to.be.revertedWith("Gig is not in progress");
-    });
-
-    it("Should not allow rating on completed gigs", async function () {
-      // Complete the gig first
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-      await gigsContract.connect(client).confirmCompletion(0, 4);
-
-      // Try to rate again - should fail because gig is completed
-      await expect(gigsContract.connect(client).confirmCompletion(0, 5)).to.be.revertedWith("Gig is not in progress");
-    });
-
-    it("Should handle edge case ratings (1 and 5)", async function () {
-      // Test minimum valid rating (1)
-      await gigsContract.connect(client).createGig({
-        ...sampleGig,
-        title: "Minimum Rating Test",
-      });
-      await gigsContract.connect(freelancer1).applyToGig(1, sampleApplication);
-      await gigsContract.connect(client).acceptApplication(1, 0, {
-        value: sampleApplication.proposedPayment,
-      });
-
-      const tx1 = await gigsContract.connect(client).confirmCompletion(1, 1);
-      await expect(tx1).to.emit(gigsContract, "GigRated").withArgs(1, client.address, 1, anyValue);
-
-      // Test maximum valid rating (5)
-      await gigsContract.connect(client).createGig({
-        ...sampleGig,
-        title: "Maximum Rating Test",
-      });
-      await gigsContract.connect(freelancer1).applyToGig(2, sampleApplication);
-      await gigsContract.connect(client).acceptApplication(2, 0, {
-        value: sampleApplication.proposedPayment,
-      });
-
-      const tx2 = await gigsContract.connect(client).confirmCompletion(2, 5);
-      await expect(tx2).to.emit(gigsContract, "GigRated").withArgs(2, client.address, 5, anyValue);
-    });
-
-    it("Should maintain rating consistency throughout completion flow", async function () {
-      const rating = 4;
-
-      // Freelancer confirms delivery first
-      const tx1 = await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-
-      // Verify freelancer confirmation doesn't emit rating event
-      await expect(tx1).to.not.emit(gigsContract, "GigRated");
-
-      // Client confirms reception with rating
-      const tx2 = await gigsContract.connect(client).confirmCompletion(0, rating);
-
-      // Verify rating event is emitted
-      await expect(tx2).to.emit(gigsContract, "GigRated").withArgs(0, client.address, rating, anyValue);
-
-      // Verify completion event is emitted with correct details
-      await expect(tx2)
-        .to.emit(gigsContract, "GigCompleted")
-        .withArgs(0, freelancer1.address, client.address, sampleApplication.proposedPayment, anyValue);
-
-      // Verify final gig state
-      const gig = await gigsContract.postedGigs(0);
-      expect(gig.rating).to.equal(rating);
-      expect(gig.state).to.equal(2); // GigState.Completed
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(gig.clientReceived).to.be.true;
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      expect(gig.freelancerDelivered).to.be.true;
+      await expect(gigsContract.connect(client).rateGig(1, 4)).to.be.revertedWith("Gig is not completed");
     });
   });
 
@@ -674,8 +566,8 @@ describe("GigsContract", function () {
       // Apply, accept and complete the gig
       await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
       await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-      await gigsContract.connect(client).confirmCompletion(0, 1);
+      await gigsContract.connect(freelancer1).confirmCompletion(0);
+      await gigsContract.connect(client).confirmCompletion(0);
 
       await expect(gigsContract.connect(client).cancelGig(0)).to.be.revertedWith(
         "Gig cannot be cancelled in its current state",
@@ -778,8 +670,8 @@ describe("GigsContract", function () {
       expect(gig.state).to.equal(1);
 
       // Complete it to move to Completed (2)
-      await gigsContract.connect(freelancer1).confirmCompletion(0, 0);
-      await gigsContract.connect(client).confirmCompletion(0, 1);
+      await gigsContract.connect(freelancer1).confirmCompletion(0);
+      await gigsContract.connect(client).confirmCompletion(0);
 
       gig = await gigsContract.postedGigs(0);
       expect(gig.state).to.equal(2);
