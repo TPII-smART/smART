@@ -18,7 +18,9 @@ export default function JobPosting() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen mt-4">
+    <div className="flex flex-col mb-4 text-start p-4 ml-2">
+      <h1 className="text-3xl font-bold tracking-tight text-content-primary">Job Details</h1>
+      <p className="text-muted-foreground mt-2">View and manage your freelance job</p>
       <JobDetail postingId={String(postingId)} jobId={String(jobId)} />
     </div>
   );

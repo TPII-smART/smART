@@ -75,7 +75,8 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
   return (
     <div className="w-full px-4 md:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-content-primary mb-12">Manage Jobs for this posting</h1>
+        <h1 className="text-3xl font-bold text-content-primary mb-4">Manage Jobs for this posting</h1>
+        <p className="text-muted-foreground mt-2">View and manage all the Jobs related to this posting</p>
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
           <InputBase
             variant="outlined"

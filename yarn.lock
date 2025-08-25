@@ -14550,6 +14550,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react@npm:^0.541.0":
+  version: 0.541.0
+  resolution: "lucide-react@npm:0.541.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 17c5ceae4a9a500dad2ba9e03efc71dff6c74ca638aa40a3cf0e3ec3aaef54df44aedcda978e6797372ac3f8dc1256343bca694eb453a685e60fa9159069b391
+  languageName: node
+  linkType: hard
+
 "main-event@npm:^1.0.1":
   version: 1.0.1
   resolution: "main-event@npm:1.0.1"
@@ -17927,6 +17936,7 @@ __metadata:
     framer-motion: ^12.18.1
     husky: ~9.1.6
     lint-staged: ~13.2.2
+    lucide-react: ^0.541.0
     motion: ^12.23.12
     tailwind-merge: ^3.3.1
   languageName: unknown

@@ -72,6 +72,7 @@
     "@thirdweb-dev/storage": "^2.0.15",
     "class-variance-authority": "^0.7.1",
     "framer-motion": "^12.18.1",
+    "lucide-react": "^0.541.0",
     "motion": "^12.23.12",
     "tailwind-merge": "^3.3.1"
   }

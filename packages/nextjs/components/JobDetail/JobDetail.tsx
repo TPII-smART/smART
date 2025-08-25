@@ -1,39 +1,393 @@
+import { Badge } from "@/components/Badge";
+import Button from "@/components/Button/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import Spinner from "@/components/Spinner/Spinner";
+import { Separator } from "@/components/ui/Separator";
 import { fetchJob } from "@services/graphql/fetchers/job";
-import { useQuery } from "@tanstack/react-query";
-import { Job } from "~~/types/job/job.types";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, CalendarDays, CheckCircle, Clock, DollarSign, FileText, User, XCircle } from "lucide-react";
+import { formatEther } from "viem";
+import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
+import { useGlobalState } from "~~/services/store/store";
+import { Job, JobStateEnum } from "~~/types/job";
 
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
-  //const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery<Job>({
+  const queryClient = useQueryClient();
+
+  // Logic related to parsing from ETH to USD
+  const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
+  // const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
+  const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: false });
+
+  const { data, isLoading, error, refetch } = useQuery<Job>({
     queryKey: ["jobDetail", jobId],
     queryFn: () => fetchJob(postingId, jobId),
   });
 
-  //const reload = async () => {
-  //  queryClient.invalidateQueries({ queryKey: ["jobDetail", postingId, jobId] });
-  //  await new Promise(resolve => setTimeout(resolve, 1000));
-  //  await refetch();
-  //};
+  const formatPaymentDisplay = (wei: bigint) => {
+    const eth = formatEther(wei);
+    const ethNum = parseFloat(eth);
+
+    if (ethNum === 0) return "Free";
+
+    if (displayUsdMode && nativeCurrencyPrice > 0) {
+      const usdValue = ethNum * nativeCurrencyPrice;
+      return `$${usdValue < 0.01 ? usdValue.toFixed(6) : usdValue.toFixed(2)}`;
+    } else {
+      if (ethNum < 0.001) return `${ethNum.toFixed(6)} ETH`;
+      if (ethNum < 1) return `${ethNum.toFixed(4)} ETH`;
+      return `${ethNum.toFixed(3)} ETH`;
+    }
+  };
+
+  const reload = async () => {
+    queryClient.invalidateQueries({ queryKey: ["jobDetail", postingId, jobId] });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await refetch();
+  };
+
+  const getStatusBadge = (status: number) => {
+    const badgeClass = "min-w-[140px] text-center justify-center px-4 py-2";
+    switch (status) {
+      case JobStateEnum.WaitingForApproval:
+        return (
+          <Badge
+            className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
+          >
+            Waiting for approval
+          </Badge>
+        );
+      case JobStateEnum.Ongoing:
+        return (
+          <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
+            Ongoing
+          </Badge>
+        );
+      case JobStateEnum.Cancelled:
+        return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Cancelled</Badge>;
+      case JobStateEnum.Finished:
+        return (
+          <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
+            Completed
+          </Badge>
+        );
+      case JobStateEnum.Disputed:
+        return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const getActionButtons = (jobData: Job) => {
+    switch (jobData.state) {
+      case JobStateEnum.WaitingForApproval:
+        return (
+          <div className="flex gap-4">
+            <Button
+              variant={"primary"}
+              className="bg-[var(--color-success)] hover:bg-[var(--color-success)] text-[var(--color-primary-content)] px-6 py-3"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Approve Job
+            </Button>
+            <Button
+              variant={"primary"}
+              className="border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white bg-transparent border-2 px-6 py-3"
+            >
+              <XCircle className="w-4 h-4 mr-2" />
+              Reject Job
+            </Button>
+          </div>
+        );
+      case JobStateEnum.Ongoing:
+        return (
+          <div className="flex gap-4">
+            <Button
+              variant={"primary"}
+              className="bg-[var(--color-info)] hover:bg-[var(--color-info)] text-white px-6 py-3"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Submit Deliverable
+            </Button>
+            <Button
+              variant={"primary"}
+              className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white px-6 py-3"
+            >
+              <User className="w-4 h-4 mr-2" />
+              Contact Client
+            </Button>
+          </div>
+        );
+      case JobStateEnum.Finished:
+        return (
+          <div className="flex gap-4">
+            <Button variant={"primary"} disabled className="bg-[var(--color-skeleton)] text-white px-6 py-3">
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Job Completed
+            </Button>
+            <Button
+              variant={"primary"}
+              className="bg-[var(--color-info)] hover:bg-[var(--color-info)] text-white px-6 py-3"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              View Deliverables
+            </Button>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateString: string | undefined) => {
+    return dateString ? new Date(Number(dateString) * 1000).toLocaleDateString() : "N/A";
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center w-full h-64">
+        <Spinner />
+      </div>
+    );
+  }
+
+  // Formats the amount of hours proposed for the duration of the job to a human-readable string
+  const formatDurationHours = (hours: string | undefined) => {
+    if (!hours || hours === "0") return "Not specified";
+
+    let totalHours = Number(BigInt(hours));
+    let days = Math.floor(totalHours / 24);
+    const weeks = Math.floor(days / 7);
+
+    if (weeks > 0) days -= weeks * 7;
+    if (days > 0) totalHours -= days * 24;
+
+    return `${
+      weeks > 0 ? `${weeks} week${weeks > 1 ? "s" : ""} ` : ""
+    }${days > 0 ? `${days} day${days > 1 ? "s" : ""} ` : ""}${
+      totalHours > 0 ? `${totalHours} hour${totalHours > 1 ? "s" : ""}` : ""
+    }`.trim();
+  };
+
+  if (error || !data) {
+    return (
+      <div className="min-h-screen w-full p-8 bg-[var(--color-primary)]">
+        <div className="max-w-6xl mx-auto">
+          <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
+            <CardContent className="pt-12 pb-12">
+              <div className="text-center">
+                <AlertCircle className="w-16 h-16 text-[var(--color-error)] mx-auto mb-6" />
+                <h3 className="text-2xl font-semibold mb-4 text-[var(--color-primary-content)]">Error loading job</h3>
+                <p className="text-[var(--color-skeleton)] mb-6 text-lg">
+                  {error?.message || "Failed to load job details"}
+                </p>
+                <Button
+                  variant={"primary"}
+                  onClick={reload}
+                  className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white px-8 py-3"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col min-h-screen mt-4">
-      <h1 className="text-2xl font-bold mb-4">Job Details</h1>
-      {/* Job details component will be implemented here */}
-      <p>
-        Details for job ID: {jobId} and posting ID: {postingId}
-      </p>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <div>
-          <h2 className="text-xl font-semibold">{data?.title}</h2>
-          <p>{data?.description}</p>
-          <p>Payment: {data?.payment}</p>
-          <p>Category: {data?.category}</p>
-          <p>State: {data?.state}</p>
-          {/* Add more job details as needed */}
+    <div className="min-h-screen w-full p-8 bg-[var(--color-primary)]">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Header Section */}
+        <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+          <CardHeader className="p-8">
+            <div className="flex items-start justify-between">
+              <div className="space-y-4 flex-1">
+                <CardTitle className="text-4xl font-bold text-[var(--color-primary-content)] leading-tight">
+                  {data.title}
+                </CardTitle>
+                <div className="flex items-center gap-6">
+                  {getStatusBadge(data.state)}
+                  <Badge className="bg-[var(--color-secondary)] text-[var(--color-secondary-content)] px-4 py-2 text-base">
+                    {data.category}
+                  </Badge>
+                </div>
+              </div>
+              <div
+                className="text-right bg-[var(--color-success)]/10 p-6 rounded-lg cursor-pointer"
+                onClick={toggleDisplayUsdMode}
+                title="Toggle USD/ETH display"
+              >
+                <div className="flex items-center text-4xl font-bold text-[var(--color-success)]">
+                  {displayUsdMode ? <DollarSign className="w-8 h-8 mr-2" /> : null}
+                  {formatPaymentDisplay(BigInt(data?.payment || "0"))}
+                </div>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {/* Job Details */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          {/* Left Column */}
+          <div className="space-y-8">
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Job Description</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0">
+                <div className="bg-[var(--color-primary)]/30 p-6 rounded-lg">
+                  <p className="text-[var(--color-primary-content)] leading-relaxed text-lg">{data.description}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Timeline & Duration</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-6">
+                <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <div className="p-3 bg-[var(--color-accent)] rounded-full">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg text-[var(--color-primary-content)]">Duration</p>
+                    <p className="text-[var(--color-skeleton)] text-base">{formatDurationHours(data.jobDuration)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <div className="p-3 bg-[var(--color-info)] rounded-full">
+                    <CalendarDays className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-lg text-[var(--color-primary-content)]">Deadline</p>
+                    <p className="text-[var(--color-skeleton)] text-base">
+                      {data.state === JobStateEnum.WaitingForApproval
+                        ? "Deadline not yet defined"
+                        : formatDate(String(data.deadline))}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-8">
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Participants</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-6">
+                <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <p className="font-semibold text-lg mb-2 text-[var(--color-primary-content)]">Client</p>
+                  <p className="text-[var(--color-skeleton)] font-mono text-base bg-[var(--color-input)]/20 p-2 rounded">
+                    {data.client}
+                  </p>
+                </div>
+                {data.freelancer && (
+                  <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                    <p className="font-semibold text-lg mb-2 text-[var(--color-primary-content)]">Freelancer</p>
+                    <p className="text-[var(--color-skeleton)] font-mono text-base bg-[var(--color-input)]/20 p-2 rounded">
+                      {data.freelancer}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Job Timeline</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-4">
+                <div className="flex justify-between items-center p-3 bg-[var(--color-primary)]/20 rounded-lg">
+                  <span className="text-base font-semibold text-[var(--color-primary-content)]">Created</span>
+                  <span className="text-base text-[var(--color-skeleton)]">{formatDate(data.createdAt)}</span>
+                </div>
+                {data.acceptedAt && (
+                  <>
+                    <Separator className="bg-[var(--color-border)]" />
+                    <div className="flex justify-between items-center p-3 bg-[var(--color-primary)]/20 rounded-lg">
+                      <span className="text-base font-semibold text-[var(--color-primary-content)]">Accepted</span>
+                      <span className="text-base text-[var(--color-skeleton)]">{formatDate(data.acceptedAt)}</span>
+                    </div>
+                  </>
+                )}
+                {data.finishedAt && (
+                  <>
+                    <Separator className="bg-[var(--color-border)]" />
+                    <div className="flex justify-between items-center p-3 bg-[var(--color-primary)]/20 rounded-lg">
+                      <span className="text-base font-semibold text-[var(--color-primary-content)]">Finished</span>
+                      <span className="text-base text-[var(--color-skeleton)]">{formatDate(data.finishedAt)}</span>
+                    </div>
+                  </>
+                )}
+                {data.canceledAt && (
+                  <>
+                    <Separator className="bg-[var(--color-border)]" />
+                    <div className="flex justify-between items-center p-3 bg-[var(--color-primary)]/20 rounded-lg">
+                      <span className="text-base font-semibold text-[var(--color-primary-content)]">Cancelled</span>
+                      <span className="text-base text-[var(--color-skeleton)]">{formatDate(data.canceledAt)}</span>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardHeader className="p-6">
+                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Delivery Status</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 pt-0 space-y-4">
+                <div className="flex justify-between items-center p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <span className="text-base font-semibold text-[var(--color-primary-content)]">
+                    Freelancer Delivered
+                  </span>
+                  <Badge
+                    variant={data.freelancerDelivered ? "default" : "secondary"}
+                    className={
+                      data.freelancerDelivered
+                        ? "bg-[var(--color-success)] text-[var(--color-primary-content)]"
+                        : "bg-[var(--color-secondary)] text-[var(--color-secondary-content)]"
+                    }
+                  >
+                    {data.freelancerDelivered ? "Yes" : "No"}
+                  </Badge>
+                </div>
+                <div className="flex justify-between items-center p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <span className="text-base font-semibold text-[var(--color-primary-content)]">Client Received</span>
+                  <Badge
+                    variant={data.clientReceived ? "default" : "secondary"}
+                    className={
+                      data.clientReceived
+                        ? "bg-[var(--color-success)] text-[var(--color-primary-content)]"
+                        : "bg-[var(--color-secondary)] text-[var(--color-secondary-content)]"
+                    }
+                  >
+                    {data.clientReceived ? "Yes" : "No"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
-      )}
+
+        {/* Action Buttons */}
+        <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+          <CardContent className="p-8">
+            <div className="flex justify-between items-center">
+              <div className="space-y-2">
+                <p className="font-semibold text-lg text-[var(--color-primary-content)]">Job ID: {data.jobId}</p>
+                <p className="text-base text-[var(--color-skeleton)]">Posting ID: {data.postingId}</p>
+              </div>
+              {getActionButtons(data)}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
