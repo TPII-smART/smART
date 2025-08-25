@@ -84,20 +84,11 @@ export const fetchApplicationsWithGigDetails = async (userAddress: string) => {
   return { applications: applicationsWithGigDetails };
 };
 
-export const fetchApplicationsForGig = async (gigId: string) => {
-  const res = await request<{ gigApplications: { items: Application[] } }>(endpoint, GigQueries.getApplicationsForGig, {
-    gigId: gigId,
-  });
-  return { applications: res.gigApplications.items };
-};
-
 export const fetchApplicationsForMyGigs = async (userAddress: string) => {
-  // 1. Trae tus gigs
   const gigsRes = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getMyGigs, { userAddress });
   const gigIds = gigsRes.gigs.items.map(gig => gig.gigId.toString());
   if (gigIds.length === 0) return { applications: [] };
 
-  // 2. Trae todas las aplicaciones para esos gigs
   const res = await request<{ gigApplications: { items: Application[] } }>(
     endpoint,
     GigQueries.getApplicationsForGigs,
@@ -105,17 +96,22 @@ export const fetchApplicationsForMyGigs = async (userAddress: string) => {
   );
   const applications = res.gigApplications.items;
 
-  // 3. Trae el detalle de los gigs
   const resGigs = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getGigByIds, { gigIds });
   const gigsMap = new Map(resGigs.gigs.items.map(gig => [gig.gigId.toString(), gig]));
 
-  // 4. Une cada aplicación con su gig
   const applicationsWithGigDetails = applications.map(app => ({
     ...app,
     gig: gigsMap.get(app.gigId.toString()),
   }));
 
   return { applications: applicationsWithGigDetails };
+};
+
+export const fetchApplicationsForGig = async (gigId: string) => {
+  const res = await request<{ gigApplications: { items: Application[] } }>(endpoint, GigQueries.getApplicationsForGig, {
+    gigId: gigId,
+  });
+  return { applications: res.gigApplications.items };
 };
 
 export const fetchGigById = async (gigId: string) => {

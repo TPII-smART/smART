@@ -11,7 +11,7 @@ import {
   fetchApplicationsForMyGigs,
   fetchApplicationsWithGigDetails,
 } from "~~/services/graphql/fetchers/gig/gig.service";
-import { fetchHires, fetchMyJobs } from "~~/services/graphql/fetchers/job/job.service";
+import { fetchJobsAndHires } from "~~/services/graphql/fetchers/job/job.service";
 import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
 import { Application, ApplicationState, ApplicationsData } from "~~/types/gig/gig-application.types";
 import { GigStateEnum } from "~~/types/gig/gig.types";
@@ -186,25 +186,33 @@ const getGigInfo = (application: Application, userAddress: string) => {
       break;
 
     case GigStateEnum.InProgress:
-      const activity = {
+      const acceptedActivity = {
         type: ActivityItemType.status,
         timestamp: castDateToTimestampNum(gig.acceptedAt),
         status: ActivityItemStatus.accepted,
         interactionType: InteractionType.gig,
       };
+
+      const waitingForApprovalActivity = {
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(gig.deliveredAt),
+        status: ActivityItemStatus.waitingForReview,
+        interactionType: InteractionType.gig,
+      };
+
       if (isFreelancer) {
         if (!gig.freelancerDelivered && !gig.clientReceived) {
           return {
             title: "You Were Selected for a Gig",
             description: `You were chosen to work on "${gig.title}". Start working and deliver when ready.`,
-            ...activity,
+            ...acceptedActivity,
           };
         }
         if (gig.freelancerDelivered && !gig.clientReceived) {
           return {
             title: "Work Delivered - Awaiting Client Approval",
             description: `You delivered the gig "${gig.title}". Waiting for client review.`,
-            ...activity,
+            ...waitingForApprovalActivity,
           };
         }
       }
@@ -213,14 +221,14 @@ const getGigInfo = (application: Application, userAddress: string) => {
           return {
             title: "Freelancer Selected",
             description: `You selected a freelancer for "${gig.title}". Work is in progress.`,
-            ...activity,
+            ...acceptedActivity,
           };
         }
         if (gig.freelancerDelivered && !gig.clientReceived) {
           return {
             title: "Work Delivered by Freelancer",
             description: `The freelancer delivered the gig "${gig.title}". Please review and approve.`,
-            ...activity,
+            ...waitingForApprovalActivity,
           };
         }
       }
@@ -352,16 +360,29 @@ const getApplicationInfo = (application: Application, userAddress: string) => {
 export default function ActivityFeed() {
   const { address: userAddress } = useAccount();
 
-  const { data: jobData, isLoading: isLoadingJobs } = useQuery<JobsData>({
-    queryKey: ["jobsFromUser", userAddress],
-    queryFn: () => fetchMyJobs(userAddress || ""),
-    refetchInterval: 1000 * 60 * 5,
-  });
+  // const { data: jobData, isLoading: isLoadingJobs } = useQuery<JobsData>({
+  //   queryKey: ["jobsFromUser", userAddress],
+  //   queryFn: () => fetchMyJobs(userAddress || ""),
+  //   refetchInterval: 1000 * 60 * 5,
+  //   staleTime: 0,
+  // });
 
-  const { data: hireData, isLoading: isLoadingHires } = useQuery<JobsData>({
-    queryKey: ["HiresFromUser", userAddress],
-    queryFn: () => fetchHires(userAddress || ""),
+  // const { data: hireData, isLoading: isLoadingHires } = useQuery<JobsData>({
+  //   queryKey: ["JobsAndHiresFromUser", userAddress],
+  //   refetchInterval: 1000 * 60 * 5,
+  //   queryFn: () => fetchHires(userAddress || ""),
+  //   staleTime: 0,
+  // });
+
+  const { data: jobAData, isLoading: isLoadingJobsAndHires } = useQuery<JobsData>({
+    queryKey: ["JobsAndHiresFromUser", userAddress],
+    queryFn: async () => {
+      const result = await fetchJobsAndHires(userAddress || "");
+      console.log("Jobs and hires data:", result);
+      return result;
+    },
     refetchInterval: 1000 * 60 * 5,
+    staleTime: 0,
   });
 
   const { data: applicationData, isLoading: isLoadingApplications } = useQuery<ApplicationsData>({
@@ -386,10 +407,10 @@ export default function ActivityFeed() {
     staleTime: 0, // Force fresh data
   });
 
-  const filteredJobData = useMemo(() => {
-    if (!jobData?.jobs) return [];
+  const filteredJobsData = useMemo(() => {
+    if (!jobAData?.jobs) return [];
 
-    return jobData.jobs.map(job => {
+    return jobAData.jobs.map(job => {
       const feedInfo = getJobInfo(job, userAddress ?? "");
       return {
         id: "job-" + job.postingId + "-" + job.jobId,
@@ -399,22 +420,7 @@ export default function ActivityFeed() {
         emitBy: job.emitBy,
       };
     });
-  }, [jobData, userAddress]);
-
-  const filteredHireData = useMemo(() => {
-    if (!hireData?.jobs) return [];
-
-    return hireData.jobs.map(job => {
-      const feedInfo = getJobInfo(job, userAddress ?? "");
-      return {
-        id: "job-" + job.postingId + "-" + job.jobId,
-        ...feedInfo,
-        client: job.client,
-        freelancer: job.freelancer,
-        emitBy: job.emitBy,
-      };
-    });
-  }, [hireData, userAddress]);
+  }, [jobAData, userAddress]);
 
   const filteredApplicationData = useMemo(() => {
     if (!applicationData?.applications) return [];
@@ -446,8 +452,8 @@ export default function ActivityFeed() {
   }, [gigApplicationData, userAddress]);
 
   const filteredData = useMemo(() => {
-    return [...filteredJobData, ...filteredHireData, ...filteredApplicationData, ...filteredGigApplicationData];
-  }, [filteredJobData, filteredHireData, filteredApplicationData, filteredGigApplicationData]);
+    return [...filteredApplicationData, ...filteredGigApplicationData, ...filteredJobsData];
+  }, [filteredApplicationData, filteredGigApplicationData, filteredJobsData]);
 
   const orderedData = useMemo(() => {
     return filteredData.sort((a, b) => {
@@ -463,7 +469,7 @@ export default function ActivityFeed() {
           Mark All as Read
         </Button> */}
       </div>
-      {isLoadingJobs && isLoadingHires && isLoadingApplications && isLoadingGigApplications ? (
+      {isLoadingApplications && isLoadingGigApplications && isLoadingJobsAndHires ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
         </div>

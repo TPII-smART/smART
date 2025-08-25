@@ -179,3 +179,36 @@ export const getHires = gql`
     }
   }
 `;
+
+export const getJobAndHires = gql`
+  query GetJobs($address: String!) {
+    jobs(
+      where: { OR: [{ freelancer: $address }, { client: $address }] }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
+        clientReceived
+        freelancerDelivered
+      }
+    }
+  }
+`;

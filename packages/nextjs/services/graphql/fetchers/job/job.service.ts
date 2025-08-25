@@ -79,3 +79,8 @@ export const fetchHires = async (userAddress: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getHires, { client: userAddress });
   return { jobs: res.jobs.items };
 };
+
+export const fetchJobsAndHires = async (userAddress: string) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobAndHires, { address: userAddress });
+  return { jobs: res.jobs.items };
+};
