@@ -7,6 +7,7 @@ import OthersProfile from "./othersProfile";
 import OwnProfile from "./ownProfile";
 import { useAccount } from "wagmi";
 import Button from "~~/components/Button/Button";
+import Spinner from "~~/components/Spinner/Spinner";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab, TabProps } from "~~/components/Tabs/types";
 import { fetchUserProfile, fetchUserRatingData } from "~~/services/graphql/fetchers/profile.service";
@@ -86,25 +87,39 @@ export default function Profile() {
       {loading ? (
         <ProfileSkeleton />
       ) : profileAddress === address && editMode ? (
-        <div>
-          <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
-          <div style={{ width: "50%", placeSelf: "center" }}>
-            <Tabs tabs={tabs} onChange={handleTabChange} />
-          </div>
-          <Suspense>{getPage(selectedTab, profileAddress)}</Suspense>
-        </div>
+        <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
       ) : (
         <div>
-          <OthersProfile
-            user={user}
-            address={profileAddress}
-            changeEditButton={changeEditMode}
-            ratingData={ratingData}
-          />
-          <div style={{ width: "50%", placeSelf: "center" }}>
-            <Tabs tabs={tabs} onChange={handleTabChange} />
+          <div style={{ minHeight: "100vh" }}>
+            <OthersProfile
+              user={user}
+              address={profileAddress}
+              changeEditButton={changeEditMode}
+              ratingData={ratingData}
+            />
           </div>
-          <Suspense>{getPage(selectedTab, profileAddress)}</Suspense>
+
+          <div>
+            <div className="sticky top-0 bg-base-100 z-100">
+              <div className="flex justify-center">
+                <div className="w-full max-w-md">
+                  <Tabs tabs={tabs} onChange={handleTabChange} />
+                </div>
+              </div>
+            </div>
+
+            <div className="container mt-8 mb-8">
+              <Suspense
+                fallback={
+                  <div className="flex justify-center items-center h-64">
+                    <Spinner />
+                  </div>
+                }
+              >
+                {getPage(selectedTab, profileAddress)}
+              </Suspense>
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -58,10 +58,17 @@ export default function OthersProfile({ user, changeEditButton, address, ratingD
         </div>
         <div className={styles.editButton}>{changeEditButton}</div>
         {isProfileEmpty ? (
-          <div className="w-full h-2/3 flex justify-center items-center">
+          <div className="flex flex-col justify-center min-h-[50vh] gap-6">
             <span className="text-3xl text-secondary-content text-center">
               {"This profile is empty" + (changeEditButton ? ", click the button to edit it!" : "!")}
             </span>
+            {!isRatingEmpty && (
+              <div className="mt-8 text-right">
+                <div className="mx-3">
+                  <RatingDisplay ratingData={ratingData} />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className={styles.profileContent}>
@@ -104,13 +111,13 @@ export default function OthersProfile({ user, changeEditButton, address, ratingD
                 )}
               </div>
             </div>
-          </div>
-        )}
-        {!isRatingEmpty && (
-          <div className="mt-6 text-right">
-            <div className="mx-3">
-              <RatingDisplay ratingData={ratingData} />
-            </div>
+            {!isRatingEmpty && (
+              <div className="mt-4 text-right">
+                <div className="mx-3">
+                  <RatingDisplay ratingData={ratingData} />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
