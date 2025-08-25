@@ -32,7 +32,6 @@ export const fetchUserProfile = async (address: string) => {
 export const fetchUserRatingData = async (address: string) => {
   const jobRatings = await fetchMyJobRatings(address);
   const gigRatings = await fetchMyGigRatings(address);
-  console.log(jobRatings, gigRatings);
 
   return newRatingData(jobRatings.jobs, gigRatings.gigs);
 };

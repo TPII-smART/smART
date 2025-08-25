@@ -53,7 +53,7 @@ export function newRatingData(jobs: Job[], gigs: Gig[]): RatingData {
   let totalRatings = 0;
 
   jobs.forEach(job => {
-    if (job.rating === undefined) return;
+    if (job.rating === null || job.rating === undefined) return;
     const rank = job.rating;
     jobRatings[rank] = (jobRatings[rank] || 0) + 1;
     totalJobRatings += rank;
@@ -61,7 +61,7 @@ export function newRatingData(jobs: Job[], gigs: Gig[]): RatingData {
   });
 
   gigs.forEach(gig => {
-    if (gig.rating === undefined) return;
+    if (gig.rating === null || gig.rating === undefined) return;
     const rank = gig.rating;
     gigRatings[rank] = (gigRatings[rank] || 0) + 1;
     totalGigRatings += rank;
