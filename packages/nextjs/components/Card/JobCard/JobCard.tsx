@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
+import { StarIcon } from "@heroicons/react/20/solid";
 import {
   ArrowDownTrayIcon,
   CheckCircleIcon,
@@ -130,17 +131,30 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     }
   };
 
-  const handleConfirmCompletion = async (rating: number) => {
+  const handleConfirmCompletion = async () => {
     try {
       if (!job.jobId) return;
       await writeContract({
         functionName: "confirmCompletion",
-        args: [BigInt(job.postingId), BigInt(job.jobId), rating],
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
       if (reload) await reload();
-      if (isRatingModalOpen) setIsRatingModalOpen(false);
     } catch (err) {
       console.error("Confirm job completion failed:", err);
+    }
+  };
+
+  const handleRateJob = async (rating: number) => {
+    try {
+      if (!job.jobId) return;
+      await writeContract({
+        functionName: "rateJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId), rating],
+      });
+      setIsRatingModalOpen(false);
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Rate job failed:", err);
     }
   };
 
@@ -224,7 +238,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           <Button
             variant="primary"
             key="deliver"
-            onClick={() => handleConfirmCompletion(0)}
+            onClick={handleConfirmCompletion}
             disabled={isMining}
             size="sm"
             tooltip="Mark as Delivered"
@@ -243,7 +257,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             <Button
               variant="primary"
               key="receive"
-              onClick={() => setIsRatingModalOpen(true)}
+              onClick={handleConfirmCompletion}
               disabled={isMining}
               size="sm"
               tooltip="Mark as Received"
@@ -252,6 +266,19 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             </Button>,
           );
         }
+      } else if (jobStatus === JobStateEnum.Finished && !job.rating) {
+        buttons.push(
+          <Button
+            variant="primary"
+            key="rate"
+            onClick={() => setIsRatingModalOpen(true)}
+            disabled={isMining}
+            size="sm"
+            tooltip="Rate Freelancer"
+          >
+            <StarIcon className="h-5 w-5" />
+          </Button>,
+        );
       }
     }
 
@@ -293,7 +320,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           loading: isMining,
         }}
         formikProps={{
-          onSubmit: values => handleConfirmCompletion(values.rating),
+          onSubmit: values => handleRateJob(values.rating),
           initialValues: { rating: 0 },
           validationSchema,
         }}
