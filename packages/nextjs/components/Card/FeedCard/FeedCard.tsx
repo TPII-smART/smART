@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
@@ -49,6 +50,14 @@ const getActivityColor = (type: ActivityItem["type"], status?: ActivityItem["sta
 
 export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
   const { profilePicture: profilePicture, username: username, isLoading: isLoading } = useUserProfile(activity.emitBy);
+  const router = useRouter();
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (activity.emitBy) {
+      router.push(`/profile/${activity.emitBy}`);
+    }
+  };
 
   const renderAvatar = () => {
     const imageToShow = profilePicture;
@@ -61,6 +70,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
           height={32}
           alt="User avatar"
           className=" rounded-full object-cover"
+          onClick={handleProfileClick}
           onError={e => {
             // ✅ Fallback al BlockieAvatar si la imagen falla
             const target = e.target as HTMLImageElement;
@@ -76,7 +86,11 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
       return <div className="h-32 w-32 rounded-full bg-gray-300 animate-pulse" />;
     }
 
-    return <BlockieAvatar address={activity.emitBy ? activity.emitBy : ""} size={32} />;
+    return (
+      <span onClick={handleProfileClick} className="cursor-pointer">
+        <BlockieAvatar address={activity.emitBy ? activity.emitBy : ""} size={32} />
+      </span>
+    );
   };
   return (
     <Card
