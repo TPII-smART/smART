@@ -451,7 +451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/styled@npm:^11.14.0":
+"@emotion/styled@npm:^11.14.1":
   version: 11.14.1
   resolution: "@emotion/styled@npm:11.14.1"
   dependencies:
@@ -3182,7 +3182,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^7.1.1":
+"@mui/material@npm:^7.3.1":
   version: 7.3.1
   resolution: "@mui/material@npm:7.3.1"
   dependencies:
@@ -4674,6 +4674,7 @@ __metadata:
     graphql: ^16.9.0
     graphql-request: ^7.1.0
     kubo-rpc-client: ~5.0.2
+    lucide-react: ^0.540.0
     next: ~15.2.3
     next-nprogress-bar: ~2.3.13
     next-themes: ~0.3.0
@@ -14550,6 +14551,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lucide-react@npm:^0.540.0":
+  version: 0.540.0
+  resolution: "lucide-react@npm:0.540.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 353ae6ff0834e4401a4e60dd86fd15b7885d8632f2503d55853e23f57a4051291dec34d6b0cce9660e11af464a280c41ede60478d41402173e5154d95d782897
+  languageName: node
+  linkType: hard
+
 "main-event@npm:^1.0.1":
   version: 1.0.1
   resolution: "main-event@npm:1.0.1"
@@ -17918,10 +17928,10 @@ __metadata:
   resolution: "se-2@workspace:."
   dependencies:
     "@emotion/react": ^11.14.0
-    "@emotion/styled": ^11.14.0
+    "@emotion/styled": ^11.14.1
     "@fontsource/roboto": ^5.2.6
     "@mui/icons-material": ^7.1.1
-    "@mui/material": ^7.1.1
+    "@mui/material": ^7.3.1
     "@thirdweb-dev/storage": ^2.0.15
     class-variance-authority: ^0.7.1
     framer-motion: ^12.18.1
