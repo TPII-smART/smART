@@ -15,6 +15,15 @@ import { RatingData, UserProfile, newUserProfile } from "~~/types/user-profile.t
 
 const MyJobPostingsListing = lazy(() => import("@/components/MyJobPostingsListing"));
 const MyGigsListing = lazy(() => import("@/components/MyGigsListing"));
+const ApplicationsListing = lazy(() => import("@/components/ApplicationsListing"));
+const HiresListing = lazy(() => import("@/components/HiresListing"));
+
+const tabsOwn: TabProps[] = [
+  { id: "job-postings", label: "Job Postings" },
+  { id: "hires", label: "Hires" },
+  { id: "gigs", label: "Gigs" },
+  { id: "applications", label: "Applications" },
+];
 
 const tabs: TabProps[] = [
   { id: "job-postings", label: "Job Postings" },
@@ -27,6 +36,19 @@ const getPage = (tab: Tab, userAddress: string): React.ReactNode => {
       return <MyJobPostingsListing userAddress={userAddress} />;
     case tabs[1].id:
       return <MyGigsListing userAddress={userAddress} />;
+  }
+};
+
+const getPageOwn = (tab: Tab, userAddress: string): React.ReactNode => {
+  switch (tab.id) {
+    case tabsOwn[0].id:
+      return <MyJobPostingsListing userAddress={userAddress} />;
+    case tabsOwn[1].id:
+      return <HiresListing userAddress={userAddress} />;
+    case tabsOwn[2].id:
+      return <MyGigsListing userAddress={userAddress} />;
+    case tabsOwn[3].id:
+      return <ApplicationsListing userAddress={userAddress} />;
   }
 };
 
@@ -102,8 +124,8 @@ export default function Profile() {
           <div>
             <div className="sticky top-0 bg-base-100 z-100">
               <div className="flex justify-center">
-                <div className="w-full max-w-md">
-                  <Tabs tabs={tabs} onChange={handleTabChange} />
+                <div className="w-full" style={{ maxWidth: "60%" }}>
+                  <Tabs tabs={profileAddress === address ? tabsOwn : tabs} onChange={handleTabChange} />
                 </div>
               </div>
             </div>
@@ -116,7 +138,9 @@ export default function Profile() {
                   </div>
                 }
               >
-                {getPage(selectedTab, profileAddress)}
+                {profileAddress === address
+                  ? getPageOwn(selectedTab, profileAddress)
+                  : getPage(selectedTab, profileAddress)}
               </Suspense>
             </div>
           </div>
