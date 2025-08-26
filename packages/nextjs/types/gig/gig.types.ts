@@ -73,7 +73,23 @@ export class Gig {
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;
+    this.acceptedFreelancer = ZERO_ADDRESS;
+    this.basePayment = "";
+    this.finalPayment = "";
+    this.title = "";
+    this.description = "";
+    this.category = "";
+    this.maxDurationInHours = "";
+    this.finalDurationInHours = "";
+    this.deadline = "";
     this.state = GigStateEnum.Open;
+    this.createdAt = "";
+    this.acceptedAt = "";
+    this.finishedAt = "";
+    this.canceledAt = "";
+    this.clientReceived = false;
+    this.freelancerDelivered = false;
+    this.acceptedApplicationId = "";
   }
 
   static mapFormDataToContractArgs(

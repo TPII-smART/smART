@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
-import { ClockIcon, DocumentDuplicateIcon, StarIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
 
 // Component for displaying time information
@@ -80,9 +80,9 @@ const MetadataRow = ({
 
   return (
     <div className={cn("flex flex-wrap items-center gap-3", className)}>
-      <TimeDisplay time={time} timeLabel={timeLabel} />
-      <CategoryDisplay category={category} />
       <RatingDisplay rating={rating} />
+      <CategoryDisplay category={category} />
+      <TimeDisplay time={time} timeLabel={timeLabel} />
       {extraInfo && <span className="text-sm text-muted-foreground">{extraInfo}</span>}
     </div>
   );
@@ -92,6 +92,7 @@ export function UniversalCard({
   bannerUrl,
   avatarAddress,
   customAvatar,
+  cardVariant = "Complete",
   title,
   description,
   extraInfo,
@@ -107,13 +108,14 @@ export function UniversalCard({
 }: UniversalCardProps) {
   const { profilePicture, isLoading } = useUserProfile(avatarAddress);
 
-  const handleCopyAddress = async () => {
+  // Determine avatar size based on card variant
+  const avatarSize = cardVariant === "Reduced" ? 64 : 96;
+  const avatarClasses = cardVariant === "Reduced" ? "h-16 w-16" : "h-24 w-24";
+
+  const handleNavigateToProfile = async () => {
     if (avatarAddress) {
-      try {
-        await navigator.clipboard.writeText(avatarAddress);
-      } catch (err) {
-        console.error("Failed to copy address:", err);
-      }
+      // Navigate to the user profile page
+      window.location.href = `/profile/${avatarAddress}`;
     }
   };
 
@@ -127,12 +129,12 @@ export function UniversalCard({
       return (
         <Image
           src={typeof imageToShow === "string" ? imageToShow : ""}
-          width={96}
-          height={96}
+          width={avatarSize}
+          height={avatarSize}
           alt="User avatar"
-          className="h-24 w-24 rounded-full object-cover"
+          className={`${avatarClasses} rounded-full object-cover`}
           onError={e => {
-            // ✅ Fallback al BlockieAvatar si la imagen falla
+            // âœ… Fallback al BlockieAvatar si la imagen falla
             const target = e.target as HTMLImageElement;
             target.style.display = "none";
             const fallback = target.nextElementSibling as HTMLElement;
@@ -143,13 +145,54 @@ export function UniversalCard({
     }
 
     if (isLoading) {
-      return <div className="h-24 w-24 rounded-full bg-gray-300 animate-pulse" />;
+      return <div className={`${avatarClasses} rounded-full bg-gray-300 animate-pulse`} />;
     }
 
-    return <BlockieAvatar address={avatarAddress ? avatarAddress : ""} size={96} />;
+    return <BlockieAvatar address={avatarAddress ? avatarAddress : ""} size={avatarSize} />;
   };
 
-  return (
+  return cardVariant == "Reduced" ? (
+    <Card
+      className={cn(
+        "group relative overflow-hidden transition-all duration-300 ease-in-out",
+        // Only shadow and translate on hover, not scale or blur
+        "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
+        className,
+      )}
+      {...props}
+    >
+      {/* Content section */}
+      <CardContent className="flex-1 flex flex-row px-6 py-4 items-start gap-6">
+        {avatarAddress && (
+          <div className="relative group/avatar flex-shrink-0 cursor-pointer" onClick={handleNavigateToProfile}>
+            {renderAvatar()}
+            <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center" />
+          </div>
+        )}
+
+        <div className="flex flex-col flex-1 min-w-0">
+          {/* Title Section */}
+          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2 mb-2" style={{ minHeight: "2.5rem" }}>
+            {title}
+          </CardTitle>
+
+          {/* Metadata Section - aligned with title */}
+          <MetadataRow
+            rating={rating}
+            category={category}
+            time={time}
+            timeLabel={timeLabel}
+            className="flex items-center"
+          />
+        </div>
+      </CardContent>
+
+      <CardFooter className="flex justify-between items-center px-6 py-4 mt-auto">
+        <div className="flex items-center">{footerLeft ?? paymentDisplay}</div>
+        <div className="flex items-center">{footerRight}</div>
+      </CardFooter>
+    </Card>
+  ) : (
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 ease-in-out",
@@ -172,7 +215,6 @@ export function UniversalCard({
                 className="h-full w-full object-cover transition-all duration-300 ease-in-out group-hover:scale-105 group-hover:blur-[3px]"
                 style={{ willChange: "transform, filter" }}
               />
-              {/* Overlay for better text readability, not blurred */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
             </div>
           </>
@@ -196,23 +238,11 @@ export function UniversalCard({
         {avatarAddress && (
           <div className="absolute -top-18 right-6 z-20 group/avatar">
             <div
-              className="h-24 w-24 rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer"
-              onClick={handleCopyAddress}
+              className={`${avatarClasses} rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer`}
+              onClick={handleNavigateToProfile}
             >
               {renderAvatar()}
-              {/* TODO: Go to profile page on click, for now just copy address */}
-              {/* Hover overlay with darkening effect and copy icon */}
-              <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                <DocumentDuplicateIcon className="h-6 w-6 text-white opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-300" />
-              </div>
-              {/* Address tooltip that slides up from avatar */}
-              <div className="absolute -top-12 right-0 opacity-0 group-hover/avatar:opacity-100 transition-all duration-300 ease-out translate-y-2 group-hover/avatar:translate-y-0 z-30 pointer-events-none">
-                <div className="bg-black/90 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap font-mono shadow-lg backdrop-blur-sm">
-                  {avatarAddress}
-                  {/* Arrow pointing down to avatar */}
-                  <div className="absolute -bottom-1 right-6 w-2 h-2 bg-black/90 rotate-45"></div>
-                </div>
-              </div>
+              <div className="absolute inset-0 rounded-full bg-black/0 group-hover/avatar:bg-black/40 transition-all duration-300 flex items-center justify-center" />
             </div>
           </div>
         )}

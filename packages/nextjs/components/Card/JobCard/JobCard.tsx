@@ -309,6 +309,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         footerLeft={statusDisplay}
         footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
         className={className}
+        cardVariant="Reduced"
       />
 
       {/* Rating modal for client */}
