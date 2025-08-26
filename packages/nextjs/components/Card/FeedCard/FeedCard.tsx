@@ -3,7 +3,16 @@ import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/Badge";
 import { Card, CardContent } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
-import { CheckCircle, Clock, DollarSign, Eye, FileText, MessageSquare, Star, XCircle } from "lucide-react";
+import {
+  ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  EyeIcon,
+  StarIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
 import { cn } from "~~/lib/utils";
 import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.type";
@@ -11,27 +20,28 @@ import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.typ
 const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["status"]) => {
   switch (type) {
     case "application":
-      return <FileText className="h-5 w-5" />;
+      return <DocumentTextIcon className="h-6 w-6" />;
     case "message":
-      return <MessageSquare className="h-5 w-5" />;
+      return <ChatBubbleLeftRightIcon className="h-6 w-6" />;
     case "status":
       if (status === ActivityItemStatus.pending) {
-        return <Clock className="h-5 w-5" />;
+        return <ClockIcon className="h-6 w-6" />;
       } else if (status === ActivityItemStatus.accepted || status === ActivityItemStatus.completed) {
-        return <CheckCircle className="h-5 w-5" />;
+        return <CheckCircleIcon className="h-6 w-6" />;
       } else if (status === ActivityItemStatus.cancelled || status === ActivityItemStatus.rejected) {
-        return <XCircle className="h-5 w-5" />;
+        return <XCircleIcon className="h-6 w-6" />;
       } else if (status === ActivityItemStatus.waitingForReview) {
-        return <Clock className="h-5 w-5" />;
+        return <ClockIcon className="h-6 w-6" />;
       }
+      break;
     case "payment":
-      return <DollarSign className="h-5 w-5" />;
+      return <CurrencyDollarIcon className="h-6 w-6" />;
     case "view":
-      return <Eye className="h-5 w-5" />;
+      return <EyeIcon className="h-6 w-6" />;
     case "review":
-      return <Star className="h-5 w-5" />;
+      return <StarIcon className="h-6 w-6" />;
     default:
-      return <Clock className="h-5 w-5" />;
+      return <ClockIcon className="h-6 w-6" />;
   }
 };
 
@@ -124,7 +134,7 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
 
                   {activity.amount && (
                     <div className="flex items-center gap-1 text-muted-foreground font-medium">
-                      <DollarSign className="h-4 w-4" />
+                      <CurrencyDollarIcon className="h-4 w-4" />
                       {activity.amount.toLocaleString()}
                     </div>
                   )}
