@@ -106,14 +106,14 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
     <Card
       data-slot="card"
       className={cn(
-        `flex flex-col gap-6 transition-all p-10`,
+        `flex flex-col gap-6 transition-all p-7`,
         "group relative  transition-all duration-300 ease-in-out",
         // Only shadow and translate on hover, not scale or blur
         "over:shadow-xl hover:-translate-y-1 hover:z-10",
       )}
     >
       <CardContent>
-        <div className="flex items-start gap-9">
+        <div className="flex items-start gap-8">
           <div className={`p-2 rounded-full bg-muted ${getActivityColor(activity.type, activity.status)}`}>
             {getActivityIcon(activity.type, activity.status)}
           </div>
