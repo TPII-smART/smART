@@ -127,6 +127,49 @@ export const getMyGigs = gql`
   }
 `;
 
+export const getMyGigsPaginated = gql`
+  query GetMyGigsPaginated($userAddress: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    gigs(
+      where: { client: $userAddress }
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      orderDirection: "desc"
+    ) {
+      items {
+        gigId
+        client
+        acceptedFreelancer
+        basePayment
+        finalPayment
+        title
+        description
+        category
+        maxDurationInHours
+        finalDurationInHours
+        deadline
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        state
+        clientReceived
+        freelancerDelivered
+        acceptedApplicationId
+        gigBannerImageHash
+        emitBy
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
 export const getMyApplications = gql`
   query GetMyApplications($userAddress: String!) {
     gigApplications(where: { freelancer: $userAddress }) {
@@ -143,6 +186,39 @@ export const getMyApplications = gql`
         emitBy
         rejectAt
       }
+    }
+  }
+`;
+
+export const getMyApplicationsPaginated = gql`
+  query GetMyApplicationsPaginated($userAddress: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    gigApplications(
+      where: { freelancer: $userAddress }
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      orderDirection: "desc"
+    ) {
+      items {
+        applicationId
+        gigId
+        freelancer
+        proposedPayment
+        proposedDurationInHours
+        state
+        createdAt
+        proposalComment
+        rejectionComment
+        emitBy
+        rejectAt
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
     }
   }
 `;
