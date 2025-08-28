@@ -1,8 +1,13 @@
 import { useCallback, useRef, useState } from "react";
 import { Paginated, PaginationMetaArg, PaginationMetadata, SearchParams } from "~~/types/paginated.types";
 
-type ScrollEvent = {
-  currentTarget: {
+export type PaginationScrollEvent = {
+  currentTarget?: {
+    scrollTop: number;
+    clientHeight: number;
+    scrollHeight: number;
+  };
+  target?: {
     scrollTop: number;
     clientHeight: number;
     scrollHeight: number;
@@ -23,8 +28,8 @@ const compareParams = (a: SearchParams[], b: SearchParams[]) => {
 
 export interface PaginationHookParams<T> {
   fetchFunction: (meta: PaginationMetaArg, ...any: SearchParams[]) => Promise<Paginated<T>>;
-  loadingFunction: (value: React.SetStateAction<boolean>) => void;
-  setDataFunction: (value: React.SetStateAction<T[]>) => void;
+  loadingFunction: (value: boolean, key?: string) => void;
+  setDataFunction: (data: T[], key?: string) => void;
   itemsPerPage?: number;
 }
 
@@ -56,21 +61,33 @@ export const usePagination = <T>({
   const lastSearch = useRef<SearchParams[]>([]);
   const cache = useRef<MetadataCache<T>>({});
   const lastScrollTop = useRef<number>(0);
-  const loading = useRef<boolean>(false);
+  const loading = useRef<{ [key: string]: boolean }>({});
 
   const setData = useCallback(
     (cache: MetadataCache<T>, key: string, data: T[]) => {
       const pushedData: T[] = cache[key].data.length === 0 ? data : cache[key].data.concat(data);
 
-      setDataFunction(pushedData);
+      setDataFunction(pushedData, key);
       cache[key].data = pushedData;
       return cache;
     },
     [setDataFunction],
   );
 
+  const setLoading = useCallback(
+    (value: boolean, key: string) => {
+      if (typeof loading.current !== "object" || loading.current === null) {
+        loading.current = {};
+      }
+      loading.current[key] = value;
+      loadingFunction(value, key);
+    },
+    [loadingFunction, loading],
+  );
+
   const fetchData = useCallback(
     async (hasParamNotChanged: boolean, key: string, ...params: SearchParams[]): Promise<void> => {
+      console.log("fetch?");
       if (!hasParamNotChanged) {
         // If search params changed, reinitialize cache
         delete cache.current[key];
@@ -81,15 +98,14 @@ export const usePagination = <T>({
         return;
       }
 
-      if (loading.current) {
+      if (loading.current[key]) {
         return;
       }
 
-      loading.current = true;
-      loadingFunction(true);
+      setLoading(true, key);
 
       const response: Paginated<T> = await fetchFunction(
-        { limit: itemsPerPage, endCursor: cache.current[key]?.meta?.endCursor },
+        { limit: itemsPerPage, endCursor: cache.current[key]?.meta?.endCursor, key },
         ...params,
       );
       setTotalItems(response.meta?.totalCount || itemsPerPage);
@@ -98,12 +114,11 @@ export const usePagination = <T>({
       cache.current = setData(cache.current, key, response.data);
 
       setTimeout(() => {
-        loadingFunction(false);
-        loading.current = false;
+        setLoading(false, key);
       }, 100);
       lastSearch.current = params ?? [];
     },
-    [lastSearch, setData, cache, loadingFunction, fetchFunction, itemsPerPage],
+    [lastSearch, setData, cache, fetchFunction, itemsPerPage, setLoading],
   );
 
   const fetchPaginatedData = useCallback(
@@ -131,8 +146,14 @@ export const usePagination = <T>({
   );
 
   const handleScroll = useCallback(
-    async (event: ScrollEvent, key: string, ...searchParams: SearchParams[]) => {
-      const listboxNode = event.currentTarget;
+    async (event: any | PaginationScrollEvent, key: string, ...searchParams: SearchParams[]) => {
+      const listboxNode = event.currentTarget ? event.currentTarget : event.target;
+
+      if (!listboxNode) {
+        console.warn("Listbox node not found, event has no currentTarget or target");
+        return;
+      }
+
       const isScrollingDown = listboxNode.scrollTop > lastScrollTop.current;
 
       // Always update the scroll position for the next event
@@ -149,7 +170,7 @@ export const usePagination = <T>({
       // Check if we are at 50% of the scroll height and not currently loading
       if (
         scrollHeight * 0.5 <= position &&
-        !loading.current &&
+        !loading.current[key] &&
         cache.current[key]?.meta?.hasNextPage !== false &&
         totalItems > itemsPerPage
       ) {

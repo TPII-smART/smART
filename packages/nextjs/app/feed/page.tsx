@@ -1,21 +1,34 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FeedActivityCard } from "@/components/Card/FeedCard/FeedCard";
-import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 //import Button from "~~/components/Button/Button";
 import Spinner from "~~/components/Spinner/Spinner";
+import { PaginationScrollEvent, usePagination } from "~~/hooks/use-pagination";
 import { castDateToTimestamp, castDateToTimestampNum } from "~~/lib/utils";
 import {
-  fetchApplicationsForMyGigs,
-  fetchApplicationsWithGigDetails,
+  fetchApplicationsForMyGigsPaginated,
+  fetchApplicationsWithGigDetailsPaginated,
 } from "~~/services/graphql/fetchers/gig/gig.service";
-import { fetchJobsAndHires } from "~~/services/graphql/fetchers/job/job.service";
+import { fetchJobsAndHiresPaginated } from "~~/services/graphql/fetchers/job/job.service";
 import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
-import { Application, ApplicationState, ApplicationsData } from "~~/types/gig/gig-application.types";
+import { Application, ApplicationState } from "~~/types/gig/gig-application.types";
 import { GigStateEnum } from "~~/types/gig/gig.types";
-import { Job, JobStateEnum, JobsData } from "~~/types/job/job.types";
+import { Job, JobStateEnum } from "~~/types/job/job.types";
+import { Paginated, PaginationMetaArg } from "~~/types/paginated.types";
+
+interface Data {
+  jobs: Job[];
+  applications: Application[];
+  gigApplications: Application[];
+}
+
+interface Loading {
+  jobs: boolean;
+  applications: boolean;
+  gigApplications: boolean;
+}
 
 const getJobInfo = (job: Job, userAddress: string) => {
   const isClient = job.client === userAddress;
@@ -359,7 +372,16 @@ const getApplicationInfo = (application: Application, userAddress: string) => {
 
 export default function ActivityFeed() {
   const { address: userAddress } = useAccount();
-
+  const [loading, setLoading] = useState<Loading>({
+    jobs: true,
+    applications: true,
+    gigApplications: true,
+  });
+  const [data, setData] = useState<Data>({
+    jobs: [],
+    applications: [],
+    gigApplications: [],
+  });
   // const { data: jobData, isLoading: isLoadingJobs } = useQuery<JobsData>({
   //   queryKey: ["jobsFromUser", userAddress],
   //   queryFn: () => fetchMyJobs(userAddress || ""),
@@ -374,43 +396,121 @@ export default function ActivityFeed() {
   //   staleTime: 0,
   // });
 
-  const { data: jobAData, isLoading: isLoadingJobsAndHires } = useQuery<JobsData>({
-    queryKey: ["JobsAndHiresFromUser", userAddress],
-    queryFn: async () => {
-      const result = await fetchJobsAndHires(userAddress || "");
-      console.log("Jobs and hires data:", result);
-      return result;
+  const fetchFunction = useCallback(
+    async (meta: PaginationMetaArg): Promise<Paginated<Job | Application>> => {
+      console.log("Fetching data for key:", meta?.key);
+      if (!userAddress)
+        return {
+          data: [],
+          meta: {
+            totalCount: 0,
+            endCursor: null,
+            startCursor: null,
+            hasNextPage: true,
+          },
+        };
+
+      switch (meta?.key) {
+        case "jobs":
+          return await fetchJobsAndHiresPaginated(meta, userAddress);
+        case "applications":
+          return await fetchApplicationsWithGigDetailsPaginated(meta, userAddress);
+        case "gigApplications":
+          return await fetchApplicationsForMyGigsPaginated(meta, userAddress);
+        default:
+          return {
+            data: [],
+            meta: {
+              totalCount: 0,
+              endCursor: null,
+              startCursor: null,
+              hasNextPage: true,
+            },
+          };
+      }
     },
-    refetchInterval: 1000 * 60 * 5,
-    staleTime: 0,
+    [userAddress],
+  );
+
+  const setDataFunction = (data: (Job | Application)[], key?: string) => {
+    if (!key) return;
+
+    setData(prevData => ({
+      ...prevData,
+      [key]: data,
+    }));
+  };
+
+  const loadingFunction = (value: boolean, key?: string) => {
+    if (!key) return;
+
+    setLoading(prevLoading => ({
+      ...prevLoading,
+      [key]: value,
+    }));
+  };
+
+  const { fetchPaginatedData, handleScroll } = usePagination<Job | Application>({
+    fetchFunction,
+    loadingFunction,
+    setDataFunction,
+    itemsPerPage: 4,
   });
 
-  const { data: applicationData, isLoading: isLoadingApplications } = useQuery<ApplicationsData>({
-    queryKey: ["applicationsFromFreelancer", userAddress],
-    queryFn: async () => {
-      const result = await fetchApplicationsWithGigDetails(userAddress || "");
-      console.log("Applications with gig details:", result);
-      return result;
-    },
-    enabled: !!userAddress, // Only run query if userAddress exists
-    staleTime: 0, // Force fresh data
-  });
+  const fetch = async () => {
+    await fetchPaginatedData(true, "jobs");
+    await fetchPaginatedData(true, "applications");
+    await fetchPaginatedData(true, "gigApplications");
+  };
 
-  const { data: gigApplicationData, isLoading: isLoadingGigApplications } = useQuery<ApplicationsData>({
-    queryKey: ["applicationsForUserGigs", userAddress],
-    queryFn: async () => {
-      const result = await fetchApplicationsForMyGigs(userAddress || "");
-      console.log("Applications for user gigs", result);
-      return result;
-    },
-    enabled: !!userAddress, // Only run query if userAddress exists
-    staleTime: 0, // Force fresh data
-  });
+  const fetchScroll = async (event: PaginationScrollEvent) => {
+    // await handleScroll(event, "jobs");
+    // await handleScroll(event, "applications");
+    await handleScroll(event, "gigApplications");
+  };
+
+  useEffect(() => {
+    fetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userAddress]);
+
+  // const { data: jobsData, isLoading: isLoadingJobsAndHires } = useQuery<JobsData>({
+  //   queryKey: ["JobsAndHiresFromUser", userAddress],
+  //   queryFn: async () => {
+  //     const result = await fetchJobsAndHires(userAddress || "");
+  //     console.log("Jobs and hires data:", result);
+  //     return result;
+  //   },
+  //   refetchInterval: 1000 * 60 * 5,
+  //   staleTime: 0,
+  // });
+
+  // const { data: applicationData, isLoading: isLoadingApplications } = useQuery<ApplicationsData>({
+  //   queryKey: ["applicationsFromFreelancer", userAddress],
+  //   queryFn: async () => {
+  //     const result = await fetchApplicationsWithGigDetails(userAddress || "");
+  //     console.log("Applications with gig details:", result);
+  //     return result;
+  //   },
+  //   enabled: !!userAddress, // Only run query if userAddress exists
+  //   staleTime: 0, // Force fresh data
+  // });
+
+  // const { data: gigApplicationData, isLoading: isLoadingGigApplications } = useQuery<ApplicationsData>({
+  //   queryKey: ["applicationsForUserGigs", userAddress],
+  //   queryFn: async () => {
+  //     const result = await fetchApplicationsForMyGigs(userAddress || "");
+  //     console.log("Applications for user gigs", result);
+  //     return result;
+  //   },
+  //   enabled: !!userAddress, // Only run query if userAddress exists
+  //   staleTime: 0, // Force fresh data
+  // });
 
   const filteredJobsData = useMemo(() => {
-    if (!jobAData?.jobs) return [];
+    if (!data?.jobs) return [];
 
-    return jobAData.jobs.map(job => {
+    return data.jobs.map(job => {
       const feedInfo = getJobInfo(job, userAddress ?? "");
       return {
         id: "job-" + job.postingId + "-" + job.jobId,
@@ -420,12 +520,12 @@ export default function ActivityFeed() {
         emitBy: job.emitBy,
       };
     });
-  }, [jobAData, userAddress]);
+  }, [data, userAddress]);
 
   const filteredApplicationData = useMemo(() => {
-    if (!applicationData?.applications) return [];
+    if (!data?.applications) return [];
 
-    return applicationData.applications.map(application => {
+    return data.applications.map(application => {
       const applicationInfo = getApplicationInfo(application, userAddress ?? "");
       return {
         id: "application-" + application.applicationId + "-" + application.gigId,
@@ -435,11 +535,11 @@ export default function ActivityFeed() {
         emitBy: application.state !== ApplicationState.Accepted ? application.emitBy : application.gig?.emitBy,
       };
     });
-  }, [applicationData, userAddress]);
+  }, [data, userAddress]);
 
   const filteredGigApplicationData = useMemo(() => {
-    if (!gigApplicationData?.applications) return [];
-    return gigApplicationData.applications.map(application => {
+    if (!data?.gigApplications) return [];
+    return data.gigApplications.map(application => {
       const applicationInfo = getApplicationInfo(application, userAddress ?? "");
       return {
         id: "application-" + application.applicationId + "-" + application.gigId,
@@ -449,7 +549,7 @@ export default function ActivityFeed() {
         emitBy: application.state !== ApplicationState.Accepted ? application.emitBy : application.gig?.emitBy,
       };
     });
-  }, [gigApplicationData, userAddress]);
+  }, [data, userAddress]);
 
   const filteredData = useMemo(() => {
     return [...filteredApplicationData, ...filteredGigApplicationData, ...filteredJobsData];
@@ -469,13 +569,13 @@ export default function ActivityFeed() {
           Mark All as Read
         </Button> */}
       </div>
-      {isLoadingApplications && isLoadingGigApplications && isLoadingJobsAndHires ? (
+      {loading.jobs || loading.applications || loading.gigApplications ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
         </div>
       ) : (
-        <div className="overflow-y-auto mx-30">
-          <div className="space-y-4 py-4 px-5  overflow-visible">
+        <div className="overflow-y-auto" onScroll={event => fetchScroll(event as unknown as PaginationScrollEvent)}>
+          <div className="mx-30 space-y-4 py-4 px-5 ">
             {orderedData.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-content-secondary text-lg">No activity found.</p>
