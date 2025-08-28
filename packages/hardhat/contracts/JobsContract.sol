@@ -44,6 +44,7 @@ contract JobsContract {
         uint256 uploadedAt;
         string fileDetail;
         string clientComment;
+        bool isLink; // Whether the file is a link or an uploaded file
     }
 
     // Struct that reduces the amount of parameters needed when submitting a Job
@@ -83,6 +84,7 @@ contract JobsContract {
     struct FileParams {
         string ipfsHash;
         string comment;
+        bool isLink;
     }
 
     // State variables of the contract
@@ -293,7 +295,7 @@ contract JobsContract {
             canceledAt: 0,
             clientReceived: false,
             freelancerDelivered: false,
-            fileInfo: FileInfo({ ipfsUrl: "", uploadedAt: 0, fileDetail: "", clientComment: "" })
+            fileInfo: FileInfo({ ipfsUrl: "", uploadedAt: 0, fileDetail: "", clientComment: "", isLink: false })
         });
 
         // Add job to the posting
@@ -487,7 +489,8 @@ contract JobsContract {
             ipfsUrl: _fileParams.ipfsHash,
             fileDetail: _fileParams.comment,
             uploadedAt: block.timestamp,
-            clientComment: ""
+            clientComment: "",
+            isLink: _fileParams.isLink
         });
 
         emit FileUploaded(_postingId, _jobId, msg.sender, _fileParams.ipfsHash, _fileParams.comment, block.timestamp);

@@ -528,17 +528,21 @@ describe("JobsContract", function () {
   });
 
   describe("Upload File to Job", function () {
+    let expectedComment: string;
+    let expectedIpfsHash: string;
+    let fileInfo: { ipfsHash: string; comment: string; isLink: boolean };
+
     beforeEach(async function () {
+      expectedComment = "File upload comment";
+      expectedIpfsHash = "QmFileHash123";
+      fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment, isLink: false };
+
       await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
       await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
       await jobsContract.connect(freelancer).acceptJob(0, 0);
     });
 
     it("Should allow freelancer to upload file successfully and update job fileInfo", async function () {
-      const expectedComment = "File upload comment";
-      const expectedIpfsHash = "QmFileHash123";
-      const fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment };
-
       const tx = await jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo);
 
       const receipt = await tx.wait();
@@ -565,35 +569,38 @@ describe("JobsContract", function () {
 
     it("Should revert if the job is not ongoing", async function () {
       await jobsContract.connect(client).cancelJob(0, 0);
-      await expect(
-        jobsContract.connect(freelancer).uploadFile(0, 0, { ipfsHash: "QmFileHash123", comment: "Valid comment" }),
-      ).to.be.revertedWith("The job is not ongoing.");
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
+        "The job is not ongoing.",
+      );
     });
 
     it("Should revert if the IPFS hash is empty", async function () {
-      await expect(
-        jobsContract.connect(freelancer).uploadFile(0, 0, { ipfsHash: "", comment: "Valid comment" }),
-      ).to.be.revertedWith("IPFS hash cannot be empty.");
+      const emptyFileInfo = { ipfsHash: "", comment: "Valid comment", isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, emptyFileInfo)).to.be.revertedWith(
+        "IPFS hash cannot be empty.",
+      );
     });
 
     it("Should revert if the IPFS hash exceeds 128 characters", async function () {
       const longHash = "a".repeat(129);
-      await expect(
-        jobsContract.connect(freelancer).uploadFile(0, 0, { ipfsHash: longHash, comment: "Valid comment" }),
-      ).to.be.revertedWith("IPFS hash must be up to 128 characters.");
+      const invalidFileInfo = { ipfsHash: longHash, comment: "Valid comment", isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
+        "IPFS hash must be up to 128 characters.",
+      );
     });
 
     it("Should revert if the comment exceeds 256 characters", async function () {
       const longComment = "a".repeat(257);
-      await expect(
-        jobsContract.connect(freelancer).uploadFile(0, 0, { ipfsHash: "QmFileHash123", comment: longComment }),
-      ).to.be.revertedWith("Comment must be up to 256 characters.");
+      const invalidFileInfo = { ipfsHash: "QmFileHash123", comment: longComment, isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
+        "Comment must be up to 256 characters.",
+      );
     });
 
     it("Should revert if called by someone who is not the freelancer", async function () {
-      await expect(
-        jobsContract.connect(client).uploadFile(0, 0, { ipfsHash: "QmFileHash123", comment: "Valid comment" }),
-      ).to.be.revertedWith("Only freelancer can call this");
+      await expect(jobsContract.connect(client).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
+        "Only freelancer can call this",
+      );
     });
   });
 
@@ -601,7 +608,7 @@ describe("JobsContract", function () {
     beforeEach(async function () {
       const expectedIpfsHash = "QmFileHash123";
       const expectedComment = "File upload comment";
-      const fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment };
+      const fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment, isLink: false };
 
       await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
       await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
