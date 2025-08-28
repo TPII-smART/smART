@@ -35,6 +35,15 @@ contract JobsContract {
         uint256 canceledAt; // When the job was canceled
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
+        FileInfo fileInfo; // Store the file related to the job
+    }
+
+    // Struct for file information
+    struct FileInfo {
+        string ipfsUrl;
+        uint256 uploadedAt;
+        string fileDetail;
+        string clientComment;
     }
 
     // Struct that reduces the amount of parameters needed when submitting a Job
@@ -69,6 +78,11 @@ contract JobsContract {
         uint256 basePayment;
         uint256 minimumNoticeTime;
         uint256 averageWorkDuration;
+    }
+
+    struct FileParams {
+        string ipfsHash;
+        string comment;
     }
 
     // State variables of the contract
@@ -123,6 +137,23 @@ contract JobsContract {
     );
 
     event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
+
+    event FileUploaded(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address indexed freelancer,
+        string ipfsHash,
+        string comment,
+        uint256 timestamp
+    );
+
+    event CommentAdded(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address indexed client,
+        string response,
+        uint256 timestamp
+    );
 
     // Modifiers
     modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
@@ -261,7 +292,8 @@ contract JobsContract {
             finishedAt: 0,
             canceledAt: 0,
             clientReceived: false,
-            freelancerDelivered: false
+            freelancerDelivered: false,
+            fileInfo: FileInfo({ ipfsUrl: "", uploadedAt: 0, fileDetail: "", clientComment: "" })
         });
 
         // Add job to the posting
@@ -401,10 +433,10 @@ contract JobsContract {
     }
 
     /**
-    * @dev Get the number of jobs in a posting
-    * @param _postingId The ID of the job posting
-    * @return Number of jobs in the posting
-    */
+     * @dev Get the number of jobs in a posting
+     * @param _postingId The ID of the job posting
+     * @return Number of jobs in the posting
+     */
     function getJobCount(uint256 _postingId) external view postingExists(_postingId) returns (uint256) {
         return postedJobs[_postingId].jobs.length;
     }
@@ -413,8 +445,73 @@ contract JobsContract {
         return postedJobsCounter;
     }
 
+    function isFileUploaded(
+        uint256 postingId,
+        uint256 jobId,
+        string memory comment,
+        string memory ipfsHash
+    ) external view returns (bool) {
+        FileInfo memory fileInfo = postedJobs[postingId].jobs[jobId].fileInfo;
+
+        return
+            bytes(fileInfo.ipfsUrl).length > 0 &&
+            keccak256(bytes(fileInfo.fileDetail)) == keccak256(bytes(comment)) &&
+            keccak256(bytes(fileInfo.ipfsUrl)) == keccak256(bytes(ipfsHash));
+    }
+
     // Function to receive Ether
     receive() external payable {
         revert("Direct payments not accepted");
+    }
+
+    /**
+     * @dev Allows the freelancer to upload a file.
+     * @param _postingId  JobPosting ID.
+     * @param _jobId Job ID.
+     * @param _fileParams The content of the file (IPFS hash and comment).
+     */
+    function uploadFile(
+        uint256 _postingId,
+        uint256 _jobId,
+        FileParams memory _fileParams
+    ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Ongoing, "The job is not ongoing.");
+
+        require(bytes(_fileParams.ipfsHash).length > 0, "IPFS hash cannot be empty.");
+        require(bytes(_fileParams.ipfsHash).length <= 128, "IPFS hash must be up to 128 characters.");
+        require(bytes(_fileParams.comment).length <= 256, "Comment must be up to 256 characters.");
+
+        job.fileInfo = FileInfo({
+            ipfsUrl: _fileParams.ipfsHash,
+            fileDetail: _fileParams.comment,
+            uploadedAt: block.timestamp,
+            clientComment: ""
+        });
+
+        emit FileUploaded(_postingId, _jobId, msg.sender, _fileParams.ipfsHash, _fileParams.comment, block.timestamp);
+    }
+
+    /**
+     * @dev Allows the client to add a response to the last uploaded file.
+     * @param _postingId JobPosting ID.
+     * @param _jobId Job ID.
+     * @param _comment Comment text.
+     */
+    function addCommentToJob(
+        uint256 _postingId,
+        uint256 _jobId,
+        string calldata _comment
+    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Ongoing, "The job is not ongoing.");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+
+        job.fileInfo.clientComment = _comment;
+
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, block.timestamp);
     }
 }
