@@ -13,7 +13,7 @@ export default function Hires() {
     queryClient.invalidateQueries({
       queryKey: ["hiredFromUser", userAddress],
     });
-  }, []);
+  });
 
   return (
     <div className="flex flex-col min-h-screen mt-4">
