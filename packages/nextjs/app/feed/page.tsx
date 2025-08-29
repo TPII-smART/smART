@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedActivityCard } from "@/components/Card/FeedCard/FeedCard";
 import { useAccount } from "wagmi";
 //import Button from "~~/components/Button/Button";
@@ -372,6 +372,7 @@ const getApplicationInfo = (application: Application, userAddress: string) => {
 
 export default function ActivityFeed() {
   const { address: userAddress } = useAccount();
+  console.log(userAddress);
   const [loading, setLoading] = useState<Loading>({
     jobs: true,
     applications: true,
@@ -382,19 +383,12 @@ export default function ActivityFeed() {
     applications: [],
     gigApplications: [],
   });
-  // const { data: jobData, isLoading: isLoadingJobs } = useQuery<JobsData>({
-  //   queryKey: ["jobsFromUser", userAddress],
-  //   queryFn: () => fetchMyJobs(userAddress || ""),
-  //   refetchInterval: 1000 * 60 * 5,
-  //   staleTime: 0,
-  // });
-
-  // const { data: hireData, isLoading: isLoadingHires } = useQuery<JobsData>({
-  //   queryKey: ["JobsAndHiresFromUser", userAddress],
-  //   refetchInterval: 1000 * 60 * 5,
-  //   queryFn: () => fetchHires(userAddress || ""),
-  //   staleTime: 0,
-  // });
+  const oldLengths = useRef<{ [key: string]: number }>({
+    jobs: 0,
+    applications: 0,
+    gigApplications: 0,
+  });
+  const [orderedData, setOrderedData] = useState<any[]>([]);
 
   const fetchFunction = useCallback(
     async (meta: PaginationMetaArg): Promise<Paginated<Job | Application>> => {
@@ -457,60 +451,34 @@ export default function ActivityFeed() {
     itemsPerPage: 4,
   });
 
-  const fetch = async () => {
-    await fetchPaginatedData(true, "jobs");
-    await fetchPaginatedData(true, "applications");
-    await fetchPaginatedData(true, "gigApplications");
+  const fetch = () => {
+    fetchPaginatedData(true, "jobs");
+    fetchPaginatedData(true, "applications");
+    fetchPaginatedData(true, "gigApplications");
   };
 
-  const fetchScroll = async (event: PaginationScrollEvent) => {
-    // await handleScroll(event, "jobs");
-    // await handleScroll(event, "applications");
-    await handleScroll(event, "gigApplications");
+  const fetchScroll = (event: PaginationScrollEvent) => {
+    handleScroll(event, "jobs");
+    handleScroll(event, "applications");
+    handleScroll(event, "gigApplications");
   };
 
   useEffect(() => {
+    if (!userAddress) return;
     fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userAddress]);
 
-  // const { data: jobsData, isLoading: isLoadingJobsAndHires } = useQuery<JobsData>({
-  //   queryKey: ["JobsAndHiresFromUser", userAddress],
-  //   queryFn: async () => {
-  //     const result = await fetchJobsAndHires(userAddress || "");
-  //     console.log("Jobs and hires data:", result);
-  //     return result;
-  //   },
-  //   refetchInterval: 1000 * 60 * 5,
-  //   staleTime: 0,
-  // });
+  const sortByTimestamp = <T extends { timestamp?: number }>(arr: T[]) => {
+    return arr.sort((a, b) => {
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    });
+  };
 
-  // const { data: applicationData, isLoading: isLoadingApplications } = useQuery<ApplicationsData>({
-  //   queryKey: ["applicationsFromFreelancer", userAddress],
-  //   queryFn: async () => {
-  //     const result = await fetchApplicationsWithGigDetails(userAddress || "");
-  //     console.log("Applications with gig details:", result);
-  //     return result;
-  //   },
-  //   enabled: !!userAddress, // Only run query if userAddress exists
-  //   staleTime: 0, // Force fresh data
-  // });
-
-  // const { data: gigApplicationData, isLoading: isLoadingGigApplications } = useQuery<ApplicationsData>({
-  //   queryKey: ["applicationsForUserGigs", userAddress],
-  //   queryFn: async () => {
-  //     const result = await fetchApplicationsForMyGigs(userAddress || "");
-  //     console.log("Applications for user gigs", result);
-  //     return result;
-  //   },
-  //   enabled: !!userAddress, // Only run query if userAddress exists
-  //   staleTime: 0, // Force fresh data
-  // });
-
-  const filteredJobsData = useMemo(() => {
+  const filteredJobsData = useCallback(() => {
     if (!data?.jobs) return [];
 
-    return data.jobs.map(job => {
+    const ret = data.jobs.slice(oldLengths.current.jobs).map(job => {
       const feedInfo = getJobInfo(job, userAddress ?? "");
       return {
         id: "job-" + job.postingId + "-" + job.jobId,
@@ -520,12 +488,19 @@ export default function ActivityFeed() {
         emitBy: job.emitBy,
       };
     });
-  }, [data, userAddress]);
 
-  const filteredApplicationData = useMemo(() => {
+    oldLengths.current = {
+      ...oldLengths.current,
+      jobs: data.jobs.length > 0 ? data.jobs.length : 0,
+    };
+
+    return sortByTimestamp(ret);
+  }, [data.jobs, userAddress]);
+
+  const filteredApplicationData = useCallback(() => {
     if (!data?.applications) return [];
 
-    return data.applications.map(application => {
+    const ret = data.applications.slice(oldLengths.current.applications).map(application => {
       const applicationInfo = getApplicationInfo(application, userAddress ?? "");
       return {
         id: "application-" + application.applicationId + "-" + application.gigId,
@@ -535,11 +510,18 @@ export default function ActivityFeed() {
         emitBy: application.state !== ApplicationState.Accepted ? application.emitBy : application.gig?.emitBy,
       };
     });
-  }, [data, userAddress]);
 
-  const filteredGigApplicationData = useMemo(() => {
+    oldLengths.current = {
+      ...oldLengths.current,
+      applications: data.applications.length > 0 ? data.applications.length : 0,
+    };
+
+    return sortByTimestamp(ret);
+  }, [data.applications, userAddress]);
+
+  const filteredGigApplicationData = useCallback(() => {
     if (!data?.gigApplications) return [];
-    return data.gigApplications.map(application => {
+    const ret = data.gigApplications.slice(oldLengths.current.gigApplications).map(application => {
       const applicationInfo = getApplicationInfo(application, userAddress ?? "");
       return {
         id: "application-" + application.applicationId + "-" + application.gigId,
@@ -549,17 +531,24 @@ export default function ActivityFeed() {
         emitBy: application.state !== ApplicationState.Accepted ? application.emitBy : application.gig?.emitBy,
       };
     });
-  }, [data, userAddress]);
 
-  const filteredData = useMemo(() => {
-    return [...filteredApplicationData, ...filteredGigApplicationData, ...filteredJobsData];
+    oldLengths.current = {
+      ...oldLengths.current,
+      gigApplications: data.gigApplications.length > 0 ? data.gigApplications.length : 0,
+    };
+
+    return sortByTimestamp(ret);
+  }, [data.gigApplications, userAddress]);
+
+  const newData: any[] = useMemo(() => {
+    return [...filteredApplicationData(), ...filteredGigApplicationData(), ...filteredJobsData()];
   }, [filteredApplicationData, filteredGigApplicationData, filteredJobsData]);
 
-  const orderedData = useMemo(() => {
-    return filteredData.sort((a, b) => {
-      return (b.timestamp || 0) - (a.timestamp || 0);
-    });
-  }, [filteredData]);
+  useEffect(() => {
+    if (newData.length > 0) {
+      setOrderedData(prev => prev.concat(newData));
+    }
+  }, [newData]);
 
   return (
     <div className="h-full flex flex-col space-y-4">
@@ -569,32 +558,36 @@ export default function ActivityFeed() {
           Mark All as Read
         </Button> */}
       </div>
-      {loading.jobs || loading.applications || loading.gigApplications ? (
-        <div className="flex items-center justify-center w-full h-64">
-          <Spinner />
+      <div
+        className="overflow-y-auto h-full"
+        onScroll={event => fetchScroll(event as unknown as PaginationScrollEvent)}
+      >
+        <div className="mx-30 space-y-4 py-4 px-5 ">
+          {orderedData.map(activity => (
+            <FeedActivityCard
+              key={activity.id}
+              activity={{
+                ...activity,
+                type: activity.type ?? ActivityItemType.unknown,
+                interactionType: activity.interactionType ?? InteractionType.unknown,
+                timestamp: castDateToTimestamp(String((activity.timestamp ?? 0) / 1000)),
+              }}
+            />
+          ))}
         </div>
-      ) : (
-        <div className="overflow-y-auto" onScroll={event => fetchScroll(event as unknown as PaginationScrollEvent)}>
-          <div className="mx-30 space-y-4 py-4 px-5 ">
-            {orderedData.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-content-secondary text-lg">No activity found.</p>
-              </div>
-            )}
-            {orderedData.map(activity => (
-              <FeedActivityCard
-                key={activity.id}
-                activity={{
-                  ...activity,
-                  type: activity.type ?? ActivityItemType.unknown,
-                  interactionType: activity.interactionType ?? InteractionType.unknown,
-                  timestamp: castDateToTimestamp(String((activity.timestamp ?? 0) / 1000)),
-                }}
-              />
-            ))}
+        <div className="h-6" />
+        {loading.jobs || loading.applications || loading.gigApplications ? (
+          <div className="flex-1 flex items-center justify-center mb-6">
+            <Spinner />
           </div>
-        </div>
-      )}
+        ) : (
+          orderedData.length === 0 && (
+            <div className="text-center py-12">
+              <p className="text-content-secondary text-2xl">No activity found.</p>
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 }
