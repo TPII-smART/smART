@@ -4,13 +4,20 @@ import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { CheckCircleIcon, ClockIcon, ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import Button from "~~/components/Button/Button";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { ApplicationState } from "~~/types/gig/gig.types";
 
-export default function ApplicationCard({ application, className }: ApplicationProps) {
+export default function ApplicationCard({ application, client, className, reload }: ApplicationProps) {
   const { address: userAddress } = useAccount();
   const applicationStatus = application.state as ApplicationState;
 
+  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
+    contractName: "GigsContract",
+  });
+
   const isFreelancer = application.freelancer?.toLowerCase() === userAddress?.toLowerCase();
+  const isClient = client?.toLowerCase() === userAddress?.toLowerCase();
 
   const getApplicationStatus = () => {
     if (applicationStatus === ApplicationState.Pending) {
@@ -48,6 +55,33 @@ export default function ApplicationCard({ application, className }: ApplicationP
     };
   };
 
+  const handleAccept = async () => {
+    try {
+      if (application.state !== ApplicationState.Pending) return;
+      await writeContract({
+        functionName: "acceptApplication",
+        args: [BigInt(application.gigId), BigInt(application.applicationId)],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Accept application failed:", err);
+    }
+  };
+
+  const handleReject = async () => {
+    try {
+      if (application.state !== ApplicationState.Pending) return;
+      await writeContract({
+        functionName: "rejectApplication",
+        // TODO: Add modal for rejection comment
+        args: [BigInt(application.gigId), BigInt(application.applicationId), "User rejected the application"],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Reject application failed:", err);
+    }
+  };
+
   const statusInfo = getApplicationStatus();
   const StatusIcon = statusInfo.icon;
 
@@ -78,7 +112,50 @@ export default function ApplicationCard({ application, className }: ApplicationP
     </div>
   );
 
-  const extraInfo = `Proposal: ${application.proposalComment || "No proposal provided"}`;
+  const extraInfo = (
+    <div>
+      {paymentDisplay}
+      <div className="text-sm text-content-secondary">{application.proposalComment || "No proposal provided"}</div>
+    </div>
+  );
+
+  // Action buttons based on user role and gig state
+  const getActionButtons = () => {
+    const buttons = [];
+
+    if (isClient) {
+      if (applicationStatus === ApplicationState.Pending) {
+        buttons.push(
+          <Button
+            variant="danger"
+            key="cancel"
+            onClick={handleReject}
+            disabled={isMining}
+            size="sm"
+            tooltip="Cancel Job"
+          >
+            <XCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+        buttons.push(
+          <Button
+            variant="primary"
+            key="approve"
+            onClick={handleAccept}
+            disabled={isMining}
+            size="sm"
+            tooltip="Approve Job"
+          >
+            <CheckCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+    }
+
+    return buttons;
+  };
+
+  const actionButtons = getActionButtons();
 
   return (
     <UniversalCard
@@ -89,8 +166,8 @@ export default function ApplicationCard({ application, className }: ApplicationP
       timeLabel="Proposed Duration"
       extraInfo={extraInfo}
       category={application.gig?.category || "Category not available"}
-      paymentDisplay={paymentDisplay}
-      footerRight={statusDisplay}
+      paymentDisplay={statusDisplay}
+      footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
       className={className}
     />
   );
