@@ -61,6 +61,7 @@ export default function ApplicationCard({ application, client, className, reload
       await writeContract({
         functionName: "acceptApplication",
         args: [BigInt(application.gigId), BigInt(application.applicationId)],
+        value: BigInt(application.proposedPayment),
       });
       if (reload) await reload();
     } catch (err) {
@@ -105,18 +106,18 @@ export default function ApplicationCard({ application, client, className, reload
 
   // Status display for footer left
   const statusDisplay = (
-    <div className="flex items-center gap-2">
-      <div className={cn("h-3 w-3 rounded-full", statusInfo.color)}></div>
-      <span className="text-sm font-medium text-content-secondary">{statusInfo.label}</span>
-      <StatusIcon className="h-4 w-4 text-content-tertiary" />
+    <div className="flex flex-col justify-between">
+      {paymentDisplay}
+      <div className="flex items-center gap-2 mt-2">
+        <div className={cn("h-3 w-3 rounded-full", statusInfo.color)}></div>
+        <span className="text-sm font-medium text-content-secondary">{statusInfo.label}</span>
+        <StatusIcon className="h-4 w-4 text-content-tertiary" />
+      </div>
     </div>
   );
 
   const extraInfo = (
-    <div>
-      {paymentDisplay}
-      <div className="text-sm text-content-secondary">{application.proposalComment || "No proposal provided"}</div>
-    </div>
+    <div className="text-sm text-content-secondary">{application.proposalComment || "No proposal provided"}</div>
   );
 
   // Action buttons based on user role and gig state
@@ -147,6 +148,41 @@ export default function ApplicationCard({ application, client, className, reload
             tooltip="Approve Job"
           >
             <CheckCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+      if (applicationStatus === ApplicationState.Accepted) {
+        buttons.push(
+          <Button
+            variant="outline"
+            key="view"
+            onClick={() => {
+              window.location.href = `/gig/${application.gigId}`;
+            }}
+            disabled={isMining}
+            size="sm"
+            tooltip="Gig Details"
+          >
+            Gig Details
+          </Button>,
+        );
+      }
+    }
+
+    if (isFreelancer) {
+      if (applicationStatus === ApplicationState.Accepted) {
+        buttons.push(
+          <Button
+            variant="outline"
+            key="view"
+            onClick={() => {
+              window.location.href = `/gig/${application.gigId}`;
+            }}
+            disabled={isMining}
+            size="sm"
+            tooltip="Gig Details"
+          >
+            Gig Details
           </Button>,
         );
       }
