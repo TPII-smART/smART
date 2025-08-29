@@ -1,3 +1,4 @@
+import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { StatusBadge } from "@/components/Badge";
@@ -58,7 +59,7 @@ const getActivityColor = (type: ActivityItem["type"], status?: ActivityItem["sta
   return "text-muted-foreground";
 };
 
-export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
+export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityItem }) => {
   const { profilePicture: profilePicture, username: username, isLoading: isLoading } = useUserProfile(activity.emitBy);
   const router = useRouter();
 
@@ -162,4 +163,6 @@ export function FeedActivityCard({ activity }: { activity: ActivityItem }) {
       </CardContent>
     </Card>
   );
-}
+});
+
+FeedActivityCard.displayName = "FeedActivityCard";
