@@ -1,9 +1,13 @@
+import { useState } from "react";
 import Button from "../../Button/Button";
+import FileUploadBox from "../../FileUploadBox";
 import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
+import { Chip } from "@mui/material";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import * as Yup from "yup";
 import {
   ArrowDownTrayIcon,
   CheckCircleIcon,
@@ -13,13 +17,27 @@ import {
   PlayIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import FormModal from "~~/components/Modal/FormModal/FormModal";
+import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobStateEnum } from "~~/types/job/job.types";
+
+class PostingFormData {
+  comment: string;
+  link?: string;
+  bannerImageFile?: File;
+  constructor() {
+    this.comment = "";
+    this.link = "";
+    this.bannerImageFile = undefined;
+  }
+}
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
-
+  const [showModal, setShowModal] = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState<"file" | "link">("file");
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
@@ -218,7 +236,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           <Button
             variant="primary"
             key="deliver"
-            onClick={handleConfirmCompletion}
+            onClick={() => setShowModal(true)}
             disabled={isMining}
             size="sm"
             tooltip="Mark as Delivered"
@@ -254,21 +272,110 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const actionButtons = getActionButtons();
 
+  // Validation schema for the form fields using yup
+  const validationSchema = Yup.object().shape({
+    comment: Yup.string().max(512, "Comment must be at most 512 characters"),
+    link: Yup.string().when([], {
+      is: () => deliveryMode === "link",
+      then: schema =>
+        schema.required("Link is required").url("Must be a valid URL").max(256, "Link must be at most 256 characters"),
+      otherwise: schema => schema.notRequired(),
+    }),
+    bannerImageFile: Yup.mixed().when([], {
+      is: () => deliveryMode === "file",
+      then: schema => schema.required("File is required"),
+      otherwise: schema => schema.notRequired(),
+    }),
+  });
+
   return (
-    <UniversalCard
-      bannerUrl={job.bannerImageHash}
-      avatarAddress={isFreelancer ? job.client : job.freelancer}
-      title={job.title || "Untitled Job"}
-      description={job.description || "No description provided"}
-      extraInfo={deadlineText}
-      time={job.jobDuration}
-      timeLabel="Client expected duration"
-      category={job.category}
-      paymentDisplay={paymentDisplay}
-      footerLeft={statusDisplay}
-      footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
-      className={className}
-      cardVariant="Reduced"
-    />
+    <>
+      <UniversalCard
+        bannerUrl={job.bannerImageHash}
+        avatarAddress={isFreelancer ? job.client : job.freelancer}
+        title={job.title || "Untitled Job"}
+        description={job.description || "No description provided"}
+        extraInfo={deadlineText}
+        time={job.jobDuration}
+        timeLabel="Client expected duration"
+        category={job.category}
+        paymentDisplay={paymentDisplay}
+        footerLeft={statusDisplay}
+        footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
+        className={className}
+        cardVariant="Reduced"
+      />
+      {/* Confirm Modal */}
+      <FormModal
+        modalProps={{
+          title: "Submit Deliverable",
+          onClose: () => setShowModal(false),
+          isOpen: showModal,
+          loading: isMining,
+          description: `
+            You are about to submit your deliverable for this job.\n
+            Please upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.
+          `,
+        }}
+        formikProps={{
+          onSubmit: handleConfirmCompletion,
+          initialValues: new PostingFormData(),
+          validationSchema,
+          enableReinitialize: true,
+        }}
+      >
+        {({ values, setFieldValue, touched, errors }) => (
+          <div className="space-y-4">
+            <div className="flex gap-2 mb-2">
+              <Chip
+                label="Upload File"
+                clickable
+                color={deliveryMode === "file" ? "primary" : "default"}
+                onClick={() => setDeliveryMode("file")}
+                sx={{
+                  borderRadius: "6px",
+                  backgroundColor: deliveryMode === "file" ? "var(--color-accent)" : "var(--color-secondary)",
+                  color: "var(--color-primary-content)",
+                  fontWeight: 500,
+                }}
+              />
+              <Chip
+                label="Paste Link"
+                clickable
+                color={deliveryMode === "link" ? "primary" : "default"}
+                onClick={() => setDeliveryMode("link")}
+                sx={{
+                  borderRadius: "6px",
+                  backgroundColor: deliveryMode === "link" ? "var(--color-accent)" : "var(--color-secondary)",
+                  color: "var(--color-primary-content)",
+                  fontWeight: 500,
+                }}
+              />
+            </div>
+            {deliveryMode === "file" ? (
+              <FileUploadBox
+                onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
+                acceptedFileType={"Any"}
+              />
+            ) : (
+              <InputBase
+                placeholder="Paste your link here"
+                value={values.link || ""}
+                onChange={(val: string) => setFieldValue("link", val)}
+                error={touched.link && !!errors.link}
+                helperText={touched.link && errors.link ? errors.link : ""}
+              />
+            )}
+            <InputBase
+              placeholder="Comment"
+              value={values.comment}
+              onChange={(val: string) => setFieldValue("comment", val)}
+              error={touched.comment && !!errors.comment}
+              helperText={touched.comment && errors.comment ? errors.comment : ""}
+            />
+          </div>
+        )}
+      </FormModal>
+    </>
   );
 }
