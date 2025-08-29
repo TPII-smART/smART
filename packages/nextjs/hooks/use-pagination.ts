@@ -55,7 +55,7 @@ export const usePagination = <T>({
   itemsPerPage = 20,
 }: PaginationHookParams<T>) => {
   // states
-  const [totalItems, setTotalItems] = useState<number>(0);
+  const [totalItems, setTotalItems] = useState<{ [key: string]: number }>({});
   // refs
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const lastSearch = useRef<SearchParams[]>([]);
@@ -108,8 +108,7 @@ export const usePagination = <T>({
         { limit: itemsPerPage, endCursor: cache.current[key]?.meta?.endCursor, key },
         ...params,
       );
-      setTotalItems(response.meta?.totalCount || itemsPerPage);
-
+      setTotalItems(prev => ({ ...prev, [key]: response.meta?.totalCount || itemsPerPage }));
       cache.current = setCacheMetaData(key, response.meta, cache.current);
       cache.current = setData(cache.current, key, response.data);
 
@@ -154,7 +153,7 @@ export const usePagination = <T>({
         return;
       }
 
-      const isScrollingDown = listboxNode.scrollTop > lastScrollTop.current;
+      const isScrollingDown = listboxNode.scrollTop >= lastScrollTop.current;
 
       // Always update the scroll position for the next event
       lastScrollTop.current = listboxNode.scrollTop;
@@ -163,7 +162,6 @@ export const usePagination = <T>({
       if (!isScrollingDown) {
         return;
       }
-
       const position = listboxNode.scrollTop + listboxNode.clientHeight;
       const scrollHeight = listboxNode.scrollHeight;
 
@@ -172,7 +170,7 @@ export const usePagination = <T>({
         scrollHeight * 0.5 <= position &&
         !loading.current[key] &&
         cache.current[key]?.meta?.hasNextPage !== false &&
-        totalItems > itemsPerPage
+        totalItems[key] > itemsPerPage
       ) {
         fetchPaginatedData(true, key, ...searchParams);
       }
