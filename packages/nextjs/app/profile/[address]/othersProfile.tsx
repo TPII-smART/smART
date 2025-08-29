@@ -5,21 +5,23 @@ import styles from "./Profile.module.css";
 import { LinkIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";
+import RatingDisplay from "~~/components/RatingDisplay";
 import ArtStationIcon from "~~/components/assets/Logos/artstation";
 import InstagramIcon from "~~/components/assets/Logos/instagram";
 import LinkedInIcon from "~~/components/assets/Logos/linkedin";
 import SketchfabIcon from "~~/components/assets/Logos/sketchfab";
 import XIcon from "~~/components/assets/Logos/x";
 import { isImageUrl } from "~~/lib/utils";
-import { UserProfile } from "~~/types/user-profile.type";
+import { RatingData, UserProfile } from "~~/types/user-profile.type";
 
 export interface OthersProfileProps {
   user: UserProfile;
   address: `0x${string}`;
   changeEditButton?: JSX.Element;
+  ratingData: RatingData;
 }
 
-export default function OthersProfile({ user, changeEditButton, address }: OthersProfileProps) {
+export default function OthersProfile({ user, changeEditButton, address, ratingData }: OthersProfileProps) {
   const hasSocialNetworks = useMemo(() => {
     return (
       user.xUrl || user.instagramUrl || user.linkedinUrl || user.sketchfabUrl || user.artstationUrl || user.customUrl
@@ -29,6 +31,10 @@ export default function OthersProfile({ user, changeEditButton, address }: Other
   const isProfileEmpty = useMemo(() => {
     return !user.username && !user.email && !user.biography && !hasSocialNetworks;
   }, [user, hasSocialNetworks]);
+
+  const isRatingEmpty = useMemo(() => {
+    return ratingData.totalRatings == 0;
+  }, [ratingData]);
 
   return (
     <div className={styles.profileTab}>
@@ -52,10 +58,17 @@ export default function OthersProfile({ user, changeEditButton, address }: Other
         </div>
         <div className={styles.editButton}>{changeEditButton}</div>
         {isProfileEmpty ? (
-          <div className="w-full h-2/3 flex justify-center items-center">
+          <div className="flex flex-col justify-center min-h-[50vh] gap-6">
             <span className="text-3xl text-secondary-content text-center">
               {"This profile is empty" + (changeEditButton ? ", click the button to edit it!" : "!")}
             </span>
+            {!isRatingEmpty && (
+              <div className="mt-8 text-right">
+                <div className="mx-3">
+                  <RatingDisplay ratingData={ratingData} />
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className={styles.profileContent}>
@@ -98,6 +111,13 @@ export default function OthersProfile({ user, changeEditButton, address }: Other
                 )}
               </div>
             </div>
+            {!isRatingEmpty && (
+              <div className="mt-4 text-right">
+                <div className="mx-3">
+                  <RatingDisplay ratingData={ratingData} />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

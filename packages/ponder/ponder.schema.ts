@@ -35,6 +35,7 @@ export const job = onchainTable(
 		acceptedAt: t.bigint(),
 		finishedAt: t.bigint(), // When the job was finished
 		canceledAt: t.bigint(), // When the job was canceled
+		rating: t.integer(), // Rating given by the client to the freelancer
 		clientReceived: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
@@ -64,6 +65,7 @@ export const gig = onchainTable("gig", (t) => ({
 	canceledAt: t.bigint(),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
+	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),

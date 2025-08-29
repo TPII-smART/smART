@@ -121,6 +121,20 @@ ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
 		});
 });
 
+// This event is triggered when a job is rated.
+ponder.on("JobsContract:JobRated", async ({ event, context }) => {
+	// Updates the job to add the rating
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			rating: event.args.rating || 0n,
+			lastTransactionHash: event.transaction.hash,
+		});
+});
+
 // This event is triggered when a job is cancelled.
 ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 	// Updates the job to mark it as cancelled

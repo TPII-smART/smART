@@ -1,9 +1,13 @@
+import { useState } from "react";
 import Button from "../../Button/Button";
 import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
+import RatingStars from "@/components/RatingStars";
 import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import * as Yup from "yup";
+import { StarIcon } from "@heroicons/react/20/solid";
 import {
   ArrowDownTrayIcon,
   CheckCircleIcon,
@@ -13,12 +17,14 @@ import {
   PlayIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobStateEnum } from "~~/types/job/job.types";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
@@ -138,6 +144,20 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     }
   };
 
+  const handleRateJob = async (rating: number) => {
+    try {
+      if (!job.jobId) return;
+      await writeContract({
+        functionName: "rateJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId), rating],
+      });
+      setIsRatingModalOpen(false);
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Rate job failed:", err);
+    }
+  };
+
   // Payment display formatting
   const formatEthPrice = (wei: bigint) => {
     const eth = formatEther(wei);
@@ -246,6 +266,19 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             </Button>,
           );
         }
+      } else if (jobStatus === JobStateEnum.Finished && !job.rating) {
+        buttons.push(
+          <Button
+            variant="primary"
+            key="rate"
+            onClick={() => setIsRatingModalOpen(true)}
+            disabled={isMining}
+            size="sm"
+            tooltip="Rate Freelancer"
+          >
+            <StarIcon className="h-5 w-5" />
+          </Button>,
+        );
       }
     }
 
@@ -254,21 +287,53 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const actionButtons = getActionButtons();
 
+  const validationSchema = Yup.object().shape({
+    rating: Yup.number()
+      .required("Please select a rating")
+      .min(1, "Please select a rating")
+      .max(5, "Rating must be between 1 and 5"),
+  });
+
   return (
-    <UniversalCard
-      bannerUrl={job.bannerImageHash}
-      avatarAddress={isFreelancer ? job.client : job.freelancer}
-      title={job.title || "Untitled Job"}
-      description={job.description || "No description provided"}
-      extraInfo={deadlineText}
-      time={job.jobDuration}
-      timeLabel="Client expected duration"
-      category={job.category}
-      paymentDisplay={paymentDisplay}
-      footerLeft={statusDisplay}
-      footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
-      className={className}
-      cardVariant="Reduced"
-    />
+    <>
+      <UniversalCard
+        bannerUrl={job.bannerImageHash}
+        avatarAddress={isFreelancer ? job.client : job.freelancer}
+        title={job.title || "Untitled Job"}
+        description={job.description || "No description provided"}
+        extraInfo={deadlineText}
+        time={job.jobDuration}
+        timeLabel="Client expected duration"
+        category={job.category}
+        paymentDisplay={paymentDisplay}
+        footerLeft={statusDisplay}
+        footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
+        className={className}
+        cardVariant="Reduced"
+      />
+
+      {/* Rating modal for client */}
+      <FormModal
+        modalProps={{
+          title: "Rate Freelancer's Work",
+          onClose: () => setIsRatingModalOpen(false),
+          isOpen: isRatingModalOpen,
+          loading: isMining,
+        }}
+        formikProps={{
+          onSubmit: values => handleRateJob(values.rating),
+          initialValues: { rating: 0 },
+          validationSchema,
+        }}
+      >
+        {formikProps => (
+          <RatingStars
+            name="rating"
+            value={formikProps.values.rating}
+            onChange={value => formikProps.setFieldValue("rating", value)}
+          />
+        )}
+      </FormModal>
+    </>
   );
 }
