@@ -12,7 +12,7 @@ export const maxPayment = gql`
 
 export const getGigs = gql`
   query GetGigs {
-    gigs(orderBy: "createdAt", orderDirection: "desc") {
+    gigs(orderBy: "createdAt", orderDirection: "desc", where: { state: 0 }) {
       items {
         gigId
         client
@@ -62,6 +62,7 @@ export const getGigsPaginated = gql`
         AND: [
           { OR: [{ title_contains: $search }, { description_contains: $search }] }
           { basePayment_gte: $minPayment, basePayment_lte: $maxPayment, category_in: $categories }
+          { state: 0 }
         ]
       }
     ) {

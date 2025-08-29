@@ -12,6 +12,7 @@ import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
+import { GigStateEnum } from "~~/types/gig/gig.types";
 
 class FormData {
   proposedPayment: string;
@@ -56,6 +57,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   const isMyOwnGig = gig?.client?.toLowerCase() === address?.toLowerCase();
 
+  const gigState = gig?.state as GigStateEnum;
+
   // Payment display with formatting and truncation
   const formatEthPrice = (wei: bigint) => {
     const eth = formatEther(wei);
@@ -76,15 +79,16 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   );
 
   // Apply button
-  const applyButton = !isMyOwnGig ? (
-    <Button variant="primary" onClick={() => setShowApplyModal(true)}>
-      Apply
-    </Button>
-  ) : (
-    <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
-      Details
-    </Button>
-  );
+  const applyButton =
+    !isMyOwnGig && gigState === GigStateEnum.Open ? (
+      <Button variant="primary" onClick={() => setShowApplyModal(true)}>
+        Apply
+      </Button>
+    ) : (
+      <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
+        Details
+      </Button>
+    );
 
   const validationSchema = Yup.object().shape({
     proposedPayment: Yup.number().positive().required("Proposed payment is required"),
