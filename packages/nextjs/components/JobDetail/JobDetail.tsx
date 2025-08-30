@@ -5,13 +5,17 @@ import Spinner from "@/components/Spinner/Spinner";
 import { Separator } from "@/components/ui/Separator";
 import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CalendarDays, CheckCircle, Clock, DollarSign, FileText, User, XCircle } from "lucide-react";
 import { formatEther } from "viem";
+import { useAccount } from "wagmi";
+import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { useGlobalState } from "~~/services/store/store";
 import { Job, JobStateEnum } from "~~/types/job";
 
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
+  const { address: userAddress } = useAccount();
   const queryClient = useQueryClient();
 
   // Logic related to parsing from ETH to USD
@@ -19,10 +23,17 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   // const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
   const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: false });
 
+  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
+    contractName: "JobsContract",
+  });
+
   const { data, isLoading, error, refetch } = useQuery<Job>({
     queryKey: ["jobDetail", jobId],
     queryFn: () => fetchJob(postingId, jobId),
   });
+
+  const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
+  const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
 
   const formatPaymentDisplay = (wei: bigint) => {
     const eth = formatEther(wei);
@@ -78,67 +89,6 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     }
   };
 
-  const getActionButtons = (jobData: Job) => {
-    switch (jobData.state) {
-      case JobStateEnum.WaitingForApproval:
-        return (
-          <div className="flex gap-4">
-            <Button
-              variant={"primary"}
-              className="bg-[var(--color-success)] hover:bg-[var(--color-success)] text-[var(--color-primary-content)] px-6 py-3"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Approve Job
-            </Button>
-            <Button
-              variant={"primary"}
-              className="border-[var(--color-error)] text-[var(--color-error)] hover:bg-[var(--color-error)] hover:text-white bg-transparent border-2 px-6 py-3"
-            >
-              <XCircle className="w-4 h-4 mr-2" />
-              Reject Job
-            </Button>
-          </div>
-        );
-      case JobStateEnum.Ongoing:
-        return (
-          <div className="flex gap-4">
-            <Button
-              variant={"primary"}
-              className="bg-[var(--color-info)] hover:bg-[var(--color-info)] text-white px-6 py-3"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              Submit Deliverable
-            </Button>
-            <Button
-              variant={"primary"}
-              className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white px-6 py-3"
-            >
-              <User className="w-4 h-4 mr-2" />
-              Contact Client
-            </Button>
-          </div>
-        );
-      case JobStateEnum.Finished:
-        return (
-          <div className="flex gap-4">
-            <Button variant={"primary"} disabled className="bg-[var(--color-skeleton)] text-white px-6 py-3">
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Job Completed
-            </Button>
-            <Button
-              variant={"primary"}
-              className="bg-[var(--color-info)] hover:bg-[var(--color-info)] text-white px-6 py-3"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              View Deliverables
-            </Button>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   const formatDate = (dateString: string | undefined) => {
     return dateString ? new Date(Number(dateString) * 1000).toLocaleDateString() : "N/A";
   };
@@ -169,6 +119,120 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     }`.trim();
   };
 
+  const handleAccept = async () => {
+    try {
+      if (data?.state !== JobStateEnum.WaitingForApproval) return;
+      await writeContract({
+        functionName: "acceptJob",
+        args: [BigInt(data?.postingId), BigInt(data?.jobId)],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Accept job failed:", err);
+    }
+  };
+
+  const handleCancel = async () => {
+    try {
+      if (!data?.payment || !data?.jobId) return;
+      await writeContract({
+        functionName: "cancelJob",
+        args: [BigInt(data?.postingId), BigInt(data?.jobId)],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Cancel job failed:", err);
+    }
+  };
+
+  const handleConfirmCompletion = async () => {
+    try {
+      if (!data?.jobId) return;
+      await writeContract({
+        functionName: "confirmCompletion",
+        args: [BigInt(data?.postingId), BigInt(data?.jobId)],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Confirm job completion failed:", err);
+    }
+  };
+
+  // Action buttons based on user role and job state
+  const getActionButtons = () => {
+    const buttons = [];
+
+    // Cancel button - available for both parties until job is finished
+    if (data?.state !== JobStateEnum.Finished && data?.state !== JobStateEnum.Cancelled) {
+      buttons.push(
+        <Button
+          variant="danger"
+          key="cancel"
+          onClick={() => handleCancel()}
+          disabled={isMining}
+          size="sm"
+          tooltip="Cancel Job"
+        >
+          <XCircleIcon className="h-5 w-5" />
+        </Button>,
+      );
+    }
+
+    // Freelancer actions
+    if (isFreelancer) {
+      if (data?.state === JobStateEnum.WaitingForApproval) {
+        buttons.push(
+          <Button
+            variant="primary"
+            key="accept"
+            onClick={handleAccept}
+            disabled={isMining}
+            size="sm"
+            tooltip="Accept Job"
+          >
+            <CheckCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+      if (data?.state === JobStateEnum.Ongoing && !data?.freelancerDelivered) {
+        buttons.push(
+          <Button
+            variant="primary"
+            key="deliver"
+            onClick={handleConfirmCompletion}
+            disabled={isMining}
+            size="sm"
+            tooltip="Mark as Delivered"
+          >
+            <PaperAirplaneIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+    }
+
+    // Client actions
+    if (isClient) {
+      if (data?.state === JobStateEnum.Ongoing) {
+        if (data?.freelancerDelivered && !data?.clientReceived) {
+          buttons.push(
+            <Button
+              variant="primary"
+              key="receive"
+              onClick={handleConfirmCompletion}
+              disabled={isMining}
+              size="sm"
+              tooltip="Mark as Received"
+            >
+              <ArrowDownTrayIcon className="h-5 w-5" />
+            </Button>,
+          );
+        }
+      }
+    }
+
+    return buttons;
+  };
+
   if (error || !data) {
     return (
       <div className="min-h-screen w-full p-8 bg-[var(--color-primary)]">
@@ -176,7 +240,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
             <CardContent className="pt-12 pb-12">
               <div className="text-center">
-                <AlertCircle className="w-16 h-16 text-[var(--color-error)] mx-auto mb-6" />
+                <ExclamationCircleIcon className="w-16 h-16 text-[var(--color-error)] mx-auto mb-6" />
                 <h3 className="text-2xl font-semibold mb-4 text-[var(--color-primary-content)]">Error loading job</h3>
                 <p className="text-[var(--color-skeleton)] mb-6 text-lg">
                   {error?.message || "Failed to load job details"}
@@ -220,7 +284,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                 title="Toggle USD/ETH display"
               >
                 <div className="flex items-center text-4xl font-bold text-[var(--color-success)]">
-                  {displayUsdMode ? <DollarSign className="w-8 h-8 mr-2" /> : null}
+                  {displayUsdMode ? <CurrencyDollarIcon className="w-8 h-8 mr-2" /> : null}
                   {formatPaymentDisplay(BigInt(data?.payment || "0"))}
                 </div>
               </div>
@@ -250,7 +314,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               <CardContent className="p-6 pt-0 space-y-6">
                 <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">
                   <div className="p-3 bg-[var(--color-accent)] rounded-full">
-                    <Clock className="w-6 h-6 text-white" />
+                    <ClockIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Duration</p>
@@ -259,7 +323,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">
                   <div className="p-3 bg-[var(--color-info)] rounded-full">
-                    <CalendarDays className="w-6 h-6 text-white" />
+                    <CalendarDaysIcon className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Deadline</p>
@@ -383,7 +447,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                 <p className="font-semibold text-lg text-[var(--color-primary-content)]">Job ID: {data.jobId}</p>
                 <p className="text-base text-[var(--color-skeleton)]">Posting ID: {data.postingId}</p>
               </div>
-              {getActionButtons(data)}
+              {getActionButtons()}
             </div>
           </CardContent>
         </Card>

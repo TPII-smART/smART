@@ -1,11 +1,9 @@
-import Button from "../../Button/Button";
 import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import {
-  ArrowDownTrayIcon,
   CheckCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
@@ -13,22 +11,16 @@ import {
   PlayIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { JobStateEnum } from "~~/types/job/job.types";
 
-export default function JobCard({ job, reload, className }: JobCardProps) {
+export default function JobCard({ job, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
 
   const postingId = job.postingId ? BigInt(job.postingId) : undefined;
   const jobId = job.jobId ? BigInt(job.jobId) : undefined;
 
-  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
-    contractName: "JobsContract",
-  });
-
   const isFreelancer = job.freelancer?.toLowerCase() === userAddress?.toLowerCase();
-  const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
 
   const getJobStatus = () => {
     if (jobStatus === JobStateEnum.WaitingForApproval) {
@@ -102,45 +94,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   const statusInfo = getJobStatus();
   const StatusIcon = statusInfo.icon;
 
-  const handleAccept = async () => {
-    try {
-      if (job.state !== JobStateEnum.WaitingForApproval) return;
-      await writeContract({
-        functionName: "acceptJob",
-        args: [BigInt(job.postingId), BigInt(job.jobId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Accept job failed:", err);
-    }
-  };
-
-  const handleCancel = async () => {
-    try {
-      if (!job.payment || !job.jobId) return;
-      await writeContract({
-        functionName: "cancelJob",
-        args: [BigInt(job.postingId), BigInt(job.jobId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Cancel job failed:", err);
-    }
-  };
-
-  const handleConfirmCompletion = async () => {
-    try {
-      if (!job.jobId) return;
-      await writeContract({
-        functionName: "confirmCompletion",
-        args: [BigInt(job.postingId), BigInt(job.jobId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Confirm job completion failed:", err);
-    }
-  };
-
   const handleCardClick = () => {
     if (postingId != null && jobId != null) {
       window.location.href = `/job-posting/${postingId}/${jobId}`;
@@ -193,76 +146,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         ? `Client expected duration: ${job.jobDuration} hours`
         : undefined;
 
-  // Action buttons based on user role and job state
-  const getActionButtons = () => {
-    const buttons = [];
-
-    // Cancel button - available for both parties until job is finished
-    if (jobStatus !== JobStateEnum.Finished && jobStatus !== JobStateEnum.Cancelled) {
-      buttons.push(
-        <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
-          <XCircleIcon className="h-5 w-5" />
-        </Button>,
-      );
-    }
-
-    // Freelancer actions
-    if (isFreelancer) {
-      if (jobStatus === JobStateEnum.WaitingForApproval) {
-        buttons.push(
-          <Button
-            variant="primary"
-            key="accept"
-            onClick={handleAccept}
-            disabled={isMining}
-            size="sm"
-            tooltip="Accept Job"
-          >
-            <CheckCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-      if (jobStatus === JobStateEnum.Ongoing && !job.freelancerDelivered) {
-        buttons.push(
-          <Button
-            variant="primary"
-            key="deliver"
-            onClick={handleConfirmCompletion}
-            disabled={isMining}
-            size="sm"
-            tooltip="Mark as Delivered"
-          >
-            <PaperAirplaneIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-    }
-
-    // Client actions
-    if (isClient) {
-      if (jobStatus === JobStateEnum.Ongoing) {
-        if (job.freelancerDelivered && !job.clientReceived) {
-          buttons.push(
-            <Button
-              variant="primary"
-              key="receive"
-              onClick={handleConfirmCompletion}
-              disabled={isMining}
-              size="sm"
-              tooltip="Mark as Received"
-            >
-              <ArrowDownTrayIcon className="h-5 w-5" />
-            </Button>,
-          );
-        }
-      }
-    }
-
-    return buttons;
-  };
-
-  const actionButtons = getActionButtons();
-
   return (
     <UniversalCard
       bannerUrl={job.bannerImageHash}
@@ -275,7 +158,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       category={job.category}
       paymentDisplay={paymentDisplay}
       footerLeft={statusDisplay}
-      footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
       className={className}
       cardVariant="Reduced"
       onClickCardAction={handleCardClick}
