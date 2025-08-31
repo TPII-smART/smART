@@ -1,14 +1,6 @@
 import { ponder } from "ponder:registry";
 import { job, jobPosting } from "ponder:schema";
-
-// Enums for job states
-export enum JobState {
-	WaitingForApproval = 0,
-	Ongoing = 1,
-	Finished = 2,
-	Cancelled = 3,
-	Disputed = 4,
-}
+import { JobState } from "@se-2/common";
 
 // Event handlers for the JobsContract
 

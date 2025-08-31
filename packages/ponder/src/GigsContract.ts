@@ -1,20 +1,6 @@
 import { ponder } from "ponder:registry";
 import { gig, gigApplication } from "ponder:schema";
-
-// Enums for Gig and GigApplication states
-enum GigState {
-	Open = 0,
-	InProgress = 1,
-	Completed = 2,
-	Cancelled = 3,
-	Disputed = 4,
-}
-
-enum ApplicationState {
-	Pending = 0,
-	Accepted = 1,
-	Rejected = 2,
-}
+import { GigState, ApplicationState } from "@se-2/common";
 
 // Listen for Gig creation
 ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
@@ -91,7 +77,7 @@ ponder.on("GigsContract:ApplicationAccepted", async ({ event, context }) => {
 
 // Listen for gigApplication rejection
 ponder.on("GigsContract:ApplicationRejected", async ({ event, context }) => {
-	const blockTimestamp = event.block.timestamp; 
+	const blockTimestamp = event.block.timestamp;
 
 	await context.db
 		.update(gigApplication, {
@@ -106,7 +92,7 @@ ponder.on("GigsContract:ApplicationRejected", async ({ event, context }) => {
 			rejectAt: blockTimestamp,
 		});
 
-		await context.db
+	await context.db
 		.update(gig, {
 			gigId: event.args.gigId,
 		})
@@ -128,14 +114,13 @@ ponder.on(
 				freelancerDelivered: true,
 				lastTransactionHash: event.transaction.hash,
 				emitBy: event.transaction.from,
-				deliveredAt: event.args.timestamp,	
+				deliveredAt: event.args.timestamp,
 			});
 	}
 );
 
 // Listen for client reception
 ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
-
 	await context.db
 		.update(gig, {
 			gigId: event.args.gigId,

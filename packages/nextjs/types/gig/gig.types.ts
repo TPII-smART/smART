@@ -1,3 +1,4 @@
+import { GigState } from "@se-2/common";
 import { parseEther } from "viem";
 import { WorkPostingFormData } from "~~/components/WorkPostingForm/types";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
@@ -87,7 +88,7 @@ export class Gig {
     this.maxDurationInHours = "";
     this.finalDurationInHours = "";
     this.deadline = "";
-    this.state = GigStateEnum.Open;
+    this.state = GigState.Open;
     this.createdAt = "";
     this.acceptedAt = "";
     this.finishedAt = "";
@@ -111,15 +112,6 @@ export class Gig {
       },
     ];
   }
-}
-
-/** Enum representing the possible states of a gig. */
-export enum GigStateEnum {
-  Open = 0,
-  InProgress = 1,
-  Completed = 2,
-  Cancelled = 3,
-  Disputed = 4,
 }
 
 export interface GigsData {

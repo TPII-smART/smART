@@ -27,13 +27,6 @@ export interface Application {
   gig?: Gig;
 }
 
-/** Enum representing the possible states of an application. */
-export enum ApplicationState {
-  Pending = 0,
-  Accepted = 1,
-  Rejected = 2,
-}
-
 export interface ApplicationsData {
   applications: Application[];
 }

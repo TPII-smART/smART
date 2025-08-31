@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedActivityCard } from "@/components/Card/FeedCard/FeedCard";
+import { ApplicationState, GigState, JobState } from "@se-2/common";
 import { useAccount } from "wagmi";
 //import Button from "~~/components/Button/Button";
 import Spinner from "~~/components/Spinner/Spinner";
@@ -13,9 +14,8 @@ import {
 } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchJobsAndHiresPaginated } from "~~/services/graphql/fetchers/job/job.service";
 import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
-import { Application, ApplicationState } from "~~/types/gig/gig-application.types";
-import { GigStateEnum } from "~~/types/gig/gig.types";
-import { Job, JobStateEnum } from "~~/types/job/job.types";
+import { Application } from "~~/types/gig/gig-application.types";
+import { Job } from "~~/types/job/job.types";
 import { Paginated, PaginationMetaArg } from "~~/types/paginated.types";
 
 interface Data {
@@ -34,7 +34,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
   const isClient = job.client === userAddress;
 
   switch (job.state) {
-    case JobStateEnum.WaitingForApproval:
+    case JobState.WaitingForApproval:
       return {
         title: isClient ? "Service Requested" : "New Service Request Received",
         description: isClient
@@ -46,7 +46,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
         interactionType: InteractionType.job,
       };
 
-    case JobStateEnum.Cancelled: {
+    case JobState.Cancelled: {
       const cancelledBy = job.emitBy;
       const client = job.client;
       const freelancer = job.freelancer;
@@ -95,7 +95,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
       }
     }
 
-    case JobStateEnum.Ongoing:
+    case JobState.Ongoing:
       // Freelancer
 
       const acceptedActivity = {
@@ -147,7 +147,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
       }
       break;
 
-    case JobStateEnum.Finished:
+    case JobState.Finished:
       return {
         title: isClient ? "Job Completed" : "You Completed a Job",
         description: isClient ? `The job "${job.title}" has been completed.` : `You completed the job "${job.title}".`,
@@ -157,7 +157,7 @@ const getJobInfo = (job: Job, userAddress: string) => {
         interactionType: InteractionType.job,
       };
 
-    case JobStateEnum.Disputed:
+    case JobState.Disputed:
       return {
         title: "Job in Dispute",
         description: `The job "${job.title}" is in dispute.`,
@@ -185,7 +185,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
   const isFreelancer = application.freelancer === userAddress;
 
   switch (gig?.state) {
-    case GigStateEnum.Open:
+    case GigState.Open:
       if (isClient) {
         return {
           title: "Gig Published",
@@ -198,7 +198,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
       }
       break;
 
-    case GigStateEnum.InProgress:
+    case GigState.InProgress:
       const acceptedActivity = {
         type: ActivityItemType.status,
         timestamp: castDateToTimestampNum(gig.acceptedAt),
@@ -247,7 +247,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
       }
       break;
 
-    case GigStateEnum.Completed:
+    case GigState.Completed:
       return {
         title: isClient ? "Gig Completed" : "You Completed a Gig",
         description: isClient
@@ -259,7 +259,7 @@ const getGigInfo = (application: Application, userAddress: string) => {
         interactionType: InteractionType.gig,
       };
 
-    case GigStateEnum.Cancelled: {
+    case GigState.Cancelled: {
       const client = gig.client?.toLowerCase();
       const freelancer = application.freelancer?.toLowerCase();
       const cancelledBy = gig.emitBy?.toLowerCase();

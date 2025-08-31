@@ -7,9 +7,10 @@ import JobCard from "@/components/Card/JobCard/JobCard";
 import { jobState } from "@/components/Card/JobState/jobState.data";
 import ComboBox from "@/components/ComboBox/ComboBox";
 import { InputBase } from "@/components/scaffold-eth";
+import { JobState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchJobsFromPosting } from "~~/services/graphql/fetchers/job/job.service";
-import { JobStateEnum, JobsData } from "~~/types/job/job.types";
+import { JobsData } from "~~/types/job/job.types";
 
 export default function MyJobsListing({ postingId }: { postingId: string }) {
   const searchParams = useSearchParams();
@@ -37,7 +38,7 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
   const initialSearch = searchParams?.get("search") || "";
   const initialState = searchParams?.get("state")
     ? parseInt(searchParams.get("state") as string)
-    : JobStateEnum.WaitingForApproval;
+    : JobState.WaitingForApproval;
 
   const [form, setForm] = useState({
     currentSelectedState: initialState,

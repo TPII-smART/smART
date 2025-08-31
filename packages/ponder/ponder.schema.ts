@@ -1,5 +1,4 @@
 import { onchainTable, primaryKey } from "ponder";
-import { emit } from "process";
 
 // JobPosting table
 export const jobPosting = onchainTable("jobPosting", (t) => ({
