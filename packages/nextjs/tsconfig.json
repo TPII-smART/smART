@@ -21,8 +21,9 @@
       "@/lib/*": ["lib/*"],
       "@hooks/*": ["hooks/*"],
       "@services/*": ["services/*"],
+      "@se-2/common": ["../common/src"]
     },
-    "plugins": [{ "name": "next" }],
+    "plugins": [{ "name": "next" }]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

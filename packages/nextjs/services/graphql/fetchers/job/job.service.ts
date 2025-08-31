@@ -120,3 +120,30 @@ export const fetchHires = async (userAddress: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getHires, { client: userAddress });
   return { jobs: res.jobs.items };
 };
+
+export const fetchJobsAndHires = async (userAddress: string) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobAndHires, { address: userAddress });
+  return { jobs: res.jobs.items };
+};
+
+export const fetchJobsAndHiresPaginated = async (
+  meta: PaginationMetaArg,
+  userAddress: string,
+): Promise<Paginated<Job>> => {
+  const res = await request<{ jobs: PaginationQueryResponse<Job> }>(endpoint, JobQueries.getJobAndHiresPaginated, {
+    address: userAddress,
+    limit: meta.limit,
+    startCursor: meta.startCursor,
+    endCursor: meta.endCursor,
+  });
+  return {
+    data: res.jobs.items,
+    meta: {
+      endCursor: res.jobs.pageInfo.endCursor,
+      hasNextPage: res.jobs.pageInfo.hasNextPage,
+      totalCount: res.jobs.totalCount,
+      startCursor: res.jobs.pageInfo.startCursor,
+      // hasPreviousPage: res.jobs.pageInfo.hasPreviousPage,
+    },
+  };
+};

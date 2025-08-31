@@ -1,0 +1,6 @@
+{
+	"name": "@se-2/common",
+	"version": "0.0.1",
+	"main": "src/index.ts",
+	"types": "src/index.ts"
+}

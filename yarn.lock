@@ -451,7 +451,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/styled@npm:^11.14.0":
+"@emotion/styled@npm:^11.14.1":
   version: 11.14.1
   resolution: "@emotion/styled@npm:11.14.1"
   dependencies:
@@ -2168,6 +2168,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@heroicons/react@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "@heroicons/react@npm:2.2.0"
+  peerDependencies:
+    react: ">= 16 || ^19.0.0-rc"
+  checksum: ff4dbfa98dacc41f86db82be9102d0c2cd0b8652b428f0b49ffd2580bee8f36fca43937a3d3d5e8f209c7303f5317a32163c018dfa13a3730d79dec43addac93
+  languageName: node
+  linkType: hard
+
 "@heroicons/react@npm:~2.1.5":
   version: 2.1.5
   resolution: "@heroicons/react@npm:2.1.5"
@@ -3182,7 +3191,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@mui/material@npm:^7.1.1":
+"@mui/material@npm:^7.3.1":
   version: 7.3.1
   resolution: "@mui/material@npm:7.3.1"
   dependencies:
@@ -4604,6 +4613,12 @@ __metadata:
   checksum: 96d46420780473d6c6c9700254a0eceec60302f61d7f9d7f29024e90c7acff3e8e40a5ee52dfaf104db539a10462e531996aaf9e69f082b8540b0a25870545fc
   languageName: node
   linkType: hard
+
+"@se-2/common@workspace:packages/common":
+  version: 0.0.0-use.local
+  resolution: "@se-2/common@workspace:packages/common"
+  languageName: unknown
+  linkType: soft
 
 "@se-2/hardhat@workspace:packages/hardhat":
   version: 0.0.0-use.local
@@ -17918,10 +17933,11 @@ __metadata:
   resolution: "se-2@workspace:."
   dependencies:
     "@emotion/react": ^11.14.0
-    "@emotion/styled": ^11.14.0
+    "@emotion/styled": ^11.14.1
     "@fontsource/roboto": ^5.2.6
+    "@heroicons/react": ^2.2.0
     "@mui/icons-material": ^7.1.1
-    "@mui/material": ^7.1.1
+    "@mui/material": ^7.3.1
     "@thirdweb-dev/storage": ^2.0.15
     class-variance-authority: ^0.7.1
     framer-motion: ^12.18.1
