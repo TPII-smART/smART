@@ -86,7 +86,9 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
     }
   }, [search, data, filterJobsByState]);
 
-  const ratingAverage = data?.jobs ? data.jobs.reduce((acc, job) => acc + (job.rating || 0), 0) / data.jobs.length : 0;
+  const ratedJobs = data?.jobs ? data.jobs.filter(job => typeof job.rating === "number") : [];
+  const ratingAverage =
+    ratedJobs.length > 0 ? ratedJobs.reduce((acc, job) => acc + (job.rating as number), 0) / ratedJobs.length : 0;
 
   const postWithRatings = {
     ...data?.posting,
@@ -94,13 +96,13 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
   };
 
   return (
-    <div className="w-full h-full overflow-auto px-4 md:px-6 lg:px-8">
+    <div className="px-4 md:px-6 lg:px-8">
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
         </div>
       ) : (
-        <div>
+        <div className="mt-8 mb-8">
           <InfoHeader data={postWithRatings as JobPosting} />
           <div className="mb-8 mt-8">
             <h1 className="text-xl font-bold text-content-primary mb-4 mt-6">Manage Jobs for this posting</h1>

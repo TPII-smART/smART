@@ -18,7 +18,7 @@ export default function JobPosting() {
   });
 
   return (
-    <div className="flex flex-col min-h-screen mt-4">
+    <div className="w-full h-full overflow-auto flex flex-col">
       <MyJobsListing postingId={String(postingId ?? "")} />
     </div>
   );

@@ -43,7 +43,7 @@ export default function GigPage() {
 
   return (
     <div className="w-full h-full overflow-auto">
-      <div className="flex flex-col min-h-screen mt-4">
+      <div className="flex flex-col min-h-screen mt-8">
         <div className="w-full px-4 md:px-6 lg:px-8">
           {isLoading ? (
             <div className="flex items-center justify-center w-full h-64">
