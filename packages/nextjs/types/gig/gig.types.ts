@@ -73,6 +73,9 @@ export class Gig {
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the gig. */
   freelancerDelivered?: boolean;
 
+  /** (Optional) Rating given by the client to the freelancer when the gig is completed. */
+  rating?: number;
+
   /** (Optional) Unique identifier for the accepted application, if applicable. */
   acceptedApplicationId?: string;
 

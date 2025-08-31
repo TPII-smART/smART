@@ -70,6 +70,7 @@ contract GigsContract {
         uint256 finishedAt; // When an application was finished
         bool clientReceived; // Whether the client has received the work results
         bool freelancerDelivered; // Whether the freelancer has delivered the work results
+        uint8 rating; // Rating given by the client (1-5)
         Application[] applications; // All applications for this gig
         uint256 acceptedApplicationId; // ID of the accepted application
         string gigBannerImageHash; // IPFS hash of the gig banner image
@@ -120,6 +121,8 @@ contract GigsContract {
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
     event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
+
+    event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
 
     event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment, uint256 timestamp);
 
@@ -193,6 +196,7 @@ contract GigsContract {
             newGig.acceptedAt = 0;
             newGig.clientReceived = false;
             newGig.freelancerDelivered = false;
+            newGig.rating = 0;
             newGig.acceptedApplicationId = 0;
             newGig.gigBannerImageHash = params.gigBannerImageHash;
         }
@@ -388,6 +392,22 @@ contract GigsContract {
         if (gig.clientReceived && gig.freelancerDelivered) {
             _completeGig(_gigId);
         }
+    }
+
+    /**
+     * @dev Rate the gig (only client can rate after completion)
+     * @param _gigId The gig ID to rate
+     * @param _rating The rating to give (1-5)
+     */
+    function rateGig(uint256 _gigId, uint8 _rating) external gigExists(_gigId) onlyClient(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+        require(gig.state == GigState.Completed, "Gig is not completed");
+        require(gig.rating == 0, "Gig already rated");
+        require(_rating >= 1 && _rating <= 5, "Invalid rating");
+        require(_rating % 1 == 0, "Rating must be an integer");
+
+        gig.rating = _rating;
+        emit GigRated(_gigId, msg.sender, _rating, block.timestamp);
     }
 
     /**

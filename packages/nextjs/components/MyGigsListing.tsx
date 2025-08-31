@@ -2,11 +2,13 @@
 
 import Spinner from "@/components//Spinner/Spinner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAccount } from "wagmi";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
 import { fetchMyGigs } from "~~/services/graphql/fetchers/gig/gig.service";
 import { GigsData } from "~~/types/gig/gig.types";
 
 export default function MyGigsListing({ userAddress }: { userAddress: string }) {
+  const { address } = useAccount();
   const queryClient = useQueryClient();
   const { data, isLoading, refetch } = useQuery<GigsData>({
     queryKey: ["gigsFromUser", userAddress],
@@ -14,6 +16,8 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
   });
 
   console.log(data);
+
+  const isOwner = userAddress === address;
 
   const reload = async () => {
     queryClient.invalidateQueries({ queryKey: ["gigsFromUser", userAddress] });
@@ -23,11 +27,6 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
 
   return (
     <div className="w-full px-4 md:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-content-primary mb-2">My Gigs</h1>
-        <p className="text-content-secondary">Manage your active and completed gigs</p>
-      </div>
-
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
@@ -41,7 +40,19 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
           ) : (
             <div className="text-center py-12">
               <p className="text-content-secondary text-lg">No gigs found.</p>
-              <p className="text-content-tertiary mt-2">Start by browsing available gigs or posting your own.</p>
+              <p className="text-content-tertiary mt-2">
+                {isOwner ? (
+                  <span>
+                    Go to the{" "}
+                    <a href={`/browse-gigs`} className="underline">
+                      Browse Gigs
+                    </a>{" "}
+                    page to create your first gig.
+                  </span>
+                ) : (
+                  <span>This user has not posted any gigs yet.</span>
+                )}
+              </p>
             </div>
           )}
         </div>

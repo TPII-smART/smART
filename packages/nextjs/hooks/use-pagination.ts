@@ -87,7 +87,6 @@ export const usePagination = <T>({
 
   const fetchData = useCallback(
     async (hasParamNotChanged: boolean, key: string, ...params: SearchParams[]): Promise<void> => {
-      console.log("fetch?");
       if (!hasParamNotChanged) {
         // If search params changed, reinitialize cache
         delete cache.current[key];

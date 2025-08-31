@@ -32,6 +32,7 @@ export const getGigs = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
       }
@@ -83,6 +84,7 @@ export const getGigsPaginated = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
       }
@@ -119,6 +121,7 @@ export const getMyGigs = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
         emitBy
@@ -247,6 +250,7 @@ export const getGigByIds = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
       }
@@ -313,8 +317,20 @@ export const getGigById = gql`
       state
       clientReceived
       freelancerDelivered
+      rating
       acceptedApplicationId
       gigBannerImageHash
+    }
+  }
+`;
+
+export const getMyGigRatings = gql`
+  query GetMyGigRatings($userAddress: String!) {
+    gigs(where: { acceptedFreelancer: $userAddress }) {
+      items {
+        gigId
+        rating
+      }
     }
   }
 `;
