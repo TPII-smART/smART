@@ -57,6 +57,8 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
     contractName: "ProfileConfigContract",
   });
 
+  const PLACEHOLDER_BANNER_URI = "https://placehold.co/1200x300/1f2937/1f2937";
+
   const handleImageUpload = async (type: "banner" | "avatar") => {
     const input = document.createElement("input");
     input.type = "file";
@@ -100,7 +102,7 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
   const getBannerSrc = () => {
     if (bannerPreview) return bannerPreview;
     if (isImageUrl(user?.bannerPicture || "")) return user.bannerPicture; // IPFS URL
-    return "https://placehold.co/1200x300/1f2937/1f2937"; // Placeholder
+    return PLACEHOLDER_BANNER_URI; // Placeholder
   };
 
   const getAvatarSrc = () => {

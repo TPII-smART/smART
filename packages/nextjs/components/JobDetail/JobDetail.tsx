@@ -1,165 +1,31 @@
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { JobRoadmap } from "@/components/JobRoadmap/JobRoadmap";
 import Spinner from "@/components/Spinner/Spinner";
+import { isImageUrl } from "@/lib/utils";
 import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
+import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
 import { Job, JobStateEnum } from "~~/types/job";
-
-// New component for the vertical roadmap
-function JobRoadmap({ job }: { job: Job }) {
-  const formatDate = (dateString: string | undefined) => {
-    return dateString ? new Date(Number(dateString) * 1000).toLocaleDateString() : "N/A";
-  };
-
-  // Always show all possible states, but adapt based on job state
-  const getAllRoadmapSteps = () => {
-    const baseSteps = [
-      {
-        title: "Job Created",
-        date: formatDate(job.createdAt),
-        completed: true,
-        current: false,
-        state: "created",
-      },
-      {
-        title: "Waiting for Approval",
-        date: job.state >= JobStateEnum.WaitingForApproval ? formatDate(job.createdAt) : null,
-        completed: job.state > JobStateEnum.WaitingForApproval,
-        current: job.state === JobStateEnum.WaitingForApproval,
-        state: "waiting",
-      },
-      {
-        title: "Job Accepted",
-        date: job.acceptedAt ? formatDate(job.acceptedAt) : null,
-        completed: job.state > JobStateEnum.Ongoing || !!job.acceptedAt,
-        current: job.state === JobStateEnum.Ongoing,
-        state: "accepted",
-      },
-      {
-        title: "Freelancer Delivered",
-        date: job.freelancerDelivered ? "Delivered" : null,
-        completed: job.freelancerDelivered || false,
-        current: job.state === JobStateEnum.Ongoing && !job.freelancerDelivered,
-        state: "delivered",
-      },
-      {
-        title: "Client Received",
-        date: job.clientReceived ? "Received" : null,
-        completed: job.clientReceived || false,
-        current: job.state === JobStateEnum.Ongoing && job.freelancerDelivered && !job.clientReceived,
-        state: "received",
-      },
-    ];
-
-    // Add the appropriate final state based on job status
-    if (job.state === JobStateEnum.Cancelled) {
-      baseSteps.push({
-        title: "Job Cancelled",
-        date: job.canceledAt ? formatDate(job.canceledAt) : null,
-        completed: true,
-        current: false,
-        state: "cancelled",
-      });
-    } else if (job.state === JobStateEnum.Disputed) {
-      baseSteps.push({
-        title: "Job Disputed",
-        date: "In Dispute",
-        completed: true,
-        current: false,
-        state: "disputed",
-      });
-    } else {
-      baseSteps.push({
-        title: "Job Completed",
-        date: job.finishedAt ? formatDate(job.finishedAt) : null,
-        completed: job.state === JobStateEnum.Finished,
-        current: false,
-        state: "finished",
-      });
-    }
-
-    return baseSteps;
-  };
-
-  const allSteps = getAllRoadmapSteps();
-
-  return (
-    <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
-      <CardHeader className="p-6">
-        <CardTitle className="text-2xl text-[var(--color-primary-content)]">Job Progress</CardTitle>
-      </CardHeader>
-      <CardContent className="p-6 pt-0">
-        <div className="relative pl-2">
-          {allSteps.map((step, index) => (
-            <div key={index} className="relative flex items-start gap-4 pb-8 last:pb-0">
-              {/* Timeline line - positioned correctly relative to the circle */}
-              {index < allSteps.length - 1 && (
-                <div
-                  className="absolute left-4 top-8 w-0.5 bg-[var(--color-border)]"
-                  style={{ height: "calc(100% - 16px)" }}
-                />
-              )}
-
-              {/* Status indicator */}
-              <div
-                className={`
-                relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 shrink-0
-                ${
-                  step.completed
-                    ? step.state === "cancelled"
-                      ? "bg-[var(--color-error)] border-[var(--color-error)]"
-                      : step.state === "disputed"
-                        ? "bg-[var(--color-accent)] border-[var(--color-accent)]"
-                        : "bg-[var(--color-success)] border-[var(--color-success)]"
-                    : step.current
-                      ? "bg-[var(--color-warning)] border-[var(--color-warning)]"
-                      : "bg-[var(--color-surface)] border-[var(--color-border)]"
-                }
-              `}
-              >
-                {step.completed && <CheckCircleIcon className="w-5 h-5 text-white" />}
-                {step.current && !step.completed && <div className="w-3 h-3 bg-white rounded-full" />}
-              </div>
-
-              {/* Step content */}
-              <div className="flex-1 min-w-0 pt-1">
-                <p
-                  className={`
-                  font-semibold text-base
-                  ${
-                    step.completed || step.current
-                      ? "text-[var(--color-primary-content)]"
-                      : "text-[var(--color-skeleton)]"
-                  }
-                `}
-                >
-                  {step.title}
-                </p>
-                {step.date && step.date !== "N/A" && (
-                  <p className="text-sm text-[var(--color-skeleton)] mt-1">{step.date}</p>
-                )}
-                {!step.date && !step.completed && !step.current && (
-                  <p className="text-sm text-[var(--color-skeleton)]/60 mt-1 italic">Pending</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+import { UserProfile } from "~~/types/user-profile.type";
 
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
   const { address: userAddress } = useAccount();
+
+  // Information related to the users (client and freelancer)
+  const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
+  const [freelancerProfile, setFreelancerProfile] = useState<UserProfile | null>(null);
+
   const queryClient = useQueryClient();
 
   // Logic related to parsing from ETH to USD
@@ -178,6 +44,37 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
   const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
+
+  // Add this useEffect to fetch user profiles
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      if (data?.client) {
+        try {
+          const profile = await fetchUserProfile(data.client);
+          setClientProfile(profile);
+        } catch (error) {
+          console.error("Failed to fetch client profile:", error);
+        }
+      }
+      if (data?.freelancer) {
+        try {
+          const profile = await fetchUserProfile(data.freelancer);
+          setFreelancerProfile(profile);
+        } catch (error) {
+          console.error("Failed to fetch freelancer profile:", error);
+        }
+      }
+    };
+
+    if (data) {
+      fetchProfiles();
+    }
+  }, [data, isLoading]);
+
+  const getAvatarSrc = (role: "client" | "freelancer") => {
+    const user = role === "client" ? clientProfile : freelancerProfile;
+    return user && isImageUrl(user.profilePicture || "") ? user.profilePicture : "";
+  };
 
   const formatPaymentDisplay = (wei: bigint) => {
     const eth = formatEther(wei);
@@ -443,18 +340,44 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </CardHeader>
           <CardContent className="p-6 pt-0">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
-                <p className="font-semibold text-lg mb-2 text-[var(--color-primary-content)]">Client</p>
-                <p className="text-[var(--color-skeleton)] font-mono text-base bg-[var(--color-input)]/20 p-2 rounded">
-                  {data.client}
-                </p>
+              <div className="space-y-3">
+                <p className="font-semibold text-lg text-[var(--color-primary-content)]">Client</p>
+                <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <AvatarImage
+                      src={getAvatarSrc("client")}
+                      alt="Client Avatar"
+                      address={data.client as `0x${string}`}
+                      width={96}
+                      height={96}
+                    />
+                    <div className="flex-1">
+                      <p className="text-[var(--color-primary-content)] font-medium mb-1">
+                        {clientProfile?.username || data.client}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
               {data.freelancer && (
-                <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
-                  <p className="font-semibold text-lg mb-2 text-[var(--color-primary-content)]">Freelancer</p>
-                  <p className="text-[var(--color-skeleton)] font-mono text-base bg-[var(--color-input)]/20 p-2 rounded">
-                    {data.freelancer}
-                  </p>
+                <div className="space-y-3">
+                  <p className="font-semibold text-lg text-[var(--color-primary-content)]">Freelancer</p>
+                  <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <AvatarImage
+                        src={getAvatarSrc("freelancer")}
+                        alt="Freelancer Avatar"
+                        address={data.freelancer as `0x${string}`}
+                        width={96}
+                        height={96}
+                      />
+                      <div className="flex-1">
+                        <p className="text-[var(--color-primary-content)] font-medium mb-1">
+                          {freelancerProfile?.username || data.freelancer}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
