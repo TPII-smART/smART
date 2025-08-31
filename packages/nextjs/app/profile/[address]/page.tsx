@@ -122,7 +122,7 @@ export default function Profile() {
           </div>
 
           <div>
-            <div className="sticky top-0 bg-base-100 z-100">
+            <div className="sticky top-0 bg-base-100 z-60">
               <div className="flex justify-center">
                 <div className="w-full" style={{ maxWidth: "60%" }}>
                   <Tabs tabs={profileAddress === address ? tabsOwn : tabs} onChange={handleTabChange} />
