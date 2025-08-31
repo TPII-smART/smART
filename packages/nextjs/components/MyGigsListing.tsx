@@ -43,9 +43,9 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
               <p className="text-content-tertiary mt-2">
                 {isOwner ? (
                   <span>
-                    Go to the{" "}
-                    <a href={`/browse-gigs`} className="underline">
-                      Browse Gigs
+                    Go to the Gigs section on the{" "}
+                    <a href={`/browse`} className="underline">
+                      Browse
                     </a>{" "}
                     page to create your first gig.
                   </span>

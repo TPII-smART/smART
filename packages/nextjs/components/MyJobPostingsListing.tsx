@@ -45,9 +45,9 @@ export default function MyJobPostingListing({ userAddress }: { userAddress: stri
               <p className="text-content-tertiary mt-2">
                 {isOwner ? (
                   <span>
-                    Go to the{" "}
-                    <a href={`/browse-jobs`} className="underline">
-                      Browse Jobs
+                    Go to the Job Posting section on the{" "}
+                    <a href={`/browse`} className="underline">
+                      Browse
                     </a>{" "}
                     page to create your first job posting.
                   </span>
