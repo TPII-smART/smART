@@ -109,3 +109,8 @@ export const fetchGigById = async (gigId: string) => {
   const res = await request<{ gig: Gig }>(endpoint, GigQueries.getGigById, { gigId: gigId });
   return res.gig;
 };
+
+export const fetchGigWithApplication = async (gigId: string) => {
+  const [gig, applications] = await Promise.all([fetchGigById(gigId), fetchApplicationsForGig(gigId)]);
+  return { gig, applications };
+};

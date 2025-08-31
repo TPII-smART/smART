@@ -30,6 +30,9 @@ export class Gig {
   /** Category or field of the gig. */
   category?: string;
 
+  /** Hash of the banner image associated with the gig. */
+  gigBannerImageHash?: string;
+
   /** (Optional) Max time to complete the gig. */
   maxDurationInHours?: string;
 
@@ -79,6 +82,7 @@ export class Gig {
     this.title = "";
     this.description = "";
     this.category = "";
+    this.gigBannerImageHash = "";
     this.maxDurationInHours = "";
     this.finalDurationInHours = "";
     this.deadline = "";

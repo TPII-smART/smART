@@ -108,7 +108,19 @@ export const fetchJobsFromPosting = async (postingId: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobsFromPosting, {
     postingId: postingId,
   });
-  return { jobs: res.jobs.items };
+  return res.jobs.items;
+};
+
+export const fetchJobPostingById = async (postingId: string) => {
+  const res = await request<{ jobPosting: JobPosting }>(endpoint, JobQueries.getJobPostingById, {
+    postingId: postingId,
+  });
+  return res.jobPosting;
+};
+
+export const fetchJobPostingWithJobs = async (postingId: string) => {
+  const [posting, jobs] = await Promise.all([fetchJobPostingById(postingId), fetchJobsFromPosting(postingId)]);
+  return { posting: posting, jobs: jobs };
 };
 
 export const fetchMyJobs = async (userAddress: string) => {
