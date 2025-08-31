@@ -205,6 +205,7 @@ export default function ApplicationCard({ application, client, className, reload
       paymentDisplay={statusDisplay}
       footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
       className={className}
+      cardVariant="Reduced"
     />
   );
 }
