@@ -34,6 +34,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
   const [categories, setCategories] = useState<Set<string>>(new Set(["all"]));
   const [sortBy, setSortBy] = useState<string>("recent");
   const [loading, setLoading] = useState<boolean>(false);
+  const loadingMax = useRef<boolean>(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -52,6 +53,8 @@ export default function BrowsePage({ type }: BrowsePageProps) {
 
   const filterItems = useCallback(
     async ({ instantFetch = false }: { instantFetch?: boolean }): Promise<void> => {
+      if (loadingMax.current) return;
+
       const sort = optionsSorts.find(option => option.id === sortBy);
 
       await fetchPaginatedData(
@@ -69,10 +72,11 @@ export default function BrowsePage({ type }: BrowsePageProps) {
         scrollRef.current.scrollTop = 0;
       }
     },
-    [type, priceRange, sortBy, search, fetchPaginatedData, scrollRef, categories],
+    [type, priceRange, sortBy, search, fetchPaginatedData, scrollRef, categories, loadingMax],
   );
 
   const fetchMaxPaymentETH = useCallback(async () => {
+    loadingMax.current = true;
     setData([]);
     setPriceRange([0, 0]);
     setSearch("");
@@ -81,6 +85,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
     const maxPayment = await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment());
     setMaxPaymentETH(maxPayment);
     setPriceRange([0, maxPayment]);
+    loadingMax.current = false;
   }, [type]);
 
   useEffect(() => {
