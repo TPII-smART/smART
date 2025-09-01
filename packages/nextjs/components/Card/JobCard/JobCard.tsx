@@ -1,12 +1,10 @@
 import { useState } from "react";
 import Button from "../../Button/Button";
-import FileUploadBox from "../../FileUploadBox";
 import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import * as Yup from "yup";
 import {
   ArrowDownTrayIcon,
   CheckCircleIcon,
@@ -16,40 +14,16 @@ import {
   PlayIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import FormModal from "~~/components/Modal/FormModal/FormModal";
-import Tabs from "~~/components/Tabs/Tabs";
-import { Tab } from "~~/components/Tabs/types";
-import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
+import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
+import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { JobStateEnum } from "~~/types/job/job.types";
-
-class FileFormData {
-  file?: File;
-  link?: string;
-  submissionComment: string;
-  isLink: boolean;
-
-  constructor() {
-    this.file = undefined;
-    this.link = "";
-    this.submissionComment = "";
-    this.isLink = false;
-  }
-}
-
-type UploadTab = "file" | "link";
-
-const tabs: Tab[] = [
-  { id: "file", label: "File" },
-  { id: "link", label: "Link" },
-];
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
   const [showModal, setShowModal] = useState(false);
-  const [selectedTab, setSelectedTab] = useState<UploadTab>("file");
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
@@ -317,22 +291,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const actionButtons = getActionButtons();
 
-  // Validation schema for the form fields using yup
-  const validationSchema = Yup.object().shape({
-    comment: Yup.string().max(512, "Comment must be at most 512 characters"),
-    link: Yup.string().when([], {
-      is: () => selectedTab === "link",
-      then: schema =>
-        schema.required("Link is required").url("Must be a valid URL").max(256, "Link must be at most 256 characters"),
-      otherwise: schema => schema.notRequired(),
-    }),
-    file: Yup.mixed().when([], {
-      is: () => selectedTab === "file",
-      then: schema => schema.required("File is required"),
-      otherwise: schema => schema.notRequired(),
-    }),
-  });
-
   return (
     <>
       <UniversalCard
@@ -351,65 +309,14 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         cardVariant="Reduced"
       />
       {/* Confirm Modal */}
-      <FormModal
-        modalProps={{
-          title: "Submit Deliverable",
-          onClose: () => setShowModal(false),
-          isOpen: showModal,
-          loading: isMining,
-          description: `
-            You are about to submit your deliverable for this job.\n
-            Please upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.
-          `,
-        }}
-        formikProps={{
-          onSubmit: handleConfirmCompletion,
-          initialValues: new FileFormData(),
-          validationSchema,
-          enableReinitialize: true,
-        }}
-      >
-        {({ values, setFieldValue, touched, errors }) => (
-          <div className="space-y-4">
-            <div className="flex gap-2 mb-2">
-              <Tabs
-                tabs={tabs}
-                onChange={id => {
-                  setSelectedTab(id.toString() as UploadTab);
-                  setFieldValue("isLink", id.toString() === "link");
-                }}
-              />
-            </div>
-            {selectedTab === "file" ? (
-              <FileUploadBox
-                onUploadSuccess={(val: File) => setFieldValue("file", val)}
-                acceptedFileType={"Image"}
-                onUploadError={error => console.error("File upload error:", error)}
-              />
-            ) : (
-              <InputBase
-                placeholder="Paste your link here"
-                variant="filled"
-                value={values.link || ""}
-                onChange={(val: string) => setFieldValue("link", val)}
-                error={touched.link && !!errors.link}
-                helperText={touched.link && errors.link ? errors.link : ""}
-              />
-            )}
-            <InputBase
-              placeholder="Comment"
-              multiline
-              minRows={4}
-              maxRows={4}
-              variant="filled"
-              value={values.submissionComment}
-              onChange={(val: string) => setFieldValue("submissionComment", val)}
-              error={touched.submissionComment && !!errors.submissionComment}
-              helperText={touched.submissionComment && errors.submissionComment ? errors.submissionComment : ""}
-            />
-          </div>
-        )}
-      </FormModal>
+      <UploadFileForm
+        onSubmit={handleConfirmCompletion}
+        loading={isMining}
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        modalTitle="Submit Deliverable"
+        modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+      />
     </>
   );
 }
