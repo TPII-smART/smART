@@ -4,7 +4,6 @@ import FileUploadBox from "../../FileUploadBox";
 import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
-import { Chip } from "@mui/material";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -18,26 +17,39 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import Tabs from "~~/components/Tabs/Tabs";
+import { Tab } from "~~/components/Tabs/types";
 import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { JobStateEnum } from "~~/types/job/job.types";
 
-class PostingFormData {
-  comment: string;
+class FileFormData {
+  file?: File;
   link?: string;
-  bannerImageFile?: File;
+  submissionComment: string;
+  isLink: boolean;
+
   constructor() {
-    this.comment = "";
+    this.file = undefined;
     this.link = "";
-    this.bannerImageFile = undefined;
+    this.submissionComment = "";
+    this.isLink = false;
   }
 }
+
+type UploadTab = "file" | "link";
+
+const tabs: Tab[] = [
+  { id: "file", label: "File" },
+  { id: "link", label: "Link" },
+];
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
   const [showModal, setShowModal] = useState(false);
-  const [deliveryMode, setDeliveryMode] = useState<"file" | "link">("file");
+  const [selectedTab, setSelectedTab] = useState<UploadTab>("file");
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
@@ -143,9 +155,40 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     }
   };
 
-  const handleConfirmCompletion = async () => {
+  const handleFileUpload = async (file: File | undefined) => {
+    if (!file) return;
+
+    return await uploadToIPFS(file);
+  };
+
+  const handleConfirmCompletion = async (fileData: FileFormData) => {
     try {
+      let resource = "";
+      const isLink = fileData.isLink;
+      console.log("entre");
+
       if (!job.jobId) return;
+
+      if (fileData.file && !isLink) {
+        resource = (await handleFileUpload(fileData.file)) || "";
+        console.log("File uploaded to IPFS:", resource);
+      } else if (!fileData.file && isLink) {
+        resource = fileData.link || "";
+      }
+
+      await writeContract({
+        functionName: "uploadFile",
+        args: [
+          BigInt(job.postingId),
+          BigInt(job.jobId),
+          { resource, submissionComment: fileData.submissionComment, isLink },
+        ],
+      });
+      // const created = await waitTransaction<JobPosting & Gig>(schema, transactionHash, typeKeys);
+      //   if (created) {
+      //     refresh(created);
+      //   }
+
       await writeContract({
         functionName: "confirmCompletion",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
@@ -153,6 +196,8 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm job completion failed:", err);
+    } finally {
+      setShowModal(false);
     }
   };
 
@@ -255,7 +300,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             <Button
               variant="primary"
               key="receive"
-              onClick={handleConfirmCompletion}
+              //onClick={handleConfirmCompletion}
               disabled={isMining}
               size="sm"
               tooltip="Mark as Received"
@@ -276,13 +321,13 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   const validationSchema = Yup.object().shape({
     comment: Yup.string().max(512, "Comment must be at most 512 characters"),
     link: Yup.string().when([], {
-      is: () => deliveryMode === "link",
+      is: () => selectedTab === "link",
       then: schema =>
         schema.required("Link is required").url("Must be a valid URL").max(256, "Link must be at most 256 characters"),
       otherwise: schema => schema.notRequired(),
     }),
-    bannerImageFile: Yup.mixed().when([], {
-      is: () => deliveryMode === "file",
+    file: Yup.mixed().when([], {
+      is: () => selectedTab === "file",
       then: schema => schema.required("File is required"),
       otherwise: schema => schema.notRequired(),
     }),
@@ -319,7 +364,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         }}
         formikProps={{
           onSubmit: handleConfirmCompletion,
-          initialValues: new PostingFormData(),
+          initialValues: new FileFormData(),
           validationSchema,
           enableReinitialize: true,
         }}
@@ -327,39 +372,24 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         {({ values, setFieldValue, touched, errors }) => (
           <div className="space-y-4">
             <div className="flex gap-2 mb-2">
-              <Chip
-                label="Upload File"
-                clickable
-                color={deliveryMode === "file" ? "primary" : "default"}
-                onClick={() => setDeliveryMode("file")}
-                sx={{
-                  borderRadius: "6px",
-                  backgroundColor: deliveryMode === "file" ? "var(--color-accent)" : "var(--color-secondary)",
-                  color: "var(--color-primary-content)",
-                  fontWeight: 500,
-                }}
-              />
-              <Chip
-                label="Paste Link"
-                clickable
-                color={deliveryMode === "link" ? "primary" : "default"}
-                onClick={() => setDeliveryMode("link")}
-                sx={{
-                  borderRadius: "6px",
-                  backgroundColor: deliveryMode === "link" ? "var(--color-accent)" : "var(--color-secondary)",
-                  color: "var(--color-primary-content)",
-                  fontWeight: 500,
+              <Tabs
+                tabs={tabs}
+                onChange={id => {
+                  setSelectedTab(id.toString() as UploadTab);
+                  setFieldValue("isLink", id.toString() === "link");
                 }}
               />
             </div>
-            {deliveryMode === "file" ? (
+            {selectedTab === "file" ? (
               <FileUploadBox
-                onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
-                acceptedFileType={"Any"}
+                onUploadSuccess={(val: File) => setFieldValue("file", val)}
+                acceptedFileType={"Image"}
+                onUploadError={error => console.error("File upload error:", error)}
               />
             ) : (
               <InputBase
                 placeholder="Paste your link here"
+                variant="filled"
                 value={values.link || ""}
                 onChange={(val: string) => setFieldValue("link", val)}
                 error={touched.link && !!errors.link}
@@ -368,10 +398,14 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             )}
             <InputBase
               placeholder="Comment"
-              value={values.comment}
-              onChange={(val: string) => setFieldValue("comment", val)}
-              error={touched.comment && !!errors.comment}
-              helperText={touched.comment && errors.comment ? errors.comment : ""}
+              multiline
+              minRows={4}
+              maxRows={4}
+              variant="filled"
+              value={values.submissionComment}
+              onChange={(val: string) => setFieldValue("submissionComment", val)}
+              error={touched.submissionComment && !!errors.submissionComment}
+              helperText={touched.submissionComment && errors.submissionComment ? errors.submissionComment : ""}
             />
           </div>
         )}

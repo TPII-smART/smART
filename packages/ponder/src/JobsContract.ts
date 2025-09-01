@@ -92,6 +92,26 @@ ponder.on(
 	}
 );
 
+// This event is triggered when a job is marked as completed by a freelancer.
+ponder.on(
+	"JobsContract:FileUploaded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({
+				resource: event.args.resource,
+				submissionComment: event.args.submissionComment,
+				isLink: event.args.isLink,
+				uploadedAt: BigInt(event.block.timestamp),
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
+
 // This event is triggered when a job is marked as received by the client.
 ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 	// Updates the job to mark it as received by the client

@@ -1,3 +1,5 @@
+import { FileType } from "../file/file.type";
+
 export * from "./job-posting.types";
 
 export interface Job {
@@ -58,6 +60,8 @@ export interface Job {
 
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
   freelancerDelivered?: boolean;
+
+  fileInfo?: FileType;
 }
 
 /** Enum representing the possible states of a job. */

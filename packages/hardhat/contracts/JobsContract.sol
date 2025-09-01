@@ -40,9 +40,9 @@ contract JobsContract {
 
     // Struct for file information
     struct FileInfo {
-        string ipfsUrl;
+        string resource;
         uint256 uploadedAt;
-        string fileDetail;
+        string submissionComment;
         string clientComment;
         bool isLink; // Whether the file is a link or an uploaded file
     }
@@ -82,8 +82,8 @@ contract JobsContract {
     }
 
     struct FileParams {
-        string ipfsHash;
-        string comment;
+        string resource;
+        string submissionComment;
         bool isLink;
     }
 
@@ -144,8 +144,9 @@ contract JobsContract {
         uint256 indexed postingId,
         uint256 indexed jobId,
         address indexed freelancer,
-        string ipfsHash,
-        string comment,
+        string resource,
+        string submissionComment,
+        bool isLink,
         uint256 timestamp
     );
 
@@ -295,7 +296,7 @@ contract JobsContract {
             canceledAt: 0,
             clientReceived: false,
             freelancerDelivered: false,
-            fileInfo: FileInfo({ ipfsUrl: "", uploadedAt: 0, fileDetail: "", clientComment: "", isLink: false })
+            fileInfo: FileInfo({ resource: "", uploadedAt: 0, submissionComment: "", clientComment: "", isLink: false })
         });
 
         // Add job to the posting
@@ -456,9 +457,9 @@ contract JobsContract {
         FileInfo memory fileInfo = postedJobs[postingId].jobs[jobId].fileInfo;
 
         return
-            bytes(fileInfo.ipfsUrl).length > 0 &&
-            keccak256(bytes(fileInfo.fileDetail)) == keccak256(bytes(comment)) &&
-            keccak256(bytes(fileInfo.ipfsUrl)) == keccak256(bytes(ipfsHash));
+            bytes(fileInfo.resource).length > 0 &&
+            keccak256(bytes(fileInfo.submissionComment)) == keccak256(bytes(comment)) &&
+            keccak256(bytes(fileInfo.resource)) == keccak256(bytes(ipfsHash));
     }
 
     // Function to receive Ether
@@ -481,19 +482,27 @@ contract JobsContract {
 
         require(job.state == JobState.Ongoing, "The job is not ongoing.");
 
-        require(bytes(_fileParams.ipfsHash).length > 0, "IPFS hash cannot be empty.");
-        require(bytes(_fileParams.ipfsHash).length <= 128, "IPFS hash must be up to 128 characters.");
-        require(bytes(_fileParams.comment).length <= 256, "Comment must be up to 256 characters.");
+        require(bytes(_fileParams.resource).length > 0, "IPFS hash cannot be empty.");
+        require(bytes(_fileParams.resource).length <= 128, "IPFS hash must be up to 128 characters.");
+        require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
         job.fileInfo = FileInfo({
-            ipfsUrl: _fileParams.ipfsHash,
-            fileDetail: _fileParams.comment,
+            resource: _fileParams.resource,
+            submissionComment: _fileParams.submissionComment,
             uploadedAt: block.timestamp,
             clientComment: "",
             isLink: _fileParams.isLink
         });
 
-        emit FileUploaded(_postingId, _jobId, msg.sender, _fileParams.ipfsHash, _fileParams.comment, block.timestamp);
+        emit FileUploaded(
+            _postingId,
+            _jobId,
+            msg.sender,
+            job.fileInfo.resource,
+            job.fileInfo.submissionComment,
+            job.fileInfo.isLink,
+            job.fileInfo.uploadedAt
+        );
     }
 
     /**
