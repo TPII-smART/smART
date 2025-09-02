@@ -1,4 +1,5 @@
 import React from "react";
+import { NotificationMessage, showNotification } from "./notification2";
 import { Toast, ToastPosition, toast } from "react-hot-toast";
 import { XMarkIcon } from "@heroicons/react/20/solid";
 import {
@@ -69,8 +70,9 @@ const Notification = ({
 };
 
 export const notification = {
-  success: (content: React.ReactNode, options?: NotificationOptions) => {
-    return Notification({ content, status: "success", ...options });
+  success: (content: React.ReactNode | NotificationMessage, options?: NotificationOptions) => {
+    // return Notification({ content, status: "success", ...options });
+    return showNotification({ type: "success", content, duration: options?.duration, position: options?.position });
   },
   info: (content: React.ReactNode, options?: NotificationOptions) => {
     return Notification({ content, status: "info", ...options });
