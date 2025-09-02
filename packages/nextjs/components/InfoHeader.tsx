@@ -86,7 +86,7 @@ const RatingDisplay = ({ rating }: { rating?: number }) => {
 
   return (
     <div className="flex items-center gap-2">
-      <StarIcon className="h-4 w-4 fill-[var(--color-accent)] text-[var(--color-accent)]" />
+      <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
       <span className="text-sm font-medium text-[var(--color-primary-content)]">{rating.toFixed(1)}</span>
     </div>
   );
@@ -114,7 +114,7 @@ const InfoHeader: React.FC<InfoHeaderProps> = ({ data, className }) => {
             ) : (
               <span className="text-xs font-semibold text-accent">JOB POSTING</span>
             )}
-            {isJobPosting(data) && <RatingDisplay rating={data.rating} />}
+            {data.rating && <RatingDisplay rating={data.rating} />}
           </div>
 
           {/* Title */}
