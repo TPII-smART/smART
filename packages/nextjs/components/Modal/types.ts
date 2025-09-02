@@ -27,4 +27,8 @@ export interface ModalProps {
    * Optional loading state for the modal, used to indicate processing.
    */
   loading?: boolean;
+  /**
+   * Optional width for the modal.
+   */
+  width?: string | number;
 }
