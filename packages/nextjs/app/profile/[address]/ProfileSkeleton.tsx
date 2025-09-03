@@ -1,5 +1,4 @@
 import styles from "./Profile.module.css";
-import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";
 import Skeleton from "~~/components/Skeleton/Skeleton";
 
@@ -22,7 +21,7 @@ const ProfileSkeleton = () => (
           <div className={styles.profileInfo}>
             <div className={styles.profileLeft}>
               <div className={styles.avatarWrapper}>
-                <AvatarImage loading={true} />
+                <Skeleton variant="circular" width={100} height={100} className="rounded-full" animation="pulse" />
               </div>
 
               <div className={styles.profileDetails}>
