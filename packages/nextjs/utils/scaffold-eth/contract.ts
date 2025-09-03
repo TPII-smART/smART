@@ -1,6 +1,6 @@
+import { notification } from "./Notification";
 import { getParsedError } from "./getParsedError";
 import { AllowedChainIds } from "./networks";
-import { notification } from "./notification";
 import { MutateOptions } from "@tanstack/react-query";
 import {
   Abi,

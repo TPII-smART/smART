@@ -127,12 +127,3 @@ html[data-theme="light"] .main-body {
     10px 0 10px -10px rgba(0, 0, 0, 0.15),
     0 10px 10px -10px rgba(0, 0, 0, 0.15);
 }
-
-@keyframes progress {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
-}

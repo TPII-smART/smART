@@ -2,66 +2,36 @@
 
 import React from "react";
 import type { NextPage } from "next";
-import * as SETH from "~~/components/scaffold-eth";
+import Button from "~~/components/Button/Button";
+import { notification } from "~~/utils/scaffold-eth";
 
 const Playground: NextPage = () => {
-  const [age, setAge] = React.useState<string>("");
-
   return (
     <div className="container mx-auto my-10">
-      <SETH.InputBase
-        value={age}
-        onChange={setAge}
-        placeholder="Enter your age"
-        label="Age"
-        error={true}
-        helperText="asjkas"
-        variant="filled"
-      />
-      <SETH.AddressInput
-        value={age}
-        onChange={setAge}
-        placeholder="Enter your age"
-        label="Age"
-        error={true}
-        helperText="asjkas"
-        variant="filled"
-      />
-      <SETH.IntegerInput
-        value={age}
-        onChange={setAge}
-        placeholder="Enter your age"
-        label="Age"
-        error={true}
-        helperText="asjkas"
-        variant="filled"
-      />
-      <SETH.BytesInput
-        value={age}
-        onChange={setAge}
-        placeholder="Enter your age"
-        label="Age"
-        error={true}
-        helperText="asjkas"
-        variant="filled"
-      />
-      <SETH.EtherInput
-        value={age}
-        onChange={setAge}
-        placeholder="Enter your age"
-        label="Age"
-        error={true}
-        helperText="asjkas"
-        variant="filled"
-      />
-      <SETH.Bytes32Input
-        value={age}
-        onChange={setAge}
-        placeholder="Enter your age"
-        label="Age"
-        error={true}
-        helperText="asjkas"
-        variant="filled"
+      <Button
+        variant="primary"
+        onClick={() => {
+          notification.loading({
+            title: "Loading...",
+            description: "UN RE TEXTO NOOO RE LARGO SABES MUUUY LARGO TANTO IBA A ESCRIBIR EL DEMENTE ESTE",
+          });
+          notification.success({
+            title: "Loading...",
+            description: "UN RE TEXTO NOOO RE LARGO SABES MUUUY LARGO TANTO IBA A ESCRIBIR EL DEMENTE ESTE",
+          });
+          notification.error({
+            title: "Loading...",
+            description: "UN RE TEXTO NOOO RE LARGO SABES MUUUY LARGO TANTO IBA A ESCRIBIR EL DEMENTE ESTE",
+          });
+          notification.info({
+            title: "Loading...",
+            description: "UN RE TEXTO NOOO RE LARGO SABES MUUUY LARGO TANTO IBA A ESCRIBIR EL DEMENTE ESTE",
+          });
+          notification.warning({
+            title: "Loading...",
+            description: "UN RE TEXTO NOOO RE LARGO SABES MUUUY LARGO TANTO IBA A ESCRIBIR EL DEMENTE ESTE",
+          });
+        }}
       />
     </div>
   );
