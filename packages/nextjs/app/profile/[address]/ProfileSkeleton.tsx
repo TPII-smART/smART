@@ -1,5 +1,4 @@
 import styles from "./Profile.module.css";
-import BannerImage from "~~/components/BannerImage/BannerImage";
 import Skeleton from "~~/components/Skeleton/Skeleton";
 
 const ProfileSkeleton = () => (
@@ -8,7 +7,7 @@ const ProfileSkeleton = () => (
       {/* Profile Header Section */}
       <div className={styles.profileHeader}>
         <div className={styles.bannerSection}>
-          <BannerImage height={400} width="100%" loading={true} />
+          <Skeleton variant="rectangular" width="100%" height="100%" />
           <div className={styles.bannerOverlay} />
 
           {/* Social Networks Skeleton in Header */}
@@ -16,6 +15,11 @@ const ProfileSkeleton = () => (
             <Skeleton variant="rectangular" width={25} height={25} animation="pulse" />
             <Skeleton variant="rectangular" width={25} height={25} animation="pulse" />
             <Skeleton variant="rectangular" width={25} height={25} animation="pulse" />
+          </div>
+
+          {/* Edit Button Skeleton in bottom right */}
+          <div className={styles.profileEditButton}>
+            <Skeleton variant="rectangular" width={100} height={40} />
           </div>
 
           <div className={styles.profileInfo}>
@@ -29,10 +33,6 @@ const ProfileSkeleton = () => (
                 <Skeleton variant="text" width={150} height={24} />
                 <Skeleton variant="text" width={300} height={20} />
               </div>
-            </div>
-
-            <div className={styles.profileActions}>
-              <Skeleton variant="rectangular" width={100} height={40} />
             </div>
           </div>
         </div>

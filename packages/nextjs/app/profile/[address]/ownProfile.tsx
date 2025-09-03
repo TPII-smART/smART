@@ -225,7 +225,9 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
         {/* Profile Header Section */}
         <div className={styles.profileHeader}>
           <div className={styles.bannerSection}>
-            {isImageUrl(user?.bannerPicture || "") ? (
+            {bannerPreview ? (
+              <BannerImage src={bannerPreview} alt="Banner" height={400} width="100%" />
+            ) : isImageUrl(user?.bannerPicture || "") ? (
               <BannerImage src={user.bannerPicture} alt="Banner" height={400} width="100%" />
             ) : (
               <div className={styles.placeholderBanner} />
