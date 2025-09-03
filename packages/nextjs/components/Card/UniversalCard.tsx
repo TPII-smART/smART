@@ -41,7 +41,7 @@ const RatingDisplay = ({ rating, className }: { rating?: number; className?: str
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
-      <span className="text-sm font-medium text-yellow-600">{rating}</span>
+      <span className="text-sm font-medium text-yellow-600">{rating.toFixed(1)}</span>
       <StarIcon className="h-4 w-4 fill-yellow-500 text-yellow-500" />
     </div>
   );

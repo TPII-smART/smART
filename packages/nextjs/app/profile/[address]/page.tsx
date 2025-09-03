@@ -6,7 +6,6 @@ import ProfileSkeleton from "./ProfileSkeleton";
 import OthersProfile from "./othersProfile";
 import OwnProfile from "./ownProfile";
 import { useAccount } from "wagmi";
-import Button from "~~/components/Button/Button";
 import Spinner from "~~/components/Spinner/Spinner";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab, TabProps } from "~~/components/Tabs/types";
@@ -93,13 +92,6 @@ export default function Profile() {
     setSelectedTab({ id, label: label ?? "" });
   };
 
-  const changeEditMode =
-    profileAddress === address ? (
-      <Button variant="primary" onClick={() => setEditMode(true)}>
-        Edit Profile
-      </Button>
-    ) : undefined;
-
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
@@ -112,25 +104,25 @@ export default function Profile() {
         <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
       ) : (
         <div>
-          <div style={{ minHeight: "100vh" }}>
+          <div>
             <OthersProfile
               user={user}
               address={profileAddress}
-              changeEditButton={changeEditMode}
               ratingData={ratingData}
+              onEditClick={profileAddress === address ? () => setEditMode(true) : undefined}
             />
           </div>
 
           <div>
             <div className="sticky top-0 bg-base-100 z-10">
               <div className="flex justify-center">
-                <div className="w-full" style={{ maxWidth: "60%" }}>
+                <div className="w-full">
                   <Tabs tabs={profileAddress === address ? tabsOwn : tabs} onChange={handleTabChange} />
                 </div>
               </div>
             </div>
 
-            <div className="container mt-8 mb-8">
+            <div className="container">
               <Suspense
                 fallback={
                   <div className="flex justify-center items-center h-64">

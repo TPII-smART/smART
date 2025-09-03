@@ -3,7 +3,7 @@
 import { Dispatch, SetStateAction, useState } from "react";
 import styles from "./Profile.module.css";
 import { resolveIPFSHash, uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
-import { LinkIcon } from "@heroicons/react/24/outline";
+import { LinkIcon, PencilIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";
 import Button from "~~/components/Button/Button";
@@ -23,14 +23,12 @@ const EditButton = ({ onClick, isLoading = false }: { onClick: () => void; isLoa
   <button
     onClick={onClick}
     disabled={isLoading}
-    className="p-2 bg-gray-800/50 rounded-full cursor-pointer hover:bg-gray-700/70 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+    className={`p-3 bg-black/60 hover:bg-black/80 rounded-full cursor-pointer transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm border border-white/20`}
   >
     {isLoading ? (
       <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
     ) : (
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-      </svg>
+      <PencilIcon className="h-5 w-5 text-white" />
     )}
   </button>
 );
@@ -95,12 +93,6 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
       }
     };
     input.click();
-  };
-
-  const getBannerSrc = () => {
-    if (bannerPreview) return bannerPreview;
-    if (isImageUrl(user?.bannerPicture || "")) return user.bannerPicture; // IPFS URL
-    return "https://placehold.co/1200x300/1f2937/1f2937"; // Placeholder
   };
 
   const getAvatarSrc = () => {
@@ -230,25 +222,43 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
   return (
     <div className={styles.profileTab}>
       <div className={styles.profileContainer}>
-        <div className="relative">
-          <BannerImage src={getBannerSrc()} alt="Banner" height={192} width={"100%"} />
-          <div className="absolute top-0 right-0 m-4  ">
-            <EditButton onClick={() => handleImageUpload("banner")} />
-          </div>
-          <div className={styles.avatarImage}>
-            <div className="relative">
-              <AvatarImage src={getAvatarSrc()} alt="Profile Picture" address={address} />
-              <div className="absolute bottom-2 right-2 p-2 ">
-                <EditButton onClick={() => handleImageUpload("avatar")} />
+        {/* Profile Header Section */}
+        <div className={styles.profileHeader}>
+          <div className={styles.bannerSection}>
+            {isImageUrl(user?.bannerPicture || "") ? (
+              <BannerImage src={user.bannerPicture} alt="Banner" height={400} width="100%" />
+            ) : (
+              <div className={styles.placeholderBanner} />
+            )}
+            <div className={styles.bannerOverlay} />
+
+            <div className="absolute top-6 right-6 z-10">
+              <EditButton onClick={() => handleImageUpload("banner")} />
+            </div>
+
+            <div className={styles.profileInfo}>
+              <div className={styles.profileLeft}>
+                <div className={styles.avatarWrapper}>
+                  <AvatarImage src={getAvatarSrc()} alt="Profile Picture" address={address} />
+                  <div className="absolute bottom-2 right-2">
+                    <EditButton onClick={() => handleImageUpload("avatar")} />
+                  </div>
+                </div>
+
+                <div className={styles.profileDetails}>
+                  <h1 className={styles.profileName}>Edit Profile</h1>
+                  <p className={styles.profileEmail}>Customize your public profile information</p>
+                  <p className={styles.profileBio}>Make sure to save your changes!</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
-        <div className={styles.editButton} />
+
+        {/* Form Content */}
         <div className={styles.profileContent}>
-          <div className={styles.ownProfile}>
-            <h1 className="text-3xl font-bold text-primary-content">Edit Profile</h1>
-            <div className={styles.inputsContainer + " space-y-12"}>
+          <div className={styles.formSection}>
+            <div className={styles.inputsContainer}>
               <InputBase
                 variant="outlined"
                 placeholder="Username"
@@ -270,30 +280,30 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
                 placeholder="Biography"
                 variant="outlined"
               />
+            </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-primary-content">Social Networks</h3>
-                <div className={styles.socialNetworksContainer}>
-                  {socialNetworks.map(({ icon: Icon, placeholder, key }) => (
-                    <div className={styles.socialNetworkWrapper} key={key}>
-                      <Icon width={30} height={30} />
-                      <InputBase
-                        placeholder={placeholder}
-                        value={user[key] ? user[key] : ""}
-                        onChange={v => handleChange(v, key)}
-                      />
-                    </div>
-                  ))}
-                </div>
+            <div className={styles.socialNetworksContainer}>
+              <h3 className="text-xl font-semibold text-primary-content mb-4">Social Networks</h3>
+              <div className="space-y-4">
+                {socialNetworks.map(({ icon: Icon, placeholder, key }) => (
+                  <div className={styles.socialNetworkWrapper} key={key}>
+                    <Icon width={24} height={24} />
+                    <InputBase
+                      placeholder={placeholder}
+                      value={user[key] ? user[key] : ""}
+                      onChange={v => handleChange(v, key)}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        </div>
 
-        <div className="mt-10 py-6 border-t border-gray-700 flex justify-end min-w-full">
-          <Button variant="primary" onClick={handleSubmit}>
-            Save Profile
-          </Button>
+          <div className={styles.saveButtonContainer}>
+            <Button variant="primary" onClick={handleSubmit} size="lg">
+              Save Profile
+            </Button>
+          </div>
         </div>
       </div>
     </div>

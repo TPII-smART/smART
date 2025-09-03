@@ -15,7 +15,7 @@ export default function AvatarImage({
     <img
       src={src ? src : address ? blo(address) : undefined}
       alt={address ? `${address} avatar` : alt}
-      className={`rounded-full border-2 border-border`}
+      className={`rounded-full`}
       width={width}
       height={height}
     />
@@ -24,7 +24,7 @@ export default function AvatarImage({
   return (
     <div style={{ width, height }}>
       {loading ? (
-        <Skeleton variant="circular" className="rounded-full border-2 border-border" animation="pulse">
+        <Skeleton variant="circular" className="rounded-full" animation="pulse">
           {component}
         </Skeleton>
       ) : (
