@@ -365,6 +365,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                       address={data.client as `0x${string}`}
                       width={96}
                       height={96}
+                      onClickProfileNavigation={true}
                     />
                     <div className="flex-1">
                       <p className="text-[var(--color-primary-content)] font-medium mb-1">
@@ -385,6 +386,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                         address={data.freelancer as `0x${string}`}
                         width={96}
                         height={96}
+                        onClickProfileNavigation={true}
                       />
                       <div className="flex-1">
                         <p className="text-[var(--color-primary-content)] font-medium mb-1">
