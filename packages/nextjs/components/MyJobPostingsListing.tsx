@@ -26,7 +26,7 @@ export default function MyJobPostingListing({ userAddress }: { userAddress: stri
   };
 
   return (
-    <div className="w-full px-4 md:px-6 lg:px-8">
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
@@ -45,9 +45,9 @@ export default function MyJobPostingListing({ userAddress }: { userAddress: stri
               <p className="text-content-tertiary mt-2">
                 {isOwner ? (
                   <span>
-                    Go to the{" "}
-                    <a href={`/browse-jobs`} className="underline">
-                      Browse Jobs
+                    Go to the Job Posting section on the{" "}
+                    <a href={`/browse`} className="underline">
+                      Browse
                     </a>{" "}
                     page to create your first job posting.
                   </span>

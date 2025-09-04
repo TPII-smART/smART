@@ -210,10 +210,20 @@ export const fetchApplicationsForGig = async (gigId: string) => {
   const res = await request<{ gigApplications: { items: Application[] } }>(endpoint, GigQueries.getApplicationsForGig, {
     gigId: gigId,
   });
-  return { applications: res.gigApplications.items };
+  const gig = await fetchGigById(gigId);
+  const applicationsWithGigDetails = res.gigApplications.items.map(app => ({
+    ...app,
+    gig: gig,
+  }));
+  return { applications: applicationsWithGigDetails };
 };
 
 export const fetchGigById = async (gigId: string) => {
   const res = await request<{ gig: Gig }>(endpoint, GigQueries.getGigById, { gigId: gigId });
   return res.gig;
+};
+
+export const fetchGigWithApplication = async (gigId: string) => {
+  const [gig, applications] = await Promise.all([fetchGigById(gigId), fetchApplicationsForGig(gigId)]);
+  return { gig, applications };
 };

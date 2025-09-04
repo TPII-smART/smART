@@ -1,7 +1,7 @@
 "use client";
 
 import Spinner from "@/components//Spinner/Spinner";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Application } from "~~/types/gig/gig.types";
@@ -11,7 +11,8 @@ type ApplicationsData = {
 };
 
 export default function ApplicationsListing({ userAddress }: { userAddress: string }) {
-  const { data, isLoading } = useQuery<ApplicationsData>({
+  const queryClient = useQueryClient();
+  const { data, isLoading, refetch } = useQuery<ApplicationsData>({
     queryKey: ["applicationsFromUser", userAddress],
     queryFn: async () => {
       const result = await fetchApplicationsWithGigDetails(userAddress);
@@ -22,8 +23,14 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
     staleTime: 0, // Force fresh data
   });
 
+  const reload = async () => {
+    queryClient.invalidateQueries({ queryKey: ["applicationsFromUser", userAddress] });
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    await refetch();
+  };
+
   return (
-    <div className="w-full px-4 md:px-6 lg:px-8">
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />
@@ -33,7 +40,12 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
           {data?.applications && data.applications.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {data?.applications.map(application => (
-                <ApplicationCard key={application.applicationId} application={application} />
+                <ApplicationCard
+                  key={application.applicationId}
+                  client={application.gig?.client}
+                  application={application}
+                  reload={reload}
+                />
               ))}
             </div>
           ) : (

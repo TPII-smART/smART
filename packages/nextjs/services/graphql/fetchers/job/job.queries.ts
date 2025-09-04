@@ -136,6 +136,7 @@ export const getJobsFromPosting = gql`
         jobDuration
         deadline
         state
+        rating
         createdAt
         acceptedAt
         finishedAt
@@ -143,6 +144,23 @@ export const getJobsFromPosting = gql`
         clientReceived
         freelancerDelivered
       }
+    }
+  }
+`;
+
+export const getJobPostingById = gql`
+  query GetJobPosting($postingId: BigInt!) {
+    jobPosting(postingId: $postingId) {
+      postingId
+      freelancer
+      basePayment
+      title
+      description
+      category
+      bannerImageHash
+      minimumNoticeTime
+      averageWorkDuration
+      createdAt
     }
   }
 `;

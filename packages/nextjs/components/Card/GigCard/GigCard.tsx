@@ -4,6 +4,7 @@ import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
+import { GigState } from "@se-2/common";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -56,6 +57,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   const isMyOwnGig = gig?.client?.toLowerCase() === address?.toLowerCase();
 
+  const gigState = gig?.state as GigState;
+
   // Payment display with formatting and truncation
   const formatEthPrice = (wei: bigint) => {
     const eth = formatEther(wei);
@@ -76,15 +79,16 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   );
 
   // Apply button
-  const applyButton = !isMyOwnGig ? (
-    <Button variant="primary" onClick={() => setShowApplyModal(true)}>
-      Apply
-    </Button>
-  ) : (
-    <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
-      Details
-    </Button>
-  );
+  const applyButton =
+    !isMyOwnGig && gigState === GigState.Open ? (
+      <Button variant="primary" onClick={() => setShowApplyModal(true)}>
+        Apply
+      </Button>
+    ) : (
+      <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
+        Details
+      </Button>
+    );
 
   const validationSchema = Yup.object().shape({
     proposedPayment: Yup.number().positive().required("Proposed payment is required"),
@@ -95,6 +99,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   return (
     <>
       <UniversalCard
+        bannerUrl={gig?.gigBannerImageHash ? gig.gigBannerImageHash : undefined}
         avatarAddress={gig?.client}
         title={gig?.title}
         description={gig?.description}
