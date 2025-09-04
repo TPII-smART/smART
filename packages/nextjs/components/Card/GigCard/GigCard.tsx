@@ -99,6 +99,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   return (
     <>
       <UniversalCard
+        bannerUrl={gig?.gigBannerImageHash ? gig.gigBannerImageHash : undefined}
         avatarAddress={gig?.client}
         title={gig?.title}
         description={gig?.description}
