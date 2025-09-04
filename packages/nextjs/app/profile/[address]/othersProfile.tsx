@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import styles from "./Profile.module.css";
 import Button from "@/components/Button/Button";
-import { LinkIcon } from "@heroicons/react/24/outline";
+import { LinkIcon } from "@heroicons/react/24/solid";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";
 import RatingDisplay from "~~/components/RatingDisplay";
@@ -125,9 +125,8 @@ export default function OthersProfile({ user, address, ratingData, onEditClick }
                     </a>
                   )}
                   {user.customUrl && (
-                    // eslint-disable-next-line prettier/prettier
-                    <a href={user.customUrl} title={user.customUrl} className="hover:opacity-70 transition-opacity text-white">
-                      <LinkIcon className="w-5 h-5 text-white" />
+                    <a href={user.customUrl} title={user.customUrl} className="hover:opacity-70 transition-opacity">
+                      <LinkIcon width={25} height={25} />
                     </a>
                   )}
                 </div>

@@ -139,7 +139,7 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
   };
 
   const handleChange = (value: string, key: keyof UserProfile) => {
-    setUser(prev => ({ ...prev, [key]: value.trim() }));
+    setUser(prev => ({ ...prev, [key]: value }));
     setHasChanged(true);
   };
 
@@ -201,12 +201,18 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
           }
         });
 
-        setUser(updatedUser);
+        Object.keys(updatedUser).forEach(key => {
+          if (typeof updatedUser[key as keyof UserProfile] === "string") {
+            updatedUser[key as keyof UserProfile] = (updatedUser[key as keyof UserProfile] as string).trim();
+          }
+        });
 
         await updateUserProfile({
           functionName: "setProfile",
           args: [updatedUser],
         });
+
+        setUser(updatedUser);
 
         await reloadUser(); // Reload user profile after update
       }
