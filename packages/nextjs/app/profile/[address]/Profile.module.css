@@ -15,7 +15,7 @@
       position: relative;
       height: 400px;
       overflow: hidden;
-      border-radius: 0;
+      border-top-left-radius: var(--radius-2xl);
     }
 
     .bannerSection {
@@ -24,7 +24,6 @@
       left: 0;
       width: 100%;
       height: 100%;
-      border-radius: 0;
     }
 
     .bannerSection img {
@@ -278,6 +277,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      border-top-left-radius: var(--radius-2xl);
     }
 
     .bannerSection {
@@ -286,7 +286,6 @@
       left: 0;
       width: 100%;
       height: 100%;
-      border-radius: 0;
       overflow: hidden;
     }
 

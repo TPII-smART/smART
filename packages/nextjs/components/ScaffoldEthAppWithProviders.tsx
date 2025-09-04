@@ -9,14 +9,7 @@ import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiProvider, useAccount } from "wagmi";
-import {
-  BookOpenIcon,
-  BugAntIcon,
-  HomeIcon,
-  MagnifyingGlassIcon,
-  TableCellsIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
+import { BugAntIcon, HomeIcon, MagnifyingGlassIcon, TableCellsIcon, UserIcon } from "@heroicons/react/24/outline";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { SpinnerProvider } from "~~/context/SpinnerProvider";
 import { UserProvider } from "~~/context/UserProvider";
@@ -51,11 +44,6 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
             {
               label: "Browse",
               href: "/browse",
-              icon: BookOpenIcon,
-            },
-            {
-              label: "Ponder",
-              href: "/ponder-greetings",
               icon: MagnifyingGlassIcon,
             },
             {

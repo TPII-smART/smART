@@ -196,7 +196,7 @@ export default function ApplicationCard({ application, client, className, reload
   return (
     <UniversalCard
       avatarAddress={application.freelancer}
-      title={application.gig?.title || "Gig Title Not Available"}
+      title={application.proposalComment || "Gig Title Not Available"}
       description={application.gig?.description || "Description not available"}
       time={application.proposedDurationInHours}
       timeLabel="Proposed Duration"
