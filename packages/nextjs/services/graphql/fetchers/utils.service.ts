@@ -10,6 +10,7 @@ export async function pollTransactionQuery<T>(
     query PollTransaction ($transactionHash: String!) {
       ${schema}(where: { lastTransactionHash: $transactionHash }) {
         items {
+          lastTransactionHash
           ${schemaKeys?.join("\n") || ""}
         }
       }

@@ -33,6 +33,7 @@ contract JobsContract {
         uint256 acceptedAt; // When the job was accepted
         uint256 finishedAt; // When the job was finished
         uint256 canceledAt; // When the job was canceled
+        uint8 rating; // Rating given by the client, should be between 1 and 5
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
         FileInfo fileInfo; // Store the file related to the job
@@ -137,6 +138,8 @@ contract JobsContract {
         uint256 payment,
         uint256 timestamp
     );
+
+    event JobRated(uint256 indexed postingId, uint256 indexed jobId, address client, uint8 rating, uint256 timestamp);
 
     event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
 
@@ -294,6 +297,7 @@ contract JobsContract {
             acceptedAt: 0,
             finishedAt: 0,
             canceledAt: 0,
+            rating: 0, // Rating is not set until job is finished
             clientReceived: false,
             freelancerDelivered: false,
             fileInfo: FileInfo({ resource: "", uploadedAt: 0, submissionComment: "", clientComment: "", isLink: false })
@@ -385,6 +389,26 @@ contract JobsContract {
         payable(job.freelancer).transfer(job.payment);
 
         emit JobFinished(_postingId, _jobId, job.freelancer, job.client, job.payment, job.finishedAt);
+    }
+
+    /**
+     * @dev Internal function to rate a job
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to rate
+     * @param _rating The rating given by the client (1-5)
+     */
+    function rateJob(
+        uint256 _postingId,
+        uint256 _jobId,
+        uint8 _rating
+    ) external onlyClient(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        require(job.state == JobState.Finished, "Job is not finished");
+        require(job.rating == 0, "Job already rated");
+        require(_rating >= 1 && _rating <= 5, "Invalid rating");
+        require(_rating % 1 == 0, "Rating must be an integer");
+        job.rating = _rating;
+        emit JobRated(_postingId, _jobId, msg.sender, _rating, block.timestamp);
     }
 
     /**

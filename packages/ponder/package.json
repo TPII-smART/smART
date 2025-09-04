@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "drizzle-kit": "0.22.8",
-    "hono": "^4.5.0",
+    "hono": "^4.9.6",
     "ponder": "^0.8.15",
     "viem": "^2.21.3"
   },

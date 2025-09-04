@@ -32,6 +32,7 @@ export const getGigs = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
       }
@@ -83,6 +84,7 @@ export const getGigsPaginated = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
       }
@@ -119,9 +121,54 @@ export const getMyGigs = gql`
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
+        emitBy
       }
+    }
+  }
+`;
+
+export const getMyGigsPaginated = gql`
+  query GetMyGigsPaginated($userAddress: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    gigs(
+      where: { client: $userAddress }
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      orderDirection: "desc"
+    ) {
+      items {
+        gigId
+        client
+        acceptedFreelancer
+        basePayment
+        finalPayment
+        title
+        description
+        category
+        maxDurationInHours
+        finalDurationInHours
+        deadline
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        state
+        clientReceived
+        freelancerDelivered
+        acceptedApplicationId
+        gigBannerImageHash
+        emitBy
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
     }
   }
 `;
@@ -139,7 +186,42 @@ export const getMyApplications = gql`
         createdAt
         proposalComment
         rejectionComment
+        emitBy
+        rejectAt
       }
+    }
+  }
+`;
+
+export const getMyApplicationsPaginated = gql`
+  query GetMyApplicationsPaginated($userAddress: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    gigApplications(
+      where: { freelancer: $userAddress }
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      orderDirection: "desc"
+    ) {
+      items {
+        applicationId
+        gigId
+        freelancer
+        proposedPayment
+        proposedDurationInHours
+        state
+        createdAt
+        proposalComment
+        rejectionComment
+        emitBy
+        rejectAt
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
     }
   }
 `;
@@ -163,9 +245,12 @@ export const getGigByIds = gql`
         acceptedAt
         finishedAt
         canceledAt
+        deliveredAt
+        emitBy
         state
         clientReceived
         freelancerDelivered
+        rating
         acceptedApplicationId
         gigBannerImageHash
       }
@@ -186,6 +271,26 @@ export const getApplicationsForGig = gql`
         createdAt
         proposalComment
         rejectionComment
+      }
+    }
+  }
+`;
+
+export const getApplicationsForGigs = gql`
+  query GetApplicationsForGigs($gigIds: [BigInt!]!) {
+    gigApplications(where: { gigId_in: $gigIds }) {
+      items {
+        applicationId
+        gigId
+        freelancer
+        proposedPayment
+        proposedDurationInHours
+        state
+        createdAt
+        proposalComment
+        rejectionComment
+        emitBy
+        rejectAt
       }
     }
   }
@@ -212,8 +317,20 @@ export const getGigById = gql`
       state
       clientReceived
       freelancerDelivered
+      rating
       acceptedApplicationId
       gigBannerImageHash
+    }
+  }
+`;
+
+export const getMyGigRatings = gql`
+  query GetMyGigRatings($userAddress: String!) {
+    gigs(where: { acceptedFreelancer: $userAddress }) {
+      items {
+        gigId
+        rating
+      }
     }
   }
 `;

@@ -315,6 +315,115 @@ describe("JobsContract", function () {
     });
   });
 
+  describe("Job Rating", function () {
+    beforeEach(async function () {
+      // Create job posting, job, accept it, and confirm completion
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      await jobsContract.connect(client).createJob(0, sampleJob, {
+        value: sampleJob.payment,
+      });
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
+      await jobsContract.connect(client).confirmCompletion(0, 0);
+    });
+
+    it("Should allow client to rate job with valid rating (1-5)", async function () {
+      const validRatings = [1, 2, 3, 4, 5];
+
+      for (let i = 0; i < validRatings.length; i++) {
+        // Create a new job for each rating test
+        await jobsContract.connect(client).createJob(
+          0,
+          {
+            ...sampleJob,
+            title: `Rating Test Job ${i}`,
+          },
+          { value: sampleJob.payment },
+        );
+
+        await jobsContract.connect(freelancer).acceptJob(0, i + 1);
+
+        await jobsContract.connect(freelancer).confirmCompletion(0, i + 1);
+        await jobsContract.connect(client).confirmCompletion(0, i + 1);
+
+        const tx = await jobsContract.connect(client).rateJob(0, i + 1, validRatings[i]);
+
+        await expect(tx)
+          .to.emit(jobsContract, "JobRated")
+          .withArgs(0, i + 1, client.address, validRatings[i], anyValue);
+      }
+    });
+
+    it("Should revert when client provides invalid rating (0)", async function () {
+      await expect(jobsContract.connect(client).rateJob(0, 0, 0)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when client provides invalid rating (6)", async function () {
+      await expect(jobsContract.connect(client).rateJob(0, 0, 6)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when client provides invalid rating (100)", async function () {
+      await expect(jobsContract.connect(client).rateJob(0, 0, 100)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when freelancer tries to rate", async function () {
+      await expect(jobsContract.connect(freelancer).rateJob(0, 0, 3)).to.be.revertedWith("Only client can call this");
+    });
+
+    it("Should prevent client from rating twice", async function () {
+      // Client rates first
+      await jobsContract.connect(client).rateJob(0, 0, 4);
+
+      // Try to rate again - should fail
+      await expect(jobsContract.connect(client).rateJob(0, 0, 3)).to.be.revertedWith("Job already rated");
+    });
+
+    it("Should emit correct rating values in events", async function () {
+      const testRatings = [1, 5, 3];
+
+      for (let i = 0; i < testRatings.length; i++) {
+        // Create new job for each test
+        await jobsContract.connect(client).createJob(
+          0,
+          {
+            ...sampleJob,
+            title: `Rating Event Test ${i}`,
+          },
+          { value: sampleJob.payment },
+        );
+
+        await jobsContract.connect(freelancer).acceptJob(0, i + 1);
+        await jobsContract.connect(freelancer).confirmCompletion(0, i + 1);
+        await jobsContract.connect(client).confirmCompletion(0, i + 1);
+
+        const tx = await jobsContract.connect(client).rateJob(0, i + 1, testRatings[i]);
+
+        // Verify the exact rating value is emitted
+        const receipt = await tx.wait();
+        const jobRatedEvent = receipt?.logs?.find(log => {
+          try {
+            const parsed = jobsContract.interface.parseLog({
+              topics: log.topics as string[],
+              data: log.data,
+            });
+            return parsed?.name === "JobRated";
+          } catch {
+            return false;
+          }
+        });
+
+        expect(jobRatedEvent).to.not.be.undefined;
+        if (jobRatedEvent) {
+          const parsed = jobsContract.interface.parseLog({
+            topics: jobRatedEvent.topics as string[],
+            data: jobRatedEvent.data,
+          });
+          expect(parsed?.args[3]).to.equal(testRatings[i]); // Rating is the 4th argument (index 3)
+        }
+      }
+    });
+  });
+
   describe("Job Cancellation", function () {
     beforeEach(async function () {
       // Create a job posting and job for cancellation tests

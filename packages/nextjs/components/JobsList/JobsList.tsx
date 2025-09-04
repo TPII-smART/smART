@@ -4,6 +4,7 @@ import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
 import { jobState } from "@/components/Card/JobState/jobState.data";
+import { JobState } from "@se-2/common";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -20,7 +21,7 @@ import {
 } from "@heroicons/react/24/outline";
 // Adjust the import to match the actual export from the module
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job/job.service";
-import { Job, JobStateEnum, JobsData } from "~~/types/job/job.types";
+import { Job, JobsData } from "~~/types/job/job.types";
 
 interface InfoIcons {
   title: string;
@@ -28,16 +29,16 @@ interface InfoIcons {
   info: string | number | undefined;
 }
 
-const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobStateEnum): InfoIcons[] => {
+const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobState): InfoIcons[] => {
   const infoIcons = [];
 
-  if (currentState === JobStateEnum.WaitingForApproval) {
+  if (currentState === JobState.WaitingForApproval) {
     infoIcons.push({
       title: `Job Duration: ${item.jobDuration} hours`,
       icon: <ClockIcon className="w-4 h-4" />,
       info: item.jobDuration + " hours",
     });
-  } else if (currentState === JobStateEnum.Ongoing) {
+  } else if (currentState === JobState.Ongoing) {
     infoIcons.push({
       title: `Deadline: ${item.deadline}`,
       icon: <FlagIcon className="w-4 h-4" />,
@@ -51,7 +52,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobState
       icon: item.freelancerDelivered ? <EnvelopeIcon className="w-4 h-4" /> : <EnvelopeOpenIcon className="w-4 h-4" />,
       info: item.freelancerDelivered ? "Submitted" : "Not submitted",
     });
-  } else if (currentState === JobStateEnum.Finished) {
+  } else if (currentState === JobState.Finished) {
     if (item.finishedAt) {
       infoIcons.push({
         title: "Finished At",
@@ -67,7 +68,7 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobState
       icon: item.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
       info: item.clientReceived ? "Received" : "Not received",
     });
-  } else if (currentState === JobStateEnum.Cancelled) {
+  } else if (currentState === JobState.Cancelled) {
     if (item.canceledAt) {
       infoIcons.push({
         title: "Canceled At",
@@ -95,7 +96,7 @@ const JobsList = () => {
     refetchInterval: 1000 * 60 * 5,
   });
 
-  const [selectedState, setSelectedState] = useState<JobStateEnum>(JobStateEnum.WaitingForApproval);
+  const [selectedState, setSelectedState] = useState<JobState>(JobState.WaitingForApproval);
 
   const filteredData = useMemo(() => {
     if (!data?.jobs) return [];
@@ -117,7 +118,7 @@ const JobsList = () => {
   }, [data, selectedState]);
 
   const handleStateChange = (state: number) => {
-    setSelectedState(state as JobStateEnum);
+    setSelectedState(state as JobState);
   };
 
   const handleInspectJob = (job: Job) => {

@@ -1,15 +1,17 @@
 import { ModalProps } from "./types";
 
-const BaseModal = ({ title, description, children, isOpen, onClose }: ModalProps) => {
+const BaseModal = ({ title, description, children, isOpen, onClose, width }: ModalProps) => {
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] z-49" onMouseDown={onClose}>
       <div
+        style={{ minWidth: width, maxWidth: width }}
         className={`
-          absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50
-          bg-primary rounded-lg p-6 w-full max-w-md
+          absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-999
+          bg-primary rounded-lg p-6
           shadow-xl border-[1px] border-border
+          max-h-[85vh] overflow-auto
         `}
         onMouseDown={e => e.stopPropagation()}
       >
@@ -29,17 +31,7 @@ const getVariant = (props: ModalProps) => {
 };
 
 const Modal = (props: ModalProps) => {
-  return (
-    <BaseModal
-      title={props.title}
-      description={props.description}
-      isOpen={props.isOpen}
-      variant={props.variant}
-      onClose={props.onClose}
-    >
-      {getVariant(props)}
-    </BaseModal>
-  );
+  return <BaseModal {...props}>{getVariant(props)}</BaseModal>;
 };
 
 export default Modal;
