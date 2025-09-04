@@ -4,6 +4,7 @@ import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import RatingStars from "@/components/RatingStars";
 import { cn } from "@/lib/utils";
+import { JobState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -17,13 +18,18 @@ import {
   PlayIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
+import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { JobStateEnum } from "~~/types/job/job.types";
+import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
-  const jobStatus = job.state as JobStateEnum;
+  const jobStatus = job.state as JobState;
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDeliverableModal, setShowDeliverableModal] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
@@ -34,7 +40,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
 
   const getJobStatus = () => {
-    if (jobStatus === JobStateEnum.WaitingForApproval) {
+    if (jobStatus === JobState.WaitingForApproval) {
       return {
         label: "Waiting for Approval",
         color: "bg-amber-500",
@@ -43,7 +49,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       };
     }
 
-    if (jobStatus === JobStateEnum.Ongoing) {
+    if (jobStatus === JobState.Ongoing) {
       // Check delivery status for ongoing jobs
       if (job.freelancerDelivered && job.clientReceived) {
         return {
@@ -76,7 +82,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       }
     }
 
-    if (jobStatus === JobStateEnum.Finished) {
+    if (jobStatus === JobState.Finished) {
       return {
         label: "Completed",
         color: "bg-emerald-500",
@@ -85,7 +91,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       };
     }
 
-    if (jobStatus === JobStateEnum.Cancelled) {
+    if (jobStatus === JobState.Cancelled) {
       return {
         label: "Cancelled",
         color: "bg-red-500",
@@ -107,7 +113,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const handleAccept = async () => {
     try {
-      if (job.state !== JobStateEnum.WaitingForApproval) return;
+      if (job.state !== JobState.WaitingForApproval) return;
       await writeContract({
         functionName: "acceptJob",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
@@ -131,9 +137,24 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     }
   };
 
-  const handleConfirmCompletion = async () => {
+  const handleFileUploadToIPFS = async (file: File | undefined) => {
+    if (!file) return;
+
+    return await uploadToIPFS(file);
+  };
+
+  const handleConfirmCompletion = async (fileData?: FileFormData, clientResponse?: string) => {
     try {
-      if (!job.jobId) return;
+      if (isFreelancer && fileData) {
+        await handleUploadFile(fileData);
+      }
+
+      if (isClient && clientResponse) {
+        console.log("Entre");
+        console.log("Client response:", clientResponse);
+        await handleWriteComment(clientResponse);
+      }
+
       await writeContract({
         functionName: "confirmCompletion",
         args: [BigInt(job.postingId), BigInt(job.jobId)],
@@ -141,6 +162,48 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm job completion failed:", err);
+    } finally {
+      setShowUploadModal(false);
+    }
+  };
+
+  const handleUploadFile = async (fileData: FileFormData) => {
+    try {
+      let resource = "";
+      const isLink = fileData.isLink;
+      console.log("entre");
+
+      if (!job.jobId) return;
+
+      if (fileData.file && !isLink) {
+        resource = (await handleFileUploadToIPFS(fileData.file)) || "";
+        console.log("File uploaded to IPFS:", resource);
+      } else if (!fileData.file && isLink) {
+        resource = fileData.link || "";
+      }
+
+      await writeContract({
+        functionName: "uploadFile",
+        args: [
+          BigInt(job.postingId),
+          BigInt(job.jobId),
+          { resource, submissionComment: fileData.submissionComment, isLink },
+        ],
+      });
+    } catch (err) {
+      console.error("Upload file failed:", err);
+    }
+  };
+
+  const handleWriteComment = async (comment: string) => {
+    try {
+      await writeContract({
+        functionName: "addCommentToJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId), comment],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Write comment failed:", err);
     }
   };
 
@@ -196,11 +259,11 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     : undefined;
 
   const deadlineText =
-    jobStatus === JobStateEnum.Ongoing
+    jobStatus === JobState.Ongoing
       ? deadlineFormatted
         ? `Deadline: ${deadlineFormatted}`
         : "Deadline not set"
-      : jobStatus === JobStateEnum.WaitingForApproval
+      : jobStatus === JobState.WaitingForApproval
         ? `Client expected duration: ${job.jobDuration} hours`
         : undefined;
 
@@ -209,7 +272,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     const buttons = [];
 
     // Cancel button - available for both parties until job is finished
-    if (jobStatus !== JobStateEnum.Finished && jobStatus !== JobStateEnum.Cancelled) {
+    if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
       buttons.push(
         <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
           <XCircleIcon className="h-5 w-5" />
@@ -219,7 +282,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
     // Freelancer actions
     if (isFreelancer) {
-      if (jobStatus === JobStateEnum.WaitingForApproval) {
+      if (jobStatus === JobState.WaitingForApproval) {
         buttons.push(
           <Button
             variant="primary"
@@ -233,12 +296,12 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           </Button>,
         );
       }
-      if (jobStatus === JobStateEnum.Ongoing && !job.freelancerDelivered) {
+      if (jobStatus === JobState.Ongoing && !job.freelancerDelivered) {
         buttons.push(
           <Button
             variant="primary"
             key="deliver"
-            onClick={handleConfirmCompletion}
+            onClick={() => setShowUploadModal(true)}
             disabled={isMining}
             size="sm"
             tooltip="Mark as Delivered"
@@ -251,13 +314,13 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
     // Client actions
     if (isClient) {
-      if (jobStatus === JobStateEnum.Ongoing) {
+      if (jobStatus === JobState.Ongoing) {
         if (job.freelancerDelivered && !job.clientReceived) {
           buttons.push(
             <Button
               variant="primary"
               key="receive"
-              onClick={handleConfirmCompletion}
+              onClick={() => setShowDeliverableModal(true)}
               disabled={isMining}
               size="sm"
               tooltip="Mark as Received"
@@ -266,7 +329,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             </Button>,
           );
         }
-      } else if (jobStatus === JobStateEnum.Finished && !job.rating) {
+      } else if (jobStatus === JobState.Finished && !job.rating) {
         buttons.push(
           <Button
             variant="primary"
@@ -310,6 +373,29 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
         className={className}
         cardVariant="Reduced"
+      />
+      {/* Confirm Modal */}
+      <UploadFileForm
+        onSubmit={handleConfirmCompletion}
+        loading={isMining}
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        modalTitle="Submit Deliverable"
+        modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+      />
+
+      {console.log("job.resource", job.resource, job.isLink)}
+
+      <DeliverableReviewModal
+        isOpen={showDeliverableModal}
+        onApprove={() => handleConfirmCompletion(undefined)}
+        onReject={() => handleConfirmCompletion(undefined)}
+        onClose={() => setShowDeliverableModal(false)}
+        modalTitle="Deliverable Review"
+        modalDescription="Please review the deliverable and provide your feedback."
+        resource={job.resource}
+        isLink={job.isLink}
+        freelancerComment={job.submissionComment}
       />
 
       {/* Rating modal for client */}

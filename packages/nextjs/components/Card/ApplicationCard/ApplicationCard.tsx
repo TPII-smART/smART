@@ -1,12 +1,12 @@
 import { ApplicationProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
+import { ApplicationState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { CheckCircleIcon, ClockIcon, ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
-import { ApplicationState } from "~~/types/gig/gig.types";
 
 export default function ApplicationCard({ application, client, className, reload }: ApplicationProps) {
   const { address: userAddress } = useAccount();

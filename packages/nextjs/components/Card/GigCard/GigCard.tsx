@@ -4,6 +4,7 @@ import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
+import { GigState } from "@se-2/common";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -12,7 +13,6 @@ import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
-import { GigStateEnum } from "~~/types/gig/gig.types";
 
 class FormData {
   proposedPayment: string;
@@ -57,7 +57,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   const isMyOwnGig = gig?.client?.toLowerCase() === address?.toLowerCase();
 
-  const gigState = gig?.state as GigStateEnum;
+  const gigState = gig?.state as GigState;
 
   // Payment display with formatting and truncation
   const formatEthPrice = (wei: bigint) => {
@@ -80,7 +80,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   // Apply button
   const applyButton =
-    !isMyOwnGig && gigState === GigStateEnum.Open ? (
+    !isMyOwnGig && gigState === GigState.Open ? (
       <Button variant="primary" onClick={() => setShowApplyModal(true)}>
         Apply
       </Button>

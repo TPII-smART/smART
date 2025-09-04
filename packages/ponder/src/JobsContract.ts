@@ -1,14 +1,6 @@
 import { ponder } from "ponder:registry";
 import { job, jobPosting } from "ponder:schema";
-
-// Enums for job states
-export enum JobState {
-	WaitingForApproval = 0,
-	Ongoing = 1,
-	Finished = 2,
-	Cancelled = 3,
-	Disputed = 4,
-}
+import { JobState } from "@se-2/common";
 
 // Event handlers for the JobsContract
 
@@ -52,6 +44,7 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 		state: JobState.WaitingForApproval, // Initial job state
 		createdAt: BigInt(event.block.timestamp),
 		acceptedAt: null,
+		emitBy: event.transaction.from,
 		clientReceived: false,
 		freelancerDelivered: false,
 		lastTransactionHash: event.transaction.hash,
@@ -72,6 +65,7 @@ ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
 			state: JobState.Ongoing,
 			deadline: event.args.deadline || 0n,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
 });
 
@@ -87,6 +81,28 @@ ponder.on(
 			})
 			.set({
 				freelancerDelivered: true,
+				emitBy: event.transaction.from,
+				deliveredAt: BigInt(event.args.timestamp),
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
+
+// This event is triggered when a job is marked as completed by a freelancer.
+ponder.on(
+	"JobsContract:FileUploaded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({
+				resource: event.args.resource,
+				submissionComment: event.args.submissionComment,
+				isLink: event.args.isLink,
+				uploadedAt: BigInt(event.block.timestamp),
 				lastTransactionHash: event.transaction.hash,
 			});
 	}
@@ -102,6 +118,7 @@ ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		})
 		.set({
 			clientReceived: true,
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });
@@ -117,6 +134,7 @@ ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
 		.set({
 			state: JobState.Finished,
 			finishedAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });
@@ -138,6 +156,8 @@ ponder.on("JobsContract:JobRated", async ({ event, context }) => {
 // This event is triggered when a job is cancelled.
 ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 	// Updates the job to mark it as cancelled
+
+	console.log("Cancelling job from:", event.transaction.from);
 	await context.db
 		.update(job, {
 			jobId: event.args.jobId,
@@ -146,6 +166,7 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 		.set({
 			state: JobState.Cancelled,
 			canceledAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });

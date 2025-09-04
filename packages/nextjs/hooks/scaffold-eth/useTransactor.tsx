@@ -83,9 +83,6 @@ export const useTransactor = (_walletClient?: WalletClient): TransactionFunc => 
 
       notification.success(
         <TxnNotification message="Transaction completed successfully!" blockExplorerLink={blockExplorerTxURL} />,
-        {
-          icon: "🎉",
-        },
       );
 
       if (options?.onBlockConfirmation) options.onBlockConfirmation(transactionReceipt);

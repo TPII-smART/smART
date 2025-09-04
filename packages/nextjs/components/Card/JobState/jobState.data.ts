@@ -1,9 +1,9 @@
-import { JobStateEnum } from "~~/types/job/job.types";
+import { JobState } from "@se-2/common";
 
 export const jobState = [
-  { id: JobStateEnum.WaitingForApproval, label: "Waiting For Approval" },
-  { id: JobStateEnum.Ongoing, label: "Ongoing" },
-  { id: JobStateEnum.Finished, label: "Finished" },
-  { id: JobStateEnum.Cancelled, label: "Cancelled" },
-  { id: JobStateEnum.Disputed, label: "Disputed" },
+  { id: JobState.WaitingForApproval, label: "Waiting For Approval" },
+  { id: JobState.Ongoing, label: "Ongoing" },
+  { id: JobState.Finished, label: "Finished" },
+  { id: JobState.Cancelled, label: "Cancelled" },
+  { id: JobState.Disputed, label: "Disputed" },
 ];

@@ -54,6 +54,10 @@ export interface Job {
   canceledAt?: string;
 
   /**
+   * (Optional) ISO date string representing when the job was delivered.
+   */
+  deliveredAt?: string;
+  /**
    * (Optional) Number between 1 and 5 representing the job rating.
    */
   rating?: number;
@@ -63,15 +67,24 @@ export interface Job {
 
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
   freelancerDelivered?: boolean;
-}
 
-/** Enum representing the possible states of a job. */
-export enum JobStateEnum {
-  WaitingForApproval = 0,
-  Ongoing = 1,
-  Finished = 2,
-  Cancelled = 3,
-  Disputed = 4,
+  /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
+  resource: string;
+
+  /** (Optional) ISO date string representing when the deliverable was uploaded. */
+  uploadedAt: string;
+
+  /** (Optional) Comment provided by the freelancer upon submission. */
+  submissionComment: string;
+
+  /** (Optional) Comment provided by the client upon review. */
+  clientComment: string;
+
+  /** (Optional) Boolean indicating if the submitted resource is a link. */
+  isLink: boolean;
+
+  /** (Optional) Ethereum address of the user who emitted the job event, formatted as a hexadecimal string. */
+  emitBy?: `0x${string}`;
 }
 
 export interface JobsData {

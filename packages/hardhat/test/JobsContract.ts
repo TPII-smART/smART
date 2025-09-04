@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+// filepath: /Users/martincwikla/Desktop/Facultad/Trabajo-profesional/smART/packages/hardhat/test/JobsContract.ts
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -410,7 +412,6 @@ describe("JobsContract", function () {
           }
         });
 
-        // eslint-disable-next-line @typescript-eslint/no-unused-expressions
         expect(jobRatedEvent).to.not.be.undefined;
         if (jobRatedEvent) {
           const parsed = jobsContract.interface.parseLog({
@@ -632,6 +633,135 @@ describe("JobsContract", function () {
       await expect(
         jobsContract.connect(client).createJob(0, invalidJob, { value: invalidJob.payment }),
       ).to.be.revertedWith("Description exceeds 512 characters");
+    });
+  });
+
+  describe("Upload File to Job", function () {
+    let expectedComment: string;
+    let expectedIpfsHash: string;
+    let fileInfo: { ipfsHash: string; comment: string; isLink: boolean };
+
+    beforeEach(async function () {
+      expectedComment = "File upload comment";
+      expectedIpfsHash = "QmFileHash123";
+      fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment, isLink: false };
+
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+    });
+
+    it("Should allow freelancer to upload file successfully and update job fileInfo", async function () {
+      const tx = await jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo);
+
+      const receipt = await tx.wait();
+
+      const events = receipt?.logs
+        .map(log => {
+          try {
+            return jobsContract.interface.parseLog(log);
+          } catch {
+            return null;
+          }
+        })
+        .filter(e => e && e.name === "FileUploaded");
+
+      expect(events?.[0]?.args?.postingId).to.equal(0);
+      expect(events?.[0]?.args?.jobId).to.equal(0);
+      expect(events?.[0]?.args?.freelancer).to.equal(freelancer.address);
+      expect(events?.[0]?.args?.ipfsHash).to.equal(expectedIpfsHash);
+
+      expect(events?.[0]?.args?.comment).to.equal(expectedComment);
+
+      expect(await jobsContract.isFileUploaded(0, 0, expectedComment, expectedIpfsHash)).to.be.true;
+    });
+
+    it("Should revert if the job is not ongoing", async function () {
+      await jobsContract.connect(client).cancelJob(0, 0);
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
+        "The job is not ongoing.",
+      );
+    });
+
+    it("Should revert if the IPFS hash is empty", async function () {
+      const emptyFileInfo = { ipfsHash: "", comment: "Valid comment", isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, emptyFileInfo)).to.be.revertedWith(
+        "IPFS hash cannot be empty.",
+      );
+    });
+
+    it("Should revert if the IPFS hash exceeds 128 characters", async function () {
+      const longHash = "a".repeat(129);
+      const invalidFileInfo = { ipfsHash: longHash, comment: "Valid comment", isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
+        "IPFS hash must be up to 128 characters.",
+      );
+    });
+
+    it("Should revert if the comment exceeds 256 characters", async function () {
+      const longComment = "a".repeat(257);
+      const invalidFileInfo = { ipfsHash: "QmFileHash123", comment: longComment, isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
+        "Comment must be up to 256 characters.",
+      );
+    });
+
+    it("Should revert if called by someone who is not the freelancer", async function () {
+      await expect(jobsContract.connect(client).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
+        "Only freelancer can call this",
+      );
+    });
+  });
+
+  describe("Add Comment to Job", function () {
+    beforeEach(async function () {
+      const expectedIpfsHash = "QmFileHash123";
+      const expectedComment = "File upload comment";
+      const fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment, isLink: false };
+
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+      await jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo);
+    });
+
+    it("Should allow freelancer to add comment successfully", async function () {
+      const expectedClientComment = "This is a comment";
+
+      const tx = await jobsContract.connect(client).addCommentToJob(0, 0, expectedClientComment);
+      const receipt = await tx.wait();
+      const events = receipt?.logs
+        .map(log => {
+          try {
+            return jobsContract.interface.parseLog(log);
+          } catch {
+            return null;
+          }
+        })
+        .filter(e => e && e.name === "CommentAdded");
+
+      expect(events).to.not.be.undefined;
+      expect(events?.[0]?.args?.postingId).to.equal(0);
+      expect(events?.[0]?.args?.jobId).to.equal(0);
+      expect(events?.[0]?.args?.response).to.equal(expectedClientComment);
+    });
+
+    it("Should revert if the job is not ongoing", async function () {
+      await jobsContract.connect(client).cancelJob(0, 0);
+      await expect(jobsContract.connect(client).addCommentToJob(0, 0, "This is a comment")).to.be.revertedWith(
+        "The job is not ongoing.",
+      );
+    });
+    it("Should revert if the comment is empty", async function () {
+      await expect(jobsContract.connect(client).addCommentToJob(0, 0, "")).to.be.revertedWith(
+        "Comment cannot be empty.",
+      );
+    });
+    it("Should revert if the comment exceeds 256 characters", async function () {
+      const longComment = "a".repeat(257);
+      await expect(jobsContract.connect(client).addCommentToJob(0, 0, longComment)).to.be.revertedWith(
+        "Comment must be up to 256 characters.",
+      );
     });
   });
 });

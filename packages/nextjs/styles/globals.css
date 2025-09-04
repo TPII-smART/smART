@@ -23,11 +23,13 @@
   --color-surface: #fcfcfc;
   --color-border: #85c8ff;
   --color-info: #93bbfb;
-  --color-success: #34eeb6;
+  --color-success: oklch(0.45 0.15 160);
   --color-warning: #ffcf72;
   --color-error: #e21818;
   --color-input: #c8c6c6;
   --color-skeleton: #888888;
+  --color-inside-border: #e5e7eb;
+  
 
   --radius-field: 9999rem;
   --radius-box: 1rem;
@@ -47,11 +49,13 @@
   --color-border: #234969;
   --color-base-content: #f9fbff;
   --color-info: #385183;
-  --color-success: #34eeb6;
+  --color-success: oklch(0.45 0.15 160);
   --color-warning: #ffcf72;
   --color-error: #e21818;
   --color-input: #555454;
   --color-skeleton: #555555;
+  --color-inside-border: #2d3748;
+
 
   --radius-field: 9999rem;
   --radius-box: 1rem;
@@ -126,4 +130,10 @@ html[data-theme="light"] .main-body {
   box-shadow:
     10px 0 10px -10px rgba(0, 0, 0, 0.15),
     0 10px 10px -10px rgba(0, 0, 0, 0.15);
+}
+
+/* En tu globals.css */
+.smrt-inner-border {
+  border: 1px solid var(--color-inside-border, #e5e7eb);
+  background: var(--color-primary);
 }

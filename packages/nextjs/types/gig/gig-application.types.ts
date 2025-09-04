@@ -15,19 +15,16 @@ export interface Application {
   state: number;
   /** ISO date string representing when the application was created. */
   createdAt: string;
+  /** ISO date string representing when the application was rejected. */
+  rejectAt?: string;
+  /** Ethereum address of the user who emitted the last update of the application. */
+  emitBy: string;
   /** Comment or message included with the application proposal. */
   proposalComment: string;
   /** (Optional) Comment or message included if the application was rejected. */
   rejectionComment?: string;
   /** (Optional) Gig details associated with the application, if available. */
   gig?: Gig;
-}
-
-/** Enum representing the possible states of an application. */
-export enum ApplicationState {
-  Pending = 0,
-  Accepted = 1,
-  Rejected = 2,
 }
 
 export interface ApplicationsData {

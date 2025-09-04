@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/dist/client/components/navigation";
 import InfoHeader from "@/components/InfoHeader";
 import Spinner from "@/components/Spinner/Spinner";
+import { GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -24,7 +25,7 @@ import FormModal from "~~/components/Modal/FormModal/FormModal";
 import RatingStars from "~~/components/RatingStars";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { fetchGigWithApplication } from "~~/services/graphql/fetchers/gig/gig.service";
-import { Application, Gig, GigStateEnum } from "~~/types/gig/gig.types";
+import { Application, Gig } from "~~/types/gig/gig.types";
 
 type GigData = {
   gig: Gig;
@@ -53,7 +54,7 @@ export default function GigPage() {
     enabled: typeof gigId === "string" && !!gigId,
   });
 
-  const gigState = data?.gig.state as GigStateEnum;
+  const gigState = data?.gig.state as GigState;
   const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
   const isAcceptedFreelancer = data?.gig.acceptedFreelancer?.toLowerCase() === userAddress?.toLowerCase();
 
@@ -113,7 +114,7 @@ export default function GigPage() {
   };
 
   const getGigStatus = () => {
-    if (gigState === GigStateEnum.InProgress) {
+    if (gigState === GigState.InProgress) {
       // Check delivery status for ongoing gigs
       if (data?.gig.freelancerDelivered && data?.gig.clientReceived) {
         return {
@@ -146,7 +147,7 @@ export default function GigPage() {
       }
     }
 
-    if (gigState === GigStateEnum.Completed) {
+    if (gigState === GigState.Completed) {
       return {
         label: "Completed",
         color: "bg-emerald-500",
@@ -155,7 +156,7 @@ export default function GigPage() {
       };
     }
 
-    if (gigState === GigStateEnum.Cancelled) {
+    if (gigState === GigState.Cancelled) {
       return {
         label: "Cancelled",
         color: "bg-red-500",
@@ -186,7 +187,7 @@ export default function GigPage() {
     const buttons = [];
 
     // Cancel button - available for both parties until gig is finished
-    if (gigState !== GigStateEnum.Completed && gigState !== GigStateEnum.Cancelled) {
+    if (gigState !== GigState.Completed && gigState !== GigState.Cancelled) {
       buttons.push(
         <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Gig">
           <XCircleIcon className="h-5 w-5" />
@@ -196,7 +197,7 @@ export default function GigPage() {
     }
 
     // Freelancer actions
-    if (isAcceptedFreelancer && gigState === GigStateEnum.InProgress) {
+    if (isAcceptedFreelancer && gigState === GigState.InProgress) {
       if (!data?.gig.freelancerDelivered) {
         buttons.push(
           <Button
@@ -215,7 +216,7 @@ export default function GigPage() {
     }
 
     // Client actions
-    if (isClient && gigState === GigStateEnum.InProgress) {
+    if (isClient && gigState === GigState.InProgress) {
       if (data?.gig.freelancerDelivered && !data?.gig.clientReceived) {
         buttons.push(
           <Button
@@ -234,7 +235,7 @@ export default function GigPage() {
     }
 
     // Rating button for client when gig is completed
-    if (isClient && gigState === GigStateEnum.Completed && !data?.gig.rating) {
+    if (isClient && gigState === GigState.Completed && !data?.gig.rating) {
       buttons.push(
         <Button
           variant="primary"
@@ -272,7 +273,7 @@ export default function GigPage() {
             ) : (
               <div>
                 <InfoHeader data={data?.gig} />
-                {gigState === GigStateEnum.Open ? (
+                {gigState === GigState.Open ? (
                   <div className="mb-8 mt-8">
                     <h1 className="text-xl font-bold text-content-primary mb-4 mt-6">
                       Manage Applications for this Gig
@@ -316,7 +317,7 @@ export default function GigPage() {
                     </div>
 
                     {/* Working Freelancer Info */}
-                    {acceptedApplication && gigState === GigStateEnum.InProgress && (
+                    {acceptedApplication && gigState === GigState.InProgress && (
                       <div className="bg-base-100 rounded-lg shadow-md p-6 mb-6">
                         <h2 className="text-lg font-semibold text-content-primary mb-4">Working on this Gig</h2>
                         <div className="flex items-center gap-4">
@@ -352,7 +353,7 @@ export default function GigPage() {
                     )}
 
                     {/* Completion Status for In Progress Gigs */}
-                    {gigState === GigStateEnum.InProgress && (
+                    {gigState === GigState.InProgress && (
                       <div className="bg-base-100 rounded-lg shadow-md p-6 mb-6">
                         <h2 className="text-lg font-semibold text-content-primary mb-4">Completion Progress</h2>
                         <div className="space-y-3">
@@ -381,7 +382,7 @@ export default function GigPage() {
                     )}
 
                     {/* Rating Display for Completed Gigs */}
-                    {gigState === GigStateEnum.Completed && data?.gig.rating && (
+                    {gigState === GigState.Completed && data?.gig.rating && (
                       <div className="bg-base-100 rounded-lg shadow-md p-6 mb-6">
                         <h2 className="text-lg font-semibold text-content-primary mb-4">Rating</h2>
                         <div className="flex items-center gap-3">

@@ -3,6 +3,7 @@ import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
 import { gigState } from "@/components/Card/GigState/gigState.data";
+import { GigState } from "@se-2/common";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -18,7 +19,7 @@ import {
 } from "@heroicons/react/24/outline";
 // Adjust the import to match the actual export from the module
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
-import { Application, ApplicationsData, Gig, GigStateEnum } from "~~/types/gig/gig.types";
+import { Application, ApplicationsData, Gig } from "~~/types/gig/gig.types";
 
 interface InfoIcons {
   title: string;
@@ -26,10 +27,10 @@ interface InfoIcons {
   info: string | number | undefined;
 }
 
-const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: GigStateEnum): InfoIcons[] => {
+const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: GigState): InfoIcons[] => {
   const infoIcons: InfoIcons[] = [];
 
-  if (currentState === GigStateEnum.Open) {
+  if (currentState === GigState.Open) {
     infoIcons.push({
       title:
         "Gig duration, original: " +
@@ -40,7 +41,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: 
       icon: <ClockIcon className="w-4 h-4" />,
       info: item.gig?.maxDurationInHours + " hours / " + item.proposedDurationInHours + " hours",
     });
-  } else if (currentState === GigStateEnum.InProgress) {
+  } else if (currentState === GigState.InProgress) {
     infoIcons.push({
       title: `Deadline: ${item.gig?.deadline}`,
       icon: <FlagIcon className="w-4 h-4" />,
@@ -58,7 +59,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: 
       ),
       info: item.gig?.freelancerDelivered ? "Submitted" : "Not submitted",
     });
-  } else if (currentState === GigStateEnum.Completed) {
+  } else if (currentState === GigState.Completed) {
     if (item.gig?.finishedAt) {
       infoIcons.push({
         title: "Finished At",
@@ -76,7 +77,7 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: 
       icon: item.gig?.clientReceived ? <CheckCircleIcon className="w-4 h-4" /> : <XCircleIcon className="w-4 h-4" />,
       info: item.gig?.clientReceived ? "Received" : "Not received",
     });
-  } else if (currentState === GigStateEnum.Cancelled) {
+  } else if (currentState === GigState.Cancelled) {
     if (item.gig?.canceledAt) {
       infoIcons.push({
         title: "Canceled At",
@@ -110,7 +111,7 @@ const GigApplicationsList = () => {
     refetchInterval: 1000 * 60 * 5,
   });
 
-  const [selectedState, setSelectedState] = useState<GigStateEnum>(GigStateEnum.Open);
+  const [selectedState, setSelectedState] = useState<GigState>(GigState.Open);
 
   const filteredData = useMemo(() => {
     if (!data?.applications) return [];
@@ -139,7 +140,7 @@ const GigApplicationsList = () => {
   }, [data, selectedState]);
 
   const handleStateChange = (state: number) => {
-    setSelectedState(state as GigStateEnum);
+    setSelectedState(state as GigState);
   };
 
   return (

@@ -184,6 +184,8 @@ export const getMyJobs = gql`
         acceptedAt
         finishedAt
         canceledAt
+        deliveredAt
+        emitBy
         clientReceived
         freelancerDelivered
       }
@@ -209,9 +211,93 @@ export const getHires = gql`
         state
         createdAt
         acceptedAt
+        uploadedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
+        clientReceived
+        freelancerDelivered
+        submissionComment
+        resource
+        isLink
+      }
+    }
+  }
+`;
+
+export const getJobAndHires = gql`
+  query GetJobs($address: String!) {
+    jobs(
+      where: { OR: [{ freelancer: $address }, { client: $address }] }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
         clientReceived
         freelancerDelivered
       }
+    }
+  }
+`;
+
+export const getJobAndHiresPaginated = gql`
+  query GetJobsPaginated($address: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    jobs(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { OR: [{ freelancer: $address }, { client: $address }] }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
+        clientReceived
+        freelancerDelivered
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
     }
   }
 `;

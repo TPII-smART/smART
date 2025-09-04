@@ -333,7 +333,12 @@ contract GigsContract {
             if (i != _acceptedId && gig.applications[i].state == ApplicationState.Pending) {
                 gig.applications[i].state = ApplicationState.Rejected;
                 gig.applications[i].rejectionComment = "Another application was selected";
-                emit ApplicationRejected(_gigId, i, gig.applications[i].freelancer, "Another application was selected");
+                emit ApplicationRejected(
+                    _gigId,
+                    i,
+                    gig.applications[i].freelancer,
+                    gig.applications[i].rejectionComment
+                );
             }
         }
     }
