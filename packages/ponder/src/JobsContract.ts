@@ -108,6 +108,23 @@ ponder.on(
 	}
 );
 
+// This event is triggered when a a client add a comment to the uploaded file.
+ponder.on(
+	"JobsContract:CommentAdded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({
+				clientResponse: event.args.response,
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
+
 // This event is triggered when a job is marked as received by the client.
 ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 	// Updates the job to mark it as received by the client

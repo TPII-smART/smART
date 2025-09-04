@@ -388,8 +388,8 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
       <DeliverableReviewModal
         isOpen={showDeliverableModal}
-        onApprove={() => handleConfirmCompletion(undefined)}
-        onReject={() => handleConfirmCompletion(undefined)}
+        onApprove={comment => handleConfirmCompletion(undefined, comment)}
+        onReject={comment => handleConfirmCompletion(undefined, comment)}
         onClose={() => setShowDeliverableModal(false)}
         modalTitle="Deliverable Review"
         modalDescription="Please review the deliverable and provide your feedback."

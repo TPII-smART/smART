@@ -44,7 +44,7 @@ contract JobsContract {
         string resource;
         uint256 uploadedAt;
         string submissionComment;
-        string clientComment;
+        string clientResponse;
         bool isLink; // Whether the file is a link or an uploaded file
     }
 
@@ -300,7 +300,13 @@ contract JobsContract {
             rating: 0, // Rating is not set until job is finished
             clientReceived: false,
             freelancerDelivered: false,
-            fileInfo: FileInfo({ resource: "", uploadedAt: 0, submissionComment: "", clientComment: "", isLink: false })
+            fileInfo: FileInfo({
+                resource: "",
+                uploadedAt: 0,
+                submissionComment: "",
+                clientResponse: "",
+                isLink: false
+            })
         });
 
         // Add job to the posting
@@ -397,11 +403,7 @@ contract JobsContract {
      * @param _jobId The job ID to rate
      * @param _rating The rating given by the client (1-5)
      */
-    function rateJob(
-        uint256 _postingId,
-        uint256 _jobId,
-        uint8 _rating
-    ) external onlyClient(_postingId, _jobId) {
+    function rateJob(uint256 _postingId, uint256 _jobId, uint8 _rating) external onlyClient(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
         require(job.state == JobState.Finished, "Job is not finished");
         require(job.rating == 0, "Job already rated");
@@ -514,7 +516,7 @@ contract JobsContract {
             resource: _fileParams.resource,
             submissionComment: _fileParams.submissionComment,
             uploadedAt: block.timestamp,
-            clientComment: "",
+            clientResponse: "",
             isLink: _fileParams.isLink
         });
 
@@ -546,7 +548,7 @@ contract JobsContract {
         require(bytes(_comment).length > 0, "Comment cannot be empty.");
         require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
 
-        job.fileInfo.clientComment = _comment;
+        job.fileInfo.clientResponse = _comment;
 
         emit CommentAdded(_postingId, _jobId, msg.sender, _comment, block.timestamp);
     }

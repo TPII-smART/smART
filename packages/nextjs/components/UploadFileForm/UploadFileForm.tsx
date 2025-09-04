@@ -57,6 +57,7 @@ const UploadFileForm = ({
           isOpen: modalOpen,
           loading,
           description: modalDescription,
+          width: 550,
         }}
         formikProps={{
           onSubmit: async (values: FileFormData) => {
