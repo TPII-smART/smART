@@ -14,6 +14,7 @@ import {
   PlayIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -23,7 +24,9 @@ import { JobStateEnum } from "~~/types/job/job.types";
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobStateEnum;
-  const [showModal, setShowModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
   });
@@ -129,13 +132,37 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     }
   };
 
-  const handleFileUpload = async (file: File | undefined) => {
+  const handleFileUploadToIPFS = async (file: File | undefined) => {
     if (!file) return;
 
     return await uploadToIPFS(file);
   };
 
-  const handleConfirmCompletion = async (fileData: FileFormData) => {
+  const handleConfirmCompletion = async (fileData?: FileFormData, clientResponse?: string) => {
+    try {
+      if (isFreelancer && fileData) {
+        await handleUploadFile(fileData);
+      }
+
+      if (isClient && clientResponse) {
+        console.log("Entre");
+        console.log("Client response:", clientResponse);
+        await handleWriteComment(clientResponse);
+      }
+
+      await writeContract({
+        functionName: "confirmCompletion",
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Confirm job completion failed:", err);
+    } finally {
+      setShowUploadModal(false);
+    }
+  };
+
+  const handleUploadFile = async (fileData: FileFormData) => {
     try {
       let resource = "";
       const isLink = fileData.isLink;
@@ -144,7 +171,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       if (!job.jobId) return;
 
       if (fileData.file && !isLink) {
-        resource = (await handleFileUpload(fileData.file)) || "";
+        resource = (await handleFileUploadToIPFS(fileData.file)) || "";
         console.log("File uploaded to IPFS:", resource);
       } else if (!fileData.file && isLink) {
         resource = fileData.link || "";
@@ -158,20 +185,20 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           { resource, submissionComment: fileData.submissionComment, isLink },
         ],
       });
-      // const created = await waitTransaction<JobPosting & Gig>(schema, transactionHash, typeKeys);
-      //   if (created) {
-      //     refresh(created);
-      //   }
+    } catch (err) {
+      console.error("Upload file failed:", err);
+    }
+  };
 
+  const handleWriteComment = async (comment: string) => {
+    try {
       await writeContract({
-        functionName: "confirmCompletion",
-        args: [BigInt(job.postingId), BigInt(job.jobId)],
+        functionName: "addCommentToJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId), comment],
       });
       if (reload) await reload();
     } catch (err) {
-      console.error("Confirm job completion failed:", err);
-    } finally {
-      setShowModal(false);
+      console.error("Write comment failed:", err);
     }
   };
 
@@ -255,7 +282,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           <Button
             variant="primary"
             key="deliver"
-            onClick={() => setShowModal(true)}
+            onClick={() => setShowUploadModal(true)}
             disabled={isMining}
             size="sm"
             tooltip="Mark as Delivered"
@@ -274,7 +301,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             <Button
               variant="primary"
               key="receive"
-              //onClick={handleConfirmCompletion}
+              onClick={() => setShowDeliverableModal(true)}
               disabled={isMining}
               size="sm"
               tooltip="Mark as Received"
@@ -312,10 +339,24 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       <UploadFileForm
         onSubmit={handleConfirmCompletion}
         loading={isMining}
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
         modalTitle="Submit Deliverable"
         modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+      />
+
+      {console.log("job.resource", job.resource, job.isLink)}
+
+      <DeliverableReviewModal
+        isOpen={showDeliverableModal}
+        onApprove={() => handleConfirmCompletion(undefined)}
+        onReject={() => handleConfirmCompletion(undefined)}
+        onClose={() => setShowDeliverableModal(false)}
+        modalTitle="Deliverable Review"
+        modalDescription="Please review the deliverable and provide your feedback."
+        resource={job.resource}
+        isLink={job.isLink}
+        freelancerComment={job.submissionComment}
       />
     </>
   );

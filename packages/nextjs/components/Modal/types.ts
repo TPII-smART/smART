@@ -27,4 +27,6 @@ export interface ModalProps {
    * Optional loading state for the modal, used to indicate processing.
    */
   loading?: boolean;
+
+  hideDefaultButtons?: boolean;
 }

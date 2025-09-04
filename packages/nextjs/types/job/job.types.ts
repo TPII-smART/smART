@@ -1,5 +1,3 @@
-import { FileType } from "../file/file.type";
-
 export * from "./job-posting.types";
 
 export interface Job {
@@ -61,7 +59,20 @@ export interface Job {
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
   freelancerDelivered?: boolean;
 
-  fileInfo?: FileType;
+  /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
+  resource: string;
+
+  /** (Optional) ISO date string representing when the deliverable was uploaded. */
+  uploadedAt: string;
+
+  /** (Optional) Comment provided by the freelancer upon submission. */
+  submissionComment: string;
+
+  /** (Optional) Comment provided by the client upon review. */
+  clientComment: string;
+
+  /** (Optional) Boolean indicating if the submitted resource is a link. */
+  isLink: boolean;
 }
 
 /** Enum representing the possible states of a job. */

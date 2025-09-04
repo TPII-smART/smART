@@ -482,8 +482,8 @@ contract JobsContract {
 
         require(job.state == JobState.Ongoing, "The job is not ongoing.");
 
-        require(bytes(_fileParams.resource).length > 0, "IPFS hash cannot be empty.");
-        require(bytes(_fileParams.resource).length <= 128, "IPFS hash must be up to 128 characters.");
+        require(bytes(_fileParams.resource).length > 0, "Resource cannot be empty.");
+        require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
         job.fileInfo = FileInfo({
