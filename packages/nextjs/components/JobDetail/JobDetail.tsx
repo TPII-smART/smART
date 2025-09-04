@@ -199,6 +199,25 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     }
   };
 
+  // Get status message based on job state and user role
+  const getStatusMessage = () => {
+    if (data?.state === JobStateEnum.WaitingForApproval) {
+      if (isClient) {
+        return "Waiting for freelancer to accept the job. You can cancel if needed.";
+      } else if (isFreelancer) {
+        return "Please review the job details and accept to start working.";
+      } else {
+        return "Job is waiting for freelancer approval.";
+      }
+    }
+
+    if (data?.state != undefined && data?.state >= JobStateEnum.Ongoing) {
+      return "¿Facing any problems with this job?";
+    }
+
+    return "";
+  };
+
   // Action buttons based on user role and job state
   const getActionButtons = () => {
     const buttons = [];
@@ -206,16 +225,12 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     // Cancel button - available for both parties until job is finished
     if (data?.state !== JobStateEnum.Finished && data?.state !== JobStateEnum.Cancelled) {
       buttons.push(
-        <Button
-          variant="danger"
-          key="cancel"
-          onClick={() => handleCancel()}
-          disabled={isMining}
-          size="sm"
-          tooltip="Cancel Job"
-        >
-          <XCircleIcon className="h-5 w-5" />
-        </Button>,
+        <div key="cancel" className="flex flex-col items-center space-y-2">
+          <Button variant="danger" onClick={() => handleCancel()} disabled={isMining} size="md" tooltip="Cancel Job">
+            <XCircleIcon className="h-8 w-8" />
+          </Button>
+          <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Cancel Job</p>
+        </div>,
       );
     }
 
@@ -223,30 +238,28 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     if (isFreelancer) {
       if (data?.state === JobStateEnum.WaitingForApproval) {
         buttons.push(
-          <Button
-            variant="primary"
-            key="accept"
-            onClick={handleAccept}
-            disabled={isMining}
-            size="sm"
-            tooltip="Accept Job"
-          >
-            <CheckCircleIcon className="h-5 w-5" />
-          </Button>,
+          <div key="accept" className="flex flex-col items-center space-y-2">
+            <Button variant="primary" onClick={handleAccept} disabled={isMining} size="md" tooltip="Accept Job">
+              <CheckCircleIcon className="h-8 w-8" />
+            </Button>
+            <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Accept Job</p>
+          </div>,
         );
       }
       if (data?.state === JobStateEnum.Ongoing && !data?.freelancerDelivered) {
         buttons.push(
-          <Button
-            variant="primary"
-            key="deliver"
-            onClick={handleConfirmCompletion}
-            disabled={isMining}
-            size="sm"
-            tooltip="Mark as Delivered"
-          >
-            <PaperAirplaneIcon className="h-5 w-5" />
-          </Button>,
+          <div key="deliver" className="flex flex-col items-center space-y-2">
+            <Button
+              variant="primary"
+              onClick={handleConfirmCompletion}
+              disabled={isMining}
+              size="md"
+              tooltip="Mark as Delivered"
+            >
+              <PaperAirplaneIcon className="h-8 w-8" />
+              <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Mark as Delivered</p>
+            </Button>
+          </div>,
         );
       }
     }
@@ -256,22 +269,24 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       if (data?.state === JobStateEnum.Ongoing) {
         if (data?.freelancerDelivered && !data?.clientReceived) {
           buttons.push(
-            <Button
-              variant="primary"
-              key="receive"
-              onClick={handleConfirmCompletion}
-              disabled={isMining}
-              size="sm"
-              tooltip="Mark as Received"
-            >
-              <ArrowDownTrayIcon className="h-5 w-5" />
-            </Button>,
+            <div key="receive" className="flex flex-col items-center space-y-2">
+              <Button
+                variant="primary"
+                onClick={handleConfirmCompletion}
+                disabled={isMining}
+                size="md"
+                tooltip="Mark as Received"
+              >
+                <ArrowDownTrayIcon className="h-8 w-8" />
+                <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Mark as Received</p>
+              </Button>
+            </div>,
           );
         }
       }
     }
 
-    return buttons;
+    return <div className="flex gap-12 flex-wrap justify-center">{buttons}</div>;
   };
 
   if (error || !data) {
@@ -472,18 +487,32 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
-          <CardContent className="p-8">
-            <div className="flex justify-between items-center">
-              <div className="space-y-2">
-                <p className="font-semibold text-lg text-[var(--color-primary-content)]">Job ID: {data.jobId}</p>
-                <p className="text-base text-[var(--color-skeleton)]">Posting ID: {data.postingId}</p>
+        {/* Action Section - Split into two boxes */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Status Message Box */}
+          <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+            <CardContent className="p-6">
+              <div className="space-y-4">
+                {getStatusMessage() && (
+                  <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg">
+                    <p className="text-[var(--color-primary-content)] text-base leading-relaxed">
+                      {getStatusMessage()}
+                    </p>
+                  </div>
+                )}
               </div>
-              {getActionButtons()}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Action Buttons Box */}
+          <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex justify-center items-center h-full">
+                <div className="flex gap-6 flex-wrap justify-center">{getActionButtons()}</div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
