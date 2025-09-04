@@ -10,14 +10,16 @@ const FormModal = <T extends FormikValues>({ translations, formikProps, children
         {(formik: FormikProps<T>) => (
           <Form>
             {children(formik)}
-            <div className="flex justify-between mt-4 max-h-[54px]">
-              <Button onClick={modalProps.onClose} variant="outline">
-                {translations?.cancelLabel || "Cancel"}
-              </Button>
-              <Button disabled={formik.isSubmitting} loading={formik.isSubmitting} variant="primary" type="submit">
-                {translations?.submitLabel || "Submit"}
-              </Button>
-            </div>
+            {!modalProps.hideDefaultButtons && (
+              <div className="flex justify-between mt-4 max-h-[54px]">
+                <Button onClick={modalProps.onClose} variant="outline">
+                  {translations?.cancelLabel || "Cancel"}
+                </Button>
+                <Button disabled={modalProps.loading} loading={modalProps.loading} variant="primary" type="submit">
+                  {translations?.submitLabel || "Submit"}
+                </Button>
+              </div>
+            )}
           </Form>
         )}
       </Formik>

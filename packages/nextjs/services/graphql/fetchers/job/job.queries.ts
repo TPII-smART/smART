@@ -193,12 +193,16 @@ export const getHires = gql`
         state
         createdAt
         acceptedAt
+        uploadedAt
         finishedAt
         canceledAt
         deliveredAt
         emitBy
         clientReceived
         freelancerDelivered
+        submissionComment
+        resource
+        isLink
       }
     }
   }

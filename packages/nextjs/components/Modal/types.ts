@@ -28,6 +28,10 @@ export interface ModalProps {
    */
   loading?: boolean;
   /**
+   * Optional flag to hide the default action buttons (Cancel and Submit).
+   */
+  hideDefaultButtons?: boolean;
+  /**
    * Optional width for the modal.
    */
   width?: string | number;

@@ -68,6 +68,21 @@ export interface Job {
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
   freelancerDelivered?: boolean;
 
+  /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
+  resource: string;
+
+  /** (Optional) ISO date string representing when the deliverable was uploaded. */
+  uploadedAt: string;
+
+  /** (Optional) Comment provided by the freelancer upon submission. */
+  submissionComment: string;
+
+  /** (Optional) Comment provided by the client upon review. */
+  clientComment: string;
+
+  /** (Optional) Boolean indicating if the submitted resource is a link. */
+  isLink: boolean;
+
   /** (Optional) Ethereum address of the user who emitted the job event, formatted as a hexadecimal string. */
   emitBy?: `0x${string}`;
 }
