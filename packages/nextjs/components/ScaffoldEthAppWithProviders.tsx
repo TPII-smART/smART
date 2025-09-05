@@ -66,7 +66,7 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
           ]}
         />
         <div className="flex flex-col w-full inherit">
-          <div className="h-[7vh] w-full relative"></div>
+          <div className="min-h-[50px] h-[7vh] w-full relative"></div>
           {children}
         </div>
       </main>
