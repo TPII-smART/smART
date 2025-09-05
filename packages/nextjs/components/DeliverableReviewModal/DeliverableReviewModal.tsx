@@ -230,8 +230,10 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                     onClick={() => setSubmitAction("reject")}
                     disabled={loading}
                     style={{ minWidth: 90 }}
+                    size="sm"
                   >
-                    <XCircleIcon className="w-6 h-6 inline-block mr-1" />
+                    <XCircleIcon className="w-4 h-4 inline-block mr-1" />
+                    Reject
                   </Button>
                   <Button
                     type="submit"
@@ -240,8 +242,10 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                     onClick={() => setSubmitAction("approve")}
                     disabled={loading}
                     style={{ minWidth: 90 }}
+                    size="sm"
                   >
-                    <CheckCircleIcon className="w-6 h-6 inline-block mr-1" />
+                    <CheckCircleIcon className="w-4 h-4 inline-block mr-1" />
+                    Approve
                   </Button>
                 </>
               )}

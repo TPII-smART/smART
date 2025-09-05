@@ -285,15 +285,19 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   // Action buttons based on user role and job state
   const getActionButtons = () => {
     const buttons = [];
-
     // Cancel button - available for both parties until job is finished
-    if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) {
-      buttons.push(
-        <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
-          <XCircleIcon className="h-5 w-5" />
-        </Button>,
-      );
-    }
+    // if (
+    //   jobStatus !== JobState.Finished &&
+    //   jobStatus !== JobState.Cancelled &&
+    //   !job.clientCancelled &&
+    //   !job.freelancerCancelled
+    // ) {
+    //   buttons.push(
+    //     <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Job">
+    //       <XCircleIcon className="h-5 w-5" />
+    //     </Button>,
+    //   );
+    // }
 
     // Freelancer actions
     if (isFreelancer) {
@@ -322,6 +326,21 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             tooltip="Mark as Delivered"
           >
             <PaperAirplaneIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+
+      if (!job.freelancerCancelled && jobStatus === JobState.Cancelled) {
+        buttons.push(
+          <Button
+            variant="danger"
+            key="cancel"
+            onClick={handleCancel}
+            disabled={isMining}
+            size="sm"
+            tooltip="Cancel Job"
+          >
+            <XCircleIcon className="h-5 w-5" />
           </Button>,
         );
       }
@@ -355,6 +374,22 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
             tooltip="Rate Freelancer"
           >
             <StarIcon className="h-5 w-5" />
+          </Button>,
+        );
+      } else if (
+        (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled) ||
+        (!job.clientCancelled && jobStatus === JobState.Cancelled)
+      ) {
+        buttons.push(
+          <Button
+            variant="danger"
+            key="cancel"
+            onClick={handleCancel}
+            disabled={isMining}
+            size="sm"
+            tooltip="Cancel Job"
+          >
+            <XCircleIcon className="h-5 w-5" />
           </Button>,
         );
       }
@@ -412,6 +447,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         isLink={job.isLink}
         comment={isClient ? job.submissionComment : job.clientResponse}
         canUploadFile={isFreelancer && isRejected}
+        loading={isMining}
       />
 
       {/* Rating modal for client */}

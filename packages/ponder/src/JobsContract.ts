@@ -49,6 +49,8 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 		clientReceived: false,
 		freelancerDelivered: false,
 		clientRejected: false,
+		clientCancelled: false,
+		freelancerCancelled: false,
 		lastTransactionHash: event.transaction.hash,
 	});
 });
@@ -184,6 +186,8 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 		})
 		.set({
 			state: JobState.Cancelled,
+			clientCancelled: event.args.clientCancelled,
+			freelancerCancelled: event.args.freelancerCancelled,
 			canceledAt: BigInt(event.args.timestamp),
 			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,

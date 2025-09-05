@@ -45,6 +45,8 @@ export const job = onchainTable(
 		submissionComment: t.varchar({ length: 512 }),
 		clientResponse: t.varchar({ length: 512 }),
 		clientRejected: t.boolean().notNull(),
+		clientCancelled: t.boolean().notNull(),
+		freelancerCancelled: t.boolean().notNull(),
 		isLink: t.boolean(),
 		freelancerDelivered: t.boolean().notNull(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),

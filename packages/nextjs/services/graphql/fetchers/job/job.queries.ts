@@ -145,6 +145,8 @@ export const getJobsFromPosting = gql`
         clientReceived
         freelancerDelivered
         clientRejected
+        clientCancelled
+        freelancerCancelled
         clientResponse
         submissionComment
         resource
@@ -224,6 +226,8 @@ export const getHires = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        clientCancelled
+        freelancerCancelled
         submissionComment
         resource
         isLink

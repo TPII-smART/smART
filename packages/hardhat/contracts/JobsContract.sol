@@ -38,6 +38,8 @@ contract JobsContract {
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
         bool clientRejected; // Whether the client has rejected the job results
+        bool clientCancelled; // Whether the client cancelled the job
+        bool freelancerCancelled; // Whether the freelancer cancelled the job
         FileInfo fileInfo; // Store the file related to the job
     }
 
@@ -143,7 +145,14 @@ contract JobsContract {
 
     event JobRated(uint256 indexed postingId, uint256 indexed jobId, address client, uint8 rating, uint256 timestamp);
 
-    event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
+    event JobCancelled(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        JobState state,
+        bool clientCancelled,
+        bool freelancerCancelled,
+        uint256 timestamp
+    );
 
     event FileUploaded(
         uint256 indexed postingId,
@@ -313,6 +322,8 @@ contract JobsContract {
             clientReceived: false,
             freelancerDelivered: false,
             clientRejected: false,
+            clientCancelled: false,
+            freelancerCancelled: false,
             fileInfo: FileInfo({
                 resource: "",
                 uploadedAt: 0,
@@ -441,11 +452,16 @@ contract JobsContract {
             // If job is still waiting for approval, simply remove it
             job.state = JobState.Cancelled;
         } else if (job.state == JobState.Ongoing) {
-            // If job is ongoing, set it to cancelled and refund client
             job.state = JobState.Cancelled;
 
+            if (msg.sender == job.client) {
+                job.clientCancelled = true;
+            } else if (msg.sender == job.freelancer) {
+                job.freelancerCancelled = true;
+            }
+
             // Refund payment to client if there was one
-            if (job.client != address(0)) {
+            if (job.client != address(0) && job.clientCancelled && job.freelancerCancelled) {
                 payable(job.client).transfer(job.payment);
             }
         } else {
@@ -454,7 +470,14 @@ contract JobsContract {
 
         job.canceledAt = block.timestamp;
 
-        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, job.canceledAt);
+        emit JobCancelled(
+            _postingId,
+            _jobId,
+            JobState.Cancelled,
+            job.clientCancelled,
+            job.freelancerCancelled,
+            job.canceledAt
+        );
     }
 
     /**
@@ -471,7 +494,14 @@ contract JobsContract {
             payable(job.client).transfer(job.payment);
         }
 
-        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
+        emit JobCancelled(
+            _postingId,
+            _jobId,
+            JobState.Cancelled,
+            job.clientCancelled,
+            job.freelancerCancelled,
+            block.timestamp
+        );
     }
 
     /**

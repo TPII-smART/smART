@@ -71,6 +71,12 @@ export interface Job {
   /** (Optional) Boolean indicating if the client has rejected the job. */
   clientRejected?: boolean;
 
+  /** (Optional) Boolean indicating if the client has canceled the job. */
+  clientCancelled?: boolean;
+
+  /** (Optional) Boolean indicating if the freelancer has canceled the job. */
+  freelancerCancelled?: boolean;
+
   /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
   resource: string;
 
