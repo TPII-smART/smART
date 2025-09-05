@@ -123,3 +123,18 @@ export const userProfile = onchainTable(
 		pk: primaryKey({ columns: [table.address] }),
 	})
 );
+
+export const notification = onchainTable(
+	"notifications",
+	(t) => ({
+		id: t.text().notNull(),
+		user: t.varchar({ length: 128 }).notNull(),
+		title: t.varchar({ length: 64 }).notNull(),
+		message: t.varchar({ length: 512 }).notNull(),
+		href: t.varchar({ length: 256 }),
+		createdAt: t.bigint().notNull(),
+	}),
+	(table) => ({
+		pk: primaryKey({ columns: [table.id, table.user] }),
+	})
+);
