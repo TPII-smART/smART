@@ -38,6 +38,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const isFreelancer = job.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
+  const isRejected = job.clientRejected;
 
   const getJobStatus = () => {
     if (jobStatus === JobState.WaitingForApproval) {
@@ -143,6 +144,23 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     return await uploadToIPFS(file);
   };
 
+  const handleRejectJob = async (reason: string) => {
+    try {
+      if (!job.jobId) return;
+      await writeContract({
+        functionName: "rejectJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
+      });
+      if (reload) await reload();
+
+      await handleAddComment(reason);
+    } catch (err) {
+      console.error("Reject deliverable failed:", err);
+    } finally {
+      setShowDeliverableModal(false);
+    }
+  };
+
   const handleConfirmCompletion = async (fileData?: FileFormData, clientResponse?: string) => {
     try {
       if (isFreelancer && fileData) {
@@ -150,9 +168,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       }
 
       if (isClient && clientResponse) {
-        console.log("Entre");
-        console.log("Client response:", clientResponse);
-        await handleWriteComment(clientResponse);
+        await handleAddComment(clientResponse);
       }
 
       await writeContract({
@@ -177,7 +193,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
       if (fileData.file && !isLink) {
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
-        console.log("File uploaded to IPFS:", resource);
       } else if (!fileData.file && isLink) {
         resource = fileData.link || "";
       }
@@ -195,7 +210,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     }
   };
 
-  const handleWriteComment = async (comment: string) => {
+  const handleAddComment = async (comment: string) => {
     try {
       await writeContract({
         functionName: "addCommentToJob",
@@ -301,7 +316,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
           <Button
             variant="primary"
             key="deliver"
-            onClick={() => setShowUploadModal(true)}
+            onClick={() => (isRejected ? setShowDeliverableModal(true) : setShowUploadModal(true))}
             disabled={isMining}
             size="sm"
             tooltip="Mark as Delivered"
@@ -388,14 +403,15 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
       <DeliverableReviewModal
         isOpen={showDeliverableModal}
-        onApprove={comment => handleConfirmCompletion(undefined, comment)}
-        onReject={comment => handleConfirmCompletion(undefined, comment)}
+        onApprove={handleConfirmCompletion}
+        onReject={reason => handleRejectJob(reason)}
         onClose={() => setShowDeliverableModal(false)}
         modalTitle="Deliverable Review"
         modalDescription="Please review the deliverable and provide your feedback."
         resource={job.resource}
         isLink={job.isLink}
-        freelancerComment={job.submissionComment}
+        comment={isClient ? job.submissionComment : job.clientResponse}
+        canUploadFile={isFreelancer && isRejected}
       />
 
       {/* Rating modal for client */}

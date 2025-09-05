@@ -36,6 +36,7 @@ export const job = onchainTable(
 		finishedAt: t.bigint(), // When the job was finished
 		canceledAt: t.bigint(), // When the job was canceled
 		deliveredAt: t.bigint(), // When the job was delivered
+		rejectedAt: t.bigint(), // When the job was rejected by the client
 		emitBy: t.varchar({ length: 128 }),
 		rating: t.integer(), // Rating given by the client to the freelancer
 		clientReceived: t.boolean().notNull(),
@@ -43,6 +44,7 @@ export const job = onchainTable(
 		uploadedAt: t.bigint(),
 		submissionComment: t.varchar({ length: 512 }),
 		clientResponse: t.varchar({ length: 512 }),
+		clientRejected: t.boolean().notNull(),
 		isLink: t.boolean(),
 		freelancerDelivered: t.boolean().notNull(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),

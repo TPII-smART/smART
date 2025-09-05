@@ -141,8 +141,14 @@ export const getJobsFromPosting = gql`
         acceptedAt
         finishedAt
         canceledAt
+        rejectedAt
         clientReceived
         freelancerDelivered
+        clientRejected
+        clientResponse
+        submissionComment
+        resource
+        isLink
       }
     }
   }

@@ -44,9 +44,11 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 		state: JobState.WaitingForApproval, // Initial job state
 		createdAt: BigInt(event.block.timestamp),
 		acceptedAt: null,
+		rejectedAt: null,
 		emitBy: event.transaction.from,
 		clientReceived: false,
 		freelancerDelivered: false,
+		clientRejected: false,
 		lastTransactionHash: event.transaction.hash,
 	});
 });
@@ -183,6 +185,28 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 		.set({
 			state: JobState.Cancelled,
 			canceledAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
+		});
+});
+
+
+ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
+	// Updates the job to mark it as cancelled
+
+	console.log("Rejecting job from:", event.transaction.from);
+	console.log("Event args:", event.args);
+
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			rejectedAt: BigInt(event.args.timestamp),
+			clientReceived: event.args.clientReceived,
+			freelancerDelivered: event.args.freelancerDelivered,
+			clientRejected: event.args.clientRejected,
 			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
