@@ -133,7 +133,7 @@ export const notification = onchainTable(
 		message: t.varchar({ length: 512 }).notNull(),
 		href: t.varchar({ length: 256 }),
 		createdAt: t.bigint().notNull(),
-		read: t.boolean().default(false),
+		status: t.integer().notNull().default(0), // 0 = UNREAD, 1 = READ, 2 = DONE
 	}),
 	(table) => ({
 		pk: primaryKey({ columns: [table.id, table.user] }),
