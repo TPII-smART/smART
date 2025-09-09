@@ -53,7 +53,7 @@ const DeliverablePreview = ({ resource, isLink }: DeliverablePreviewProps) => {
       </div>
     );
   }
-  return <span style={{ color: "var(--color-secondary-content)", opacity: 0.7 }}>No hay archivo entregado.</span>;
+  return <span style={{ color: "var(--color-secondary-content)", opacity: 0.7 }}>There is no file delivered.</span>;
 };
 
 export default DeliverablePreview;

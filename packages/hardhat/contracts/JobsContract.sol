@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "./common/FileInfo.sol";
+
 /**
  * @title JobsContract
  * @dev A simplified escrow contract for managing freelance job postings.
@@ -43,15 +45,6 @@ contract JobsContract {
         FileInfo fileInfo; // Store the file related to the job
     }
 
-    // Struct for file information
-    struct FileInfo {
-        string resource;
-        uint256 uploadedAt;
-        string submissionComment;
-        string clientResponse;
-        bool isLink; // Whether the file is a link or an uploaded file
-    }
-
     // Struct that reduces the amount of parameters needed when submitting a Job
     struct JobParams {
         string title;
@@ -84,12 +77,6 @@ contract JobsContract {
         uint256 basePayment;
         uint256 minimumNoticeTime;
         uint256 averageWorkDuration;
-    }
-
-    struct FileParams {
-        string resource;
-        string submissionComment;
-        bool isLink;
     }
 
     // State variables of the contract

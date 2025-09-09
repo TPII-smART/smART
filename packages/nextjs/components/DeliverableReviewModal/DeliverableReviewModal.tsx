@@ -108,29 +108,37 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
           </div>
           <Separator />
 
-          {/* Comment */}
-          {comment && (
-            <div>
-              <h3 className="flex font-medium gap-2 mb-4 text-primary-content items-center">
-                <ChatBubbleLeftRightIcon className="w-4 h-4" />
-                {canUploadFile ? "Client response" : "Freelancer comment"}
-              </h3>
-              <div
-                className="smrt-inner-border rounded-md p-4"
-                style={{
-                  background: "var(--color-surface)",
-                  borderColor: "var(--color-inside-border)",
-                }}
-              >
-                <span
-                  className="text-sm text-pretty whitespace-pre-line break-words"
-                  style={{ color: "var(--color-primary-content)" }}
+          <div>
+            <h3 className="flex font-medium gap-2 mb-4 text-primary-content items-center">
+              <ChatBubbleLeftRightIcon className="w-4 h-4" />
+              {canUploadFile ? "Client response" : "Freelancer comment"}
+            </h3>
+            {/* Comment */}
+            {comment ? (
+              <div>
+                <div
+                  className="smrt-inner-border rounded-md p-4"
+                  style={{
+                    background: "var(--color-surface)",
+                    borderColor: "var(--color-inside-border)",
+                  }}
                 >
-                  {comment}
+                  <span
+                    className="text-sm text-pretty whitespace-pre-line break-words"
+                    style={{ color: "var(--color-primary-content)" }}
+                  >
+                    {comment}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <span className="text-sm " style={{ color: "var(--color-danger)" }}>
+                  No comment available.
                 </span>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           {canUploadFile && (
             <div className="space-y-10">

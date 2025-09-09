@@ -75,12 +75,21 @@ export const gig = onchainTable("gig", (t) => ({
 	finishedAt: t.bigint(),
 	canceledAt: t.bigint(),
 	deliveredAt: t.bigint(), // When the job was delivered
+	rejectedAt: t.bigint(), // When the job was rejected by the client
+	uploadedAt: t.bigint(),
 	emitBy: t.varchar({ length: 128 }),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
+	clientCancelled: t.boolean().notNull(),
+	freelancerCancelled: t.boolean().notNull(),
+	clientRejected: t.boolean().notNull(),	
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
+	resource: t.varchar({ length: 256 }),	
+	isLink: t.boolean().notNull(),
+	submissionComment: t.varchar({ length: 512 }),
+	clientResponse: t.varchar({ length: 512 }),
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 

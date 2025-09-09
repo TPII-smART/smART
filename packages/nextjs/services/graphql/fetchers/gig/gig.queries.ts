@@ -315,12 +315,21 @@ export const getGigById = gql`
       acceptedAt
       finishedAt
       canceledAt
+      deliveredAt
+      rejectedAt
       state
       clientReceived
       freelancerDelivered
+      clientCancelled
+      freelancerCancelled
+      clientRejected
       rating
       acceptedApplicationId
       gigBannerImageHash
+      submissionComment
+      clientResponse
+      resource
+      isLink
     }
   }
 `;
