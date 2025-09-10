@@ -194,6 +194,22 @@ export default function GigPage() {
   const getGigStatus = () => {
     if (gigState === GigState.InProgress) {
       // Check delivery status for ongoing gigs
+
+      if (data?.gig.freelancerCancelled) {
+        return {
+          label: "Cancellation Pending",
+          color: "bg-red-500",
+          icon: XCircleIcon,
+          description: isFreelancer ? "You cancelled the gig" : "Gig was cancelled by freelancer",
+        };
+      } else if (data?.gig.clientCancelled) {
+        return {
+          label: "Cancellation Pending",
+          color: "bg-red-500",
+          icon: XCircleIcon,
+          description: isClient ? "You cancelled the gig" : "Gig was cancelled by client",
+        };
+      }
       if (data?.gig.freelancerDelivered && data?.gig.clientReceived) {
         return {
           label: "Completed - Awaiting Payment",
@@ -264,18 +280,33 @@ export default function GigPage() {
   const getActionButtons = () => {
     const buttons = [];
 
-    // Cancel button - available for both parties until gig is finished
-    if (gigState !== GigState.Completed && gigState !== GigState.Cancelled) {
+    // Freelancer actions
+    if (
+      isAcceptedFreelancer &&
+      gigState !== GigState.Completed &&
+      gigState !== GigState.Cancelled &&
+      !data?.gig.freelancerCancelled
+    ) {
       buttons.push(
-        <Button variant="danger" key="cancel" onClick={handleCancel} disabled={isMining} size="sm" tooltip="Cancel Gig">
+        <Button
+          variant="danger"
+          key="FreelancerCancel"
+          onClick={handleCancel}
+          disabled={isMining}
+          size="sm"
+          tooltip="Cancel Gig"
+        >
           <XCircleIcon className="h-5 w-5" />
           Cancel
         </Button>,
       );
     }
-
-    // Freelancer actions
-    if (isAcceptedFreelancer && gigState === GigState.InProgress) {
+    if (
+      isAcceptedFreelancer &&
+      gigState === GigState.InProgress &&
+      !data?.gig.freelancerCancelled &&
+      !data?.gig.clientCancelled
+    ) {
       if (!data?.gig.freelancerDelivered) {
         buttons.push(
           <Button
@@ -325,6 +356,21 @@ export default function GigPage() {
         >
           <StarIcon className="h-5 w-5" />
           Rate Freelancer
+        </Button>,
+      );
+    }
+    if (isClient && gigState !== GigState.Completed && gigState !== GigState.Cancelled && !data?.gig.clientCancelled) {
+      buttons.push(
+        <Button
+          variant="danger"
+          key="ClientCancel"
+          onClick={handleCancel}
+          disabled={isMining}
+          size="sm"
+          tooltip="Cancel Job"
+        >
+          <XCircleIcon className="h-5 w-5" />
+          Cancel
         </Button>,
       );
     }

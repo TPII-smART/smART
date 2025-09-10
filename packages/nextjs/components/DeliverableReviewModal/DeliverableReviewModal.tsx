@@ -6,7 +6,13 @@ import FormModal from "../Modal/FormModal/FormModal";
 import { FileFormData, UploadTab, tabs } from "../UploadFileForm/types";
 import Separator from "../ui/Separator";
 import * as Yup from "yup";
-import { ChatBubbleLeftRightIcon, CheckCircleIcon, PaperClipIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import {
+  ChatBubbleLeftRightIcon,
+  CheckCircleIcon,
+  PaperAirplaneIcon,
+  PaperClipIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import Button from "~~/components/Button/Button";
 import FileUploadBox from "~~/components/FileUploadBox";
 import Tabs from "~~/components/Tabs/Tabs";
@@ -226,8 +232,8 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                   variant="primary"
                   onClick={() => setSubmitAction("approve")}
                 >
-                  <PaperClipIcon className="w-4 h-4 inline-block mr-1" />
-                  Submit Updated Deliverable
+                  <PaperAirplaneIcon className="w-4 h-4 inline-block mr-1" />
+                  Submit Deliverable
                 </Button>
               ) : (
                 <>

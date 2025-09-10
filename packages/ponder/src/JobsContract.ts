@@ -185,7 +185,7 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 			postingId: event.args.postingId,
 		})
 		.set({
-			state: JobState.Cancelled,
+			state: event.args.state,
 			clientCancelled: event.args.clientCancelled,
 			freelancerCancelled: event.args.freelancerCancelled,
 			canceledAt: BigInt(event.args.timestamp),

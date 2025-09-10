@@ -443,11 +443,12 @@ describe("JobsContract", function () {
 
     it("Should cancel job in WaitingForApproval state", async function () {
       const tx = await jobsContract.connect(client).cancelJob(0, 0);
+      await tx.wait();
 
-      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, anyValue); // JobState.Cancelled = 3
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, false, false, anyValue); // JobState.Cancelled = 3
     });
 
-    it("Should cancel ongoing job and refund client", async function () {
+    it("Should cancel ongoing job by both parties and refund client", async function () {
       // Accept job first
       await jobsContract.connect(freelancer).acceptJob(0, 0);
 
@@ -455,12 +456,46 @@ describe("JobsContract", function () {
 
       const tx = await jobsContract.connect(client).cancelJob(0, 0);
       const receipt = await tx.wait();
+
+      const anotherTx = await jobsContract.connect(freelancer).cancelJob(0, 0);
+      await anotherTx.wait();
+
       const gasUsed = receipt!.gasUsed * receipt!.gasPrice;
 
       await expect(tx).to.emit(jobsContract, "JobCancelled");
+      await expect(anotherTx).to.emit(jobsContract, "JobCancelled");
 
       const clientBalanceAfter = await ethers.provider.getBalance(client.address);
       expect(clientBalanceAfter - clientBalanceBefore + gasUsed).to.equal(sampleJob.payment);
+    });
+
+    it("Should not cancel ongoing job by only one party(client)", async function () {
+      // Accept job first
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+
+      const clientBalanceBefore = await ethers.provider.getBalance(client.address);
+
+      const tx = await jobsContract.connect(client).cancelJob(0, 0);
+
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 1, true, false, anyValue); // JobState.Ongoing = 1
+
+      const clientBalanceAfter = await ethers.provider.getBalance(client.address);
+      expect(clientBalanceAfter).to.be.lessThan(clientBalanceBefore); // Only gas fee paid, no refund
+    });
+
+    it("Should not cancel ongoing job by only one party(freelancer)", async function () {
+      // Accept job first
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+
+      const clientBalanceBefore = await ethers.provider.getBalance(client.address);
+
+      const tx = await jobsContract.connect(freelancer).cancelJob(0, 0);
+      await tx.wait();
+
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 1, false, true, anyValue); // JobState.Ongoing = 1
+
+      const clientBalanceAfter = await ethers.provider.getBalance(client.address);
+      expect(clientBalanceAfter).to.be.equal(clientBalanceBefore); // Only gas fee paid, no refund
     });
 
     it("Should revert if job cannot be cancelled", async function () {
@@ -498,7 +533,7 @@ describe("JobsContract", function () {
 
       const tx = await jobsContract.connect(owner).emergencyCancel(0, 0);
 
-      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, anyValue);
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, false, false, anyValue);
 
       const clientBalanceAfter = await ethers.provider.getBalance(client.address);
       expect(clientBalanceAfter - clientBalanceBefore).to.equal(sampleJob.payment);
@@ -639,12 +674,12 @@ describe("JobsContract", function () {
   describe("Upload File to Job", function () {
     let expectedComment: string;
     let expectedIpfsHash: string;
-    let fileInfo: { ipfsHash: string; comment: string; isLink: boolean };
+    let fileInfo: { resource: string; submissionComment: string; isLink: boolean };
 
     beforeEach(async function () {
       expectedComment = "File upload comment";
       expectedIpfsHash = "QmFileHash123";
-      fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment, isLink: false };
+      fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
 
       await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
       await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
@@ -655,6 +690,10 @@ describe("JobsContract", function () {
       const tx = await jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo);
 
       const receipt = await tx.wait();
+
+      await expect(tx)
+        .to.emit(jobsContract, "FileUploaded")
+        .withArgs(0, 0, freelancer.address, expectedIpfsHash, expectedComment, false, anyValue);
 
       const events = receipt?.logs
         .map(log => {
@@ -669,38 +708,39 @@ describe("JobsContract", function () {
       expect(events?.[0]?.args?.postingId).to.equal(0);
       expect(events?.[0]?.args?.jobId).to.equal(0);
       expect(events?.[0]?.args?.freelancer).to.equal(freelancer.address);
-      expect(events?.[0]?.args?.ipfsHash).to.equal(expectedIpfsHash);
+      expect(events?.[0]?.args?.resource).to.equal(expectedIpfsHash);
 
-      expect(events?.[0]?.args?.comment).to.equal(expectedComment);
+      expect(events?.[0]?.args?.submissionComment).to.equal(expectedComment);
 
       expect(await jobsContract.isFileUploaded(0, 0, expectedComment, expectedIpfsHash)).to.be.true;
     });
 
     it("Should revert if the job is not ongoing", async function () {
       await jobsContract.connect(client).cancelJob(0, 0);
+      await jobsContract.connect(freelancer).cancelJob(0, 0);
       await expect(jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
         "The job is not ongoing.",
       );
     });
 
     it("Should revert if the IPFS hash is empty", async function () {
-      const emptyFileInfo = { ipfsHash: "", comment: "Valid comment", isLink: false };
+      const emptyFileInfo = { resource: "", submissionComment: "Valid comment", isLink: false };
       await expect(jobsContract.connect(freelancer).uploadFile(0, 0, emptyFileInfo)).to.be.revertedWith(
-        "IPFS hash cannot be empty.",
+        "Resource cannot be empty.",
       );
     });
 
-    it("Should revert if the IPFS hash exceeds 128 characters", async function () {
-      const longHash = "a".repeat(129);
-      const invalidFileInfo = { ipfsHash: longHash, comment: "Valid comment", isLink: false };
+    it("Should revert if the resource exceeds 256 characters", async function () {
+      const longHash = "a".repeat(257);
+      const invalidFileInfo = { resource: longHash, submissionComment: "Valid comment", isLink: false };
       await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
-        "IPFS hash must be up to 128 characters.",
+        "Resource must be up to 256 characters.",
       );
     });
 
     it("Should revert if the comment exceeds 256 characters", async function () {
       const longComment = "a".repeat(257);
-      const invalidFileInfo = { ipfsHash: "QmFileHash123", comment: longComment, isLink: false };
+      const invalidFileInfo = { resource: "QmFileHash123", submissionComment: longComment, isLink: false };
       await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
         "Comment must be up to 256 characters.",
       );
@@ -717,7 +757,7 @@ describe("JobsContract", function () {
     beforeEach(async function () {
       const expectedIpfsHash = "QmFileHash123";
       const expectedComment = "File upload comment";
-      const fileInfo = { ipfsHash: expectedIpfsHash, comment: expectedComment, isLink: false };
+      const fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
 
       await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
       await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
@@ -748,6 +788,8 @@ describe("JobsContract", function () {
 
     it("Should revert if the job is not ongoing", async function () {
       await jobsContract.connect(client).cancelJob(0, 0);
+      await jobsContract.connect(freelancer).cancelJob(0, 0);
+
       await expect(jobsContract.connect(client).addCommentToJob(0, 0, "This is a comment")).to.be.revertedWith(
         "The job is not ongoing.",
       );

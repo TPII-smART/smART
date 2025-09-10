@@ -439,8 +439,6 @@ contract JobsContract {
             // If job is still waiting for approval, simply remove it
             job.state = JobState.Cancelled;
         } else if (job.state == JobState.Ongoing) {
-            job.state = JobState.Cancelled;
-
             if (msg.sender == job.client) {
                 job.clientCancelled = true;
             } else if (msg.sender == job.freelancer) {
@@ -449,22 +447,15 @@ contract JobsContract {
 
             // Refund payment to client if there was one
             if (job.client != address(0) && job.clientCancelled && job.freelancerCancelled) {
+                job.state = JobState.Cancelled;
+                job.canceledAt = block.timestamp;
                 payable(job.client).transfer(job.payment);
             }
         } else {
             revert("Job cannot be cancelled in its current state");
         }
 
-        job.canceledAt = block.timestamp;
-
-        emit JobCancelled(
-            _postingId,
-            _jobId,
-            JobState.Cancelled,
-            job.clientCancelled,
-            job.freelancerCancelled,
-            job.canceledAt
-        );
+        emit JobCancelled(_postingId, _jobId, job.state, job.clientCancelled, job.freelancerCancelled, job.canceledAt);
     }
 
     /**

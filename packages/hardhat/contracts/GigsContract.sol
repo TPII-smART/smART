@@ -470,7 +470,6 @@ contract GigsContract {
             gig.state = GigState.Cancelled;
         } else if (gig.state == GigState.InProgress) {
             // If gig is in progress, cancel and refund full amount to client
-            gig.state = GigState.Cancelled;
 
             if (msg.sender == gig.client) {
                 gig.clientCancelled = true;
@@ -480,15 +479,15 @@ contract GigsContract {
 
             // Refund payment to client if there was one
             if (gig.client != address(0) && gig.clientCancelled && gig.freelancerCancelled) {
+                gig.state = GigState.Cancelled;
+                gig.canceledAt = block.timestamp;
                 payable(gig.client).transfer(gig.finalPayment);
             }
         } else {
             revert("Gig cannot be cancelled in its current state");
         }
 
-        gig.canceledAt = block.timestamp;
-
-        emit GigCancelled(_gigId, GigState.Cancelled, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);
+        emit GigCancelled(_gigId, gig.state, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);
     }
 
     /**
