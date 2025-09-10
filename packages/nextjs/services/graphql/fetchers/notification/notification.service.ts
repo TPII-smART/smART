@@ -5,7 +5,7 @@ import { Notification } from "~~/types/notification.types";
 export const fetchUnreadNotificationsAmountByUser = async (userAddress: string) => {
   const query = gql`
     query GetJobsPaginated($address: String!) {
-      notifications(where: { user: $address, read: false }) {
+      notifications(where: { user: $address, status: 0 }) {
         totalCount
       }
     }

@@ -10,6 +10,8 @@ import { useOutsideClick } from "~~/hooks/scaffold-eth";
 import { fetchUnreadNotificationsAmountByUser } from "~~/services/graphql/fetchers/notification/notification.service";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
+const REFRESH = 10 * 60 * 1000; // 10 minutes
+
 export const Header = () => {
   const burgerMenuRef = useRef<HTMLDetailsElement>(null);
   useOutsideClick(burgerMenuRef, () => {
@@ -23,6 +25,7 @@ export const Header = () => {
       return await fetchUnreadNotificationsAmountByUser(userAddress ?? ZERO_ADDRESS);
     },
     enabled: !!userAddress,
+    refetchInterval: REFRESH,
   });
 
   return (
@@ -44,9 +47,11 @@ export const Header = () => {
           className="h-8 w-8 hover:bg-secondary rounded-2xl flex items-center justify-center cursor-pointer"
           onClick={() => redirect("/notifications", RedirectType.push)}
         >
-          <div className="h-4 w-4 bg-red-600 rounded-4xl text-primary-content text-xs align-middle text-center font-bold absolute mb-5 ml-4">
-            {unreadNotifications}
-          </div>
+          {unreadNotifications && unreadNotifications > 0 && (
+            <div className="h-4 w-4 bg-red-600 rounded-4xl text-primary-content text-xs align-middle text-center font-bold absolute mb-5 ml-4">
+              {unreadNotifications}
+            </div>
+          )}
           <BellIcon className="h-6 w-6" />
         </div>
       </div>
