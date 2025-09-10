@@ -12,3 +12,14 @@ ponder.on(
 		}
 	}
 );
+
+ponder.on(
+	"NotificationsContract:ChangeNotificationsStatus",
+	async ({ event, context }) => {
+		const { ids, status, user } = event.args;
+
+		for (const id of ids) {
+			await context.db.update(notification, { user, id }).set({ status });
+		}
+	}
+);
