@@ -75,7 +75,7 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
         onClose,
         loading,
         hideDefaultButtons: true,
-        width: 600,
+        width: 500,
       }}
       formikProps={{
         initialValues: { reviewComment: "", fileValues: new FileFormData() },
