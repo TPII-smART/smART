@@ -9,21 +9,14 @@ import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
 import { StarIcon } from "@heroicons/react/20/solid";
-import {
-  ArrowDownTrayIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationTriangleIcon,
-  PaperAirplaneIcon,
-  PlayIcon,
-  XCircleIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
+import { getJobStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
   const { address: userAddress } = useAccount();
@@ -40,92 +33,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
   const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
   const isRejected = job.clientRejected;
 
-  const getJobStatus = () => {
-    if (jobStatus === JobState.WaitingForApproval) {
-      return {
-        label: "Waiting for Approval",
-        color: "bg-amber-500",
-        icon: ClockIcon,
-        description: isFreelancer ? "Waiting for client approval" : "Awaiting your approval",
-      };
-    }
-
-    if (jobStatus === JobState.Ongoing) {
-      // Check delivery status for ongoing jobs
-      if (job.freelancerCancelled) {
-        return {
-          label: "Cancellation Pending",
-          color: "bg-red-500",
-          icon: XCircleIcon,
-          description: isFreelancer ? "You cancelled the job" : "Job was cancelled by freelancer",
-        };
-      } else if (job.clientCancelled) {
-        return {
-          label: isClient ? "You cancelled the job" : "Cancelled by Client",
-          color: "bg-red-500",
-          icon: XCircleIcon,
-          description: isClient ? "You cancelled the job" : "Job was cancelled by client",
-        };
-      }
-
-      if (job.freelancerDelivered && job.clientReceived) {
-        return {
-          label: "Completed - Awaiting Payment",
-          color: "bg-blue-500",
-          icon: CheckCircleIcon,
-          description: "Work delivered and received",
-        };
-      } else if (job.freelancerDelivered && !job.clientReceived) {
-        return {
-          label: "Delivered - Awaiting Review",
-          color: "bg-purple-500",
-          icon: PaperAirplaneIcon,
-          description: "Work delivered, awaiting client review",
-        };
-      } else if (!job.freelancerDelivered && job.clientReceived) {
-        return {
-          label: "In Progress - Client Ready",
-          color: "bg-green-500",
-          icon: PlayIcon,
-          description: "Client ready, awaiting delivery",
-        };
-      } else {
-        return {
-          label: "In Progress",
-          color: "bg-green-500",
-          icon: PlayIcon,
-          description: "Work in progress",
-        };
-      }
-    }
-
-    if (jobStatus === JobState.Finished) {
-      return {
-        label: "Completed",
-        color: "bg-emerald-500",
-        icon: CheckCircleIcon,
-        description: "Job successfully completed",
-      };
-    }
-
-    if (jobStatus === JobState.Cancelled) {
-      return {
-        label: "Cancelled",
-        color: "bg-red-500",
-        icon: XCircleIcon,
-        description: "Job was cancelled",
-      };
-    }
-
-    return {
-      label: "Unknown",
-      color: "bg-gray-500",
-      icon: ExclamationTriangleIcon,
-      description: "Unknown status",
-    };
-  };
-
-  const statusInfo = getJobStatus();
+  const statusInfo = getJobStatus(jobStatus, job, isFreelancer, isClient);
   const StatusIcon = statusInfo.icon;
 
   const handleAccept = async () => {

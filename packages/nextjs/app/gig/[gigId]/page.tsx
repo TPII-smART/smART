@@ -9,16 +9,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
-import {
-  ArrowDownTrayIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  PaperAirplaneIcon,
-  PlayIcon,
-  StarIcon,
-  UserIcon,
-  XCircleIcon,
-} from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, PaperAirplaneIcon, StarIcon, UserIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import Button from "~~/components/Button/Button";
 import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
@@ -30,6 +21,7 @@ import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { fetchGigWithApplication } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Application, Gig } from "~~/types/gig/gig.types";
+import { getGigStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
 type GigData = {
   gig: Gig;
@@ -189,82 +181,6 @@ export default function GigPage() {
     } finally {
       setShowDeliverableModal(false);
     }
-  };
-
-  const getGigStatus = () => {
-    if (gigState === GigState.InProgress) {
-      // Check delivery status for ongoing gigs
-
-      if (data?.gig.freelancerCancelled) {
-        return {
-          label: "Cancellation Pending",
-          color: "bg-red-500",
-          icon: XCircleIcon,
-          description: isFreelancer ? "You cancelled the gig" : "Gig was cancelled by freelancer",
-        };
-      } else if (data?.gig.clientCancelled) {
-        return {
-          label: "Cancellation Pending",
-          color: "bg-red-500",
-          icon: XCircleIcon,
-          description: isClient ? "You cancelled the gig" : "Gig was cancelled by client",
-        };
-      }
-      if (data?.gig.freelancerDelivered && data?.gig.clientReceived) {
-        return {
-          label: "Completed - Awaiting Payment",
-          color: "bg-blue-500",
-          icon: CheckCircleIcon,
-          description: "Work delivered and received",
-        };
-      } else if (data?.gig.freelancerDelivered && !data?.gig.clientReceived) {
-        return {
-          label: "Delivered - Awaiting Review",
-          color: "bg-purple-500",
-          icon: PaperAirplaneIcon,
-          description: "Work delivered, awaiting client review",
-        };
-      } else if (!data?.gig.freelancerDelivered && data?.gig.clientReceived) {
-        return {
-          label: "In Progress - Client Ready",
-          color: "bg-green-500",
-          icon: PlayIcon,
-          description: "Client ready, awaiting delivery",
-        };
-      } else {
-        return {
-          label: "In Progress",
-          color: "bg-green-500",
-          icon: PlayIcon,
-          description: "Work in progress",
-        };
-      }
-    }
-
-    if (gigState === GigState.Completed) {
-      return {
-        label: "Completed",
-        color: "bg-emerald-500",
-        icon: CheckCircleIcon,
-        description: "Gig successfully completed",
-      };
-    }
-
-    if (gigState === GigState.Cancelled) {
-      return {
-        label: "Cancelled",
-        color: "bg-red-500",
-        icon: XCircleIcon,
-        description: "Gig was cancelled",
-      };
-    }
-
-    return {
-      label: "Unknown",
-      color: "bg-gray-500",
-      icon: ExclamationTriangleIcon,
-      description: "Unknown status",
-    };
   };
 
   // Format ETH price display
@@ -429,7 +345,7 @@ export default function GigPage() {
                     <div className="bg-base-100 rounded-lg shadow-md p-6 mb-6">
                       <h2 className="text-lg font-semibold text-content-primary mb-4">Current Status</h2>
                       {(() => {
-                        const statusInfo = getGigStatus();
+                        const statusInfo = getGigStatus(gigState, data?.gig as Gig, isFreelancer, isClient);
                         const StatusIcon = statusInfo.icon;
                         return (
                           <div className="flex items-center gap-3">
