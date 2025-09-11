@@ -68,6 +68,15 @@ export interface Job {
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the job. */
   freelancerDelivered?: boolean;
 
+  /** (Optional) Boolean indicating if the client has rejected the job. */
+  clientRejected?: boolean;
+
+  /** (Optional) Boolean indicating if the client has canceled the job. */
+  clientCancelled?: boolean;
+
+  /** (Optional) Boolean indicating if the freelancer has canceled the job. */
+  freelancerCancelled?: boolean;
+
   /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
   resource: string;
 
@@ -78,7 +87,7 @@ export interface Job {
   submissionComment: string;
 
   /** (Optional) Comment provided by the client upon review. */
-  clientComment: string;
+  clientResponse: string;
 
   /** (Optional) Boolean indicating if the submitted resource is a link. */
   isLink: boolean;

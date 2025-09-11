@@ -13,6 +13,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		category: event.args.category,
 		maxDurationInHours: event.args.maxDurationInHours,
 		createdAt: BigInt(event.block.timestamp),
+		uploadedAt: null,
 		state: GigState.Open,
 		acceptedFreelancer: null,
 		finalPayment: null,
@@ -21,8 +22,12 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		acceptedAt: null,
 		emitBy: event.transaction.from,
 		clientReceived: false,
-		freelancerDelivered: false,
+		clientRejected: false,
+		freelancerDelivered: false,	
+		clientCancelled: false,
+		freelancerCancelled: false,
 		acceptedApplicationId: null,
+		isLink: false,
 		gigBannerImageHash: event.args.gigBannerImageHash,
 		lastTransactionHash: event.transaction.hash,
 	});
@@ -166,9 +171,56 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 			gigId: event.args.gigId,
 		})
 		.set({
-			state: GigState.Cancelled,
+			state: event.args.state,
+			clientCancelled: event.args.clientCancelled,
+			freelancerCancelled: event.args.freelancerCancelled,
 			canceledAt: event.args.timestamp,
-			lastTransactionHash: event.transaction.hash,
 			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
+		});
+});
+
+ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			resource: event.args.resource,
+			submissionComment: event.args.submissionComment,
+			isLink: event.args.isLink,
+			uploadedAt: BigInt(event.block.timestamp),
+			lastTransactionHash: event.transaction.hash,
+		});
+});
+
+// This event is triggered when a a client add a comment to the uploaded file.
+ponder.on(
+	"GigsContract:CommentAdded",
+	async ({ event, context }) => {
+		// Updates the gig to mark it as file uploaded
+		await context.db
+			.update(gig, {
+				gigId: event.args.gigId,
+			})
+			.set({
+				clientResponse: event.args.response,
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
+
+ponder.on("GigsContract:GigRejected", async ({event, context}) => {
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			clientReceived: event.args.clientReceived,
+			freelancerDelivered: event.args.freelancerDelivered,
+			clientRejected: event.args.clientRejected,
+			rejectedAt: event.args.timestamp,
+			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
 		});
 });
