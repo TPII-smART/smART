@@ -23,7 +23,7 @@ type MetadataCache<T> = {
 
 const compareParams = (a: SearchParams[], b: SearchParams[]) => {
   if (a.length !== b.length) return false;
-  return a.every((param, index) => param === b[index]);
+  return JSON.stringify(a) === JSON.stringify(b);
 };
 
 export interface PaginationHookParams<T> {

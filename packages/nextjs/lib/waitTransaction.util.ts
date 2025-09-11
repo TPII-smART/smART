@@ -11,8 +11,6 @@ export async function waitTransaction<T>(
     return null;
   }
 
-  console.log(fields);
-
   const poll = async () => {
     const baseSleep = 200;
     const maxSleep = 5000;
