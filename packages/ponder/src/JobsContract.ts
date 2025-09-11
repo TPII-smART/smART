@@ -44,9 +44,13 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 		state: JobState.WaitingForApproval, // Initial job state
 		createdAt: BigInt(event.block.timestamp),
 		acceptedAt: null,
+		rejectedAt: null,
 		emitBy: event.transaction.from,
 		clientReceived: false,
 		freelancerDelivered: false,
+		clientRejected: false,
+		clientCancelled: false,
+		freelancerCancelled: false,
 		lastTransactionHash: event.transaction.hash,
 	});
 
@@ -144,6 +148,23 @@ ponder.on(
 	}
 );
 
+// This event is triggered when a a client add a comment to the uploaded file.
+ponder.on(
+	"JobsContract:CommentAdded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({
+				clientResponse: event.args.response,
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
+
 // This event is triggered when a job is marked as received by the client.
 ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 	// Updates the job to mark it as received by the client
@@ -230,7 +251,9 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 			postingId: event.args.postingId,
 		})
 		.set({
-			state: JobState.Cancelled,
+			state: event.args.state,
+			clientCancelled: event.args.clientCancelled,
+			freelancerCancelled: event.args.freelancerCancelled,
 			canceledAt: BigInt(event.args.timestamp),
 			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
@@ -256,4 +279,26 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 			createdAt: BigInt(event.block.timestamp),
 		});
 	}
+});
+
+
+ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
+	// Updates the job to mark it as cancelled
+
+	console.log("Rejecting job from:", event.transaction.from);
+	console.log("Event args:", event.args);
+
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			rejectedAt: BigInt(event.args.timestamp),
+			clientReceived: event.args.clientReceived,
+			freelancerDelivered: event.args.freelancerDelivered,
+			clientRejected: event.args.clientRejected,
+			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
+		});
 });

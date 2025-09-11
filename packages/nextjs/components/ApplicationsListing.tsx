@@ -29,6 +29,16 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
     await refetch();
   };
 
+  console.log(
+    "Application id",
+    data?.applications.map(app => app.applicationId),
+  );
+
+  console.log(
+    "Gig Ids",
+    data?.applications.map(app => app.gig?.gigId),
+  );
+
   return (
     <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       {isLoading ? (
@@ -41,7 +51,7 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {data?.applications.map(application => (
                 <ApplicationCard
-                  key={application.applicationId}
+                  key={`${application.gig?.gigId}-${application.applicationId}`}
                   client={application.gig?.client}
                   application={application}
                   reload={reload}

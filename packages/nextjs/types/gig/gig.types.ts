@@ -67,6 +67,12 @@ export class Gig {
    */
   deliveredAt?: string;
 
+  /**
+   * (Optional) ISO date string representing when the job was
+   * rejected by the client.
+   */
+  rejectedAt?: string;
+
   /** Ethereum address of the user who emitted the last update of the gig. */
   emitBy?: string;
 
@@ -81,6 +87,30 @@ export class Gig {
 
   /** (Optional) Unique identifier for the accepted application, if applicable. */
   acceptedApplicationId?: string;
+
+  /** (Optional) Boolean indicating if the client has rejected the job. */
+  clientRejected?: boolean;
+
+  /** (Optional) Boolean indicating if the client has canceled the job. */
+  clientCancelled?: boolean;
+
+  /** (Optional) Boolean indicating if the freelancer has canceled the job. */
+  freelancerCancelled?: boolean;
+
+  /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
+  resource: string;
+
+  /** (Optional) ISO date string representing when the deliverable was uploaded. */
+  uploadedAt: string;
+
+  /** (Optional) Comment provided by the freelancer upon submission. */
+  submissionComment: string;
+
+  /** (Optional) Comment provided by the client upon review. */
+  clientResponse: string;
+
+  /** (Optional) Boolean indicating if the submitted resource is a link. */
+  isLink: boolean;
 
   constructor() {
     this.gigId = "";
@@ -100,6 +130,18 @@ export class Gig {
     this.acceptedAt = "";
     this.finishedAt = "";
     this.canceledAt = "";
+    this.deliveredAt = "";
+    this.rejectedAt = "";
+    this.emitBy = ZERO_ADDRESS;
+    this.rating = 0;
+    this.clientRejected = false;
+    this.clientCancelled = false;
+    this.freelancerCancelled = false;
+    this.resource = "";
+    this.uploadedAt = "";
+    this.submissionComment = "";
+    this.clientResponse = "";
+    this.isLink = false;
     this.clientReceived = false;
     this.freelancerDelivered = false;
     this.acceptedApplicationId = "";
