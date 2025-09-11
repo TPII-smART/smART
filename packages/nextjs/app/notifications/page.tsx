@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { RedirectType, redirect } from "next/navigation";
 import { styled } from "@mui/material";
 import { NotificationStatus } from "@se-2/common";
@@ -11,17 +11,14 @@ import Button from "~~/components/Button";
 import Checkbox from "~~/components/CheckBox/CheckBox";
 import Spinner from "~~/components/Spinner/Spinner";
 import { InputBase } from "~~/components/scaffold-eth";
+import { useGlobalNotifications } from "~~/context/NotificationsCountProvider";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { usePagination } from "~~/hooks/use-pagination";
 import { castDateToTimestamp } from "~~/lib/utils";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
-import {
-  fetchNotificationsByUserPaginated,
-  fetchUnreadNotificationsAmountByUser,
-} from "~~/services/graphql/fetchers/notification/notification.service";
+import { fetchNotificationsByUserPaginated } from "~~/services/graphql/fetchers/notification/notification.service";
 import { Notification } from "~~/types/notification.types";
-import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 const SideBarButton = styled("button")<{ isActive: boolean }>(({ isActive }) => ({
   display: "flex",
@@ -110,10 +107,10 @@ const NotificationsDashboard = () => {
   const [localNotifications, setLocalNotifications] = useState<Notification[]>([]);
   const [activeView, setActiveView] = useState("inbox");
   const [search, setSearch] = useState("");
-  const [unreadCount, setUnreadCount] = useState(0);
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { address: userAddress } = useAccount();
+  const { unreadCount, refreshUnreadCount } = useGlobalNotifications();
 
   const { writeContractAsync: changeNotificationStatus } = useScaffoldWriteContract({
     contractName: "NotificationsContract",
@@ -134,19 +131,6 @@ const NotificationsDashboard = () => {
 
     fetchPaginatedData(true, activeView, userAddress, getActiveViewStatusList(activeView));
   }, [activeView, userAddress, fetchPaginatedData]);
-
-  const fetchUnreadCount = useCallback(async () => {
-    setUnreadCount(await fetchUnreadNotificationsAmountByUser(userAddress ?? ZERO_ADDRESS));
-  }, [userAddress]);
-
-  useEffect(() => {
-    if (!userAddress) {
-      setUnreadCount(0);
-      return;
-    }
-
-    fetchUnreadCount();
-  }, [fetchUnreadCount, userAddress]);
 
   const allSelected = selectedNotifications.length === localNotifications.length && localNotifications.length > 0;
 
@@ -184,9 +168,9 @@ const NotificationsDashboard = () => {
         })
         .filter(notification => getActiveViewStatusList(activeView).includes(notification.status));
 
+      await refreshUnreadCount();
       setLocalNotifications(updatedLocalNotifications);
       setSelectedNotifications([]);
-      await fetchUnreadCount();
     } catch (error) {
       console.error("Failed to change notification status:", error);
     } finally {
