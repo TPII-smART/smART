@@ -42,6 +42,7 @@ export const fetchNotificationsByUserPaginated = async (
   meta: PaginationMetaArg,
   userAddress: string,
   statusList: NotificationStatus[] = [NotificationStatus.UNREAD, NotificationStatus.READ, NotificationStatus.DONE],
+  search: string = "",
 ): Promise<Paginated<Notification>> => {
   const query = gql`
     query GetNotificationsByUser(
@@ -50,12 +51,13 @@ export const fetchNotificationsByUserPaginated = async (
       $startCursor: String
       $endCursor: String
       $statusList: [Int!]
+      $search: String
     ) {
       notifications(
         limit: $limit
         after: $endCursor
         before: $startCursor
-        where: { user: $address, status_in: $statusList }
+        where: { user: $address, status_in: $statusList, OR: { message_contains: $search, title_contains: $search } }
         orderBy: "createdAt"
         orderDirection: "desc"
       ) {
@@ -85,6 +87,7 @@ export const fetchNotificationsByUserPaginated = async (
     startCursor: meta.startCursor,
     endCursor: meta.endCursor,
     statusList: statusList,
+    search,
   });
 
   return {

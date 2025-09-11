@@ -57,9 +57,9 @@ const NotificationCard = ({
     <div
       key={notification.id}
       className={`
-            flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
-            ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
-        `}
+        flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
+        ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
+      `}
       onClick={() => (notification.href ? redirect(notification.href, RedirectType.push) : undefined)}
     >
       {notification.status === NotificationStatus.UNREAD ? (
@@ -116,7 +116,7 @@ const NotificationsDashboard = () => {
     contractName: "NotificationsContract",
   });
 
-  const { handleScroll, fetchPaginatedData } = usePagination({
+  const { handleScroll, fetchPaginatedData, totalItems } = usePagination({
     fetchFunction: fetchNotificationsByUserPaginated,
     itemsPerPage: 15,
     setDataFunction: setLocalNotifications,
@@ -129,8 +129,21 @@ const NotificationsDashboard = () => {
       return;
     }
 
-    fetchPaginatedData(true, activeView, userAddress, getActiveViewStatusList(activeView));
+    fetchPaginatedData(true, activeView, userAddress, getActiveViewStatusList(activeView), search);
+    setSearch("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeView, userAddress, fetchPaginatedData]);
+
+  useEffect(() => {
+    if (!userAddress) {
+      setLocalNotifications([]);
+      return;
+    }
+
+    fetchPaginatedData(false, activeView, userAddress, getActiveViewStatusList(activeView), search);
+    setSelectedNotifications([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   const allSelected = selectedNotifications.length === localNotifications.length && localNotifications.length > 0;
 
@@ -189,6 +202,11 @@ const NotificationsDashboard = () => {
             onChange={handleSelectAll}
           />
           <span className="mx-2 whitespace-nowrap text-primary-content font-semibold mt-[0.5px]">Select all</span>
+          {selectedNotifications.length > 0 && (
+            <span className="text-sm text-secondary-content">
+              ({selectedNotifications.length} of {totalItems[activeView]})
+            </span>
+          )}
         </label>
         {selectedNotifications.length > 0 && (
           <>
@@ -279,7 +297,7 @@ const NotificationsDashboard = () => {
         {/* Notifications List */}
         <div
           className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2"
-          onScroll={event => handleScroll(event, activeView, userAddress, getActiveViewStatusList(activeView))}
+          onScroll={event => handleScroll(event, activeView, userAddress, getActiveViewStatusList(activeView), search)}
         >
           {localNotifications.length > 0
             ? localNotifications.map(notification => (
