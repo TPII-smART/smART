@@ -7,7 +7,7 @@ export interface CheckboxProps {
    * Callback function triggered when the checkbox state changes.
    * Receives the new checked state as an argument.
    */
-  onChange: (checked: boolean) => void;
+  onChange: (checked: boolean, event: React.ChangeEvent<HTMLInputElement>) => void;
   /**
    * Optional label for the checkbox, displayed next to the checkbox icon.
    */

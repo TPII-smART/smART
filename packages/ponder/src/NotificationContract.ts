@@ -8,7 +8,10 @@ ponder.on(
 
 		// Remove notifications from the database
 		for (const id of ids) {
-			await context.db.delete(notification, { user, id });
+			await context.db.delete(notification, {
+				user,
+				id,
+			});
 		}
 	}
 );
@@ -19,7 +22,9 @@ ponder.on(
 		const { ids, status, user } = event.args;
 
 		for (const id of ids) {
-			await context.db.update(notification, { user, id }).set({ status });
+			await context.db
+				.update(notification, { user, id })
+				.set({ status, lastTransactionHash: event.transaction.hash });
 		}
 	}
 );

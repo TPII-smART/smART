@@ -35,7 +35,7 @@ const customCheckboxStyle: React.CSSProperties = {
 
 const Checkbox: React.FC<CheckboxProps> = ({ checked, onChange, label, className, checkStyle, containerStyle }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(event.target.checked);
+    onChange(event.target.checked, event);
   };
 
   const contStyle = { ...checkboxContainerStyle, ...containerStyle };
