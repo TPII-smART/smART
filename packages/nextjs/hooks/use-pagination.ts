@@ -119,6 +119,22 @@ export const usePagination = <T>({
     [lastSearch, setData, cache, fetchFunction, itemsPerPage, setLoading],
   );
 
+  const paginationPushFront = useCallback(
+    (key: string, item: T) => {
+      if (!cache.current[key]) {
+        cache.current[key] = {
+          meta: { hasNextPage: true, endCursor: null, startCursor: null, totalCount: 0 },
+          data: [],
+        };
+      }
+
+      cache.current[key].data.unshift(item);
+      setDataFunction(cache.current[key].data, key);
+      setTotalItems(prev => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+    },
+    [setDataFunction],
+  );
+
   const fetchPaginatedData = useCallback(
     async (instantFetch: boolean, key: string, ...searchParams: SearchParams[]) => {
       if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
@@ -181,5 +197,6 @@ export const usePagination = <T>({
     totalItems,
     fetchPaginatedData,
     handleScroll,
+    paginationPushFront,
   };
 };
