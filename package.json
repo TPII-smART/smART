@@ -56,8 +56,8 @@
 		"verify": "yarn hardhat:verify"
 	},
 	"devDependencies": {
-		"husky": "~9.1.6",
-		"lint-staged": "~13.2.2"
+		"husky": "~9.1.7",
+		"lint-staged": "~13.2.3"
 	},
 	"packageManager": "yarn@3.2.3",
 	"engines": {
@@ -69,7 +69,7 @@
 		"@fontsource/roboto": "^5.2.6",
 		"@heroicons/react": "^2.2.0",
 		"@mui/icons-material": "^7.1.1",
-		"@mui/material": "^7.3.1",
+		"@mui/material": "^7.3.2",
 		"@thirdweb-dev/storage": "^2.0.15",
 		"class-variance-authority": "^0.7.1",
 		"framer-motion": "^12.18.1",
