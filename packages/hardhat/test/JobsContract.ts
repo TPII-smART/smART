@@ -261,7 +261,7 @@ describe("JobsContract", function () {
       const tx = await jobsContract.connect(freelancer).confirmCompletion(0, 0);
       await expect(tx)
         .to.emit(jobsContract, "FreelancerMarkedAsDelivered")
-        .withArgs(0, 0, freelancer.address, anyValue);
+        .withArgs(0, 0, freelancer.address, client.address, anyValue);
     });
 
     it("Should allow client to mark job as received", async function () {
