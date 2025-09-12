@@ -326,10 +326,6 @@ export const getGigById = gql`
       rating
       acceptedApplicationId
       gigBannerImageHash
-      submissionComment
-      clientResponse
-      resource
-      isLink
     }
   }
 `;
@@ -340,6 +336,21 @@ export const getMyGigRatings = gql`
       items {
         gigId
         rating
+      }
+    }
+  }
+`;
+
+export const getDeliverablesForGig = gql`
+  query GetDeliverablesForGig($gigId: BigInt!) {
+    gigDeliverables(where: { gigId: $gigId }) {
+      items {
+        gigId
+        resource
+        submissionComment
+        clientResponse
+        isLink
+        uploadedAt
       }
     }
   }

@@ -147,10 +147,6 @@ export const getJobsFromPosting = gql`
         clientRejected
         clientCancelled
         freelancerCancelled
-        clientResponse
-        submissionComment
-        resource
-        isLink
       }
     }
   }
@@ -219,7 +215,6 @@ export const getHires = gql`
         state
         createdAt
         acceptedAt
-        uploadedAt
         finishedAt
         canceledAt
         deliveredAt
@@ -228,9 +223,6 @@ export const getHires = gql`
         freelancerDelivered
         clientCancelled
         freelancerCancelled
-        submissionComment
-        resource
-        isLink
       }
     }
   }
@@ -308,6 +300,21 @@ export const getJobAndHiresPaginated = gql`
         hasPreviousPage
       }
       totalCount
+    }
+  }
+`;
+
+export const getDeliverablesForJob = gql`
+  query GetDeliverablesForJob($jobId: BigInt!, $postingId: BigInt!) {
+    jobDeliverables(where: { jobId: $jobId, postingId: $postingId }) {
+      items {
+        resource
+        uploadedAt
+        submissionComment
+        clientResponse
+        isLink
+        lastTransactionHash
+      }
     }
   }
 `;

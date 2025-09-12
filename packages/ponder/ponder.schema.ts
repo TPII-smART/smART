@@ -40,14 +40,9 @@ export const job = onchainTable(
 		emitBy: t.varchar({ length: 128 }),
 		rating: t.integer(), // Rating given by the client to the freelancer
 		clientReceived: t.boolean().notNull(),
-		resource: t.varchar({ length: 256 }),
-		uploadedAt: t.bigint(),
-		submissionComment: t.varchar({ length: 512 }),
-		clientResponse: t.varchar({ length: 512 }),
 		clientRejected: t.boolean().notNull(),
 		clientCancelled: t.boolean().notNull(),
 		freelancerCancelled: t.boolean().notNull(),
-		isLink: t.boolean(),
 		freelancerDelivered: t.boolean().notNull(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
@@ -86,10 +81,6 @@ export const gig = onchainTable("gig", (t) => ({
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
-	resource: t.varchar({ length: 256 }),
-	isLink: t.boolean().notNull(),
-	submissionComment: t.varchar({ length: 512 }),
-	clientResponse: t.varchar({ length: 512 }),
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 
@@ -154,3 +145,38 @@ export const notification = onchainTable(
 		pk: primaryKey({ columns: [table.id, table.user] }),
 	})
 );
+
+
+export const jobDeliverable = onchainTable(
+  "jobDeliverable",
+  t => ({
+    jobId: t.bigint().notNull(),
+    postingId: t.bigint().notNull(),
+    resource: t.varchar({ length: 256 }).notNull(),
+    uploadedAt: t.bigint().notNull(),
+    submissionComment: t.varchar({ length: 512 }),
+    clientResponse: t.varchar({ length: 512 }),
+    isLink: t.boolean().notNull(),
+    lastTransactionHash: t.varchar({ length: 256 }).notNull(),
+  }),
+  table => ({
+    pk: primaryKey({ columns: [table.jobId, table.postingId, table.uploadedAt] }),
+  })
+);
+
+export const gigDeliverable = onchainTable(
+  "gigDeliverables",
+  t => ({
+    gigId: t.bigint().notNull(),
+    resource: t.varchar({ length: 256 }).notNull(),
+    uploadedAt: t.bigint().notNull(),
+    submissionComment: t.varchar({ length: 512 }),
+    clientResponse: t.varchar({ length: 512 }),
+    isLink: t.boolean().notNull(),
+    lastTransactionHash: t.varchar({ length: 256 }).notNull(),
+  }),
+  table => ({
+    pk: primaryKey({ columns: [table.gigId, table.uploadedAt] }),
+  })
+);
+

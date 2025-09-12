@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { job, jobPosting, notification } from "ponder:schema";
+import { job, jobPosting, notification, jobDeliverable } from "ponder:schema";
 import { JobState } from "@se-2/common";
 
 // Event handlers for the JobsContract
@@ -132,35 +132,41 @@ ponder.on(
 	}
 );
 
-ponder.on("JobsContract:FileUploaded", async ({ event, context }) => {
-	// Updates the job to mark it as file uploaded
-	await context.db
-		.update(job, {
-			jobId: event.args.jobId,
-			postingId: event.args.postingId,
-		})
-		.set({
-			resource: event.args.resource,
-			submissionComment: event.args.submissionComment,
-			isLink: event.args.isLink,
-			uploadedAt: BigInt(event.block.timestamp),
-			lastTransactionHash: event.transaction.hash,
-		});
-});
+ponder.on(
+	"JobsContract:FileUploaded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.insert(jobDeliverable)
+			.values({
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+				resource: event.args.resource,
+				submissionComment: event.args.submissionComment,
+				isLink: event.args.isLink,
+				uploadedAt: BigInt(event.block.timestamp),
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
 
 // This event is triggered when a a client add a comment to the uploaded file.
-ponder.on("JobsContract:CommentAdded", async ({ event, context }) => {
-	// Updates the job to mark it as file uploaded
-	await context.db
-		.update(job, {
-			jobId: event.args.jobId,
-			postingId: event.args.postingId,
-		})
-		.set({
-			clientResponse: event.args.response,
-			lastTransactionHash: event.transaction.hash,
-		});
-});
+ponder.on(
+	"JobsContract:CommentAdded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.update(jobDeliverable, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+				uploadedAt: BigInt(event.args.fileUploadedAt),
+			})
+			.set({
+				clientResponse: event.args.response,
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
 
 // This event is triggered when a job is marked as received by the client.
 ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {

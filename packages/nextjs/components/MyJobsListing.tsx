@@ -33,8 +33,6 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
     },
   });
 
-  console.log(data);
-
   const reload = async () => {
     queryClient.invalidateQueries({ queryKey: ["jobPostingWithJobs", postingId] });
     await new Promise(resolve => setTimeout(resolve, 1000));

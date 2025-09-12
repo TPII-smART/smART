@@ -1,6 +1,7 @@
 import { endpoint } from "../../config";
 import * as JobQueries from "./job.queries";
 import request from "graphql-request";
+import { Deliverable } from "~~/types/deliverable";
 import { Job, JobPosting } from "~~/types/job";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
 
@@ -158,4 +159,12 @@ export const fetchJobsAndHiresPaginated = async (
       // hasPreviousPage: res.jobs.pageInfo.hasPreviousPage,
     },
   };
+};
+
+export const fetchDeliverablesForJob = async (postingId: string, jobId: string) => {
+  const res = await request<{ jobDeliverables: { items: Deliverable[] } }>(endpoint, JobQueries.getDeliverablesForJob, {
+    jobId,
+    postingId,
+  });
+  return res.jobDeliverables?.items ?? [];
 };
