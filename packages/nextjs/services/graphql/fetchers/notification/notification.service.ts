@@ -69,6 +69,7 @@ export const fetchNotificationsByUserPaginated = async (
           href
           createdAt
           status
+          itemId
         }
         pageInfo {
           endCursor

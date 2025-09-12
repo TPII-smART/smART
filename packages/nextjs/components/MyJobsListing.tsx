@@ -8,7 +8,6 @@ import JobCard from "@/components/Card/JobCard/JobCard";
 import { jobState } from "@/components/Card/JobState/jobState.data";
 import ComboBox from "@/components/ComboBox/ComboBox";
 import { InputBase } from "@/components/scaffold-eth";
-import { JobState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchJobPostingWithJobs } from "~~/services/graphql/fetchers/job/job.service";
 import { Job, JobPosting } from "~~/types/job/job.types";
@@ -17,6 +16,8 @@ type JobPostingData = {
   posting: JobPosting;
   jobs: Job[];
 };
+
+const jobStatesWithAll = [{ id: -1, label: "All" }, ...jobState];
 
 export default function MyJobsListing({ postingId }: { postingId: string }) {
   const searchParams = useSearchParams();
@@ -41,6 +42,8 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
   const filterJobsByState = useCallback(
     (state: number) => {
       if (!data || !data.jobs) return [];
+      if (state === -1) return data.jobs;
+
       return data.jobs.filter(job => job.state === state);
     },
     [data],
@@ -48,9 +51,8 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
 
   // Initialize state from URL parameters
   const initialSearch = searchParams?.get("search") || "";
-  const initialState = searchParams?.get("state")
-    ? parseInt(searchParams.get("state") as string)
-    : JobState.WaitingForApproval;
+  const initialItemId = searchParams?.get("itemId") || "";
+  const initialState = searchParams?.get("state") ? parseInt(searchParams.get("state") as string) : -1;
 
   const [form, setForm] = useState({
     currentSelectedState: initialState,
@@ -123,7 +125,7 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
                   }));
                 }}
                 value={form.currentSelectedState}
-                options={jobState}
+                options={jobStatesWithAll}
               />
             </div>
           </div>
@@ -131,7 +133,12 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
             {form.filteredJobs && form.filteredJobs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {form.filteredJobs.map(job => (
-                  <JobCard key={`${job.jobId}-${job.postingId}`} job={job} reload={reload} />
+                  <JobCard
+                    key={`${job.jobId}-${job.postingId}`}
+                    job={job}
+                    reload={reload}
+                    highlight={initialItemId === job.jobId}
+                  />
                 ))}
               </div>
             ) : (

@@ -8,4 +8,5 @@ export interface Notification {
   href?: string;
   createdAt: string;
   status: NotificationStatus;
+  itemId?: bigint;
 }

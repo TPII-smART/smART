@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { RedirectType, redirect } from "next/navigation";
+import Link from "next/link";
 import { styled } from "@mui/material";
 import { NotificationStatus } from "@se-2/common";
 import { useAccount } from "wagmi";
@@ -42,10 +42,12 @@ const NotificationCard = ({
   notification,
   checked,
   onChange,
+  onNavigate,
 }: {
   notification: Notification;
   checked: boolean;
   onChange: (id: string) => void;
+  onNavigate: (status: NotificationStatus, ids: string[]) => Promise<void>;
 }) => {
   const [createdAt, setCreatedAt] = useState<string>("");
 
@@ -54,13 +56,18 @@ const NotificationCard = ({
   }, [notification.createdAt]);
 
   return (
-    <div
+    <Link
       key={notification.id}
       className={`
         flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
         ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
       `}
-      onClick={() => (notification.href ? redirect(notification.href, RedirectType.push) : undefined)}
+      href={{ pathname: notification.href ?? "#", query: notification.href ? { itemId: notification.itemId } : {} }}
+      onClick={
+        notification.status === NotificationStatus.UNREAD
+          ? () => onNavigate(NotificationStatus.READ, [notification.id])
+          : undefined
+      }
     >
       {notification.status === NotificationStatus.UNREAD ? (
         <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-accent`} />
@@ -84,7 +91,7 @@ const NotificationCard = ({
         <p className="text-sm opacity-80">{notification.message}</p>
         <span className="text-xs mt-1 text-gray-400">{createdAt}</span>
       </div>
-    </div>
+    </Link>
   );
 };
 
@@ -122,6 +129,14 @@ const NotificationsDashboard = () => {
     setDataFunction: setLocalNotifications,
     loadingFunction: setLoading,
   });
+
+  useEffect(() => {
+    if (!userAddress) {
+      return;
+    }
+
+    refreshUnreadCount();
+  }, [userAddress, refreshUnreadCount]);
 
   useEffect(() => {
     if (!userAddress) {
@@ -163,14 +178,19 @@ const NotificationsDashboard = () => {
     }
   };
 
+  const changeNotificationsStatus = async (status: NotificationStatus, ids: string[]) => {
+    const transactionHash = await changeNotificationStatus({
+      functionName: "changeNotificationsStatus",
+      args: [ids, status],
+    });
+    await waitTransaction("notification", transactionHash);
+    await refreshUnreadCount();
+  };
+
   const handleSelected = async (status: NotificationStatus) => {
     try {
       showSpinner();
-      const transactionHash = await changeNotificationStatus({
-        functionName: "changeNotificationsStatus",
-        args: [selectedNotifications, status],
-      });
-      await waitTransaction("notification", transactionHash);
+      await changeNotificationsStatus(status, selectedNotifications);
 
       const updatedLocalNotifications = localNotifications
         .map(n => {
@@ -181,7 +201,6 @@ const NotificationsDashboard = () => {
         })
         .filter(notification => getActiveViewStatusList(activeView).includes(notification.status));
 
-      await refreshUnreadCount();
       setLocalNotifications(updatedLocalNotifications);
       setSelectedNotifications([]);
     } catch (error) {
@@ -306,6 +325,7 @@ const NotificationsDashboard = () => {
                   checked={selectedNotifications.includes(notification.id)}
                   notification={notification}
                   onChange={handleCheckboxChange}
+                  onNavigate={changeNotificationsStatus}
                 />
               ))
             : !loading && (
