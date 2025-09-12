@@ -5,6 +5,7 @@ import { UniversalCard } from "@/components/Card/UniversalCard";
 import RatingStars from "@/components/RatingStars";
 import { cn } from "@/lib/utils";
 import { JobState } from "@se-2/common";
+import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -16,6 +17,8 @@ import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
+import { fetchDeliverablesForJob } from "~~/services/graphql/fetchers/job/job.service";
+import { Deliverable } from "~~/types/deliverable";
 import { getJobStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
 export default function JobCard({ job, reload, className }: JobCardProps) {
@@ -35,6 +38,15 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
 
   const statusInfo = getJobStatus(jobStatus, job, isFreelancer, isClient);
   const StatusIcon = statusInfo.icon;
+
+  const { data, isLoading, refetch } = useQuery<Deliverable[]>({
+    queryKey: ["jobDeliverable", job.postingId, job.jobId],
+    queryFn: async () => {
+      const result = await fetchDeliverablesForJob(job.postingId, job.jobId);
+      return result;
+    },
+  });
+  console.log("Deliverables data:", data);
 
   const handleAccept = async () => {
     try {
@@ -89,6 +101,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     try {
       if (isFreelancer && fileData) {
         await handleUploadFile(fileData);
+        await refetch();
       }
 
       if (isClient && clientResponse) {
@@ -111,7 +124,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
     try {
       let resource = "";
       const isLink = fileData.isLink;
-      console.log("entre");
 
       if (!job.jobId) return;
 
@@ -323,6 +335,11 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
       .max(5, "Rating must be between 1 and 5"),
   });
 
+  const resource = data?.[data?.length - 1]?.resource;
+  const isLink = data?.[data?.length - 1]?.isLink;
+  const submissionComment = data?.[data?.length - 1]?.submissionComment;
+  const clientResponse = data?.[data?.length - 1]?.clientResponse;
+
   return (
     <>
       <UniversalCard
@@ -350,8 +367,6 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
       />
 
-      {console.log("job.resource", job.resource, job.isLink)}
-
       <DeliverableReviewModal
         isOpen={showDeliverableModal}
         onApprove={handleConfirmCompletion}
@@ -359,11 +374,11 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         onClose={() => setShowDeliverableModal(false)}
         modalTitle="Deliverable Review"
         modalDescription="Please review the deliverable and provide your feedback."
-        resource={job.resource}
-        isLink={job.isLink}
-        comment={isClient ? job.submissionComment : job.clientResponse}
+        resource={resource || ""}
+        isLink={isLink || false}
+        comment={isClient ? submissionComment || "" : clientResponse || ""}
         canUploadFile={isFreelancer && isRejected}
-        loading={isMining}
+        loading={isMining && isLoading}
       />
 
       {/* Rating modal for client */}

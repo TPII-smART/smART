@@ -57,6 +57,7 @@ export interface Job {
    * (Optional) ISO date string representing when the job was delivered.
    */
   deliveredAt?: string;
+
   /**
    * (Optional) Number between 1 and 5 representing the job rating.
    */
@@ -76,21 +77,6 @@ export interface Job {
 
   /** (Optional) Boolean indicating if the freelancer has canceled the job. */
   freelancerCancelled?: boolean;
-
-  /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
-  resource: string;
-
-  /** (Optional) ISO date string representing when the deliverable was uploaded. */
-  uploadedAt: string;
-
-  /** (Optional) Comment provided by the freelancer upon submission. */
-  submissionComment: string;
-
-  /** (Optional) Comment provided by the client upon review. */
-  clientResponse: string;
-
-  /** (Optional) Boolean indicating if the submitted resource is a link. */
-  isLink: boolean;
 
   /** (Optional) Ethereum address of the user who emitted the job event, formatted as a hexadecimal string. */
   emitBy?: `0x${string}`;

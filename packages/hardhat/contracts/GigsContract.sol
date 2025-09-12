@@ -80,7 +80,7 @@ contract GigsContract {
         bool clientRejected; // Whether the client has rejected the job results
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
-        FileInfo fileInfo; // Store the file related to the job
+        FileInfo[] fileInfo; // Store the file related to the job
     }
 
     // State variables of the contract
@@ -142,7 +142,13 @@ contract GigsContract {
         uint256 timestamp
     );
 
-    event CommentAdded(uint256 indexed gigId, address indexed client, string response, uint256 timestamp);
+    event CommentAdded(
+        uint256 indexed gigId,
+        address indexed client,
+        string response,
+        uint256 fileUploadedAt,
+        uint256 timestamp
+    );
 
     event GigCancelled(
         uint256 indexed gigId,
@@ -535,7 +541,7 @@ contract GigsContract {
         require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
-        gig.fileInfo = FileInfo({
+        FileInfo memory fileInfo = FileInfo({
             resource: _fileParams.resource,
             submissionComment: _fileParams.submissionComment,
             uploadedAt: block.timestamp,
@@ -543,13 +549,23 @@ contract GigsContract {
             isLink: _fileParams.isLink
         });
 
+        gig.fileInfo.push(
+            FileInfo({
+                resource: _fileParams.resource,
+                submissionComment: _fileParams.submissionComment,
+                uploadedAt: block.timestamp,
+                clientResponse: "",
+                isLink: _fileParams.isLink
+            })
+        );
+
         emit FileUploaded(
             _gigId,
             msg.sender,
-            gig.fileInfo.resource,
-            gig.fileInfo.submissionComment,
-            gig.fileInfo.isLink,
-            gig.fileInfo.uploadedAt
+            fileInfo.resource,
+            fileInfo.submissionComment,
+            fileInfo.isLink,
+            fileInfo.uploadedAt
         );
     }
 
@@ -560,14 +576,15 @@ contract GigsContract {
      */
     function addCommentToGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
+        FileInfo storage fileInfo = gig.fileInfo[gig.fileInfo.length - 1];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
         require(bytes(_comment).length > 0, "Comment cannot be empty.");
         require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
 
-        gig.fileInfo.clientResponse = _comment;
+        fileInfo.clientResponse = _comment;
 
-        emit CommentAdded(_gigId, msg.sender, _comment, block.timestamp);
+        emit CommentAdded(_gigId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
     }
 
     function rejectGig(uint256 _gigId) external onlyClient(_gigId) gigExists(_gigId) {

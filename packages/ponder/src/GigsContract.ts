@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { gig, gigApplication, notification } from "ponder:schema";
+import { gig, gigApplication, notification, gigDeliverable } from "ponder:schema";
 import { GigState, ApplicationState } from "@se-2/common";
 
 // Listen for Gig creation
@@ -254,10 +254,9 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 
 ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
 	await context.db
-		.update(gig, {
+		.insert(gigDeliverable)
+		.values({
 			gigId: event.args.gigId,
-		})
-		.set({
 			resource: event.args.resource,
 			submissionComment: event.args.submissionComment,
 			isLink: event.args.isLink,
@@ -272,8 +271,9 @@ ponder.on(
 	async ({ event, context }) => {
 		// Updates the gig to mark it as file uploaded
 		await context.db
-			.update(gig, {
+			.update(gigDeliverable, {
 				gigId: event.args.gigId,
+				uploadedAt: BigInt(event.args.fileUploadedAt),
 			})
 			.set({
 				clientResponse: event.args.response,

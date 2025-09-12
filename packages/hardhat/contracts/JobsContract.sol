@@ -42,7 +42,7 @@ contract JobsContract {
         bool clientRejected; // Whether the client has rejected the job results
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
-        FileInfo fileInfo; // Store the file related to the job
+        FileInfo[] fileInfo; // Store the file related to the job
     }
 
     // Struct that reduces the amount of parameters needed when submitting a Job
@@ -116,6 +116,7 @@ contract JobsContract {
         uint256 indexed postingId,
         uint256 indexed jobId,
         address freelancer,
+        address client,
         uint256 timestamp
     );
 
@@ -156,6 +157,7 @@ contract JobsContract {
         uint256 indexed jobId,
         address indexed client,
         string response,
+        uint256 fileUploadedAt,
         uint256 timestamp
     );
 
@@ -311,13 +313,7 @@ contract JobsContract {
             clientRejected: false,
             clientCancelled: false,
             freelancerCancelled: false,
-            fileInfo: FileInfo({
-                resource: "",
-                uploadedAt: 0,
-                submissionComment: "",
-                clientResponse: "",
-                isLink: false
-            })
+            fileInfo: new FileInfo[](0)
         });
 
         // Add job to the posting
@@ -383,7 +379,7 @@ contract JobsContract {
         } else {
             require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
             job.freelancerDelivered = true;
-            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, block.timestamp);
+            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
         }
 
         // If both parties have confirmed, complete the job
@@ -501,7 +497,11 @@ contract JobsContract {
         string memory comment,
         string memory ipfsHash
     ) external view returns (bool) {
-        FileInfo memory fileInfo = postedJobs[postingId].jobs[jobId].fileInfo;
+        Job storage job = postedJobs[postingId].jobs[jobId];
+        if (job.fileInfo.length == 0) {
+            return false;
+        }
+        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
 
         return
             bytes(fileInfo.resource).length > 0 &&
@@ -533,7 +533,7 @@ contract JobsContract {
         require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
-        job.fileInfo = FileInfo({
+        FileInfo memory fileToUpload = FileInfo({
             resource: _fileParams.resource,
             submissionComment: _fileParams.submissionComment,
             uploadedAt: block.timestamp,
@@ -541,14 +541,16 @@ contract JobsContract {
             isLink: _fileParams.isLink
         });
 
+        job.fileInfo.push(fileToUpload);
+
         emit FileUploaded(
             _postingId,
             _jobId,
             msg.sender,
-            job.fileInfo.resource,
-            job.fileInfo.submissionComment,
-            job.fileInfo.isLink,
-            job.fileInfo.uploadedAt
+            fileToUpload.resource,
+            fileToUpload.submissionComment,
+            fileToUpload.isLink,
+            fileToUpload.uploadedAt
         );
     }
 
@@ -564,14 +566,15 @@ contract JobsContract {
         string calldata _comment
     ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
+        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
 
         require(job.state == JobState.Ongoing, "The job is not ongoing.");
         require(bytes(_comment).length > 0, "Comment cannot be empty.");
         require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
 
-        job.fileInfo.clientResponse = _comment;
+        fileInfo.clientResponse = _comment;
 
-        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, block.timestamp);
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
     }
 
     function rejectJob(

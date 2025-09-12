@@ -97,21 +97,6 @@ export class Gig {
   /** (Optional) Boolean indicating if the freelancer has canceled the job. */
   freelancerCancelled?: boolean;
 
-  /** (Optional) Hash or URL of the resource submitted for the job deliverable. */
-  resource: string;
-
-  /** (Optional) ISO date string representing when the deliverable was uploaded. */
-  uploadedAt: string;
-
-  /** (Optional) Comment provided by the freelancer upon submission. */
-  submissionComment: string;
-
-  /** (Optional) Comment provided by the client upon review. */
-  clientResponse: string;
-
-  /** (Optional) Boolean indicating if the submitted resource is a link. */
-  isLink: boolean;
-
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;
@@ -137,11 +122,6 @@ export class Gig {
     this.clientRejected = false;
     this.clientCancelled = false;
     this.freelancerCancelled = false;
-    this.resource = "";
-    this.uploadedAt = "";
-    this.submissionComment = "";
-    this.clientResponse = "";
-    this.isLink = false;
     this.clientReceived = false;
     this.freelancerDelivered = false;
     this.acceptedApplicationId = "";

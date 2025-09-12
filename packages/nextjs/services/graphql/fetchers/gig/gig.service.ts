@@ -1,6 +1,7 @@
 import { endpoint } from "../../config";
 import * as GigQueries from "./gig.queries";
 import request from "graphql-request";
+import { Deliverable } from "~~/types/deliverable";
 import { Application, Gig } from "~~/types/gig";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
 
@@ -223,7 +224,23 @@ export const fetchGigById = async (gigId: string) => {
   return res.gig;
 };
 
+export const fetchDeliverablesForGig = async (gigId: string) => {
+  const res = await request<{ gigDeliverables: { items: Deliverable[] } }>(endpoint, GigQueries.getDeliverablesForGig, {
+    gigId: gigId,
+  });
+  return res.gigDeliverables.items ?? [];
+};
+
 export const fetchGigWithApplication = async (gigId: string) => {
   const [gig, applications] = await Promise.all([fetchGigById(gigId), fetchApplicationsForGig(gigId)]);
   return { gig, applications };
+};
+
+export const fetchGigWithApplicationAndDeliverables = async (gigId: string) => {
+  const [gig, applications, deliverables] = await Promise.all([
+    fetchGigById(gigId),
+    fetchApplicationsForGig(gigId),
+    fetchDeliverablesForGig(gigId),
+  ]);
+  return { gig, applications, deliverables };
 };

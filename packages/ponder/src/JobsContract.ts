@@ -1,5 +1,5 @@
 import { ponder } from "ponder:registry";
-import { job, jobPosting, notification } from "ponder:schema";
+import { job, jobPosting, notification, jobDeliverable } from "ponder:schema";
 import { JobState } from "@se-2/common";
 
 // Event handlers for the JobsContract
@@ -134,11 +134,10 @@ ponder.on(
 	async ({ event, context }) => {
 		// Updates the job to mark it as file uploaded
 		await context.db
-			.update(job, {
+			.insert(jobDeliverable)
+			.values({
 				jobId: event.args.jobId,
 				postingId: event.args.postingId,
-			})
-			.set({
 				resource: event.args.resource,
 				submissionComment: event.args.submissionComment,
 				isLink: event.args.isLink,
@@ -154,9 +153,10 @@ ponder.on(
 	async ({ event, context }) => {
 		// Updates the job to mark it as file uploaded
 		await context.db
-			.update(job, {
+			.update(jobDeliverable, {
 				jobId: event.args.jobId,
 				postingId: event.args.postingId,
+				uploadedAt: BigInt(event.args.fileUploadedAt),
 			})
 			.set({
 				clientResponse: event.args.response,

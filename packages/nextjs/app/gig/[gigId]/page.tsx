@@ -19,13 +19,15 @@ import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
-import { fetchGigWithApplication } from "~~/services/graphql/fetchers/gig/gig.service";
-import { Application, Gig } from "~~/types/gig/gig.types";
+import { fetchGigWithApplicationAndDeliverables } from "~~/services/graphql/fetchers/gig/gig.service";
+import { Deliverable } from "~~/types/deliverable";
+import { Application, Gig } from "~~/types/gig";
 import { getGigStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
 type GigData = {
   gig: Gig;
   applications: Application[];
+  deliverables: Deliverable[];
 };
 
 export default function GigPage() {
@@ -41,16 +43,19 @@ export default function GigPage() {
   });
 
   const { data, isLoading, refetch } = useQuery<GigData>({
-    queryKey: ["gigWithApplication", gigId],
+    queryKey: ["gigWithApplicationAndDeliverables", gigId],
     queryFn: async () => {
-      const result = await fetchGigWithApplication(gigId as string);
+      const result = await fetchGigWithApplicationAndDeliverables(gigId as string);
       return {
         gig: result.gig,
         applications: result.applications.applications,
+        deliverables: result.deliverables,
       };
     },
     enabled: typeof gigId === "string" && !!gigId,
   });
+
+  console.log(data);
 
   const gigState = data?.gig.state as GigState;
   const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
@@ -83,9 +88,6 @@ export default function GigPage() {
     try {
       let resource = "";
       const isLink = fileData.isLink;
-
-      console.log("entre");
-      console.log("fileData", fileData);
 
       if (!data?.gig.gigId) return;
 
@@ -294,8 +296,17 @@ export default function GigPage() {
     return buttons;
   };
 
-  const comment = isClient ? data?.gig.submissionComment : data?.gig.clientResponse;
+  const hasDeliverables = data?.deliverables && data.deliverables.length > 0;
 
+  const comment = hasDeliverables
+    ? isClient
+      ? data.deliverables[data.deliverables.length - 1].submissionComment
+      : data.deliverables[data.deliverables.length - 1].clientResponse
+    : "";
+
+  const resource = hasDeliverables ? data.deliverables[data.deliverables.length - 1].resource : "";
+
+  const isLink = hasDeliverables ? data.deliverables[data.deliverables.length - 1].isLink : false;
   const validationSchema = Yup.object().shape({
     rating: Yup.number()
       .required("Please select a rating")
@@ -468,8 +479,6 @@ export default function GigPage() {
         modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
       />
 
-      {console.log("gig.resource", data?.gig.resource, data?.gig.isLink)}
-
       <DeliverableReviewModal
         isOpen={showDeliverableModal}
         onApprove={handleConfirmCompletion}
@@ -477,8 +486,8 @@ export default function GigPage() {
         onClose={() => setShowDeliverableModal(false)}
         modalTitle="Deliverable Review"
         modalDescription="Please review the deliverable and provide your feedback."
-        resource={data?.gig.resource ? data?.gig.resource : ""}
-        isLink={data?.gig.isLink ? data?.gig.isLink : false}
+        resource={resource ? resource : ""}
+        isLink={isLink ? isLink : false}
         comment={comment ? comment : ""}
         canUploadFile={isFreelancer && isRejected}
         loading={isMining}
