@@ -8,7 +8,7 @@ import { CheckCircleIcon, ClockIcon, ExclamationCircleIcon, XCircleIcon } from "
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 
-export default function ApplicationCard({ application, client, className, reload }: ApplicationProps) {
+export default function ApplicationCard({ application, client, className, reload, highlight }: ApplicationProps) {
   const { address: userAddress } = useAccount();
   const applicationStatus = application.state as ApplicationState;
 
@@ -206,6 +206,7 @@ export default function ApplicationCard({ application, client, className, reload
       footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
       className={className}
       cardVariant="Reduced"
+      highlight={highlight}
     />
   );
 }

@@ -42,7 +42,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
 
   const fetchFunction = useMemo(() => (type === "job" ? fetchJobPostingsPaginated : fetchGigsPaginated), [type]);
 
-  const { handleScroll, fetchPaginatedData } = usePagination<JobPosting | Gig>({
+  const { handleScroll, fetchPaginatedData, paginationPushFront } = usePagination<JobPosting | Gig>({
     fetchFunction,
     loadingFunction: setLoading,
     setDataFunction: setData,
@@ -218,7 +218,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
         type={type}
         refresh={(created: JobPosting | Gig) => {
           fetchMaxPaymentETH();
-          setData(prev => [created, ...prev]);
+          paginationPushFront(type, created);
         }}
       />
     </div>

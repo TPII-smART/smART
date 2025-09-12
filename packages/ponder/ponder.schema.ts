@@ -82,11 +82,11 @@ export const gig = onchainTable("gig", (t) => ({
 	freelancerDelivered: t.boolean().notNull(),
 	clientCancelled: t.boolean().notNull(),
 	freelancerCancelled: t.boolean().notNull(),
-	clientRejected: t.boolean().notNull(),	
+	clientRejected: t.boolean().notNull(),
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
-	resource: t.varchar({ length: 256 }),	
+	resource: t.varchar({ length: 256 }),
 	isLink: t.boolean().notNull(),
 	submissionComment: t.varchar({ length: 512 }),
 	clientResponse: t.varchar({ length: 512 }),
@@ -144,6 +144,7 @@ export const notification = onchainTable(
 		user: t.varchar({ length: 128 }).notNull(),
 		title: t.varchar({ length: 64 }).notNull(),
 		message: t.varchar({ length: 512 }).notNull(),
+		itemId: t.bigint(),
 		href: t.varchar({ length: 256 }),
 		createdAt: t.bigint().notNull(),
 		status: t.integer().notNull().default(0), // 0 = UNREAD, 1 = READ, 2 = DONE

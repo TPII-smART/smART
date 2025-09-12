@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/dist/client/components/navigation";
+import { useParams, useSearchParams } from "next/dist/client/components/navigation";
 import InfoHeader from "@/components/InfoHeader";
 import Spinner from "@/components/Spinner/Spinner";
 import { GigState } from "@se-2/common";
@@ -35,7 +35,7 @@ export default function GigPage() {
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
-
+  const searchParams = useSearchParams();
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
@@ -52,6 +52,7 @@ export default function GigPage() {
     enabled: typeof gigId === "string" && !!gigId,
   });
 
+  const initialItemId = searchParams?.get("itemId") || "";
   const gigState = data?.gig.state as GigState;
   const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
   const isFreelancer = data?.gig.acceptedFreelancer?.toLowerCase() === userAddress?.toLowerCase();
@@ -328,6 +329,7 @@ export default function GigPage() {
                             client={application.gig?.client}
                             application={application}
                             reload={reload}
+                            highlight={application.applicationId === initialItemId}
                           />
                         ))}
                       </div>
