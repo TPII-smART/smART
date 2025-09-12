@@ -62,7 +62,7 @@ const NotificationCard = ({
         flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
         ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
       `}
-      href={notification.href ?? "#"}
+      href={{ pathname: notification.href ?? "#", query: notification.href ? { itemId: notification.itemId } : {} }}
       onClick={
         notification.status === NotificationStatus.UNREAD
           ? () => onNavigate(NotificationStatus.READ, [notification.id])

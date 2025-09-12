@@ -5,4 +5,5 @@ export interface ApplicationProps {
   client: `0x${string}` | undefined;
   className?: string;
   reload?: () => Promise<void>;
+  highlight?: boolean;
 }

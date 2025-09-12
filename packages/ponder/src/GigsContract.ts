@@ -23,7 +23,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		emitBy: event.transaction.from,
 		clientReceived: false,
 		clientRejected: false,
-		freelancerDelivered: false,	
+		freelancerDelivered: false,
 		clientCancelled: false,
 		freelancerCancelled: false,
 		acceptedApplicationId: null,
@@ -56,8 +56,9 @@ ponder.on("GigsContract:ApplicationSubmitted", async ({ event, context }) => {
 		user: _gig?.client as unknown as string,
 		title: "New Application Received",
 		message: `New application submitted for your gig "${_gig?.title}"`,
-		href: `/gigs/${event.args.gigId}`,
+		href: `/gig/${event.args.gigId}`,
 		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
 	});
 });
 
@@ -97,8 +98,9 @@ ponder.on("GigsContract:ApplicationAccepted", async ({ event, context }) => {
 		user: event.args.freelancer,
 		title: "Your application was accepted",
 		message: `Your application for gig "${_gig?.title}" was accepted`,
-		href: `/gigs/${event.args.gigId}`,
+		href: `/gig/${event.args.gigId}`,
 		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
 	});
 });
 
@@ -139,8 +141,9 @@ ponder.on("GigsContract:ApplicationRejected", async ({ event, context }) => {
 		user: _app?.freelancer as unknown as string,
 		title: "Your application was rejected",
 		message: `Your application for gig "${_gig?.title}" was rejected`,
-		href: `/gigs/${event.args.gigId}`,
+		href: `/gig/${event.args.gigId}`,
 		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
 	});
 });
 
@@ -166,8 +169,9 @@ ponder.on(
 			user: _gig?.client as unknown as string,
 			title: "Hired freelancer marked gig as delivered",
 			message: `Your gig "${_gig?.title}" has been marked as delivered by the freelancer.`,
-			href: `/gigs/${event.args.gigId}`,
+			href: `/gig/${event.args.gigId}`,
 			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.applicationId,
 		});
 	}
 );
@@ -191,8 +195,9 @@ ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		user: _gig?.acceptedFreelancer as unknown as string,
 		title: "Client marked gig as delivered",
 		message: `Your work in "${_gig?.title}" has been marked as delivered by the client.`,
-		href: `/gigs/${event.args.gigId}`,
+		href: `/gig/${event.args.gigId}`,
 		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
 	});
 });
 
@@ -231,8 +236,9 @@ ponder.on("GigsContract:GigRated", async ({ event, context }) => {
 		message: `Your work in "${
 			_gig?.title
 		}" has been rated by the client with ${event.args.rating || 0n} ⭐.`,
-		href: `/gigs/${event.args.gigId}`,
+		href: `/gig/${event.args.gigId}`,
 		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
 	});
 });
 
@@ -250,6 +256,50 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
+
+	const _gig = await context.db.find(gig, { gigId: event.args.gigId });
+
+	if (event.args.freelancerCancelled && event.args.clientCancelled) {
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _gig?.acceptedFreelancer as unknown as string,
+			title: "The application was cancelled",
+			message: `The application for gig "${_gig?.title}" has been cancelled.`,
+			href: `/gig/${event.args.gigId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.applicationId,
+		});
+
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _gig?.client as unknown as string,
+			title: "The application was cancelled",
+			message: `The application for gig "${_gig?.title}" has been cancelled.`,
+			href: `/gig/${event.args.gigId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.applicationId,
+		});
+	} else if (event.args.clientCancelled) {
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _gig?.acceptedFreelancer as unknown as string,
+			title: "The application was cancelled by the client",
+			message: `The client for gig "${_gig?.title}" wants to cancel it.`,
+			href: `/gig/${event.args.gigId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.applicationId,
+		});
+	} else if (event.args.freelancerCancelled) {
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _gig?.client as unknown as string,
+			title: "The application was cancelled by the freelancer",
+			message: `The freelancer for gig "${_gig?.title}" wants to cancel it.`,
+			href: `/gig/${event.args.gigId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.applicationId,
+		});
+	}
 });
 
 ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
@@ -267,22 +317,19 @@ ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
 });
 
 // This event is triggered when a a client add a comment to the uploaded file.
-ponder.on(
-	"GigsContract:CommentAdded",
-	async ({ event, context }) => {
-		// Updates the gig to mark it as file uploaded
-		await context.db
-			.update(gig, {
-				gigId: event.args.gigId,
-			})
-			.set({
-				clientResponse: event.args.response,
-				lastTransactionHash: event.transaction.hash,
-			});
-	}
-);
+ponder.on("GigsContract:CommentAdded", async ({ event, context }) => {
+	// Updates the gig to mark it as file uploaded
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			clientResponse: event.args.response,
+			lastTransactionHash: event.transaction.hash,
+		});
+});
 
-ponder.on("GigsContract:GigRejected", async ({event, context}) => {
+ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 	await context.db
 		.update(gig, {
 			gigId: event.args.gigId,
@@ -298,19 +345,13 @@ ponder.on("GigsContract:GigRejected", async ({event, context}) => {
 
 	const _gig = await context.db.find(gig, { gigId: event.args.gigId });
 
-	const user =
-		event.transaction.from === _gig?.client
-			? _gig?.acceptedFreelancer
-			: _gig?.client;
-
-	if (user) {
-		await context.db.insert(notification).values({
-			id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
-			user: user as unknown as string,
-			title: "Gig Cancelled",
-			message: `The gig "${_gig?.title}" has been cancelled.`,
-			href: `/gigs/${event.args.gigId}`,
-			createdAt: BigInt(event.block.timestamp),
-		});
-	}
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: _gig?.acceptedFreelancer as unknown as string,
+		title: "Gig application rejected",
+		message: `The application for gig "${_gig?.title}" has been rejected by the client.`,
+		href: `/gig/${event.args.gigId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
+	});
 });

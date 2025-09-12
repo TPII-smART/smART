@@ -18,7 +18,7 @@ import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { getJobStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
-export default function JobCard({ job, reload, className }: JobCardProps) {
+export default function JobCard({ job, reload, className, highlight }: JobCardProps) {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobState;
   const [showUploadModal, setShowUploadModal] = useState(false);
@@ -339,6 +339,7 @@ export default function JobCard({ job, reload, className }: JobCardProps) {
         footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
         className={className}
         cardVariant="Reduced"
+        highlight={highlight}
       />
       {/* Confirm Modal */}
       <UploadFileForm
