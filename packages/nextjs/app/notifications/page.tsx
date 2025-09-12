@@ -125,6 +125,14 @@ const NotificationsDashboard = () => {
 
   useEffect(() => {
     if (!userAddress) {
+      return;
+    }
+
+    refreshUnreadCount();
+  }, [userAddress, refreshUnreadCount]);
+
+  useEffect(() => {
+    if (!userAddress) {
       setLocalNotifications([]);
       return;
     }
