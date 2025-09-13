@@ -35,7 +35,14 @@ export const job = onchainTable(
 		acceptedAt: t.bigint(),
 		finishedAt: t.bigint(), // When the job was finished
 		canceledAt: t.bigint(), // When the job was canceled
+		deliveredAt: t.bigint(), // When the job was delivered
+		rejectedAt: t.bigint(), // When the job was rejected by the client
+		emitBy: t.varchar({ length: 128 }),
+		rating: t.integer(), // Rating given by the client to the freelancer
 		clientReceived: t.boolean().notNull(),
+		clientRejected: t.boolean().notNull(),
+		clientCancelled: t.boolean().notNull(),
+		freelancerCancelled: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
@@ -62,8 +69,16 @@ export const gig = onchainTable("gig", (t) => ({
 	acceptedAt: t.bigint(),
 	finishedAt: t.bigint(),
 	canceledAt: t.bigint(),
+	deliveredAt: t.bigint(), // When the job was delivered
+	rejectedAt: t.bigint(), // When the job was rejected by the client
+	uploadedAt: t.bigint(),
+	emitBy: t.varchar({ length: 128 }),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
+	clientCancelled: t.boolean().notNull(),
+	freelancerCancelled: t.boolean().notNull(),
+	clientRejected: t.boolean().notNull(),
+	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
@@ -80,6 +95,8 @@ export const gigApplication = onchainTable(
 		proposedDurationInHours: t.bigint().notNull(),
 		state: t.integer().notNull(),
 		createdAt: t.bigint().notNull(),
+		rejectAt: t.bigint(),
+		emitBy: t.varchar({ length: 128 }).notNull(),
 		proposalComment: t.varchar({ length: 512 }).notNull(),
 		rejectionComment: t.varchar({ length: 512 }),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
@@ -110,3 +127,56 @@ export const userProfile = onchainTable(
 		pk: primaryKey({ columns: [table.address] }),
 	})
 );
+
+export const notification = onchainTable(
+	"notification",
+	(t) => ({
+		id: t.text().notNull(),
+		user: t.varchar({ length: 128 }).notNull(),
+		title: t.varchar({ length: 64 }).notNull(),
+		message: t.varchar({ length: 512 }).notNull(),
+		itemId: t.bigint(),
+		href: t.varchar({ length: 256 }),
+		createdAt: t.bigint().notNull(),
+		status: t.integer().notNull().default(0), // 0 = UNREAD, 1 = READ, 2 = DONE
+		lastTransactionHash: t.varchar({ length: 256 }),
+	}),
+	(table) => ({
+		pk: primaryKey({ columns: [table.id, table.user] }),
+	})
+);
+
+
+export const jobDeliverable = onchainTable(
+  "jobDeliverable",
+  t => ({
+    jobId: t.bigint().notNull(),
+    postingId: t.bigint().notNull(),
+    resource: t.varchar({ length: 256 }).notNull(),
+    uploadedAt: t.bigint().notNull(),
+    submissionComment: t.varchar({ length: 512 }),
+    clientResponse: t.varchar({ length: 512 }),
+    isLink: t.boolean().notNull(),
+    lastTransactionHash: t.varchar({ length: 256 }).notNull(),
+  }),
+  table => ({
+    pk: primaryKey({ columns: [table.jobId, table.postingId, table.uploadedAt] }),
+  })
+);
+
+export const gigDeliverable = onchainTable(
+  "gigDeliverables",
+  t => ({
+    gigId: t.bigint().notNull(),
+    resource: t.varchar({ length: 256 }).notNull(),
+    uploadedAt: t.bigint().notNull(),
+    submissionComment: t.varchar({ length: 512 }),
+    clientResponse: t.varchar({ length: 512 }),
+    isLink: t.boolean().notNull(),
+    lastTransactionHash: t.varchar({ length: 256 }).notNull(),
+  }),
+  table => ({
+    pk: primaryKey({ columns: [table.gigId, table.uploadedAt] }),
+  })
+);
+

@@ -30,7 +30,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
    * - "lg": Large button, used for emphasis.
    * @default "md"
    */
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   /**
    * Optional disabled state for the button.
    * When true, the button will be unclickable and styled as disabled.

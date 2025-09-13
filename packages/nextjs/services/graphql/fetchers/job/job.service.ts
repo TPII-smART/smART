@@ -1,6 +1,7 @@
 import { endpoint } from "../../config";
 import * as JobQueries from "./job.queries";
 import request from "graphql-request";
+import { Deliverable } from "~~/types/deliverable";
 import { Job, JobPosting } from "~~/types/job";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
 
@@ -44,8 +45,16 @@ export const fetchJobPostingsPaginated = async (
     },
   );
 
+  const postingIds = res.jobPostings.items.map(item => item.postingId);
+  const ratings = await fetchRatingsGroupedByPosting(postingIds);
+  // Calculate average rating for each job posting
+  const jobPostingsWithRatings = res.jobPostings.items.map(item => ({
+    ...item,
+    rating: ratings[item.postingId]?.reduce((acc, r) => acc + r, 0) / (ratings[item.postingId]?.length || 1),
+  }));
+
   return {
-    data: res.jobPostings.items,
+    data: jobPostingsWithRatings,
     meta: {
       endCursor: res.jobPostings.pageInfo.endCursor,
       hasNextPage: res.jobPostings.pageInfo.hasNextPage,
@@ -56,18 +65,63 @@ export const fetchJobPostingsPaginated = async (
   };
 };
 
+export const fetchRatingsGroupedByPosting = async (postingIds: string[]) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getRatingsByPostingIds, {
+    postingIds,
+  });
+  const groupedRatings = res.jobs.items.reduce(
+    (acc, job) => {
+      if (!acc[job.postingId]) {
+        acc[job.postingId] = [];
+      }
+      if (job.rating) {
+        acc[job.postingId].push(job.rating);
+      }
+      return acc;
+    },
+    {} as Record<string, number[]>,
+  );
+  return groupedRatings;
+};
+
+export const fetchMyJobRatings = async (userAddress: string) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getMyJobRatings, {
+    userAddress: userAddress,
+  });
+  return { jobs: res.jobs.items };
+};
+
 export const fetchMyJobPostings = async (userAddress: string) => {
   const res = await request<{ jobPostings: { items: JobPosting[] } }>(endpoint, JobQueries.getMyJobPostings, {
     userAddress: userAddress,
   });
-  return { jobPostings: res.jobPostings.items };
+  const postingIds = res.jobPostings.items.map(item => item.postingId);
+  const ratings = await fetchRatingsGroupedByPosting(postingIds);
+  // Calculate average rating for each job posting
+  const jobPostingsWithRatings = res.jobPostings.items.map(item => ({
+    ...item,
+    rating: ratings[item.postingId]?.reduce((acc, r) => acc + r, 0) / (ratings[item.postingId]?.length || 1),
+  }));
+  return { jobPostings: jobPostingsWithRatings };
 };
 
 export const fetchJobsFromPosting = async (postingId: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobsFromPosting, {
     postingId: postingId,
   });
-  return { jobs: res.jobs.items };
+  return res.jobs.items;
+};
+
+export const fetchJobPostingById = async (postingId: string) => {
+  const res = await request<{ jobPosting: JobPosting }>(endpoint, JobQueries.getJobPostingById, {
+    postingId: postingId,
+  });
+  return res.jobPosting;
+};
+
+export const fetchJobPostingWithJobs = async (postingId: string) => {
+  const [posting, jobs] = await Promise.all([fetchJobPostingById(postingId), fetchJobsFromPosting(postingId)]);
+  return { posting: posting, jobs: jobs };
 };
 
 export const fetchMyJobs = async (userAddress: string) => {
@@ -83,4 +137,39 @@ export const fetchHires = async (userAddress: string) => {
 export const fetchJob = async (postingId: string, jobId: string) => {
   const res = await request<{ job: Job }>(endpoint, JobQueries.getJob, { postingId, jobId });
   return res.job;
+};
+
+export const fetchJobsAndHires = async (userAddress: string) => {
+  const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobAndHires, { address: userAddress });
+  return { jobs: res.jobs.items };
+};
+
+export const fetchJobsAndHiresPaginated = async (
+  meta: PaginationMetaArg,
+  userAddress: string,
+): Promise<Paginated<Job>> => {
+  const res = await request<{ jobs: PaginationQueryResponse<Job> }>(endpoint, JobQueries.getJobAndHiresPaginated, {
+    address: userAddress,
+    limit: meta.limit,
+    startCursor: meta.startCursor,
+    endCursor: meta.endCursor,
+  });
+  return {
+    data: res.jobs.items,
+    meta: {
+      endCursor: res.jobs.pageInfo.endCursor,
+      hasNextPage: res.jobs.pageInfo.hasNextPage,
+      totalCount: res.jobs.totalCount,
+      startCursor: res.jobs.pageInfo.startCursor,
+      // hasPreviousPage: res.jobs.pageInfo.hasPreviousPage,
+    },
+  };
+};
+
+export const fetchDeliverablesForJob = async (postingId: string, jobId: string) => {
+  const res = await request<{ jobDeliverables: { items: Deliverable[] } }>(endpoint, JobQueries.getDeliverablesForJob, {
+    jobId,
+    postingId,
+  });
+  return res.jobDeliverables?.items ?? [];
 };

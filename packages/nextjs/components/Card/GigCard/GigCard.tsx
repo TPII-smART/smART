@@ -4,6 +4,7 @@ import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
+import { GigState } from "@se-2/common";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -11,6 +12,7 @@ import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { waitTransaction } from "~~/lib/waitTransaction.util";
 
 class FormData {
   proposedPayment: string;
@@ -33,7 +35,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
 
   const handleApplyToGig = async (form: FormData) => {
     try {
-      await writeContractAsync({
+      const transactionHash = await writeContractAsync({
         functionName: "applyToGig",
         args: [
           BigInt(gig.gigId),
@@ -44,7 +46,9 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
           },
         ],
       });
-      if (reload) await reload();
+
+      await waitTransaction("gigApplication", transactionHash);
+      await reload?.();
       setShowApplyModal(false);
     } catch (err) {
       console.error("Create gig application failed:", err);
@@ -52,6 +56,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   };
 
   const isMyOwnGig = gig?.client?.toLowerCase() === address?.toLowerCase();
+
+  const gigState = gig?.state as GigState;
 
   // Payment display with formatting and truncation
   const formatEthPrice = (wei: bigint) => {
@@ -73,15 +79,16 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   );
 
   // Apply button
-  const applyButton = !isMyOwnGig ? (
-    <Button variant="primary" onClick={() => setShowApplyModal(true)}>
-      Apply
-    </Button>
-  ) : (
-    <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
-      Details
-    </Button>
-  );
+  const applyButton =
+    !isMyOwnGig && gigState === GigState.Open ? (
+      <Button variant="primary" onClick={() => setShowApplyModal(true)}>
+        Apply
+      </Button>
+    ) : (
+      <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
+        Details
+      </Button>
+    );
 
   const validationSchema = Yup.object().shape({
     proposedPayment: Yup.number().positive().required("Proposed payment is required"),
@@ -92,6 +99,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   return (
     <>
       <UniversalCard
+        bannerUrl={gig?.gigBannerImageHash ? gig.gigBannerImageHash : undefined}
         avatarAddress={gig?.client}
         title={gig?.title}
         description={gig?.description}

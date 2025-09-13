@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
+import { JobState } from "@se-2/common";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
-import { Job, JobStateEnum } from "~~/types/job";
+import { Job } from "~~/types/job";
 
 export function JobRoadmap({ job }: { job: Job }) {
   const formatDate = (dateString: string | undefined) => {
@@ -19,36 +20,36 @@ export function JobRoadmap({ job }: { job: Job }) {
       },
       {
         title: "Waiting for Approval",
-        date: job.state >= JobStateEnum.WaitingForApproval ? formatDate(job.createdAt) : null,
-        completed: job.state > JobStateEnum.WaitingForApproval,
-        current: job.state === JobStateEnum.WaitingForApproval,
+        date: job.state >= JobState.WaitingForApproval ? formatDate(job.createdAt) : null,
+        completed: job.state > JobState.WaitingForApproval,
+        current: job.state === JobState.WaitingForApproval,
         state: "waiting",
       },
       {
         title: "Job Accepted",
         date: job.acceptedAt ? formatDate(job.acceptedAt) : null,
-        completed: job.state > JobStateEnum.Ongoing || !!job.acceptedAt,
-        current: job.state === JobStateEnum.Ongoing,
+        completed: job.state > JobState.Ongoing || !!job.acceptedAt,
+        current: job.state === JobState.Ongoing,
         state: "accepted",
       },
       {
         title: "Freelancer Delivered",
         date: job.freelancerDelivered ? "Delivered" : null,
         completed: job.freelancerDelivered || false,
-        current: job.state === JobStateEnum.Ongoing && !job.freelancerDelivered,
+        current: job.state === JobState.Ongoing && !job.freelancerDelivered,
         state: "delivered",
       },
       {
         title: "Client Received",
         date: job.clientReceived ? "Received" : null,
         completed: job.clientReceived || false,
-        current: job.state === JobStateEnum.Ongoing && job.freelancerDelivered && !job.clientReceived,
+        current: job.state === JobState.Ongoing && job.freelancerDelivered && !job.clientReceived,
         state: "received",
       },
     ];
 
     // Add the appropriate final state based on job status
-    if (job.state === JobStateEnum.Cancelled) {
+    if (job.state === JobState.Cancelled) {
       baseSteps.push({
         title: "Job Cancelled",
         date: job.canceledAt ? formatDate(job.canceledAt) : null,
@@ -56,7 +57,7 @@ export function JobRoadmap({ job }: { job: Job }) {
         current: false,
         state: "cancelled",
       });
-    } else if (job.state === JobStateEnum.Disputed) {
+    } else if (job.state === JobState.Disputed) {
       baseSteps.push({
         title: "Job Disputed",
         date: "In Dispute",
@@ -68,7 +69,7 @@ export function JobRoadmap({ job }: { job: Job }) {
       baseSteps.push({
         title: "Job Completed",
         date: job.finishedAt ? formatDate(job.finishedAt) : null,
-        completed: job.state === JobStateEnum.Finished,
+        completed: job.state === JobState.Finished,
         current: false,
         state: "finished",
       });

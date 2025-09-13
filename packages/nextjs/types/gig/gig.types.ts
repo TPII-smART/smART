@@ -1,3 +1,4 @@
+import { GigState } from "@se-2/common";
 import { parseEther } from "viem";
 import { WorkPostingFormData } from "~~/components/WorkPostingForm/types";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
@@ -30,6 +31,9 @@ export class Gig {
   /** Category or field of the gig. */
   category?: string;
 
+  /** Hash of the banner image associated with the gig. */
+  gigBannerImageHash?: string;
+
   /** (Optional) Max time to complete the gig. */
   maxDurationInHours?: string;
 
@@ -58,19 +62,69 @@ export class Gig {
    */
   canceledAt?: string;
 
+  /**
+   * (Optional) ISO date string representing when the job was delivered.
+   */
+  deliveredAt?: string;
+
+  /**
+   * (Optional) ISO date string representing when the job was
+   * rejected by the client.
+   */
+  rejectedAt?: string;
+
+  /** Ethereum address of the user who emitted the last update of the gig. */
+  emitBy?: string;
+
   /** (Optional) Boolean indicating if the client has marked they received the gig deliverables. */
   clientReceived?: boolean;
 
   /** (Optional) Boolean indicating if the freelancer has marked they delivered the gig. */
   freelancerDelivered?: boolean;
 
+  /** (Optional) Rating given by the client to the freelancer when the gig is completed. */
+  rating?: number;
+
   /** (Optional) Unique identifier for the accepted application, if applicable. */
   acceptedApplicationId?: string;
+
+  /** (Optional) Boolean indicating if the client has rejected the job. */
+  clientRejected?: boolean;
+
+  /** (Optional) Boolean indicating if the client has canceled the job. */
+  clientCancelled?: boolean;
+
+  /** (Optional) Boolean indicating if the freelancer has canceled the job. */
+  freelancerCancelled?: boolean;
 
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;
-    this.state = GigStateEnum.Open;
+    this.acceptedFreelancer = ZERO_ADDRESS;
+    this.basePayment = "";
+    this.finalPayment = "";
+    this.title = "";
+    this.description = "";
+    this.category = "";
+    this.gigBannerImageHash = "";
+    this.maxDurationInHours = "";
+    this.finalDurationInHours = "";
+    this.deadline = "";
+    this.state = GigState.Open;
+    this.createdAt = "";
+    this.acceptedAt = "";
+    this.finishedAt = "";
+    this.canceledAt = "";
+    this.deliveredAt = "";
+    this.rejectedAt = "";
+    this.emitBy = ZERO_ADDRESS;
+    this.rating = 0;
+    this.clientRejected = false;
+    this.clientCancelled = false;
+    this.freelancerCancelled = false;
+    this.clientReceived = false;
+    this.freelancerDelivered = false;
+    this.acceptedApplicationId = "";
   }
 
   static mapFormDataToContractArgs(
@@ -87,15 +141,6 @@ export class Gig {
       },
     ];
   }
-}
-
-/** Enum representing the possible states of a gig. */
-export enum GigStateEnum {
-  Open = 0,
-  InProgress = 1,
-  Completed = 2,
-  Cancelled = 3,
-  Disputed = 4,
 }
 
 export interface GigsData {

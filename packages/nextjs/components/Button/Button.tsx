@@ -17,6 +17,12 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const getSizeStyles = (size: string): React.CSSProperties => {
     switch (size) {
+      case "xs":
+        return {
+          padding: "0.25rem 0.5rem",
+          fontSize: "12px",
+          borderRadius: "0.25rem",
+        };
       case "sm":
         return {
           padding: "0.5rem 1rem",

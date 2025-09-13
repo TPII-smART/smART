@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+// filepath: /Users/martincwikla/Desktop/Facultad/Trabajo-profesional/smART/packages/hardhat/test/GigsContract.ts
+
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -400,6 +403,135 @@ describe("GigsContract", function () {
     });
   });
 
+  describe("Gig Rating", function () {
+    beforeEach(async function () {
+      // Create gig, application, accept it and confirm completion
+      await gigsContract.connect(client).createGig(sampleGig);
+      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+      await gigsContract.connect(client).acceptApplication(0, 0, {
+        value: sampleApplication.proposedPayment,
+      });
+      await gigsContract.connect(freelancer1).confirmCompletion(0);
+      await gigsContract.connect(client).confirmCompletion(0);
+    });
+
+    it("Should allow client to rate gig with valid rating (1-5)", async function () {
+      const validRatings = [1, 2, 3, 4, 5];
+
+      for (let i = 0; i < validRatings.length; i++) {
+        // Create a new gig for each rating test
+        await gigsContract.connect(client).createGig({
+          ...sampleGig,
+          title: `Rating Test Gig ${i}`,
+        });
+
+        await gigsContract.connect(freelancer1).applyToGig(i + 1, sampleApplication);
+        await gigsContract.connect(client).acceptApplication(i + 1, 0, {
+          value: sampleApplication.proposedPayment,
+        });
+
+        await gigsContract.connect(freelancer1).confirmCompletion(i + 1);
+        await gigsContract.connect(client).confirmCompletion(i + 1);
+
+        const tx = await gigsContract.connect(client).rateGig(i + 1, validRatings[i]);
+
+        await expect(tx)
+          .to.emit(gigsContract, "GigRated")
+          .withArgs(i + 1, client.address, validRatings[i], anyValue);
+      }
+    });
+
+    it("Should revert when client provides invalid rating (0)", async function () {
+      await expect(gigsContract.connect(client).rateGig(0, 0)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when client provides invalid rating (6)", async function () {
+      await expect(gigsContract.connect(client).rateGig(0, 6)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when client provides invalid rating (100)", async function () {
+      await expect(gigsContract.connect(client).rateGig(0, 100)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when freelancer tries to rate", async function () {
+      await expect(gigsContract.connect(freelancer1).rateGig(0, 0)).to.be.revertedWith("Only client can call this");
+    });
+
+    it("Should prevent client from rating twice", async function () {
+      // Client rates first
+      await gigsContract.connect(client).rateGig(0, 4);
+
+      // Try to rate again - should fail
+      await expect(gigsContract.connect(client).rateGig(0, 3)).to.be.revertedWith("Gig already rated");
+    });
+
+    it("Should emit correct rating values in events", async function () {
+      const testRatings = [1, 5, 3];
+
+      for (let i = 0; i < testRatings.length; i++) {
+        // Create new gig for each test
+        await gigsContract.connect(client).createGig({
+          ...sampleGig,
+          title: `Rating Event Test ${i}`,
+        });
+
+        await gigsContract.connect(freelancer1).applyToGig(i + 1, sampleApplication);
+        await gigsContract.connect(client).acceptApplication(i + 1, 0, {
+          value: sampleApplication.proposedPayment,
+        });
+
+        await gigsContract.connect(freelancer1).confirmCompletion(i + 1);
+        await gigsContract.connect(client).confirmCompletion(i + 1);
+
+        const tx = await gigsContract.connect(client).rateGig(i + 1, testRatings[i]);
+
+        // Verify the exact rating value is emitted
+        const receipt = await tx.wait();
+        const gigRatedEvent = receipt?.logs?.find(log => {
+          try {
+            const parsed = gigsContract.interface.parseLog({
+              topics: log.topics as string[],
+              data: log.data,
+            });
+            return parsed?.name === "GigRated";
+          } catch {
+            return false;
+          }
+        });
+
+        expect(gigRatedEvent).to.not.be.undefined;
+        if (gigRatedEvent) {
+          const parsed = gigsContract.interface.parseLog({
+            topics: gigRatedEvent.topics as string[],
+            data: gigRatedEvent.data,
+          });
+          expect(parsed?.args[2]).to.equal(testRatings[i]); // Rating is the 3rd argument (index 2)
+        }
+      }
+    });
+
+    it("Should store rating in gig struct", async function () {
+      const rating = 5;
+
+      // Complete gig with rating
+      await gigsContract.connect(client).rateGig(0, rating);
+
+      // Check that rating is stored in the gig
+      const gig = await gigsContract.postedGigs(0);
+      expect(gig.rating).to.equal(rating);
+    });
+
+    it("Should not allow rating on non-Completed gigs", async function () {
+      // Create a new gig but don't accept any application (stays in Open state)
+      await gigsContract.connect(client).createGig({
+        ...sampleGig,
+        title: "Open Gig for Rating Test",
+      });
+
+      await expect(gigsContract.connect(client).rateGig(1, 4)).to.be.revertedWith("Gig is not completed");
+    });
+  });
+
   describe("Gig Cancellation", function () {
     beforeEach(async function () {
       // Create a gig for cancellation tests
@@ -411,11 +543,10 @@ describe("GigsContract", function () {
 
     it("Should cancel gig in Open state", async function () {
       const tx = await gigsContract.connect(client).cancelGig(0);
-
-      await expect(tx).to.emit(gigsContract, "GigCancelled").withArgs(0, 3, anyValue); // GigState.Cancelled = 3
+      await expect(tx).to.emit(gigsContract, "GigCancelled").withArgs(0, 3, false, false, anyValue); // GigState.Cancelled = 3
     });
 
-    it("Should cancel in-progress gig and refund client", async function () {
+    it("Should cancel in-progress gig by both parties and refund client", async function () {
       // Apply and accept to make gig InProgress
       await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
       await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
@@ -424,12 +555,47 @@ describe("GigsContract", function () {
 
       const tx = await gigsContract.connect(client).cancelGig(0);
       const receipt = await tx.wait();
+
+      const otherTx = await gigsContract.connect(freelancer1).cancelGig(0);
+      await otherTx.wait();
+
       const gasUsed = receipt!.gasUsed * receipt!.gasPrice;
 
       await expect(tx).to.emit(gigsContract, "GigCancelled");
 
       const clientBalanceAfter = await ethers.provider.getBalance(client.address);
       expect(clientBalanceAfter - clientBalanceBefore + gasUsed).to.equal(sampleApplication.proposedPayment);
+    });
+
+    it("Should not cancel ongoing gig by only one party(client)", async function () {
+      // Accept gig first
+      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+      await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
+
+      const clientBalanceBefore = await ethers.provider.getBalance(client.address);
+
+      const tx = await gigsContract.connect(client).cancelGig(0);
+
+      await expect(tx).to.emit(gigsContract, "GigCancelled").withArgs(0, 1, true, false, anyValue); // gigState.Ongoing = 1
+
+      const clientBalanceAfter = await ethers.provider.getBalance(client.address);
+      expect(clientBalanceAfter).to.be.lessThan(clientBalanceBefore); // Only gas fee paid, no refund
+    });
+
+    it("Should not cancel ongoing gig by only one party(freelancer)", async function () {
+      // Accept gig first
+      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+      await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
+
+      const clientBalanceBefore = await ethers.provider.getBalance(client.address);
+
+      const tx = await gigsContract.connect(freelancer1).cancelGig(0);
+      await tx.wait();
+
+      await expect(tx).to.emit(gigsContract, "GigCancelled").withArgs(0, 1, false, true, anyValue); // gigState.Ongoing = 1
+
+      const clientBalanceAfter = await ethers.provider.getBalance(client.address);
+      expect(clientBalanceAfter).to.be.equal(clientBalanceBefore); // Only gas fee paid, no refund
     });
 
     it("Should revert if gig cannot be cancelled", async function () {
@@ -447,15 +613,6 @@ describe("GigsContract", function () {
     it("Should revert if called by non-party", async function () {
       await expect(gigsContract.connect(other).cancelGig(0)).to.be.revertedWith("Only gig parties can call this");
     });
-
-    it("Should allow accepted freelancer to cancel", async function () {
-      // Apply and accept to make gig InProgress
-      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
-      await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
-
-      const tx = await gigsContract.connect(freelancer1).cancelGig(0);
-      await expect(tx).to.emit(gigsContract, "GigCancelled");
-    });
   });
 
   describe("Emergency Cancel", function () {
@@ -469,7 +626,7 @@ describe("GigsContract", function () {
 
       const tx = await gigsContract.connect(owner).emergencyCancel(0);
 
-      await expect(tx).to.emit(gigsContract, "GigCancelled").withArgs(0, 3, anyValue);
+      await expect(tx).to.emit(gigsContract, "GigCancelled").withArgs(0, 3, false, false, anyValue);
 
       // Note: Emergency cancel only refunds if gig is InProgress, but this gig is Open
       const clientBalanceAfter = await ethers.provider.getBalance(client.address);
@@ -522,98 +679,229 @@ describe("GigsContract", function () {
       });
 
       expect(await gigsContract.postedGigsCounter()).to.equal(2);
+
+      it("Should maintain correct gig states throughout lifecycle", async function () {
+        // Create new gig
+        await gigsContract.connect(client).createGig(sampleGig);
+
+        // Gig should start in Open (0)
+        let gig = await gigsContract.postedGigs(0);
+        expect(gig.state).to.equal(0);
+
+        // Apply and accept to move to InProgress (1)
+        await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+        await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
+
+        gig = await gigsContract.postedGigs(0);
+        expect(gig.state).to.equal(1);
+
+        // Complete it to move to Completed (2)
+        await gigsContract.connect(freelancer1).confirmCompletion(0);
+        await gigsContract.connect(client).confirmCompletion(0);
+
+        gig = await gigsContract.postedGigs(0);
+        expect(gig.state).to.equal(2);
+      });
+
+      it("Should handle complex application scenarios", async function () {
+        // Create gig
+        await gigsContract.connect(client).createGig(sampleGig);
+
+        // Multiple freelancers apply
+        await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+
+        const app2 = { ...sampleApplication, proposedPayment: ethers.parseEther("1.8") };
+        await gigsContract.connect(freelancer2).applyToGig(0, app2);
+
+        // Client rejects first application
+        await gigsContract.connect(client).rejectApplication(0, 0, "Not what we're looking for");
+
+        // Client accepts second application
+        await gigsContract.connect(client).acceptApplication(0, 1, { value: app2.proposedPayment });
+
+        // Verify correct freelancer is accepted
+        const gig = await gigsContract.postedGigs(0);
+        expect(gig.acceptedFreelancer).to.equal(freelancer2.address);
+        expect(gig.finalPayment).to.equal(app2.proposedPayment);
+      });
     });
 
-    it("Should maintain correct gig states throughout lifecycle", async function () {
-      // Create new gig
-      await gigsContract.connect(client).createGig(sampleGig);
+    describe("Length Validation", function () {
+      it("Should revert if gig title exceeds 64 characters", async function () {
+        const invalidGig = { ...sampleGig, title: "a".repeat(65) };
+        await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+          "Title must be up to 64 characters",
+        );
+      });
 
-      // Gig should start in Open (0)
-      let gig = await gigsContract.postedGigs(0);
-      expect(gig.state).to.equal(0);
+      it("Should revert if gig description exceeds 512 characters", async function () {
+        const invalidGig = { ...sampleGig, description: "a".repeat(513) };
+        await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+          "Description must be up to 512 characters",
+        );
+      });
 
-      // Apply and accept to move to InProgress (1)
-      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
-      await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
+      it("Should revert if gig category exceeds 64 characters", async function () {
+        const invalidGig = { ...sampleGig, category: "a".repeat(65) };
+        await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+          "Category must be up to 64 characters",
+        );
+      });
 
-      gig = await gigsContract.postedGigs(0);
-      expect(gig.state).to.equal(1);
+      it("Should revert if gig banner image hash exceeds 128 characters", async function () {
+        const invalidGig = { ...sampleGig, gigBannerImageHash: "a".repeat(129) };
+        await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
+          "Banner image hash must be up to 128 characters",
+        );
+      });
 
-      // Complete it to move to Completed (2)
-      await gigsContract.connect(freelancer1).confirmCompletion(0);
-      await gigsContract.connect(client).confirmCompletion(0);
+      it("Should revert if application proposal exceeds 512 characters", async function () {
+        await gigsContract.connect(client).createGig(sampleGig);
+        const invalidApplication = { ...sampleApplication, proposal: "a".repeat(513) };
+        await expect(gigsContract.connect(freelancer1).applyToGig(0, invalidApplication)).to.be.revertedWith(
+          "Proposal comment must be up to 512 characters",
+        );
+      });
 
-      gig = await gigsContract.postedGigs(0);
-      expect(gig.state).to.equal(2);
+      it("Should revert if rejection comment exceeds 512 characters", async function () {
+        await gigsContract.connect(client).createGig(sampleGig);
+        await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+        const longComment = "a".repeat(513);
+        await expect(gigsContract.connect(client).rejectApplication(0, 0, longComment)).to.be.revertedWith(
+          "Rejection comment must be up to 512 characters",
+        );
+      });
+    });
+    describe("Upload File to Gig", function () {
+      let expectedComment: string;
+      let expectedIpfsHash: string;
+      let fileInfo: { resource: string; submissionComment: string; isLink: boolean };
+
+      beforeEach(async function () {
+        expectedComment = "File upload comment";
+        expectedIpfsHash = "QmFileHash123";
+        fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
+
+        await gigsContract.connect(client).createGig(sampleGig);
+        await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+        await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
+      });
+
+      it("Should allow freelancer to upload file successfully and update gig fileInfo", async function () {
+        const tx = await gigsContract.connect(freelancer1).uploadFile(0, fileInfo);
+        const receipt = await tx.wait();
+
+        await expect(tx)
+          .to.emit(gigsContract, "FileUploaded")
+          .withArgs(0, freelancer1.address, expectedIpfsHash, expectedComment, false, anyValue);
+
+        const events = receipt?.logs
+          .map(log => {
+            try {
+              return gigsContract.interface.parseLog(log);
+            } catch {
+              return null;
+            }
+          })
+          .filter(e => e && e.name === "FileUploaded");
+
+        expect(events?.[0]?.args?.gigId).to.equal(0);
+        expect(events?.[0]?.args?.freelancer).to.equal(freelancer1.address);
+        expect(events?.[0]?.args?.resource).to.equal(expectedIpfsHash);
+        expect(events?.[0]?.args?.submissionComment).to.equal(expectedComment);
+        // Optionally, check gig.fileInfo state if accessible
+      });
+
+      it("Should revert if the gig is not in progress", async function () {
+        await gigsContract.connect(client).cancelGig(0);
+        await gigsContract.connect(freelancer1).cancelGig(0);
+        await expect(gigsContract.connect(freelancer1).uploadFile(0, fileInfo)).to.be.revertedWith(
+          "The gig is not in progress.",
+        );
+      });
+
+      it("Should revert if the IPFS hash is empty", async function () {
+        const emptyFileInfo = { resource: "", submissionComment: "Valid comment", isLink: false };
+        await expect(gigsContract.connect(freelancer1).uploadFile(0, emptyFileInfo)).to.be.revertedWith(
+          "Resource cannot be empty.",
+        );
+      });
+
+      it("Should revert if the resource exceeds 256 characters", async function () {
+        const longHash = "a".repeat(257);
+        const invalidFileInfo = { resource: longHash, submissionComment: "Valid comment", isLink: false };
+        await expect(gigsContract.connect(freelancer1).uploadFile(0, invalidFileInfo)).to.be.revertedWith(
+          "Resource must be up to 256 characters.",
+        );
+      });
+
+      it("Should revert if the comment exceeds 256 characters", async function () {
+        const longComment = "a".repeat(257);
+        const invalidFileInfo = { resource: "QmFileHash123", submissionComment: longComment, isLink: false };
+        await expect(gigsContract.connect(freelancer1).uploadFile(0, invalidFileInfo)).to.be.revertedWith(
+          "Comment must be up to 256 characters.",
+        );
+      });
+
+      it("Should revert if called by someone who is not the freelancer", async function () {
+        await expect(gigsContract.connect(client).uploadFile(0, fileInfo)).to.be.revertedWith(
+          "Only accepted freelancer can call this",
+        );
+      });
     });
 
-    it("Should handle complex application scenarios", async function () {
-      // Create gig
-      await gigsContract.connect(client).createGig(sampleGig);
+    describe("Add Comment to Gig", function () {
+      beforeEach(async function () {
+        const expectedIpfsHash = "QmFileHash123";
+        const expectedComment = "File upload comment";
+        const fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
 
-      // Multiple freelancers apply
-      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+        await gigsContract.connect(client).createGig(sampleGig);
+        await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
+        await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
+        await gigsContract.connect(freelancer1).uploadFile(0, fileInfo);
+      });
 
-      const app2 = { ...sampleApplication, proposedPayment: ethers.parseEther("1.8") };
-      await gigsContract.connect(freelancer2).applyToGig(0, app2);
+      it("Should allow client to add comment successfully", async function () {
+        const expectedClientComment = "This is a comment";
+        const tx = await gigsContract.connect(client).addCommentToGig(0, expectedClientComment);
+        const receipt = await tx.wait();
+        const events = receipt?.logs
+          .map(log => {
+            try {
+              return gigsContract.interface.parseLog(log);
+            } catch {
+              return null;
+            }
+          })
+          .filter(e => e && e.name === "CommentAdded");
 
-      // Client rejects first application
-      await gigsContract.connect(client).rejectApplication(0, 0, "Not what we're looking for");
+        expect(events).to.not.be.undefined;
+        expect(events?.[0]?.args?.gigId).to.equal(0);
+        expect(events?.[0]?.args?.response).to.equal(expectedClientComment);
+      });
 
-      // Client accepts second application
-      await gigsContract.connect(client).acceptApplication(0, 1, { value: app2.proposedPayment });
+      it("Should revert if the gig is not in progress", async function () {
+        await gigsContract.connect(client).cancelGig(0);
+        await gigsContract.connect(freelancer1).cancelGig(0);
 
-      // Verify correct freelancer is accepted
-      const gig = await gigsContract.postedGigs(0);
-      expect(gig.acceptedFreelancer).to.equal(freelancer2.address);
-      expect(gig.finalPayment).to.equal(app2.proposedPayment);
-    });
-  });
+        await expect(gigsContract.connect(client).addCommentToGig(0, "This is a comment")).to.be.revertedWith(
+          "The gig is not in progress.",
+        );
+      });
 
-  describe("Length Validation", function () {
-    it("Should revert if gig title exceeds 64 characters", async function () {
-      const invalidGig = { ...sampleGig, title: "a".repeat(65) };
-      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
-        "Title must be up to 64 characters",
-      );
-    });
+      it("Should revert if the comment is empty", async function () {
+        await expect(gigsContract.connect(client).addCommentToGig(0, "")).to.be.revertedWith(
+          "Comment cannot be empty.",
+        );
+      });
 
-    it("Should revert if gig description exceeds 512 characters", async function () {
-      const invalidGig = { ...sampleGig, description: "a".repeat(513) };
-      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
-        "Description must be up to 512 characters",
-      );
-    });
-
-    it("Should revert if gig category exceeds 64 characters", async function () {
-      const invalidGig = { ...sampleGig, category: "a".repeat(65) };
-      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
-        "Category must be up to 64 characters",
-      );
-    });
-
-    it("Should revert if gig banner image hash exceeds 128 characters", async function () {
-      const invalidGig = { ...sampleGig, gigBannerImageHash: "a".repeat(129) };
-      await expect(gigsContract.connect(client).createGig(invalidGig)).to.be.revertedWith(
-        "Banner image hash must be up to 128 characters",
-      );
-    });
-
-    it("Should revert if application proposal exceeds 512 characters", async function () {
-      await gigsContract.connect(client).createGig(sampleGig);
-      const invalidApplication = { ...sampleApplication, proposal: "a".repeat(513) };
-      await expect(gigsContract.connect(freelancer1).applyToGig(0, invalidApplication)).to.be.revertedWith(
-        "Proposal comment must be up to 512 characters",
-      );
-    });
-
-    it("Should revert if rejection comment exceeds 512 characters", async function () {
-      await gigsContract.connect(client).createGig(sampleGig);
-      await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
-      const longComment = "a".repeat(513);
-      await expect(gigsContract.connect(client).rejectApplication(0, 0, longComment)).to.be.revertedWith(
-        "Rejection comment must be up to 512 characters",
-      );
+      it("Should revert if the comment exceeds 256 characters", async function () {
+        const longComment = "a".repeat(257);
+        await expect(gigsContract.connect(client).addCommentToGig(0, longComment)).to.be.revertedWith(
+          "Comment must be up to 256 characters.",
+        );
+      });
     });
   });
 });

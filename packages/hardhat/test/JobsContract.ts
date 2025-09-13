@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+// filepath: /Users/martincwikla/Desktop/Facultad/Trabajo-profesional/smART/packages/hardhat/test/JobsContract.ts
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
@@ -259,7 +261,7 @@ describe("JobsContract", function () {
       const tx = await jobsContract.connect(freelancer).confirmCompletion(0, 0);
       await expect(tx)
         .to.emit(jobsContract, "FreelancerMarkedAsDelivered")
-        .withArgs(0, 0, freelancer.address, anyValue);
+        .withArgs(0, 0, freelancer.address, client.address, anyValue);
     });
 
     it("Should allow client to mark job as received", async function () {
@@ -313,6 +315,115 @@ describe("JobsContract", function () {
     });
   });
 
+  describe("Job Rating", function () {
+    beforeEach(async function () {
+      // Create job posting, job, accept it, and confirm completion
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      await jobsContract.connect(client).createJob(0, sampleJob, {
+        value: sampleJob.payment,
+      });
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+      await jobsContract.connect(freelancer).confirmCompletion(0, 0);
+      await jobsContract.connect(client).confirmCompletion(0, 0);
+    });
+
+    it("Should allow client to rate job with valid rating (1-5)", async function () {
+      const validRatings = [1, 2, 3, 4, 5];
+
+      for (let i = 0; i < validRatings.length; i++) {
+        // Create a new job for each rating test
+        await jobsContract.connect(client).createJob(
+          0,
+          {
+            ...sampleJob,
+            title: `Rating Test Job ${i}`,
+          },
+          { value: sampleJob.payment },
+        );
+
+        await jobsContract.connect(freelancer).acceptJob(0, i + 1);
+
+        await jobsContract.connect(freelancer).confirmCompletion(0, i + 1);
+        await jobsContract.connect(client).confirmCompletion(0, i + 1);
+
+        const tx = await jobsContract.connect(client).rateJob(0, i + 1, validRatings[i]);
+
+        await expect(tx)
+          .to.emit(jobsContract, "JobRated")
+          .withArgs(0, i + 1, client.address, validRatings[i], anyValue);
+      }
+    });
+
+    it("Should revert when client provides invalid rating (0)", async function () {
+      await expect(jobsContract.connect(client).rateJob(0, 0, 0)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when client provides invalid rating (6)", async function () {
+      await expect(jobsContract.connect(client).rateJob(0, 0, 6)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when client provides invalid rating (100)", async function () {
+      await expect(jobsContract.connect(client).rateJob(0, 0, 100)).to.be.revertedWith("Invalid rating");
+    });
+
+    it("Should revert when freelancer tries to rate", async function () {
+      await expect(jobsContract.connect(freelancer).rateJob(0, 0, 3)).to.be.revertedWith("Only client can call this");
+    });
+
+    it("Should prevent client from rating twice", async function () {
+      // Client rates first
+      await jobsContract.connect(client).rateJob(0, 0, 4);
+
+      // Try to rate again - should fail
+      await expect(jobsContract.connect(client).rateJob(0, 0, 3)).to.be.revertedWith("Job already rated");
+    });
+
+    it("Should emit correct rating values in events", async function () {
+      const testRatings = [1, 5, 3];
+
+      for (let i = 0; i < testRatings.length; i++) {
+        // Create new job for each test
+        await jobsContract.connect(client).createJob(
+          0,
+          {
+            ...sampleJob,
+            title: `Rating Event Test ${i}`,
+          },
+          { value: sampleJob.payment },
+        );
+
+        await jobsContract.connect(freelancer).acceptJob(0, i + 1);
+        await jobsContract.connect(freelancer).confirmCompletion(0, i + 1);
+        await jobsContract.connect(client).confirmCompletion(0, i + 1);
+
+        const tx = await jobsContract.connect(client).rateJob(0, i + 1, testRatings[i]);
+
+        // Verify the exact rating value is emitted
+        const receipt = await tx.wait();
+        const jobRatedEvent = receipt?.logs?.find(log => {
+          try {
+            const parsed = jobsContract.interface.parseLog({
+              topics: log.topics as string[],
+              data: log.data,
+            });
+            return parsed?.name === "JobRated";
+          } catch {
+            return false;
+          }
+        });
+
+        expect(jobRatedEvent).to.not.be.undefined;
+        if (jobRatedEvent) {
+          const parsed = jobsContract.interface.parseLog({
+            topics: jobRatedEvent.topics as string[],
+            data: jobRatedEvent.data,
+          });
+          expect(parsed?.args[3]).to.equal(testRatings[i]); // Rating is the 4th argument (index 3)
+        }
+      }
+    });
+  });
+
   describe("Job Cancellation", function () {
     beforeEach(async function () {
       // Create a job posting and job for cancellation tests
@@ -332,11 +443,12 @@ describe("JobsContract", function () {
 
     it("Should cancel job in WaitingForApproval state", async function () {
       const tx = await jobsContract.connect(client).cancelJob(0, 0);
+      await tx.wait();
 
-      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, anyValue); // JobState.Cancelled = 3
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, false, false, anyValue); // JobState.Cancelled = 3
     });
 
-    it("Should cancel ongoing job and refund client", async function () {
+    it("Should cancel ongoing job by both parties and refund client", async function () {
       // Accept job first
       await jobsContract.connect(freelancer).acceptJob(0, 0);
 
@@ -344,12 +456,46 @@ describe("JobsContract", function () {
 
       const tx = await jobsContract.connect(client).cancelJob(0, 0);
       const receipt = await tx.wait();
+
+      const anotherTx = await jobsContract.connect(freelancer).cancelJob(0, 0);
+      await anotherTx.wait();
+
       const gasUsed = receipt!.gasUsed * receipt!.gasPrice;
 
       await expect(tx).to.emit(jobsContract, "JobCancelled");
+      await expect(anotherTx).to.emit(jobsContract, "JobCancelled");
 
       const clientBalanceAfter = await ethers.provider.getBalance(client.address);
       expect(clientBalanceAfter - clientBalanceBefore + gasUsed).to.equal(sampleJob.payment);
+    });
+
+    it("Should not cancel ongoing job by only one party(client)", async function () {
+      // Accept job first
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+
+      const clientBalanceBefore = await ethers.provider.getBalance(client.address);
+
+      const tx = await jobsContract.connect(client).cancelJob(0, 0);
+
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 1, true, false, anyValue); // JobState.Ongoing = 1
+
+      const clientBalanceAfter = await ethers.provider.getBalance(client.address);
+      expect(clientBalanceAfter).to.be.lessThan(clientBalanceBefore); // Only gas fee paid, no refund
+    });
+
+    it("Should not cancel ongoing job by only one party(freelancer)", async function () {
+      // Accept job first
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+
+      const clientBalanceBefore = await ethers.provider.getBalance(client.address);
+
+      const tx = await jobsContract.connect(freelancer).cancelJob(0, 0);
+      await tx.wait();
+
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 1, false, true, anyValue); // JobState.Ongoing = 1
+
+      const clientBalanceAfter = await ethers.provider.getBalance(client.address);
+      expect(clientBalanceAfter).to.be.equal(clientBalanceBefore); // Only gas fee paid, no refund
     });
 
     it("Should revert if job cannot be cancelled", async function () {
@@ -387,7 +533,7 @@ describe("JobsContract", function () {
 
       const tx = await jobsContract.connect(owner).emergencyCancel(0, 0);
 
-      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, anyValue);
+      await expect(tx).to.emit(jobsContract, "JobCancelled").withArgs(0, 0, 3, false, false, anyValue);
 
       const clientBalanceAfter = await ethers.provider.getBalance(client.address);
       expect(clientBalanceAfter - clientBalanceBefore).to.equal(sampleJob.payment);
@@ -522,6 +668,142 @@ describe("JobsContract", function () {
       await expect(
         jobsContract.connect(client).createJob(0, invalidJob, { value: invalidJob.payment }),
       ).to.be.revertedWith("Description exceeds 512 characters");
+    });
+  });
+
+  describe("Upload File to Job", function () {
+    let expectedComment: string;
+    let expectedIpfsHash: string;
+    let fileInfo: { resource: string; submissionComment: string; isLink: boolean };
+
+    beforeEach(async function () {
+      expectedComment = "File upload comment";
+      expectedIpfsHash = "QmFileHash123";
+      fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
+
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+    });
+
+    it("Should allow freelancer to upload file successfully and update job fileInfo", async function () {
+      const tx = await jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo);
+
+      const receipt = await tx.wait();
+
+      await expect(tx)
+        .to.emit(jobsContract, "FileUploaded")
+        .withArgs(0, 0, freelancer.address, expectedIpfsHash, expectedComment, false, anyValue);
+
+      const events = receipt?.logs
+        .map(log => {
+          try {
+            return jobsContract.interface.parseLog(log);
+          } catch {
+            return null;
+          }
+        })
+        .filter(e => e && e.name === "FileUploaded");
+
+      expect(events?.[0]?.args?.postingId).to.equal(0);
+      expect(events?.[0]?.args?.jobId).to.equal(0);
+      expect(events?.[0]?.args?.freelancer).to.equal(freelancer.address);
+      expect(events?.[0]?.args?.resource).to.equal(expectedIpfsHash);
+
+      expect(events?.[0]?.args?.submissionComment).to.equal(expectedComment);
+
+      expect(await jobsContract.isFileUploaded(0, 0, expectedComment, expectedIpfsHash)).to.be.true;
+    });
+
+    it("Should revert if the job is not ongoing", async function () {
+      await jobsContract.connect(client).cancelJob(0, 0);
+      await jobsContract.connect(freelancer).cancelJob(0, 0);
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
+        "The job is not ongoing.",
+      );
+    });
+
+    it("Should revert if the IPFS hash is empty", async function () {
+      const emptyFileInfo = { resource: "", submissionComment: "Valid comment", isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, emptyFileInfo)).to.be.revertedWith(
+        "Resource cannot be empty.",
+      );
+    });
+
+    it("Should revert if the resource exceeds 256 characters", async function () {
+      const longHash = "a".repeat(257);
+      const invalidFileInfo = { resource: longHash, submissionComment: "Valid comment", isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
+        "Resource must be up to 256 characters.",
+      );
+    });
+
+    it("Should revert if the comment exceeds 256 characters", async function () {
+      const longComment = "a".repeat(257);
+      const invalidFileInfo = { resource: "QmFileHash123", submissionComment: longComment, isLink: false };
+      await expect(jobsContract.connect(freelancer).uploadFile(0, 0, invalidFileInfo)).to.be.revertedWith(
+        "Comment must be up to 256 characters.",
+      );
+    });
+
+    it("Should revert if called by someone who is not the freelancer", async function () {
+      await expect(jobsContract.connect(client).uploadFile(0, 0, fileInfo)).to.be.revertedWith(
+        "Only freelancer can call this",
+      );
+    });
+  });
+
+  describe("Add Comment to Job", function () {
+    beforeEach(async function () {
+      const expectedIpfsHash = "QmFileHash123";
+      const expectedComment = "File upload comment";
+      const fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
+
+      await jobsContract.connect(freelancer).createJobPosting(sampleJobPosting);
+      await jobsContract.connect(client).createJob(0, sampleJob, { value: sampleJob.payment });
+      await jobsContract.connect(freelancer).acceptJob(0, 0);
+      await jobsContract.connect(freelancer).uploadFile(0, 0, fileInfo);
+    });
+
+    it("Should allow freelancer to add comment successfully", async function () {
+      const expectedClientComment = "This is a comment";
+
+      const tx = await jobsContract.connect(client).addCommentToJob(0, 0, expectedClientComment);
+      const receipt = await tx.wait();
+      const events = receipt?.logs
+        .map(log => {
+          try {
+            return jobsContract.interface.parseLog(log);
+          } catch {
+            return null;
+          }
+        })
+        .filter(e => e && e.name === "CommentAdded");
+
+      expect(events).to.not.be.undefined;
+      expect(events?.[0]?.args?.postingId).to.equal(0);
+      expect(events?.[0]?.args?.jobId).to.equal(0);
+      expect(events?.[0]?.args?.response).to.equal(expectedClientComment);
+    });
+
+    it("Should revert if the job is not ongoing", async function () {
+      await jobsContract.connect(client).cancelJob(0, 0);
+      await jobsContract.connect(freelancer).cancelJob(0, 0);
+
+      await expect(jobsContract.connect(client).addCommentToJob(0, 0, "This is a comment")).to.be.revertedWith(
+        "The job is not ongoing.",
+      );
+    });
+    it("Should revert if the comment is empty", async function () {
+      await expect(jobsContract.connect(client).addCommentToJob(0, 0, "")).to.be.revertedWith(
+        "Comment cannot be empty.",
+      );
+    });
+    it("Should revert if the comment exceeds 256 characters", async function () {
+      const longComment = "a".repeat(257);
+      await expect(jobsContract.connect(client).addCommentToJob(0, 0, longComment)).to.be.revertedWith(
+        "Comment must be up to 256 characters.",
+      );
     });
   });
 });

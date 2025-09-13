@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "./common/FileInfo.sol";
+
 /**
  * @title JobsContract
  * @dev A simplified escrow contract for managing freelance job postings.
@@ -33,8 +35,14 @@ contract JobsContract {
         uint256 acceptedAt; // When the job was accepted
         uint256 finishedAt; // When the job was finished
         uint256 canceledAt; // When the job was canceled
+        uint256 rejectedAt; // When the job was rejected by the client
+        uint8 rating; // Rating given by the client, should be between 1 and 5
         bool clientReceived; // Whether the client has received the job results
         bool freelancerDelivered; // Whether the freelancer has delivered the job results
+        bool clientRejected; // Whether the client has rejected the job results
+        bool clientCancelled; // Whether the client cancelled the job
+        bool freelancerCancelled; // Whether the freelancer cancelled the job
+        FileInfo[] fileInfo; // Store the file related to the job
     }
 
     // Struct that reduces the amount of parameters needed when submitting a Job
@@ -108,6 +116,7 @@ contract JobsContract {
         uint256 indexed postingId,
         uint256 indexed jobId,
         address freelancer,
+        address client,
         uint256 timestamp
     );
 
@@ -122,7 +131,44 @@ contract JobsContract {
         uint256 timestamp
     );
 
-    event JobCancelled(uint256 indexed postingId, uint256 indexed jobId, JobState state, uint256 timestamp);
+    event JobRated(uint256 indexed postingId, uint256 indexed jobId, address client, uint8 rating, uint256 timestamp);
+
+    event JobCancelled(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        JobState state,
+        bool clientCancelled,
+        bool freelancerCancelled,
+        uint256 timestamp
+    );
+
+    event FileUploaded(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address indexed freelancer,
+        string resource,
+        string submissionComment,
+        bool isLink,
+        uint256 timestamp
+    );
+
+    event CommentAdded(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address indexed client,
+        string response,
+        uint256 fileUploadedAt,
+        uint256 timestamp
+    );
+
+    event JobRejected(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        bool freelancerDelivered,
+        bool clientReceived,
+        bool clientRejected,
+        uint256 timestamp
+    );
 
     // Modifiers
     modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
@@ -260,8 +306,14 @@ contract JobsContract {
             acceptedAt: 0,
             finishedAt: 0,
             canceledAt: 0,
+            rejectedAt: 0,
+            rating: 0, // Rating is not set until job is finished
             clientReceived: false,
-            freelancerDelivered: false
+            freelancerDelivered: false,
+            clientRejected: false,
+            clientCancelled: false,
+            freelancerCancelled: false,
+            fileInfo: new FileInfo[](0)
         });
 
         // Add job to the posting
@@ -327,7 +379,7 @@ contract JobsContract {
         } else {
             require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
             job.freelancerDelivered = true;
-            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, block.timestamp);
+            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
         }
 
         // If both parties have confirmed, complete the job
@@ -353,6 +405,22 @@ contract JobsContract {
     }
 
     /**
+     * @dev Internal function to rate a job
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to rate
+     * @param _rating The rating given by the client (1-5)
+     */
+    function rateJob(uint256 _postingId, uint256 _jobId, uint8 _rating) external onlyClient(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        require(job.state == JobState.Finished, "Job is not finished");
+        require(job.rating == 0, "Job already rated");
+        require(_rating >= 1 && _rating <= 5, "Invalid rating");
+        require(_rating % 1 == 0, "Rating must be an integer");
+        job.rating = _rating;
+        emit JobRated(_postingId, _jobId, msg.sender, _rating, block.timestamp);
+    }
+
+    /**
      * @dev Cancel a job
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to cancel
@@ -367,20 +435,23 @@ contract JobsContract {
             // If job is still waiting for approval, simply remove it
             job.state = JobState.Cancelled;
         } else if (job.state == JobState.Ongoing) {
-            // If job is ongoing, set it to cancelled and refund client
-            job.state = JobState.Cancelled;
+            if (msg.sender == job.client) {
+                job.clientCancelled = true;
+            } else if (msg.sender == job.freelancer) {
+                job.freelancerCancelled = true;
+            }
 
             // Refund payment to client if there was one
-            if (job.client != address(0)) {
+            if (job.client != address(0) && job.clientCancelled && job.freelancerCancelled) {
+                job.state = JobState.Cancelled;
+                job.canceledAt = block.timestamp;
                 payable(job.client).transfer(job.payment);
             }
         } else {
             revert("Job cannot be cancelled in its current state");
         }
 
-        job.canceledAt = block.timestamp;
-
-        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, job.canceledAt);
+        emit JobCancelled(_postingId, _jobId, job.state, job.clientCancelled, job.freelancerCancelled, job.canceledAt);
     }
 
     /**
@@ -397,14 +468,21 @@ contract JobsContract {
             payable(job.client).transfer(job.payment);
         }
 
-        emit JobCancelled(_postingId, _jobId, JobState.Cancelled, block.timestamp);
+        emit JobCancelled(
+            _postingId,
+            _jobId,
+            JobState.Cancelled,
+            job.clientCancelled,
+            job.freelancerCancelled,
+            block.timestamp
+        );
     }
 
     /**
-    * @dev Get the number of jobs in a posting
-    * @param _postingId The ID of the job posting
-    * @return Number of jobs in the posting
-    */
+     * @dev Get the number of jobs in a posting
+     * @param _postingId The ID of the job posting
+     * @return Number of jobs in the posting
+     */
     function getJobCount(uint256 _postingId) external view postingExists(_postingId) returns (uint256) {
         return postedJobs[_postingId].jobs.length;
     }
@@ -413,8 +491,114 @@ contract JobsContract {
         return postedJobsCounter;
     }
 
+    function isFileUploaded(
+        uint256 postingId,
+        uint256 jobId,
+        string memory comment,
+        string memory ipfsHash
+    ) external view returns (bool) {
+        Job storage job = postedJobs[postingId].jobs[jobId];
+        if (job.fileInfo.length == 0) {
+            return false;
+        }
+        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
+
+        return
+            bytes(fileInfo.resource).length > 0 &&
+            keccak256(bytes(fileInfo.submissionComment)) == keccak256(bytes(comment)) &&
+            keccak256(bytes(fileInfo.resource)) == keccak256(bytes(ipfsHash));
+    }
+
     // Function to receive Ether
     receive() external payable {
         revert("Direct payments not accepted");
+    }
+
+    /**
+     * @dev Allows the freelancer to upload a file.
+     * @param _postingId  JobPosting ID.
+     * @param _jobId Job ID.
+     * @param _fileParams The content of the file (IPFS hash and comment).
+     */
+    function uploadFile(
+        uint256 _postingId,
+        uint256 _jobId,
+        FileParams memory _fileParams
+    ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Ongoing, "The job is not ongoing.");
+
+        require(bytes(_fileParams.resource).length > 0, "Resource cannot be empty.");
+        require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
+        require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
+
+        FileInfo memory fileToUpload = FileInfo({
+            resource: _fileParams.resource,
+            submissionComment: _fileParams.submissionComment,
+            uploadedAt: block.timestamp,
+            clientResponse: "",
+            isLink: _fileParams.isLink
+        });
+
+        job.fileInfo.push(fileToUpload);
+
+        emit FileUploaded(
+            _postingId,
+            _jobId,
+            msg.sender,
+            fileToUpload.resource,
+            fileToUpload.submissionComment,
+            fileToUpload.isLink,
+            fileToUpload.uploadedAt
+        );
+    }
+
+    /**
+     * @dev Allows the client to add a response to the last uploaded file.
+     * @param _postingId JobPosting ID.
+     * @param _jobId Job ID.
+     * @param _comment Comment text.
+     */
+    function addCommentToJob(
+        uint256 _postingId,
+        uint256 _jobId,
+        string calldata _comment
+    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
+
+        require(job.state == JobState.Ongoing, "The job is not ongoing.");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+
+        fileInfo.clientResponse = _comment;
+
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
+    }
+
+    function rejectJob(
+        uint256 _postingId,
+        uint256 _jobId
+    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Ongoing, "Job is not ongoing");
+        require(job.client != address(0), "Job has no assigned client");
+        require(job.freelancer != address(0), "Job has no assigned freelancer");
+
+        job.freelancerDelivered = false;
+        job.clientReceived = false;
+        job.clientRejected = true;
+        job.rejectedAt = block.timestamp;
+
+        emit JobRejected(
+            _postingId,
+            _jobId,
+            job.freelancerDelivered,
+            job.clientReceived,
+            job.clientRejected,
+            job.rejectedAt
+        );
     }
 }

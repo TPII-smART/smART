@@ -1,25 +1,28 @@
 "use client";
 
-import { JSX, useMemo } from "react";
+import { useMemo } from "react";
 import styles from "./Profile.module.css";
-import { LinkIcon } from "@heroicons/react/24/outline";
+import Button from "@/components/Button/Button";
+import { LinkIcon } from "@heroicons/react/24/solid";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";
+import RatingDisplay from "~~/components/RatingDisplay";
 import ArtStationIcon from "~~/components/assets/Logos/artstation";
 import InstagramIcon from "~~/components/assets/Logos/instagram";
 import LinkedInIcon from "~~/components/assets/Logos/linkedin";
 import SketchfabIcon from "~~/components/assets/Logos/sketchfab";
 import XIcon from "~~/components/assets/Logos/x";
 import { isImageUrl } from "~~/lib/utils";
-import { UserProfile } from "~~/types/user-profile.type";
+import { RatingData, UserProfile } from "~~/types/user-profile.type";
 
 export interface OthersProfileProps {
   user: UserProfile;
   address: `0x${string}`;
-  changeEditButton?: JSX.Element;
+  ratingData: RatingData;
+  onEditClick?: () => void;
 }
 
-export default function OthersProfile({ user, changeEditButton, address }: OthersProfileProps) {
+export default function OthersProfile({ user, address, ratingData, onEditClick }: OthersProfileProps) {
   const hasSocialNetworks = useMemo(() => {
     return (
       user.xUrl || user.instagramUrl || user.linkedinUrl || user.sketchfabUrl || user.artstationUrl || user.customUrl
@@ -30,72 +33,143 @@ export default function OthersProfile({ user, changeEditButton, address }: Other
     return !user.username && !user.email && !user.biography && !hasSocialNetworks;
   }, [user, hasSocialNetworks]);
 
+  const isRatingEmpty = useMemo(() => {
+    return ratingData.totalRatings == 0;
+  }, [ratingData]);
+
   return (
     <div className={styles.profileTab}>
       <div className={styles.profileContainer}>
-        <div className="relative">
-          <BannerImage
-            src={isImageUrl(user.bannerPicture) ? user.bannerPicture : "https://placehold.co/1200x300/1f2937/1f2937"}
-            alt="Banner"
-            height={192}
-            width={"100%"}
-          />
-          <div className={styles.avatarImage}>
-            <div className="relative">
-              <AvatarImage
-                src={isImageUrl(user.profilePicture) ? user.profilePicture : undefined}
-                alt="Profile Picture"
-                address={address as `0x${string}`}
-              />
+        {isProfileEmpty ? (
+          <div className={styles.profileHeader}>
+            <div className={styles.bannerSection}>
+              {isImageUrl(user.bannerPicture) ? (
+                <BannerImage src={user.bannerPicture} alt="Banner" height={400} width="100%" />
+              ) : (
+                <div className={styles.placeholderBanner} />
+              )}
+              <div className={styles.bannerOverlay} />
+
+              {/* Rating in top right */}
+              {!isRatingEmpty && (
+                <div className="absolute top-6 right-6 z-10">
+                  <div className="ratingDisplayOverlay">
+                    <RatingDisplay ratingData={ratingData} tooltipPosition="left" />
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Button in bottom right */}
+              {onEditClick && (
+                <div className={styles.profileEditButton}>
+                  <Button onClick={onEditClick} variant="outline" size="sm" color="accent">
+                    Edit Profile
+                  </Button>
+                </div>
+              )}
+
+              <div className={styles.profileInfo}>
+                <div className={styles.profileLeft}>
+                  <div className={styles.avatarWrapper}>
+                    <AvatarImage
+                      src={isImageUrl(user.profilePicture) ? user.profilePicture : undefined}
+                      alt="Profile Picture"
+                      address={address as `0x${string}`}
+                    />
+                  </div>
+                  <div className={styles.profileDetails}>
+                    <h1 className={styles.emptyProfileText}>
+                      {"This profile is empty" + (onEditClick ? ", click the button to edit it!" : "!")}
+                    </h1>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-        <div className={styles.editButton}>{changeEditButton}</div>
-        {isProfileEmpty ? (
-          <div className="w-full h-2/3 flex justify-center items-center">
-            <span className="text-3xl text-secondary-content text-center">
-              {"This profile is empty" + (changeEditButton ? ", click the button to edit it!" : "!")}
-            </span>
-          </div>
         ) : (
-          <div className={styles.profileContent}>
-            <div className={styles.othersProfile}>
-              <h1 className="text-4xl font-bold text-primary-content">{user.username}</h1>
-              <div className={styles.labelWrapper}>
-                <span className="text-2xl text-primary-content font-semibold">Email contact:</span>
-                {user.email ? (
-                  <a
-                    className={`text-lg mx-3 underline text-blue-400 hover:text-blue-500`}
-                    href={`mailto:${user.email}`}
-                  >
-                    {user.email}
-                  </a>
-                ) : (
-                  <span className="text-lg mx-3 text-secondary-content">No email address provided.</span>
-                )}
-              </div>
-              <div className={styles.labelWrapper}>
-                <span className="text-2xl text-primary-content font-semibold">Biography:</span>
-                <p className="text-secondary-content mt-2 mx-3">{user.biography || "No biography available."}</p>
-              </div>
-              <div className={styles.socialNetworksContainer}>
-                {hasSocialNetworks && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-primary-content">Social Networks</h3>
-                    <div className={styles.socialNetworksIcons + " space-x-4"}>
-                      {user.xUrl && <XIcon href={user.xUrl} />}
-                      {user.instagramUrl && <InstagramIcon href={user.instagramUrl} />}
-                      {user.linkedinUrl && <LinkedInIcon href={user.linkedinUrl} />}
-                      {user.sketchfabUrl && <SketchfabIcon href={user.sketchfabUrl} />}
-                      {user.artstationUrl && <ArtStationIcon href={user.artstationUrl} label={user.artstationUrl} />}
-                      {user.customUrl && (
-                        <a href={user.customUrl} title={user.customUrl}>
-                          <LinkIcon width={24} height={24} />
-                        </a>
-                      )}
-                    </div>
+          <div className={styles.profileHeader}>
+            <div className={styles.bannerSection}>
+              {isImageUrl(user.bannerPicture) ? (
+                <BannerImage src={user.bannerPicture} alt="Banner" height={400} width="100%" />
+              ) : (
+                <div className={styles.placeholderBanner} />
+              )}
+              <div className={styles.bannerOverlay} />
+
+              {/* Social Networks in Header */}
+              {hasSocialNetworks && (
+                <div className={styles.socialNetworksInHeader}>
+                  {user.xUrl && (
+                    <a href={user.xUrl} className="hover:opacity-70 transition-opacity text-white">
+                      <XIcon width={25} height={25} color="white" />
+                    </a>
+                  )}
+                  {user.instagramUrl && (
+                    <a href={user.instagramUrl} className="hover:opacity-70 transition-opacity text-white">
+                      <InstagramIcon width={25} height={25} color="white" />
+                    </a>
+                  )}
+                  {user.linkedinUrl && (
+                    <a href={user.linkedinUrl} className="hover:opacity-70 transition-opacity text-white">
+                      <LinkedInIcon width={25} height={25} color="white" />
+                    </a>
+                  )}
+                  {user.sketchfabUrl && (
+                    <a href={user.sketchfabUrl} className="hover:opacity-70 transition-opacity text-white">
+                      <SketchfabIcon width={25} height={25} color="white" />
+                    </a>
+                  )}
+                  {user.artstationUrl && (
+                    <a href={user.artstationUrl} className="hover:opacity-70 transition-opacity text-white">
+                      <ArtStationIcon width={25} height={25} color="white" />
+                    </a>
+                  )}
+                  {user.customUrl && (
+                    <a href={user.customUrl} title={user.customUrl} className="hover:opacity-70 transition-opacity">
+                      <LinkIcon width={25} height={25} />
+                    </a>
+                  )}
+                </div>
+              )}
+
+              {/* Rating in top right */}
+              {!isRatingEmpty && (
+                <div className="absolute top-6 right-6 z-10">
+                  <div className="ratingDisplayOverlay">
+                    <RatingDisplay ratingData={ratingData} tooltipPosition="left" />
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Edit Button in bottom right */}
+              {onEditClick && (
+                <div className={styles.profileEditButton}>
+                  <Button onClick={onEditClick} variant="outline" size="sm" color="accent">
+                    Edit Profile
+                  </Button>
+                </div>
+              )}
+
+              <div className={styles.profileInfo}>
+                <div className={styles.profileLeft}>
+                  <div className={styles.avatarWrapper}>
+                    <AvatarImage
+                      src={isImageUrl(user.profilePicture) ? user.profilePicture : undefined}
+                      alt="Profile Picture"
+                      address={address as `0x${string}`}
+                    />
+                  </div>
+
+                  <div className={styles.profileDetails}>
+                    <h1 className={styles.profileName}>{user.username || "Anonymous User"}</h1>
+                    {user.email && (
+                      <a className={styles.profileEmail + " hover:underline"} href={`mailto:${user.email}`}>
+                        {user.email}
+                      </a>
+                    )}
+                    {user.biography && <p className={styles.profileBio}>{user.biography}</p>}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

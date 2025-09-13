@@ -41,7 +41,7 @@ const RatingDisplay = ({ rating, className }: { rating?: number; className?: str
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
-      <span className="text-sm font-medium text-yellow-600">{rating}</span>
+      <span className="text-sm font-medium text-yellow-600">{rating.toFixed(1)}</span>
       <StarIcon className="h-4 w-4 fill-yellow-500 text-yellow-500" />
     </div>
   );
@@ -83,6 +83,8 @@ const MetadataRow = ({
       <RatingDisplay rating={rating} />
       <CategoryDisplay category={category} />
       <TimeDisplay time={time} timeLabel={timeLabel} />
+      <CategoryDisplay category={category} />
+      <RatingDisplay rating={rating} />
       {extraInfo && <span className="text-sm text-muted-foreground">{extraInfo}</span>}
     </div>
   );
@@ -105,6 +107,7 @@ export function UniversalCard({
   footerRight,
   className,
   onClickCardAction = () => {},
+  highlight = false,
   ...props
 }: UniversalCardProps) {
   const { profilePicture, isLoading } = useUserProfile(avatarAddress);
@@ -160,6 +163,7 @@ export function UniversalCard({
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
         className,
       )}
+      highlight={highlight}
       onClick={onClickCardAction}
       {...props}
     >
@@ -203,6 +207,7 @@ export function UniversalCard({
         className,
       )}
       onClick={onClickCardAction}
+      highlight={highlight}
       {...props}
     >
       {/* Banner with glassmorphism effect */}

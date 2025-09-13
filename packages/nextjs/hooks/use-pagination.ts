@@ -1,50 +1,48 @@
 import { useCallback, useRef, useState } from "react";
 import { Paginated, PaginationMetaArg, PaginationMetadata, SearchParams } from "~~/types/paginated.types";
 
-type ScrollEvent = {
-  currentTarget: {
+export type PaginationScrollEvent = {
+  currentTarget?: {
+    scrollTop: number;
+    clientHeight: number;
+    scrollHeight: number;
+  };
+  target?: {
     scrollTop: number;
     clientHeight: number;
     scrollHeight: number;
   };
 };
 
-type MetadataCache = {
+type MetadataCache<T> = {
   [key: string]: {
+    data: T[];
     meta: PaginationMetadata;
   };
 };
 
 const compareParams = (a: SearchParams[], b: SearchParams[]) => {
   if (a.length !== b.length) return false;
-  return a.every((param, index) => param === b[index]);
+  return JSON.stringify(a) === JSON.stringify(b);
 };
 
 export interface PaginationHookParams<T> {
   fetchFunction: (meta: PaginationMetaArg, ...any: SearchParams[]) => Promise<Paginated<T>>;
-  loadingFunction: (value: React.SetStateAction<boolean>) => void;
-  setDataFunction: (value: React.SetStateAction<T[]>) => void;
+  loadingFunction: (value: boolean, key?: string) => void;
+  setDataFunction: (data: T[], key?: string) => void;
   itemsPerPage?: number;
 }
 
-const setCacheMetaData = (key: string, meta: PaginationMetadata, cache: MetadataCache, end: boolean = true) => {
+const setCacheMetaData = <T>(key: string, meta: PaginationMetadata, cache: MetadataCache<T>) => {
   if (!cache[key]) {
-    cache[key] = { meta };
+    cache[key] = { meta, data: [] };
     return cache;
   }
 
-  if (end) {
-    cache[key].meta.endCursor = meta.endCursor;
-    cache[key].meta.hasNextPage = meta.hasNextPage;
-    if (cache[key].meta.startCursor === undefined) {
-      cache[key].meta.startCursor = meta.startCursor;
-    }
-  } else {
+  cache[key].meta.endCursor = meta.endCursor;
+  cache[key].meta.hasNextPage = meta.hasNextPage;
+  if (cache[key].meta.startCursor === undefined) {
     cache[key].meta.startCursor = meta.startCursor;
-    if (cache[key].meta.endCursor === undefined) {
-      cache[key].meta.endCursor = meta.endCursor;
-    }
-    // cache[key].meta.hasPreviousPage = meta.hasPreviousPage;
   }
 
   return cache;
@@ -57,71 +55,93 @@ export const usePagination = <T>({
   itemsPerPage = 20,
 }: PaginationHookParams<T>) => {
   // states
-  const [totalItems, setTotalItems] = useState<number>(itemsPerPage);
+  const [totalItems, setTotalItems] = useState<{ [key: string]: number }>({});
   // refs
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
   const lastSearch = useRef<SearchParams[]>([]);
-  const cache = useRef<MetadataCache>({});
+  const cache = useRef<MetadataCache<T>>({});
   const lastScrollTop = useRef<number>(0);
-  const loading = useRef<boolean>(false);
+  const loading = useRef<{ [key: string]: boolean }>({});
 
-  const fetchStart = useCallback(
-    async (key: string, ...params: SearchParams[]): Promise<void> => {
-      loading.current = true;
-      loadingFunction(true);
+  const setData = useCallback(
+    (cache: MetadataCache<T>, key: string, data: T[]) => {
+      const pushedData: T[] = cache[key].data.length === 0 ? data : cache[key].data.concat(data);
 
-      const response: Paginated<T> = await fetchFunction(
-        { limit: itemsPerPage, startCursor: cache.current[key]?.meta?.startCursor },
-        ...params,
-      );
-      setTotalItems(response.meta?.totalCount || itemsPerPage);
-
-      cache.current = setCacheMetaData(key, response.meta, cache.current, false);
-      setDataFunction(prev => (prev.length === 0 ? response.data : response.data.concat(prev)));
-
-      setTimeout(() => {
-        loadingFunction(false);
-        loading.current = false;
-      }, 100);
-      lastSearch.current = params ?? [];
+      setDataFunction(pushedData, key);
+      cache[key].data = pushedData;
+      return cache;
     },
-    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction, itemsPerPage],
+    [setDataFunction],
+  );
+
+  const setLoading = useCallback(
+    (value: boolean, key: string) => {
+      if (typeof loading.current !== "object" || loading.current === null) {
+        loading.current = {};
+      }
+      loading.current[key] = value;
+      loadingFunction(value, key);
+    },
+    [loadingFunction, loading],
   );
 
   const fetchData = useCallback(
     async (hasParamNotChanged: boolean, key: string, ...params: SearchParams[]): Promise<void> => {
-      if (hasParamNotChanged && cache.current[key]?.meta?.hasNextPage === false) {
+      if (!hasParamNotChanged) {
+        // If search params changed, reinitialize cache
+        delete cache.current[key];
+      }
+
+      if (cache.current[key]?.meta?.hasNextPage === false) {
+        cache.current = setData(cache.current, key, []);
         return;
       }
 
-      loading.current = true;
-      loadingFunction(true);
+      if (loading.current[key]) {
+        return;
+      }
+
+      setLoading(true, key);
 
       const response: Paginated<T> = await fetchFunction(
-        { limit: itemsPerPage, endCursor: hasParamNotChanged ? cache.current[key]?.meta?.endCursor : undefined },
+        { limit: itemsPerPage, endCursor: cache.current[key]?.meta?.endCursor, key },
         ...params,
       );
-      setTotalItems(response.meta?.totalCount || itemsPerPage);
-
+      setTotalItems(prev => ({ ...prev, [key]: response.meta?.totalCount || itemsPerPage }));
       cache.current = setCacheMetaData(key, response.meta, cache.current);
-      setDataFunction(prev => (prev.length === 0 || !hasParamNotChanged ? response.data : prev.concat(response.data)));
+      cache.current = setData(cache.current, key, response.data);
 
       setTimeout(() => {
-        loadingFunction(false);
-        loading.current = false;
+        setLoading(false, key);
       }, 100);
       lastSearch.current = params ?? [];
     },
-    [lastSearch, setDataFunction, cache, loadingFunction, fetchFunction, itemsPerPage],
+    [lastSearch, setData, cache, fetchFunction, itemsPerPage, setLoading],
+  );
+
+  const paginationPushFront = useCallback(
+    (key: string, item: T) => {
+      if (!cache.current[key]) {
+        cache.current[key] = {
+          meta: { hasNextPage: true, endCursor: null, startCursor: null, totalCount: 0 },
+          data: [],
+        };
+      }
+
+      cache.current[key].data.unshift(item);
+      setDataFunction(cache.current[key].data, key);
+      setTotalItems(prev => ({ ...prev, [key]: (prev[key] || 0) + 1 }));
+    },
+    [setDataFunction],
   );
 
   const fetchPaginatedData = useCallback(
-    async (key: string, ...searchParams: SearchParams[]) => {
+    async (instantFetch: boolean, key: string, ...searchParams: SearchParams[]) => {
       if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
 
       const hasParamNotChanged = compareParams(lastSearch.current, searchParams);
 
-      if (hasParamNotChanged) {
+      if (hasParamNotChanged || instantFetch) {
         // If search params have not changed, fetch data immediately
         await fetchData(hasParamNotChanged, key, ...searchParams);
       } else {
@@ -140,9 +160,15 @@ export const usePagination = <T>({
   );
 
   const handleScroll = useCallback(
-    async (event: ScrollEvent, key: string, ...searchParams: SearchParams[]) => {
-      const listboxNode = event.currentTarget;
-      const isScrollingDown = listboxNode.scrollTop > lastScrollTop.current;
+    async (event: any | PaginationScrollEvent, key: string, ...searchParams: SearchParams[]) => {
+      const listboxNode = event.currentTarget ? event.currentTarget : event.target;
+
+      if (!listboxNode) {
+        console.warn("Listbox node not found, event has no currentTarget or target");
+        return;
+      }
+
+      const isScrollingDown = listboxNode.scrollTop >= lastScrollTop.current;
 
       // Always update the scroll position for the next event
       lastScrollTop.current = listboxNode.scrollTop;
@@ -151,22 +177,26 @@ export const usePagination = <T>({
       if (!isScrollingDown) {
         return;
       }
-
       const position = listboxNode.scrollTop + listboxNode.clientHeight;
       const scrollHeight = listboxNode.scrollHeight;
 
       // Check if we are at 50% of the scroll height and not currently loading
-      if (scrollHeight * 0.5 <= position && !loading.current && cache.current[key]?.meta?.hasNextPage !== false) {
-        fetchPaginatedData(key, ...searchParams);
+      if (
+        scrollHeight * 0.5 <= position &&
+        !loading.current[key] &&
+        cache.current[key]?.meta?.hasNextPage !== false &&
+        totalItems[key] > itemsPerPage
+      ) {
+        fetchPaginatedData(true, key, ...searchParams);
       }
     },
-    [fetchPaginatedData, cache, lastScrollTop],
+    [fetchPaginatedData, cache, lastScrollTop, totalItems, itemsPerPage],
   );
 
   return {
     totalItems,
-    reloadStart: fetchStart,
     fetchPaginatedData,
     handleScroll,
+    paginationPushFront,
   };
 };

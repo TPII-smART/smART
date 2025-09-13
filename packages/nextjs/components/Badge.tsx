@@ -1,4 +1,5 @@
 import React from "react";
+import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.type";
 
 interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
@@ -16,4 +17,26 @@ export function Badge({ children, variant = "default", className, ...props }: Ba
       {children}
     </span>
   );
+}
+
+export function StatusBadge({ status }: { status: ActivityItem["status"] | undefined }) {
+  const badgeClass = "min-w-[150px] text-center text-xl justify-center  py-1";
+  switch (status) {
+    case ActivityItemStatus.pending:
+      return <Badge className={`bg-orange-350 text-white ${badgeClass}`}>Pending</Badge>;
+    case ActivityItemStatus.accepted:
+      return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Accepted</Badge>;
+    case ActivityItemStatus.cancelled:
+      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Cancelled</Badge>;
+    case ActivityItemStatus.completed:
+      return <Badge className={`bg-[var(--color-success)] text-white ${badgeClass}`}>Completed</Badge>;
+    case ActivityItemStatus.waitingForReview:
+      return (
+        <Badge className={`bg-yellow-100 text-yellow-800 hover:bg-yellow-100 ${badgeClass}`}>Waiting For Review</Badge>
+      );
+    case ActivityItemStatus.rejected:
+      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
+    default:
+      return null;
+  }
 }

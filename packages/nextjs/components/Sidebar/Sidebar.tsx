@@ -4,7 +4,6 @@ import React from "react";
 import Image from "next/image";
 import { RedirectType, redirect } from "next/navigation";
 import SmartIcon from "../../app/favicon.ico";
-import { SwitchTheme } from "../SwitchTheme/SwitchTheme";
 import { SidebarElementProps, SidebarProps } from "./types";
 import { styled } from "@mui/material";
 import Box from "@mui/material/Box";
@@ -127,7 +126,7 @@ const Sidebar = (props: SidebarProps) => {
     <SidebarContainer open={false}>
       <SidebarContent open={open} onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
         <Header>
-          <SidebarItem customLabel={SmartLogo()} open={open} imgSrc={SmartIcon} disabled />
+          <SidebarItem customLabel={SmartLogo()} open={open} imgSrc={SmartIcon} href="/" />
         </Header>
 
         <Content>
@@ -143,7 +142,7 @@ const Sidebar = (props: SidebarProps) => {
           ))}
         </Content>
 
-        <SwitchTheme open={open} />
+        {/* <SwitchTheme open={open} /> */}
       </SidebarContent>
     </SidebarContainer>
   );

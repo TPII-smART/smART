@@ -1,6 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
+import "./common/FileInfo.sol";
+
 /**
  * @title GigsContract
  * @dev A contract for managing gigs where clients post work requests and freelancers apply with proposals.
@@ -18,7 +20,8 @@ contract GigsContract {
     enum ApplicationState {
         Pending,
         Accepted,
-        Rejected
+        Rejected,
+        Withdrawn
     }
 
     // Struct for freelancer applications to gigs
@@ -67,12 +70,18 @@ contract GigsContract {
         uint256 createdAt;
         uint256 acceptedAt; // When an application was accepted
         uint256 canceledAt; // When an application was canceled
+        uint256 rejectedAt; // When the job was rejected by the client
         uint256 finishedAt; // When an application was finished
         bool clientReceived; // Whether the client has received the work results
         bool freelancerDelivered; // Whether the freelancer has delivered the work results
+        uint8 rating; // Rating given by the client (1-5)
         Application[] applications; // All applications for this gig
         uint256 acceptedApplicationId; // ID of the accepted application
         string gigBannerImageHash; // IPFS hash of the gig banner image
+        bool clientRejected; // Whether the client has rejected the job results
+        bool clientCancelled; // Whether the client cancelled the job
+        bool freelancerCancelled; // Whether the freelancer cancelled the job
+        FileInfo[] fileInfo; // Store the file related to the job
     }
 
     // State variables of the contract
@@ -117,13 +126,49 @@ contract GigsContract {
         string rejectionComment
     );
 
+    event ApplicationWithdrawn(uint256 indexed gigId, uint256 indexed applicationId, address indexed freelancer, string rejectionComment);
+
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
     event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
 
+    event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
+
     event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment, uint256 timestamp);
 
-    event GigCancelled(uint256 indexed gigId, GigState state, uint256 timestamp);
+    event GigRejected(
+        uint256 indexed gigId,
+        address client,
+        bool freelancerDelivered,
+        bool clientReceived,
+        bool clientRejected,
+        uint256 timestamp
+    );
+
+    event CommentAdded(
+        uint256 indexed gigId,
+        address indexed client,
+        string response,
+        uint256 fileUploadedAt,
+        uint256 timestamp
+    );
+
+    event GigCancelled(
+        uint256 indexed gigId,
+        GigState state,
+        bool clientCancelled,
+        bool freelancerCancelled,
+        uint256 timestamp
+    );
+
+    event FileUploaded(
+        uint256 indexed gigId,
+        address indexed freelancer,
+        string resource,
+        string submissionComment,
+        bool isLink,
+        uint256 uploadedAt
+    );
 
     // Modifiers
     modifier onlyClient(uint256 _gigId) {
@@ -193,6 +238,7 @@ contract GigsContract {
             newGig.acceptedAt = 0;
             newGig.clientReceived = false;
             newGig.freelancerDelivered = false;
+            newGig.rating = 0;
             newGig.acceptedApplicationId = 0;
             newGig.gigBannerImageHash = params.gigBannerImageHash;
         }
@@ -329,6 +375,12 @@ contract GigsContract {
             if (i != _acceptedId && gig.applications[i].state == ApplicationState.Pending) {
                 gig.applications[i].state = ApplicationState.Rejected;
                 gig.applications[i].rejectionComment = "Another application was selected";
+                emit ApplicationRejected(
+                    _gigId,
+                    i,
+                    gig.applications[i].freelancer,
+                    gig.applications[i].rejectionComment
+                );
             }
         }
     }
@@ -385,6 +437,22 @@ contract GigsContract {
     }
 
     /**
+     * @dev Rate the gig (only client can rate after completion)
+     * @param _gigId The gig ID to rate
+     * @param _rating The rating to give (1-5)
+     */
+    function rateGig(uint256 _gigId, uint8 _rating) external gigExists(_gigId) onlyClient(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+        require(gig.state == GigState.Completed, "Gig is not completed");
+        require(gig.rating == 0, "Gig already rated");
+        require(_rating >= 1 && _rating <= 5, "Invalid rating");
+        require(_rating % 1 == 0, "Rating must be an integer");
+
+        gig.rating = _rating;
+        emit GigRated(_gigId, msg.sender, _rating, block.timestamp);
+    }
+
+    /**
      * @dev Internal function to complete gig and release payment
      * @param _gigId The gig ID to complete
      */
@@ -411,15 +479,37 @@ contract GigsContract {
             gig.state = GigState.Cancelled;
         } else if (gig.state == GigState.InProgress) {
             // If gig is in progress, cancel and refund full amount to client
-            gig.state = GigState.Cancelled;
-            payable(gig.client).transfer(gig.finalPayment);
+
+            if (msg.sender == gig.client) {
+                gig.clientCancelled = true;
+            } else if (msg.sender == gig.acceptedFreelancer) {
+                gig.freelancerCancelled = true;
+            }
+
+            // Refund payment to client if there was one
+            if (gig.client != address(0) && gig.clientCancelled && gig.freelancerCancelled) {
+                gig.state = GigState.Cancelled;
+                gig.canceledAt = block.timestamp;
+                payable(gig.client).transfer(gig.finalPayment);
+            }
         } else {
             revert("Gig cannot be cancelled in its current state");
         }
 
-        gig.canceledAt = block.timestamp;
+        emit GigCancelled(_gigId, gig.state, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);
+    }
 
-        emit GigCancelled(_gigId, GigState.Cancelled, gig.canceledAt);
+    function withdrawApplication(uint256 _gigId, uint256 _applicationId) external gigExists(_gigId) applicationExists(_gigId, _applicationId) {
+        Gig storage gig = postedGigs[_gigId];
+        Application storage application = gig.applications[_applicationId];
+
+        require(application.freelancer == msg.sender, "Only the applicant can withdraw their application");
+        require(application.state == ApplicationState.Pending, "Only pending applications can be withdrawn");
+
+        application.state = ApplicationState.Withdrawn;
+        application.rejectionComment = "Application withdrawn by freelancer";
+
+        emit ApplicationWithdrawn(_gigId, _applicationId, msg.sender, application.rejectionComment);
     }
 
     /**
@@ -438,7 +528,7 @@ contract GigsContract {
 
         gig.canceledAt = block.timestamp;
 
-        emit GigCancelled(_gigId, GigState.Cancelled, gig.canceledAt);
+        emit GigCancelled(_gigId, GigState.Cancelled, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);
     }
 
     function getTotalGigsPosted() external view returns (uint256) {
@@ -448,5 +538,90 @@ contract GigsContract {
     // Function to receive Ether
     receive() external payable {
         revert("Direct payments not accepted");
+    }
+
+    /**
+     * @dev Allows the freelancer to upload a file.
+     * @param _gigId Gig ID.
+     * @param _fileParams The content of the file (IPFS hash and comment).
+     */
+    function uploadFile(
+        uint256 _gigId,
+        FileParams memory _fileParams
+    ) external onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.InProgress, "The gig is not in progress.");
+
+        require(bytes(_fileParams.resource).length > 0, "Resource cannot be empty.");
+        require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
+        require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
+
+        FileInfo memory fileInfo = FileInfo({
+            resource: _fileParams.resource,
+            submissionComment: _fileParams.submissionComment,
+            uploadedAt: block.timestamp,
+            clientResponse: "",
+            isLink: _fileParams.isLink
+        });
+
+        gig.fileInfo.push(
+            FileInfo({
+                resource: _fileParams.resource,
+                submissionComment: _fileParams.submissionComment,
+                uploadedAt: block.timestamp,
+                clientResponse: "",
+                isLink: _fileParams.isLink
+            })
+        );
+
+        emit FileUploaded(
+            _gigId,
+            msg.sender,
+            fileInfo.resource,
+            fileInfo.submissionComment,
+            fileInfo.isLink,
+            fileInfo.uploadedAt
+        );
+    }
+
+    /**
+     * @dev Allows the client to add a response to the last uploaded file.
+     * @param _gigId Gig ID.
+     * @param _comment Comment text.
+     */
+    function addCommentToGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+        FileInfo storage fileInfo = gig.fileInfo[gig.fileInfo.length - 1];
+
+        require(gig.state == GigState.InProgress, "The gig is not in progress.");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+
+        fileInfo.clientResponse = _comment;
+
+        emit CommentAdded(_gigId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
+    }
+
+    function rejectGig(uint256 _gigId) external onlyClient(_gigId) gigExists(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.InProgress, "The gig is not in progress.");
+        require(gig.client != address(0), "The gig has no assigned client.");
+        require(gig.acceptedFreelancer != address(0), "The gig has no assigned freelancer.");
+
+        gig.freelancerDelivered = false;
+        gig.clientReceived = false;
+        gig.clientRejected = true;
+        gig.rejectedAt = block.timestamp;
+
+        emit GigRejected(
+            _gigId,
+            gig.client,
+            gig.freelancerDelivered,
+            gig.clientReceived,
+            gig.clientRejected,
+            gig.rejectedAt
+        );
     }
 }

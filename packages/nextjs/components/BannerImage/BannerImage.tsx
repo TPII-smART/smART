@@ -12,7 +12,7 @@ export default function BannerImage({
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src ? src : undefined}
-      className={`rounded-xl object-cover`}
+      className={`object-cover`}
       alt={alt}
       width={width}
       height={height}
@@ -20,5 +20,5 @@ export default function BannerImage({
     />
   );
 
-  return loading ? <Skeleton variant="rectangular" className="rounded-xl" width={width} height={height} /> : component;
+  return loading ? <Skeleton variant="rectangular" width={width} height={height} /> : component;
 }

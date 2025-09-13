@@ -10,16 +10,15 @@ import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiProvider, useAccount } from "wagmi";
 import {
-  BookOpenIcon,
-  BriefcaseIcon,
   BugAntIcon,
   HomeIcon,
   MagnifyingGlassIcon,
+  NewspaperIcon,
   TableCellsIcon,
   UserIcon,
-  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/outline";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
+import { NotificationsProvider } from "~~/context/NotificationsCountProvider";
 import { SpinnerProvider } from "~~/context/SpinnerProvider";
 import { UserProvider } from "~~/context/UserProvider";
 import { useInitializeNativeCurrencyPrice } from "~~/hooks/scaffold-eth";
@@ -32,70 +31,47 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <main className="flex flex-1 w-full inherit">
-        <Header />
-        <Sidebar
-          items={[
-            {
-              label: "Home",
-              href: "/",
-              icon: HomeIcon,
-            },
-            {
-              label: "Profile",
-              href: `/profile/${address}`,
-              icon: UserIcon,
-            },
-            {
-              label: "Dashboard",
-              href: "/dashboard",
-              icon: TableCellsIcon,
-            },
-            {
-              label: "My Job Postings",
-              href: "/my-jobs",
-              icon: BriefcaseIcon,
-            },
-            {
-              label: "My Hires",
-              href: "/hires",
-              icon: WrenchScrewdriverIcon,
-            },
-            {
-              label: "Browse Jobs",
-              href: "/browse-jobs",
-              icon: BookOpenIcon,
-            },
-            {
-              label: "My Gigs",
-              href: "/my-gigs",
-              icon: BriefcaseIcon,
-            },
-            {
-              label: "My Applications",
-              href: "/applications",
-              icon: WrenchScrewdriverIcon,
-            },
-            {
-              label: "Browse Gigs",
-              href: "/browse-gigs",
-              icon: BookOpenIcon,
-            },
-            {
-              label: "Ponder",
-              href: "/ponder-greetings",
-              icon: MagnifyingGlassIcon,
-            },
-            {
-              label: "Debug Contracts",
-              href: "/debug",
-              icon: BugAntIcon,
-            },
-          ]}
-        />
-        <div className="flex flex-col w-full inherit">
-          <div className="h-[7vh] w-full relative"></div>
-          {children}
-        </div>
+        <NotificationsProvider>
+          <Header />
+          <Sidebar
+            items={[
+              {
+                label: "Home",
+                href: "/",
+                icon: HomeIcon,
+              },
+              {
+                label: "Profile",
+                href: `/profile/${address}`,
+                icon: UserIcon,
+              },
+              {
+                label: "Dashboard",
+                href: "/dashboard",
+                icon: TableCellsIcon,
+              },
+              {
+                label: "Browse",
+                href: "/browse",
+                icon: MagnifyingGlassIcon,
+              },
+              {
+                label: "Debug Contracts",
+                href: "/debug",
+                icon: BugAntIcon,
+              },
+              {
+                label: "Feed",
+                href: "/feed",
+                icon: NewspaperIcon,
+              },
+            ]}
+          />
+          <div className="flex flex-col w-full inherit">
+            <div className="min-h-[50px] h-[7vh] w-full relative"></div>
+            {children}
+          </div>
+        </NotificationsProvider>
       </main>
     </>
   );

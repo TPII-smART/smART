@@ -1,9 +1,9 @@
-import { GigStateEnum } from "~~/types/gig/gig.types";
+import { GigState } from "@se-2/common";
 
 export const gigState = [
-  { id: GigStateEnum.Open, label: "Hearing Offers" },
-  { id: GigStateEnum.InProgress, label: "In Progress" },
-  { id: GigStateEnum.Completed, label: "Finished" },
-  { id: GigStateEnum.Cancelled, label: "Cancelled" },
-  { id: GigStateEnum.Disputed, label: "Disputed" },
+  { id: GigState.Open, label: "Hearing Offers" },
+  { id: GigState.InProgress, label: "In Progress" },
+  { id: GigState.Completed, label: "Finished" },
+  { id: GigState.Cancelled, label: "Cancelled" },
+  { id: GigState.Disputed, label: "Disputed" },
 ];

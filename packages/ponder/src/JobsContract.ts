@@ -1,14 +1,6 @@
 import { ponder } from "ponder:registry";
-import { job, jobPosting } from "ponder:schema";
-
-// Enums for job states
-export enum JobState {
-	WaitingForApproval = 0,
-	Ongoing = 1,
-	Finished = 2,
-	Cancelled = 3,
-	Disputed = 4,
-}
+import { job, jobPosting, notification, jobDeliverable } from "ponder:schema";
+import { JobState } from "@se-2/common";
 
 // Event handlers for the JobsContract
 
@@ -52,9 +44,24 @@ ponder.on("JobsContract:JobCreated", async ({ event, context }) => {
 		state: JobState.WaitingForApproval, // Initial job state
 		createdAt: BigInt(event.block.timestamp),
 		acceptedAt: null,
+		rejectedAt: null,
+		emitBy: event.transaction.from,
 		clientReceived: false,
 		freelancerDelivered: false,
+		clientRejected: false,
+		clientCancelled: false,
+		freelancerCancelled: false,
 		lastTransactionHash: event.transaction.hash,
+	});
+
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: event.args.freelancer as unknown as string,
+		title: "A client want to hire you",
+		message: `A client want to hire you for the job "${event.args.title}"`,
+		href: `/job-posting/${event.args.postingId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.jobId,
 	});
 });
 
@@ -72,7 +79,23 @@ ponder.on("JobsContract:JobAccepted", async ({ event, context }) => {
 			state: JobState.Ongoing,
 			deadline: event.args.deadline || 0n,
 			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
 		});
+
+	const _job = await context.db.find(job, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+	});
+
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: event.args.client as unknown as string,
+		title: "A job was accepted by a freelancer",
+		message: `The freelancer accepted the job "${_job?.title}"`,
+		href: `/job-posting/${event.args.postingId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.jobId,
+	});
 });
 
 // This event is triggered when a job is marked as completed by a freelancer.
@@ -87,6 +110,59 @@ ponder.on(
 			})
 			.set({
 				freelancerDelivered: true,
+				emitBy: event.transaction.from,
+				deliveredAt: BigInt(event.args.timestamp),
+				lastTransactionHash: event.transaction.hash,
+			});
+
+		const _job = await context.db.find(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		});
+
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+			user: event.args.client as unknown as string,
+			title: "The freelancer marked a job as delivered",
+			message: `The freelancer marked the job "${_job?.title}" as delivered`,
+			href: `/job-posting/${event.args.postingId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.jobId,
+		});
+	}
+);
+
+ponder.on(
+	"JobsContract:FileUploaded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.insert(jobDeliverable)
+			.values({
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+				resource: event.args.resource,
+				submissionComment: event.args.submissionComment,
+				isLink: event.args.isLink,
+				uploadedAt: BigInt(event.block.timestamp),
+				lastTransactionHash: event.transaction.hash,
+			});
+	}
+);
+
+// This event is triggered when a a client add a comment to the uploaded file.
+ponder.on(
+	"JobsContract:CommentAdded",
+	async ({ event, context }) => {
+		// Updates the job to mark it as file uploaded
+		await context.db
+			.update(jobDeliverable, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+				uploadedAt: BigInt(event.args.fileUploadedAt),
+			})
+			.set({
+				clientResponse: event.args.response,
 				lastTransactionHash: event.transaction.hash,
 			});
 	}
@@ -102,8 +178,24 @@ ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		})
 		.set({
 			clientReceived: true,
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
+
+	const _job = await context.db.find(job, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+	});
+
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: event.args.client as unknown as string,
+		title: "The client marked your job as received",
+		message: `The client marked your job "${_job?.title}" as received`,
+		href: `/job-posting/${event.args.postingId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.jobId,
+	});
 });
 
 // This event is triggered when a job is marked as finished.
@@ -117,21 +209,141 @@ ponder.on("JobsContract:JobFinished", async ({ event, context }) => {
 		.set({
 			state: JobState.Finished,
 			finishedAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});
 });
 
-// This event is triggered when a job is cancelled.
-ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
-	// Updates the job to mark it as cancelled
+// This event is triggered when a job is rated.
+ponder.on("JobsContract:JobRated", async ({ event, context }) => {
+	// Updates the job to add the rating
 	await context.db
 		.update(job, {
 			jobId: event.args.jobId,
 			postingId: event.args.postingId,
 		})
 		.set({
-			state: JobState.Cancelled,
-			canceledAt: BigInt(event.args.timestamp),
+			rating: event.args.rating || 0n,
 			lastTransactionHash: event.transaction.hash,
 		});
+
+	const _job = await context.db.find(job, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+	});
+
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: _job?.freelancer as unknown as string,
+		title: "The client rated your job",
+		message: `Your job "${_job?.title}" was rated with ${
+			event.args.rating || 0n
+		} ⭐`,
+		href: `/job-posting/${event.args.postingId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.jobId,
+	});
+});
+
+// This event is triggered when a job is cancelled.
+ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
+	// Updates the job to mark it as cancelled
+
+	console.log("Cancelling job from:", event.transaction.from);
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			state: event.args.state,
+			clientCancelled: event.args.clientCancelled,
+			freelancerCancelled: event.args.freelancerCancelled,
+			canceledAt: BigInt(event.args.timestamp),
+			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
+		});
+
+	const _job = await context.db.find(job, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+	});
+
+	if (event.args.freelancerCancelled && event.args.clientCancelled) {
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _job?.freelancer as unknown as string,
+			title: "The job was cancelled",
+			message: `The job "${_job?.title}" has been cancelled.`,
+			href: `/job-posting/${event.args.postingId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.jobId,
+		});
+
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _job?.client as unknown as string,
+			title: "The job was cancelled",
+			message: `The job "${_job?.title}" has been cancelled.`,
+			href: `/job-posting/${event.args.postingId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.jobId,
+		});
+	} else if (event.args.clientCancelled) {
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _job?.freelancer as unknown as string,
+			title: "The job was cancelled by the client",
+			message: `The client for job "${_job?.title}" wants to cancel it.`,
+			href: `/job-posting/${event.args.postingId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.jobId,
+		});
+	} else if (event.args.freelancerCancelled) {
+		await context.db.insert(notification).values({
+			id: `${event.block.number}-${event.log.logIndex}`,
+			user: _job?.client as unknown as string,
+			title: "The job was cancelled by the freelancer",
+			message: `The freelancer for job "${_job?.title}" wants to cancel it.`,
+			href: `/job-posting/${event.args.postingId}`,
+			createdAt: BigInt(event.block.timestamp),
+			itemId: event.args.jobId,
+		});
+	}
+});
+
+ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
+	// Updates the job to mark it as cancelled
+
+	console.log("Rejecting job from:", event.transaction.from);
+	console.log("Event args:", event.args);
+
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			rejectedAt: BigInt(event.args.timestamp),
+			clientReceived: event.args.clientReceived,
+			freelancerDelivered: event.args.freelancerDelivered,
+			clientRejected: event.args.clientRejected,
+			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
+		});
+
+	const _job = await context.db.find(job, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+	});
+
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: _job?.freelancer as unknown as string,
+		title: "Job rejected",
+		message: `The job "${_job?.title}" has been rejected by the client.`,
+		href: `/job-posting/${event.args.jobId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.jobId,
+	});
 });

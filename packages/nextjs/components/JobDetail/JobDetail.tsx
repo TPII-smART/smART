@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { JobRoadmap } from "@/components/JobRoadmap/JobRoadmap";
 import Spinner from "@/components/Spinner/Spinner";
 import { isImageUrl } from "@/lib/utils";
+import { JobState } from "@se-2/common";
 import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
@@ -16,7 +17,7 @@ import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
-import { Job, JobStateEnum } from "~~/types/job";
+import { Job } from "~~/types/job";
 import { UserProfile } from "~~/types/user-profile.type";
 
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
@@ -101,7 +102,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const getStatusBadge = (status: number) => {
     const badgeClass = "min-w-[140px] text-center justify-center px-4 py-2";
     switch (status) {
-      case JobStateEnum.WaitingForApproval:
+      case JobState.WaitingForApproval:
         return (
           <Badge
             className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
@@ -109,21 +110,21 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
             Waiting for approval
           </Badge>
         );
-      case JobStateEnum.Ongoing:
+      case JobState.Ongoing:
         return (
           <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
             Ongoing
           </Badge>
         );
-      case JobStateEnum.Cancelled:
+      case JobState.Cancelled:
         return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Cancelled</Badge>;
-      case JobStateEnum.Finished:
+      case JobState.Finished:
         return (
           <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
             Completed
           </Badge>
         );
-      case JobStateEnum.Disputed:
+      case JobState.Disputed:
         return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
       default:
         return null;
@@ -162,7 +163,8 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
   const handleAccept = async () => {
     try {
-      if (data?.state !== JobStateEnum.WaitingForApproval) return;
+      if (data?.state !== JobState.WaitingForApproval) return;
+      if (!data?.payment || !data?.jobId) return;
       await writeContract({
         functionName: "acceptJob",
         args: [BigInt(data?.postingId), BigInt(data?.jobId)],
@@ -201,7 +203,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
   // Get status message based on job state and user role
   const getStatusMessage = () => {
-    if (data?.state === JobStateEnum.WaitingForApproval) {
+    if (data?.state === JobState.WaitingForApproval) {
       if (isClient) {
         return "Waiting for freelancer to accept the job. You can cancel if needed.";
       } else if (isFreelancer) {
@@ -211,7 +213,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       }
     }
 
-    if (data?.state != undefined && data?.state >= JobStateEnum.Ongoing) {
+    if (data?.state != undefined && data?.state >= JobState.Ongoing) {
       return "¿Facing any problems with this job?";
     }
 
@@ -223,7 +225,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     const buttons = [];
 
     // Cancel button - available for both parties until job is finished
-    if (data?.state !== JobStateEnum.Finished && data?.state !== JobStateEnum.Cancelled) {
+    if (data?.state !== JobState.Finished && data?.state !== JobState.Cancelled) {
       buttons.push(
         <div key="cancel" className="flex flex-col items-center space-y-2">
           <Button variant="danger" onClick={() => handleCancel()} disabled={isMining} size="md" tooltip="Cancel Job">
@@ -236,7 +238,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
     // Freelancer actions
     if (isFreelancer) {
-      if (data?.state === JobStateEnum.WaitingForApproval) {
+      if (data?.state === JobState.WaitingForApproval) {
         buttons.push(
           <div key="accept" className="flex flex-col items-center space-y-2">
             <Button variant="primary" onClick={handleAccept} disabled={isMining} size="md" tooltip="Accept Job">
@@ -246,7 +248,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </div>,
         );
       }
-      if (data?.state === JobStateEnum.Ongoing && !data?.freelancerDelivered) {
+      if (data?.state === JobState.Ongoing && !data?.freelancerDelivered) {
         buttons.push(
           <div key="deliver" className="flex flex-col items-center space-y-2">
             <Button
@@ -266,7 +268,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
     // Client actions
     if (isClient) {
-      if (data?.state === JobStateEnum.Ongoing) {
+      if (data?.state === JobState.Ongoing) {
         if (data?.freelancerDelivered && !data?.clientReceived) {
           buttons.push(
             <div key="receive" className="flex flex-col items-center space-y-2">
@@ -437,7 +439,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Deadline</p>
                     <p className="text-[var(--color-skeleton)] text-base">
-                      {data.state === JobStateEnum.WaitingForApproval
+                      {data.state === JobState.WaitingForApproval
                         ? "Deadline not yet defined"
                         : formatDate(String(data.deadline))}
                     </p>

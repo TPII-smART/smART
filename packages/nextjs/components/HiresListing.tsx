@@ -26,12 +26,7 @@ export default function HiresListing({ userAddress }: { userAddress: string }) {
   };
 
   return (
-    <div className="w-full px-4 md:px-6 lg:px-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-content-primary mb-2">My Hires</h1>
-        <p className="text-content-secondary">Manage your hired jobs and projects</p>
-      </div>
-
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <Spinner />

@@ -10,7 +10,7 @@ import { WorkPostingFormData, WorkPostingFormProps } from "./types";
 import * as yup from "yup";
 import { PlusIcon } from "@heroicons/react/24/outline";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { waitTransaction } from "~~/lib/utils";
+import { waitTransaction } from "~~/lib/waitTransaction.util";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { Gig } from "~~/types/gig/gig.types";
 import { JobPosting } from "~~/types/job";
@@ -22,6 +22,8 @@ interface JobVariant {
     functionName: "createJobPosting";
     args: ScaffoldWriteContractVariables<"JobsContract", "createJobPosting">["args"];
   };
+  schema: "jobPosting";
+  typeKeys: (keyof JobPosting)[];
 }
 
 interface GigVariant {
@@ -30,6 +32,8 @@ interface GigVariant {
     functionName: "createGig";
     args: ScaffoldWriteContractVariables<"GigsContract", "createGig">["args"];
   };
+  schema: "gig";
+  typeKeys: (keyof Gig)[];
 }
 
 function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
@@ -41,6 +45,8 @@ function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
           functionName: "createJobPosting",
           args: JobPosting.mapFormDataToContractArgs(form),
         }),
+        schema: "jobPosting",
+        typeKeys: Object.keys(new JobPosting()) as (keyof JobPosting)[],
       };
     case "gig":
       return {
@@ -49,6 +55,8 @@ function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
           functionName: "createGig",
           args: Gig.mapFormDataToContractArgs(form),
         }),
+        schema: "gig",
+        typeKeys: Object.keys(new Gig()) as (keyof Gig)[],
       };
   }
 }
@@ -56,7 +64,7 @@ function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
 const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   const [showModal, setShowModal] = useState(false);
 
-  const { contract, formMapper } = useMemo(() => getVariant(type), [type]);
+  const { contract, formMapper, schema, typeKeys } = useMemo(() => getVariant(type), [type]);
 
   const { writeContractAsync: createPosting, isMining } = useScaffoldWriteContract({
     contractName: contract,
@@ -73,8 +81,12 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
 
     try {
       const transactionHash = await createPosting(formMapper(form));
-      await waitTransaction("jobPosting", transactionHash);
-      await refresh();
+      const created = await waitTransaction<JobPosting & Gig>(schema, transactionHash, typeKeys);
+
+      if (created) {
+        refresh(created);
+      }
+
       setShowModal(false);
     } catch (err) {
       console.error("Failed to create job:", err);

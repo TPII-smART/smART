@@ -21,4 +21,8 @@ export interface SVGIconProps {
    * If not provided, it will be a simple SVG element.
    */
   href?: string;
+  /**
+   * Color override for the SVG icon.
+   */
+  color?: string;
 }
