@@ -20,7 +20,8 @@ contract GigsContract {
     enum ApplicationState {
         Pending,
         Accepted,
-        Rejected
+        Rejected,
+        Withdrawn
     }
 
     // Struct for freelancer applications to gigs
@@ -124,6 +125,8 @@ contract GigsContract {
         address indexed freelancer,
         string rejectionComment
     );
+
+    event ApplicationWithdrawn(uint256 indexed gigId, uint256 indexed applicationId, address indexed freelancer, string rejectionComment);
 
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
@@ -494,6 +497,19 @@ contract GigsContract {
         }
 
         emit GigCancelled(_gigId, gig.state, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);
+    }
+
+    function withdrawApplication(uint256 _gigId, uint256 _applicationId) external gigExists(_gigId) applicationExists(_gigId, _applicationId) {
+        Gig storage gig = postedGigs[_gigId];
+        Application storage application = gig.applications[_applicationId];
+
+        require(application.freelancer == msg.sender, "Only the applicant can withdraw their application");
+        require(application.state == ApplicationState.Pending, "Only pending applications can be withdrawn");
+
+        application.state = ApplicationState.Withdrawn;
+        application.rejectionComment = "Application withdrawn by freelancer";
+
+        emit ApplicationWithdrawn(_gigId, _applicationId, msg.sender, application.rejectionComment);
     }
 
     /**

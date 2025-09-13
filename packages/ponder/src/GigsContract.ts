@@ -1,5 +1,10 @@
 import { ponder } from "ponder:registry";
-import { gig, gigApplication, notification, gigDeliverable } from "ponder:schema";
+import {
+	gig,
+	gigApplication,
+	notification,
+	gigDeliverable,
+} from "ponder:schema";
 import { GigState, ApplicationState } from "@se-2/common";
 
 // Listen for Gig creation
@@ -303,34 +308,29 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 });
 
 ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
-	await context.db
-		.insert(gigDeliverable)
-		.values({
-			gigId: event.args.gigId,
-			resource: event.args.resource,
-			submissionComment: event.args.submissionComment,
-			isLink: event.args.isLink,
-			uploadedAt: BigInt(event.block.timestamp),
-			lastTransactionHash: event.transaction.hash,
-		});
+	await context.db.insert(gigDeliverable).values({
+		gigId: event.args.gigId,
+		resource: event.args.resource,
+		submissionComment: event.args.submissionComment,
+		isLink: event.args.isLink,
+		uploadedAt: BigInt(event.block.timestamp),
+		lastTransactionHash: event.transaction.hash,
+	});
 });
 
 // This event is triggered when a a client add a comment to the uploaded file.
-ponder.on(
-	"GigsContract:CommentAdded",
-	async ({ event, context }) => {
-		// Updates the gig to mark it as file uploaded
-		await context.db
-			.update(gigDeliverable, {
-				gigId: event.args.gigId,
-				uploadedAt: BigInt(event.args.fileUploadedAt),
-			})
-			.set({
-				clientResponse: event.args.response,
-				lastTransactionHash: event.transaction.hash,
-			});
-	}
-);
+ponder.on("GigsContract:CommentAdded", async ({ event, context }) => {
+	// Updates the gig to mark it as file uploaded
+	await context.db
+		.update(gigDeliverable, {
+			gigId: event.args.gigId,
+			uploadedAt: BigInt(event.args.fileUploadedAt),
+		})
+		.set({
+			clientResponse: event.args.response,
+			lastTransactionHash: event.transaction.hash,
+		});
+});
 
 ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 	await context.db
@@ -353,6 +353,42 @@ ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 		user: _gig?.acceptedFreelancer as unknown as string,
 		title: "Gig application rejected",
 		message: `The application for gig "${_gig?.title}" has been rejected by the client.`,
+		href: `/gig/${event.args.gigId}`,
+		createdAt: BigInt(event.block.timestamp),
+		itemId: event.args.applicationId,
+	});
+});
+
+ponder.on("GigsContract:ApplicationWithdrawn", async ({ event, context }) => {
+	await context.db
+		.update(gigApplication, {
+			gigId: event.args.gigId,
+			applicationId: event.args.applicationId,
+		})
+		.set({
+			state: ApplicationState.Withdrawn,
+			emitBy: event.transaction.from,
+			lastTransactionHash: event.transaction.hash,
+			rejectAt: event.block.timestamp,
+			rejectionComment: event.args.rejectionComment,
+		});
+
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
+		});
+
+	const _gig = await context.db.find(gig, { gigId: event.args.gigId });
+
+	await context.db.insert(notification).values({
+		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
+		user: _gig?.client as unknown as string,
+		title: "An application was withdrawn",
+		message: `The application for gig "${_gig?.title}" was withdrawn by the freelancer.`,
 		href: `/gig/${event.args.gigId}`,
 		createdAt: BigInt(event.block.timestamp),
 		itemId: event.args.applicationId,
