@@ -3,6 +3,7 @@ import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import { JobRoadmap } from "@/components/JobRoadmap/JobRoadmap";
+import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
 import { isImageUrl } from "@/lib/utils";
 import { JobState } from "@se-2/common";
@@ -10,13 +11,22 @@ import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import * as Yup from "yup";
+import { StarIcon } from "@heroicons/react/20/solid";
 import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
+import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
+import FormModal from "~~/components/Modal/FormModal/FormModal";
+import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
+import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
+import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
+import { fetchDeliverablesForJob } from "~~/services/graphql/fetchers/job/job.service";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
+import { Deliverable } from "~~/types/deliverable";
 import { Job } from "~~/types/job";
 import { UserProfile } from "~~/types/user-profile.type";
 
@@ -26,6 +36,10 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   // Information related to the users (client and freelancer)
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
   const [freelancerProfile, setFreelancerProfile] = useState<UserProfile | null>(null);
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -43,8 +57,22 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     queryFn: () => fetchJob(postingId, jobId),
   });
 
-  const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
-  const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
+  const {
+    data: deliverables,
+    isLoading: isDeliverableLoading,
+    refetch: refetchDeliverables,
+  } = useQuery<Deliverable[]>({
+    queryKey: ["jobDeliverable", postingId, jobId],
+    queryFn: async () => {
+      const result = await fetchDeliverablesForJob(postingId, jobId);
+      return result;
+    },
+  });
+  const job = data as Job;
+  const isRejected = job?.clientRejected;
+  const isFreelancer = job?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
+  const isClient = job?.client?.toLowerCase() === userAddress?.toLowerCase();
+  const jobStatus = job?.state as JobState;
 
   // Add this useEffect to fetch user profiles
   useEffect(() => {
@@ -188,16 +216,103 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     }
   };
 
-  const handleConfirmCompletion = async () => {
+  const handleFileUploadToIPFS = async (file: File | undefined) => {
+    if (!file) return;
+
+    return await uploadToIPFS(file);
+  };
+
+  const handleUploadFile = async (fileData: FileFormData) => {
     try {
-      if (!data?.jobId) return;
+      let resource = "";
+      const isLink = fileData.isLink;
+
+      if (!job.jobId) return;
+
+      if (fileData.file && !isLink) {
+        resource = (await handleFileUploadToIPFS(fileData.file)) || "";
+      } else if (!fileData.file && isLink) {
+        resource = fileData.link || "";
+      }
+
+      await writeContract({
+        functionName: "uploadFile",
+        args: [
+          BigInt(job.postingId),
+          BigInt(job.jobId),
+          { resource, submissionComment: fileData.submissionComment, isLink },
+        ],
+      });
+      await refetchDeliverables();
+    } catch (err) {
+      console.error("Upload file failed:", err);
+    }
+  };
+
+  const handleAddComment = async (comment: string) => {
+    try {
+      await writeContract({
+        functionName: "addCommentToJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId), comment],
+      });
+      if (reload) await reload();
+      await refetchDeliverables();
+    } catch (err) {
+      console.error("Write comment failed:", err);
+    }
+  };
+
+  const handleRateJob = async (rating: number) => {
+    try {
+      if (!job.jobId) return;
+      await writeContract({
+        functionName: "rateJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId), rating],
+      });
+      setIsRatingModalOpen(false);
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Rate job failed:", err);
+    }
+  };
+
+  const handleConfirmCompletion = async (fileData?: FileFormData, clientResponse?: string) => {
+    try {
+      if (isFreelancer && fileData) {
+        await handleUploadFile(fileData);
+        await refetch();
+      }
+
+      if (isClient && clientResponse) {
+        await handleAddComment(clientResponse);
+      }
+
       await writeContract({
         functionName: "confirmCompletion",
-        args: [BigInt(data?.postingId), BigInt(data?.jobId)],
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
       });
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm job completion failed:", err);
+    } finally {
+      setShowUploadModal(false);
+    }
+  };
+
+  const handleRejectJob = async (reason: string) => {
+    try {
+      if (!job.jobId) return;
+      await writeContract({
+        functionName: "rejectJob",
+        args: [BigInt(job.postingId), BigInt(job.jobId)],
+      });
+      if (reload) await reload();
+
+      await handleAddComment(reason);
+    } catch (err) {
+      console.error("Reject deliverable failed:", err);
+    } finally {
+      setShowDeliverableModal(false);
     }
   };
 
@@ -224,72 +339,111 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const getActionButtons = () => {
     const buttons = [];
 
-    // Cancel button - available for both parties until job is finished
-    if (data?.state !== JobState.Finished && data?.state !== JobState.Cancelled) {
-      buttons.push(
-        <div key="cancel" className="flex flex-col items-center space-y-2">
-          <Button variant="danger" onClick={() => handleCancel()} disabled={isMining} size="md" tooltip="Cancel Job">
-            <XCircleIcon className="h-8 w-8" />
-          </Button>
-          <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Cancel Job</p>
-        </div>,
-      );
-    }
-
     // Freelancer actions
     if (isFreelancer) {
-      if (data?.state === JobState.WaitingForApproval) {
+      if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled && !job.freelancerCancelled) {
         buttons.push(
-          <div key="accept" className="flex flex-col items-center space-y-2">
-            <Button variant="primary" onClick={handleAccept} disabled={isMining} size="md" tooltip="Accept Job">
-              <CheckCircleIcon className="h-8 w-8" />
-            </Button>
-            <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Accept Job</p>
-          </div>,
+          <Button
+            variant="danger"
+            key="FreelancerCancel"
+            onClick={handleCancel}
+            disabled={isMining}
+            size="sm"
+            tooltip="Cancel Job"
+          >
+            <XCircleIcon className="h-5 w-5" />
+          </Button>,
         );
       }
-      if (data?.state === JobState.Ongoing && !data?.freelancerDelivered) {
+      if (jobStatus === JobState.WaitingForApproval) {
         buttons.push(
-          <div key="deliver" className="flex flex-col items-center space-y-2">
-            <Button
-              variant="primary"
-              onClick={handleConfirmCompletion}
-              disabled={isMining}
-              size="md"
-              tooltip="Mark as Delivered"
-            >
-              <PaperAirplaneIcon className="h-8 w-8" />
-              <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Mark as Delivered</p>
-            </Button>
-          </div>,
+          <Button
+            variant="primary"
+            key="accept"
+            onClick={handleAccept}
+            disabled={isMining}
+            size="sm"
+            tooltip="Accept Job"
+          >
+            <CheckCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+      if (
+        jobStatus === JobState.Ongoing &&
+        !job.freelancerDelivered &&
+        !job.freelancerCancelled &&
+        !job.clientCancelled
+      ) {
+        buttons.push(
+          <Button
+            variant="primary"
+            key="deliver"
+            onClick={() => (isRejected ? setShowDeliverableModal(true) : setShowUploadModal(true))}
+            disabled={isMining}
+            size="sm"
+            tooltip="Mark as Delivered"
+          >
+            <PaperAirplaneIcon className="h-5 w-5" />
+          </Button>,
         );
       }
     }
 
     // Client actions
     if (isClient) {
-      if (data?.state === JobState.Ongoing) {
-        if (data?.freelancerDelivered && !data?.clientReceived) {
+      if (jobStatus === JobState.Ongoing) {
+        if (job.freelancerDelivered && !job.clientReceived) {
           buttons.push(
-            <div key="receive" className="flex flex-col items-center space-y-2">
-              <Button
-                variant="primary"
-                onClick={handleConfirmCompletion}
-                disabled={isMining}
-                size="md"
-                tooltip="Mark as Received"
-              >
-                <ArrowDownTrayIcon className="h-8 w-8" />
-                <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Mark as Received</p>
-              </Button>
-            </div>,
+            <Button
+              variant="primary"
+              key="receive"
+              onClick={() => setShowDeliverableModal(true)}
+              disabled={isMining}
+              size="sm"
+              tooltip="Mark as Received"
+            >
+              <ArrowDownTrayIcon className="h-5 w-5" />
+            </Button>,
           );
         }
       }
+
+      if (jobStatus === JobState.Finished && !job.rating) {
+        buttons.push(
+          <Button
+            variant="primary"
+            key="rate"
+            onClick={() => setIsRatingModalOpen(true)}
+            disabled={isMining}
+            size="sm"
+            tooltip="Rate Freelancer"
+          >
+            <StarIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
+
+      if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled && !job.clientCancelled) {
+        buttons.push(
+          <Button
+            variant="danger"
+            key="ClientCancel"
+            onClick={handleCancel}
+            disabled={isMining}
+            size="sm"
+            tooltip="Cancel Job"
+          >
+            <XCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
     }
 
-    return <div className="flex gap-12 flex-wrap justify-center">{buttons}</div>;
+    return buttons;
   };
+
+  const actionButtons = getActionButtons();
 
   if (error || !data) {
     return (
@@ -317,6 +471,18 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       </div>
     );
   }
+
+  const validationSchema = Yup.object().shape({
+    rating: Yup.number()
+      .required("Please select a rating")
+      .min(1, "Please select a rating")
+      .max(5, "Rating must be between 1 and 5"),
+  });
+
+  const resource = deliverables?.[deliverables?.length - 1]?.resource;
+  const isLink = deliverables?.[deliverables?.length - 1]?.isLink;
+  const submissionComment = deliverables?.[deliverables?.length - 1]?.submissionComment;
+  const clientResponse = deliverables?.[deliverables?.length - 1]?.clientResponse;
 
   return (
     <div className="min-h-screen w-full p-8 bg-[var(--color-primary)]">
@@ -512,13 +678,59 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
             <CardContent className="p-6">
               <div className="flex justify-center items-center h-full">
-                <div className="flex gap-6 flex-wrap justify-center">{getActionButtons()}</div>
+                <div className="flex gap-6 flex-wrap justify-center">{actionButtons}</div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
       <div className="h-8 mb-8" />
+      {/* Confirm Modal */}
+      <UploadFileForm
+        onSubmit={handleConfirmCompletion}
+        loading={isMining && isDeliverableLoading}
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        modalTitle="Submit Deliverable"
+        modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+      />
+
+      <DeliverableReviewModal
+        isOpen={showDeliverableModal}
+        onApprove={handleConfirmCompletion}
+        onReject={reason => handleRejectJob(reason)}
+        onClose={() => setShowDeliverableModal(false)}
+        modalTitle="Deliverable Review"
+        modalDescription="Please review the deliverable and provide your feedback."
+        resource={resource || ""}
+        isLink={isLink || false}
+        comment={isClient ? submissionComment || "" : clientResponse || ""}
+        canUploadFile={isFreelancer && isRejected}
+        loading={isMining && isDeliverableLoading}
+      />
+
+      {/* Rating modal for client */}
+      <FormModal
+        modalProps={{
+          title: "Rate Freelancer's Work",
+          onClose: () => setIsRatingModalOpen(false),
+          isOpen: isRatingModalOpen,
+          loading: isMining,
+        }}
+        formikProps={{
+          onSubmit: values => handleRateJob(values.rating),
+          initialValues: { rating: 0 },
+          validationSchema,
+        }}
+      >
+        {formikProps => (
+          <RatingStars
+            name="rating"
+            value={formikProps.values.rating}
+            onChange={value => formikProps.setFieldValue("rating", value)}
+          />
+        )}
+      </FormModal>
     </div>
   );
 }
