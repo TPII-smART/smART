@@ -24,10 +24,8 @@ export function Hero() {
             Discover high-quality professionals, find clients, and join a thriving community of freelance workers.
           </p>
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Link href="/.">
-              <Button variant={"primary"} onClick={() => (window.location.href = "/browse-jobs")}>
-                Browse Jobs
-              </Button>
+            <Link href="/browse">
+              <Button variant={"primary"}>Browse Works</Button>
             </Link>
             <Link href="/.">
               <Button variant={"primary"}>Offer your skills</Button>
