@@ -83,8 +83,6 @@ const MetadataRow = ({
       <RatingDisplay rating={rating} />
       <CategoryDisplay category={category} />
       <TimeDisplay time={time} timeLabel={timeLabel} />
-      <CategoryDisplay category={category} />
-      <RatingDisplay rating={rating} />
       {extraInfo && <span className="text-sm text-muted-foreground">{extraInfo}</span>}
     </div>
   );
