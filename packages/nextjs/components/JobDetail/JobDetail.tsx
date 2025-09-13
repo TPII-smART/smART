@@ -516,6 +516,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </Card>
         </div>
       </div>
+      <div className="h-8 mb-8" />
     </div>
   );
 }
