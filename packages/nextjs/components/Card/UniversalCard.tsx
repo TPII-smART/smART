@@ -104,6 +104,7 @@ export function UniversalCard({
   footerLeft,
   footerRight,
   className,
+  onClickCardAction = () => {},
   highlight = false,
   ...props
 }: UniversalCardProps) {
@@ -161,6 +162,7 @@ export function UniversalCard({
         className,
       )}
       highlight={highlight}
+      onClick={onClickCardAction}
       {...props}
     >
       {/* Content section */}
@@ -202,6 +204,7 @@ export function UniversalCard({
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
         className,
       )}
+      onClick={onClickCardAction}
       highlight={highlight}
       {...props}
     >

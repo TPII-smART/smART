@@ -134,6 +134,11 @@ export const fetchHires = async (userAddress: string) => {
   return { jobs: res.jobs.items };
 };
 
+export const fetchJob = async (postingId: string, jobId: string) => {
+  const res = await request<{ job: Job }>(endpoint, JobQueries.getJob, { postingId, jobId });
+  return res.job;
+};
+
 export const fetchJobsAndHires = async (userAddress: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobAndHires, { address: userAddress });
   return { jobs: res.jobs.items };

@@ -28,9 +28,8 @@ export default function JobCard({ job, reload, className, highlight }: JobCardPr
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
-  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
-    contractName: "JobsContract",
-  });
+  const postingId = job.postingId ? BigInt(job.postingId) : undefined;
+  const jobId = job.jobId ? BigInt(job.jobId) : undefined;
 
   const isFreelancer = job.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = job.client?.toLowerCase() === userAddress?.toLowerCase();
@@ -38,6 +37,16 @@ export default function JobCard({ job, reload, className, highlight }: JobCardPr
 
   const statusInfo = getJobStatus(jobStatus, job, isFreelancer, isClient);
   const StatusIcon = statusInfo.icon;
+
+  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
+    contractName: "JobsContract",
+  });
+
+  const handleCardClick = () => {
+    if (postingId != null && jobId != null) {
+      window.location.href = `/job-posting/${postingId}/${jobId}`;
+    }
+  };
 
   const { data, isLoading, refetch } = useQuery<Deliverable[]>({
     queryKey: ["jobDeliverable", job.postingId, job.jobId],
@@ -357,6 +366,7 @@ export default function JobCard({ job, reload, className, highlight }: JobCardPr
         className={className}
         cardVariant="Reduced"
         highlight={highlight}
+        onClickCardAction={handleCardClick}
       />
       {/* Confirm Modal */}
       <UploadFileForm

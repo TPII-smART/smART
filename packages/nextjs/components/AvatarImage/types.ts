@@ -23,4 +23,8 @@ export interface AvatarImageProps {
    * Optional address for the avatar, if applicable.
    */
   address?: `0x${string}`; // Optional address for the avatar, if applicable
+  /**
+   * Whether clicking the avatar should navigate to the avatar's owner profile.
+   */
+  onClickProfileNavigation?: boolean;
 }
