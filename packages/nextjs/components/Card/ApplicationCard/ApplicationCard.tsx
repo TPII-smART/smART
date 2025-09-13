@@ -4,7 +4,13 @@ import { cn } from "@/lib/utils";
 import { ApplicationState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import { CheckCircleIcon, ClockIcon, ExclamationCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import {
+  BackspaceIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import Button from "~~/components/Button/Button";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 
@@ -47,6 +53,15 @@ export default function ApplicationCard({ application, client, className, reload
       };
     }
 
+    if (applicationStatus === ApplicationState.Withdrawn) {
+      return {
+        label: "Withdrawn",
+        color: "bg-gray-200",
+        icon: BackspaceIcon,
+        description: "Application withdrawn by the freelancer",
+      };
+    }
+
     return {
       label: "Unknown",
       color: "bg-gray-500",
@@ -80,6 +95,19 @@ export default function ApplicationCard({ application, client, className, reload
       if (reload) await reload();
     } catch (err) {
       console.error("Reject application failed:", err);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    try {
+      if (application.state !== ApplicationState.Pending) return;
+      await writeContract({
+        functionName: "withdrawApplication",
+        args: [BigInt(application.gigId), BigInt(application.applicationId)],
+      });
+      if (reload) await reload();
+    } catch (err) {
+      console.error("Withdraw application failed:", err);
     }
   };
 
@@ -170,6 +198,20 @@ export default function ApplicationCard({ application, client, className, reload
     }
 
     if (isFreelancer) {
+      if (applicationStatus === ApplicationState.Pending) {
+        buttons.push(
+          <Button
+            variant="danger"
+            key="cancel"
+            onClick={handleWithdraw}
+            disabled={isMining}
+            size="sm"
+            tooltip="Withdraw application"
+          >
+            <XCircleIcon className="h-5 w-5" />
+          </Button>,
+        );
+      }
       if (applicationStatus === ApplicationState.Accepted) {
         buttons.push(
           <Button
