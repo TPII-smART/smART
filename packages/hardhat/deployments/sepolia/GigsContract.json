@@ -1,0 +1,1471 @@
+{
+  "address": "0x38660d2DA3ac3D6b4276509c9c798eD26Deed006",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_owner",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "applicationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "finalPayment",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "finalDurationInHours",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        }
+      ],
+      "name": "ApplicationAccepted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "applicationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "rejectionComment",
+          "type": "string"
+        }
+      ],
+      "name": "ApplicationRejected",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "applicationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "proposedPayment",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "proposedDurationInHours",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "proposalComment",
+          "type": "string"
+        }
+      ],
+      "name": "ApplicationSubmitted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "applicationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "rejectionComment",
+          "type": "string"
+        }
+      ],
+      "name": "ApplicationWithdrawn",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "ClientMarkedAsReceived",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "response",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "fileUploadedAt",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "CommentAdded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "resource",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "submissionComment",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "isLink",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "uploadedAt",
+          "type": "uint256"
+        }
+      ],
+      "name": "FileUploaded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "FreelancerMarkedAsDelivered",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "enum GigsContract.GigState",
+          "name": "state",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "clientCancelled",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "freelancerCancelled",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "GigCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "freelancer",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "payment",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "GigCompleted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "basePayment",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "maxDurationInHours",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "gigBannerImageHash",
+          "type": "string"
+        }
+      ],
+      "name": "GigCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint8",
+          "name": "rating",
+          "type": "uint8"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "GigRated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "freelancerDelivered",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "clientReceived",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "clientRejected",
+          "type": "bool"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "GigRejected",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_applicationId",
+          "type": "uint256"
+        }
+      ],
+      "name": "acceptApplication",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_comment",
+          "type": "string"
+        }
+      ],
+      "name": "addCommentToGig",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "proposedPayment",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "proposedDurationInHours",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "proposal",
+              "type": "string"
+            }
+          ],
+          "internalType": "struct GigsContract.ApplicationParams",
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "applyToGig",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        }
+      ],
+      "name": "cancelGig",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        }
+      ],
+      "name": "confirmCompletion",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "description",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "category",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "maxDurationInHours",
+              "type": "uint256"
+            },
+            {
+              "internalType": "string",
+              "name": "gigBannerImageHash",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "basePayment",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct GigsContract.GigParams",
+          "name": "params",
+          "type": "tuple"
+        }
+      ],
+      "name": "createGig",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        }
+      ],
+      "name": "emergencyCancel",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getTotalGigsPosted",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "postedGigs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "gigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "client",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "acceptedFreelancer",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "basePayment",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "finalPayment",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "category",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "maxDurationInHours",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "finalDurationInHours",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "deadline",
+          "type": "uint256"
+        },
+        {
+          "internalType": "enum GigsContract.GigState",
+          "name": "state",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "createdAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "acceptedAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "canceledAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "rejectedAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "finishedAt",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "clientReceived",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "freelancerDelivered",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint8",
+          "name": "rating",
+          "type": "uint8"
+        },
+        {
+          "internalType": "uint256",
+          "name": "acceptedApplicationId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "gigBannerImageHash",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "clientRejected",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "clientCancelled",
+          "type": "bool"
+        },
+        {
+          "internalType": "bool",
+          "name": "freelancerCancelled",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "postedGigsCounter",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "_rating",
+          "type": "uint8"
+        }
+      ],
+      "name": "rateGig",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_applicationId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "_rejectionComment",
+          "type": "string"
+        }
+      ],
+      "name": "rejectApplication",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        }
+      ],
+      "name": "rejectGig",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "resource",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "submissionComment",
+              "type": "string"
+            },
+            {
+              "internalType": "bool",
+              "name": "isLink",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct FileParams",
+          "name": "_fileParams",
+          "type": "tuple"
+        }
+      ],
+      "name": "uploadFile",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_gigId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_applicationId",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdrawApplication",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "stateMutability": "payable",
+      "type": "receive"
+    }
+  ],
+  "transactionHash": "0x00908c8ae509fcb4bd9fd167151f8e23a794cc666231c10d83c4fe3390d44412",
+  "receipt": {
+    "to": null,
+    "from": "0x8E8FCF98941fbE4F54217FA957eDcEeC86CfF01a",
+    "contractAddress": "0x38660d2DA3ac3D6b4276509c9c798eD26Deed006",
+    "transactionIndex": 51,
+    "gasUsed": "2832343",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xbb7bef3dd23082b7ec415cf1d769ce6136c8464e934a3c6b6b788ddc788e00e5",
+    "transactionHash": "0x00908c8ae509fcb4bd9fd167151f8e23a794cc666231c10d83c4fe3390d44412",
+    "logs": [],
+    "blockNumber": 9197675,
+    "cumulativeGasUsed": "9589854",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [
+    "0x8E8FCF98941fbE4F54217FA957eDcEeC86CfF01a"
+  ],
+  "numDeployments": 1,
+  "solcInputHash": "dc7d67ba3e8b4431f74f92539a69e523",
+  "metadata": "{\"compiler\":{\"version\":\"0.8.20+commit.a1b79de6\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_owner\",\"type\":\"address\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"applicationId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"finalPayment\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"finalDurationInHours\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"}],\"name\":\"ApplicationAccepted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"applicationId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"rejectionComment\",\"type\":\"string\"}],\"name\":\"ApplicationRejected\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"applicationId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"proposedPayment\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"proposedDurationInHours\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"proposalComment\",\"type\":\"string\"}],\"name\":\"ApplicationSubmitted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"applicationId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"rejectionComment\",\"type\":\"string\"}],\"name\":\"ApplicationWithdrawn\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"ClientMarkedAsReceived\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"response\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"fileUploadedAt\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"CommentAdded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"resource\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"submissionComment\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"isLink\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"uploadedAt\",\"type\":\"uint256\"}],\"name\":\"FileUploaded\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"FreelancerMarkedAsDelivered\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"enum GigsContract.GigState\",\"name\":\"state\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"clientCancelled\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"freelancerCancelled\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"GigCancelled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"freelancer\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"payment\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"GigCompleted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"basePayment\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"category\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"maxDurationInHours\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"gigBannerImageHash\",\"type\":\"string\"}],\"name\":\"GigCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint8\",\"name\":\"rating\",\"type\":\"uint8\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"GigRated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"freelancerDelivered\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"clientReceived\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"clientRejected\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"timestamp\",\"type\":\"uint256\"}],\"name\":\"GigRejected\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_applicationId\",\"type\":\"uint256\"}],\"name\":\"acceptApplication\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_comment\",\"type\":\"string\"}],\"name\":\"addCommentToGig\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"proposedPayment\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"proposedDurationInHours\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"proposal\",\"type\":\"string\"}],\"internalType\":\"struct GigsContract.ApplicationParams\",\"name\":\"params\",\"type\":\"tuple\"}],\"name\":\"applyToGig\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"}],\"name\":\"cancelGig\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"}],\"name\":\"confirmCompletion\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"components\":[{\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"category\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"maxDurationInHours\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"gigBannerImageHash\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"basePayment\",\"type\":\"uint256\"}],\"internalType\":\"struct GigsContract.GigParams\",\"name\":\"params\",\"type\":\"tuple\"}],\"name\":\"createGig\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"}],\"name\":\"emergencyCancel\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getTotalGigsPosted\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"postedGigs\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"gigId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"client\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"acceptedFreelancer\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"basePayment\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finalPayment\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"category\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"maxDurationInHours\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finalDurationInHours\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"},{\"internalType\":\"enum GigsContract.GigState\",\"name\":\"state\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"createdAt\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"acceptedAt\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"canceledAt\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"rejectedAt\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"finishedAt\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"clientReceived\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"freelancerDelivered\",\"type\":\"bool\"},{\"internalType\":\"uint8\",\"name\":\"rating\",\"type\":\"uint8\"},{\"internalType\":\"uint256\",\"name\":\"acceptedApplicationId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"gigBannerImageHash\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"clientRejected\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"clientCancelled\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"freelancerCancelled\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"postedGigsCounter\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"_rating\",\"type\":\"uint8\"}],\"name\":\"rateGig\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_applicationId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"_rejectionComment\",\"type\":\"string\"}],\"name\":\"rejectApplication\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"}],\"name\":\"rejectGig\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"components\":[{\"internalType\":\"string\",\"name\":\"resource\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"submissionComment\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"isLink\",\"type\":\"bool\"}],\"internalType\":\"struct FileParams\",\"name\":\"_fileParams\",\"type\":\"tuple\"}],\"name\":\"uploadFile\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_gigId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"_applicationId\",\"type\":\"uint256\"}],\"name\":\"withdrawApplication\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"stateMutability\":\"payable\",\"type\":\"receive\"}],\"devdoc\":{\"author\":\"SmArt\",\"details\":\"A contract for managing gigs where clients post work requests and freelancers apply with proposals.\",\"kind\":\"dev\",\"methods\":{\"acceptApplication(uint256,uint256)\":{\"details\":\"Accept an application (Client accepts freelancer's proposal)\",\"params\":{\"_applicationId\":\"The application ID to accept\",\"_gigId\":\"The ID of the gig\"}},\"addCommentToGig(uint256,string)\":{\"details\":\"Allows the client to add a response to the last uploaded file.\",\"params\":{\"_comment\":\"Comment text.\",\"_gigId\":\"Gig ID.\"}},\"applyToGig(uint256,(uint256,uint256,string))\":{\"details\":\"Apply to a gig (Freelancer submits application)\",\"params\":{\"_gigId\":\"The ID of the gig to apply for\",\"params\":\"struct containing proposed payment, duration, and proposal comment\"}},\"cancelGig(uint256)\":{\"details\":\"Cancel a gig\",\"params\":{\"_gigId\":\"The gig ID to cancel\"}},\"confirmCompletion(uint256)\":{\"details\":\"Confirm gig completion (both parties must confirm to complete the gig)\",\"params\":{\"_gigId\":\"The gig ID to confirm completion\"}},\"emergencyCancel(uint256)\":{\"details\":\"Emergency cancel by owner (with full refund to client)\",\"params\":{\"_gigId\":\"The gig ID to emergency cancel\"}},\"rateGig(uint256,uint8)\":{\"details\":\"Rate the gig (only client can rate after completion)\",\"params\":{\"_gigId\":\"The gig ID to rate\",\"_rating\":\"The rating to give (1-5)\"}},\"rejectApplication(uint256,uint256,string)\":{\"details\":\"Reject an application (Client rejects freelancer's proposal)\",\"params\":{\"_applicationId\":\"The application ID to reject\",\"_gigId\":\"The ID of the gig\",\"_rejectionComment\":\"Comment explaining why the application was rejected\"}},\"uploadFile(uint256,(string,string,bool))\":{\"details\":\"Allows the freelancer to upload a file.\",\"params\":{\"_fileParams\":\"The content of the file (IPFS hash and comment).\",\"_gigId\":\"Gig ID.\"}}},\"title\":\"GigsContract\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/GigsContract.sol\":\"GigsContract\"},\"evmVersion\":\"paris\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[],\"viaIR\":true},\"sources\":{\"contracts/GigsContract.sol\":{\"content\":\"//SPDX-License-Identifier: MIT\\r\\npragma solidity ^0.8.19;\\r\\n\\r\\nimport \\\"./common/FileInfo.sol\\\";\\r\\n\\r\\n/**\\r\\n * @title GigsContract\\r\\n * @dev A contract for managing gigs where clients post work requests and freelancers apply with proposals.\\r\\n * @author SmArt\\r\\n */\\r\\ncontract GigsContract {\\r\\n    // Enums for gig and application states\\r\\n    enum GigState {\\r\\n        Open,\\r\\n        InProgress,\\r\\n        Completed,\\r\\n        Cancelled,\\r\\n        Disputed\\r\\n    }\\r\\n    enum ApplicationState {\\r\\n        Pending,\\r\\n        Accepted,\\r\\n        Rejected,\\r\\n        Withdrawn\\r\\n    }\\r\\n\\r\\n    // Struct for freelancer applications to gigs\\r\\n    struct Application {\\r\\n        uint256 applicationId;\\r\\n        address freelancer;\\r\\n        uint256 proposedPayment;\\r\\n        uint256 proposedDurationInHours;\\r\\n        ApplicationState state;\\r\\n        uint256 createdAt;\\r\\n        string proposalComment; // Comment from freelancer with their proposal\\r\\n        string rejectionComment; // Comment from client when rejecting\\r\\n    }\\r\\n\\r\\n    // Struct that reduces the amount of parameters needed when submitting an application\\r\\n    struct ApplicationParams {\\r\\n        uint256 proposedPayment;\\r\\n        uint256 proposedDurationInHours;\\r\\n        string proposal; // Freelancer's proposal/pitch\\r\\n    }\\r\\n\\r\\n    // Struct that reduces the amount of parameters needed when creating a gig\\r\\n    struct GigParams {\\r\\n        string title;\\r\\n        string description;\\r\\n        string category; // e.g., \\\"Writing\\\", \\\"Web Development\\\", \\\"Design\\\"\\r\\n        uint256 maxDurationInHours; // Maximum time client is willing to wait\\r\\n        string gigBannerImageHash; // IPFS hash of the gig banner image\\r\\n        uint256 basePayment; // Base ETH client is willing to pay\\r\\n    }\\r\\n\\r\\n    // Struct for individual gigs posted by clients\\r\\n    struct Gig {\\r\\n        uint256 gigId;\\r\\n        address client;\\r\\n        address acceptedFreelancer; // The freelancer whose application was accepted\\r\\n        uint256 basePayment; // Base ETH client is willing to pay\\r\\n        uint256 finalPayment; // Final agreed payment (from accepted application)\\r\\n        string title;\\r\\n        string description;\\r\\n        string category;\\r\\n        uint256 maxDurationInHours; // Maximum time client is willing to wait\\r\\n        uint256 finalDurationInHours; // Final agreed duration (from accepted application)\\r\\n        uint256 deadline; // Actual deadline set when application is accepted\\r\\n        GigState state;\\r\\n        uint256 createdAt;\\r\\n        uint256 acceptedAt; // When an application was accepted\\r\\n        uint256 canceledAt; // When an application was canceled\\r\\n        uint256 rejectedAt; // When the job was rejected by the client\\r\\n        uint256 finishedAt; // When an application was finished\\r\\n        bool clientReceived; // Whether the client has received the work results\\r\\n        bool freelancerDelivered; // Whether the freelancer has delivered the work results\\r\\n        uint8 rating; // Rating given by the client (1-5)\\r\\n        Application[] applications; // All applications for this gig\\r\\n        uint256 acceptedApplicationId; // ID of the accepted application\\r\\n        string gigBannerImageHash; // IPFS hash of the gig banner image\\r\\n        bool clientRejected; // Whether the client has rejected the job results\\r\\n        bool clientCancelled; // Whether the client cancelled the job\\r\\n        bool freelancerCancelled; // Whether the freelancer cancelled the job\\r\\n        FileInfo[] fileInfo; // Store the file related to the job\\r\\n    }\\r\\n\\r\\n    // State variables of the contract\\r\\n    mapping(uint256 => Gig) public postedGigs;\\r\\n    uint256 public postedGigsCounter;\\r\\n    address public owner;\\r\\n\\r\\n    // Events for database indexing\\r\\n    event GigCreated(\\r\\n        uint256 indexed gigId,\\r\\n        address indexed client,\\r\\n        uint256 basePayment,\\r\\n        string title,\\r\\n        string description,\\r\\n        string category,\\r\\n        uint256 maxDurationInHours,\\r\\n        string gigBannerImageHash\\r\\n    );\\r\\n\\r\\n    event ApplicationSubmitted(\\r\\n        uint256 indexed gigId,\\r\\n        uint256 indexed applicationId,\\r\\n        address indexed freelancer,\\r\\n        uint256 proposedPayment,\\r\\n        uint256 proposedDurationInHours,\\r\\n        string proposalComment\\r\\n    );\\r\\n\\r\\n    event ApplicationAccepted(\\r\\n        uint256 indexed gigId,\\r\\n        uint256 indexed applicationId,\\r\\n        address indexed freelancer,\\r\\n        uint256 finalPayment,\\r\\n        uint256 finalDurationInHours,\\r\\n        uint256 deadline\\r\\n    );\\r\\n\\r\\n    event ApplicationRejected(\\r\\n        uint256 indexed gigId,\\r\\n        uint256 indexed applicationId,\\r\\n        address indexed freelancer,\\r\\n        string rejectionComment\\r\\n    );\\r\\n\\r\\n    event ApplicationWithdrawn(uint256 indexed gigId, uint256 indexed applicationId, address indexed freelancer, string rejectionComment);\\r\\n\\r\\n    event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);\\r\\n\\r\\n    event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);\\r\\n\\r\\n    event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);\\r\\n\\r\\n    event GigCompleted(uint256 indexed gigId, address freelancer, address client, uint256 payment, uint256 timestamp);\\r\\n\\r\\n    event GigRejected(\\r\\n        uint256 indexed gigId,\\r\\n        address client,\\r\\n        bool freelancerDelivered,\\r\\n        bool clientReceived,\\r\\n        bool clientRejected,\\r\\n        uint256 timestamp\\r\\n    );\\r\\n\\r\\n    event CommentAdded(\\r\\n        uint256 indexed gigId,\\r\\n        address indexed client,\\r\\n        string response,\\r\\n        uint256 fileUploadedAt,\\r\\n        uint256 timestamp\\r\\n    );\\r\\n\\r\\n    event GigCancelled(\\r\\n        uint256 indexed gigId,\\r\\n        GigState state,\\r\\n        bool clientCancelled,\\r\\n        bool freelancerCancelled,\\r\\n        uint256 timestamp\\r\\n    );\\r\\n\\r\\n    event FileUploaded(\\r\\n        uint256 indexed gigId,\\r\\n        address indexed freelancer,\\r\\n        string resource,\\r\\n        string submissionComment,\\r\\n        bool isLink,\\r\\n        uint256 uploadedAt\\r\\n    );\\r\\n\\r\\n    // Modifiers\\r\\n    modifier onlyClient(uint256 _gigId) {\\r\\n        require(postedGigs[_gigId].client == msg.sender, \\\"Only client can call this\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    modifier onlyAcceptedFreelancer(uint256 _gigId) {\\r\\n        require(postedGigs[_gigId].acceptedFreelancer == msg.sender, \\\"Only accepted freelancer can call this\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    modifier onlyGigParties(uint256 _gigId) {\\r\\n        require(\\r\\n            postedGigs[_gigId].client == msg.sender || postedGigs[_gigId].acceptedFreelancer == msg.sender,\\r\\n            \\\"Only gig parties can call this\\\"\\r\\n        );\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    modifier gigExists(uint256 _gigId) {\\r\\n        require(_gigId < postedGigsCounter, \\\"Gig does not exist\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    modifier applicationExists(uint256 _gigId, uint256 _applicationId) {\\r\\n        require(_applicationId < postedGigs[_gigId].applications.length, \\\"Application does not exist\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    modifier onlyOwner() {\\r\\n        require(msg.sender == owner, \\\"Only owner can call this\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    constructor(address _owner) {\\r\\n        owner = _owner;\\r\\n    }\\r\\n\\r\\n    function createGig(GigParams memory params) external returns (uint256) {\\r\\n        require(params.maxDurationInHours > 0, \\\"Duration must be greater than 0\\\");\\r\\n        require(bytes(params.title).length > 0, \\\"Title cannot be empty\\\");\\r\\n        require(bytes(params.description).length > 0, \\\"Description cannot be empty\\\");\\r\\n        require(bytes(params.category).length > 0, \\\"Category cannot be empty\\\");\\r\\n        require(params.basePayment > 0, \\\"Base payment must be greater than 0\\\");\\r\\n        require(bytes(params.title).length <= 64, \\\"Title must be up to 64 characters\\\");\\r\\n        require(bytes(params.description).length <= 512, \\\"Description must be up to 512 characters\\\");\\r\\n        require(bytes(params.category).length <= 64, \\\"Category must be up to 64 characters\\\");\\r\\n        require(bytes(params.gigBannerImageHash).length <= 128, \\\"Banner image hash must be up to 128 characters\\\");\\r\\n\\r\\n        uint256 gigId = postedGigsCounter++;\\r\\n        Gig storage newGig = postedGigs[gigId];\\r\\n        {\\r\\n            newGig.gigId = gigId;\\r\\n            newGig.client = msg.sender;\\r\\n            newGig.acceptedFreelancer = address(0);\\r\\n            newGig.basePayment = params.basePayment;\\r\\n            newGig.finalPayment = 0;\\r\\n            newGig.title = params.title;\\r\\n            newGig.description = params.description;\\r\\n            newGig.category = params.category;\\r\\n            newGig.maxDurationInHours = params.maxDurationInHours;\\r\\n            newGig.finalDurationInHours = 0;\\r\\n            newGig.deadline = 0;\\r\\n            newGig.state = GigState.Open;\\r\\n            newGig.createdAt = block.timestamp;\\r\\n            newGig.acceptedAt = 0;\\r\\n            newGig.clientReceived = false;\\r\\n            newGig.freelancerDelivered = false;\\r\\n            newGig.rating = 0;\\r\\n            newGig.acceptedApplicationId = 0;\\r\\n            newGig.gigBannerImageHash = params.gigBannerImageHash;\\r\\n        }\\r\\n\\r\\n        emit GigCreated(\\r\\n            gigId,\\r\\n            msg.sender,\\r\\n            params.basePayment,\\r\\n            params.title,\\r\\n            params.description,\\r\\n            params.category,\\r\\n            params.maxDurationInHours,\\r\\n            params.gigBannerImageHash\\r\\n        );\\r\\n\\r\\n        return gigId;\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Apply to a gig (Freelancer submits application)\\r\\n     * @param _gigId The ID of the gig to apply for\\r\\n     * @param params struct containing proposed payment, duration, and proposal comment\\r\\n     */\\r\\n    function applyToGig(uint256 _gigId, ApplicationParams memory params) external gigExists(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        require(gig.state == GigState.Open, \\\"Gig is not accepting applications\\\");\\r\\n        require(msg.sender != gig.client, \\\"Client cannot apply to their own gig\\\");\\r\\n        require(params.proposedPayment > 0, \\\"Proposed payment must be greater than 0\\\");\\r\\n        require(params.proposedDurationInHours > 0, \\\"Duration must be greater than 0\\\");\\r\\n        require(bytes(params.proposal).length > 0, \\\"Proposal comment cannot be empty\\\");\\r\\n        require(bytes(params.proposal).length <= 512, \\\"Proposal comment must be up to 512 characters\\\");\\r\\n\\r\\n        _validateApplication(_gigId);\\r\\n\\r\\n        // Create new application\\r\\n        uint256 applicationId = gig.applications.length;\\r\\n        Application memory newApplication = Application({\\r\\n            applicationId: applicationId,\\r\\n            freelancer: msg.sender,\\r\\n            proposedPayment: params.proposedPayment,\\r\\n            proposedDurationInHours: params.proposedDurationInHours,\\r\\n            proposalComment: params.proposal,\\r\\n            state: ApplicationState.Pending,\\r\\n            createdAt: block.timestamp,\\r\\n            rejectionComment: \\\"\\\"\\r\\n        });\\r\\n\\r\\n        // Add application to the gig\\r\\n        gig.applications.push(newApplication);\\r\\n\\r\\n        emit ApplicationSubmitted(\\r\\n            _gigId,\\r\\n            applicationId,\\r\\n            msg.sender,\\r\\n            params.proposedPayment,\\r\\n            params.proposedDurationInHours,\\r\\n            params.proposal\\r\\n        );\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Internal function to validate application parameters\\r\\n     */\\r\\n    function _validateApplication(uint256 _gigId) internal view {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        // Check if freelancer has already applied\\r\\n        for (uint256 i = 0; i < gig.applications.length; i++) {\\r\\n            require(gig.applications[i].freelancer != msg.sender, \\\"Already applied to this gig\\\");\\r\\n        }\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Accept an application (Client accepts freelancer's proposal)\\r\\n     * @param _gigId The ID of the gig\\r\\n     * @param _applicationId The application ID to accept\\r\\n     */\\r\\n    function acceptApplication(\\r\\n        uint256 _gigId,\\r\\n        uint256 _applicationId\\r\\n    ) external payable gigExists(_gigId) applicationExists(_gigId, _applicationId) onlyClient(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        Application storage application = gig.applications[_applicationId];\\r\\n\\r\\n        require(gig.state == GigState.Open, \\\"Gig is not accepting applications\\\");\\r\\n        require(application.state == ApplicationState.Pending, \\\"Application is not pending\\\");\\r\\n        require(msg.value == application.proposedPayment, \\\"Must pay the agreed price\\\");\\r\\n\\r\\n        // Accept the application\\r\\n        _processAcceptance(_gigId, _applicationId);\\r\\n\\r\\n        // Reject all other pending applications\\r\\n        _rejectOtherApplications(_gigId, _applicationId);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Internal function to process application acceptance\\r\\n     */\\r\\n    function _processAcceptance(uint256 _gigId, uint256 _applicationId) internal {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        Application storage application = gig.applications[_applicationId];\\r\\n\\r\\n        require(gig.state == GigState.Open, \\\"Gig is not accepting applications\\\");\\r\\n        require(application.state == ApplicationState.Pending, \\\"Application is not pending\\\");\\r\\n\\r\\n        // Accept the application\\r\\n        application.state = ApplicationState.Accepted;\\r\\n        gig.acceptedFreelancer = application.freelancer;\\r\\n        gig.finalPayment = application.proposedPayment;\\r\\n        gig.finalDurationInHours = application.proposedDurationInHours;\\r\\n        gig.acceptedApplicationId = _applicationId;\\r\\n        gig.state = GigState.InProgress;\\r\\n        gig.acceptedAt = block.timestamp;\\r\\n        gig.deadline = block.timestamp + (application.proposedDurationInHours * 1 hours);\\r\\n\\r\\n        emit ApplicationAccepted(\\r\\n            _gigId,\\r\\n            _applicationId,\\r\\n            application.freelancer,\\r\\n            application.proposedPayment,\\r\\n            application.proposedDurationInHours,\\r\\n            gig.deadline\\r\\n        );\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Internal function to reject other pending applications\\r\\n     */\\r\\n    function _rejectOtherApplications(uint256 _gigId, uint256 _acceptedId) internal {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        for (uint256 i = 0; i < gig.applications.length; i++) {\\r\\n            if (i != _acceptedId && gig.applications[i].state == ApplicationState.Pending) {\\r\\n                gig.applications[i].state = ApplicationState.Rejected;\\r\\n                gig.applications[i].rejectionComment = \\\"Another application was selected\\\";\\r\\n                emit ApplicationRejected(\\r\\n                    _gigId,\\r\\n                    i,\\r\\n                    gig.applications[i].freelancer,\\r\\n                    gig.applications[i].rejectionComment\\r\\n                );\\r\\n            }\\r\\n        }\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Reject an application (Client rejects freelancer's proposal)\\r\\n     * @param _gigId The ID of the gig\\r\\n     * @param _applicationId The application ID to reject\\r\\n     * @param _rejectionComment Comment explaining why the application was rejected\\r\\n     */\\r\\n    function rejectApplication(\\r\\n        uint256 _gigId,\\r\\n        uint256 _applicationId,\\r\\n        string memory _rejectionComment\\r\\n    ) external gigExists(_gigId) applicationExists(_gigId, _applicationId) onlyClient(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        Application storage application = gig.applications[_applicationId];\\r\\n\\r\\n        require(gig.state == GigState.Open, \\\"Gig is not accepting applications\\\");\\r\\n        require(application.state == ApplicationState.Pending, \\\"Application is not pending\\\");\\r\\n        require(bytes(_rejectionComment).length <= 512, \\\"Rejection comment must be up to 512 characters\\\");\\r\\n\\r\\n        application.state = ApplicationState.Rejected;\\r\\n        application.rejectionComment = _rejectionComment;\\r\\n\\r\\n        emit ApplicationRejected(_gigId, _applicationId, application.freelancer, _rejectionComment);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Confirm gig completion (both parties must confirm to complete the gig)\\r\\n     * @param _gigId The gig ID to confirm completion\\r\\n     */\\r\\n    function confirmCompletion(uint256 _gigId) external gigExists(_gigId) onlyGigParties(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        require(gig.state == GigState.InProgress, \\\"Gig is not in progress\\\");\\r\\n        require(gig.acceptedFreelancer != address(0), \\\"No freelancer assigned\\\");\\r\\n\\r\\n        // Set confirmation based on who is calling\\r\\n        if (msg.sender == gig.client) {\\r\\n            require(!gig.clientReceived, \\\"Client already confirmed reception\\\");\\r\\n            gig.clientReceived = true;\\r\\n            emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);\\r\\n        } else {\\r\\n            require(!gig.freelancerDelivered, \\\"Freelancer already marked as delivered\\\");\\r\\n            gig.freelancerDelivered = true;\\r\\n            emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);\\r\\n        }\\r\\n\\r\\n        // If both parties have confirmed, complete the gig\\r\\n        if (gig.clientReceived && gig.freelancerDelivered) {\\r\\n            _completeGig(_gigId);\\r\\n        }\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Rate the gig (only client can rate after completion)\\r\\n     * @param _gigId The gig ID to rate\\r\\n     * @param _rating The rating to give (1-5)\\r\\n     */\\r\\n    function rateGig(uint256 _gigId, uint8 _rating) external gigExists(_gigId) onlyClient(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        require(gig.state == GigState.Completed, \\\"Gig is not completed\\\");\\r\\n        require(gig.rating == 0, \\\"Gig already rated\\\");\\r\\n        require(_rating >= 1 && _rating <= 5, \\\"Invalid rating\\\");\\r\\n        require(_rating % 1 == 0, \\\"Rating must be an integer\\\");\\r\\n\\r\\n        gig.rating = _rating;\\r\\n        emit GigRated(_gigId, msg.sender, _rating, block.timestamp);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Internal function to complete gig and release payment\\r\\n     * @param _gigId The gig ID to complete\\r\\n     */\\r\\n    function _completeGig(uint256 _gigId) internal {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        gig.state = GigState.Completed;\\r\\n        gig.finishedAt = block.timestamp;\\r\\n\\r\\n        // Send agreed payment to freelancer\\r\\n        payable(gig.acceptedFreelancer).transfer(gig.finalPayment);\\r\\n\\r\\n        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Cancel a gig\\r\\n     * @param _gigId The gig ID to cancel\\r\\n     */\\r\\n    function cancelGig(uint256 _gigId) external gigExists(_gigId) onlyGigParties(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        if (gig.state == GigState.Open) {\\r\\n            // If gig is still open, simply cancel the gig\\r\\n            gig.state = GigState.Cancelled;\\r\\n        } else if (gig.state == GigState.InProgress) {\\r\\n            // If gig is in progress, cancel and refund full amount to client\\r\\n\\r\\n            if (msg.sender == gig.client) {\\r\\n                gig.clientCancelled = true;\\r\\n            } else if (msg.sender == gig.acceptedFreelancer) {\\r\\n                gig.freelancerCancelled = true;\\r\\n            }\\r\\n\\r\\n            // Refund payment to client if there was one\\r\\n            if (gig.client != address(0) && gig.clientCancelled && gig.freelancerCancelled) {\\r\\n                gig.state = GigState.Cancelled;\\r\\n                gig.canceledAt = block.timestamp;\\r\\n                payable(gig.client).transfer(gig.finalPayment);\\r\\n            }\\r\\n        } else {\\r\\n            revert(\\\"Gig cannot be cancelled in its current state\\\");\\r\\n        }\\r\\n\\r\\n        emit GigCancelled(_gigId, gig.state, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);\\r\\n    }\\r\\n\\r\\n    function withdrawApplication(uint256 _gigId, uint256 _applicationId) external gigExists(_gigId) applicationExists(_gigId, _applicationId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        Application storage application = gig.applications[_applicationId];\\r\\n\\r\\n        require(application.freelancer == msg.sender, \\\"Only the applicant can withdraw their application\\\");\\r\\n        require(application.state == ApplicationState.Pending, \\\"Only pending applications can be withdrawn\\\");\\r\\n\\r\\n        application.state = ApplicationState.Withdrawn;\\r\\n        application.rejectionComment = \\\"Application withdrawn by freelancer\\\";\\r\\n\\r\\n        emit ApplicationWithdrawn(_gigId, _applicationId, msg.sender, application.rejectionComment);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Emergency cancel by owner (with full refund to client)\\r\\n     * @param _gigId The gig ID to emergency cancel\\r\\n     */\\r\\n    function emergencyCancel(uint256 _gigId) external onlyOwner gigExists(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        gig.state = GigState.Cancelled;\\r\\n\\r\\n        // Refund full amount to client if gig is in progress\\r\\n        if (gig.state == GigState.InProgress) {\\r\\n            payable(gig.client).transfer(gig.basePayment);\\r\\n        }\\r\\n\\r\\n        gig.canceledAt = block.timestamp;\\r\\n\\r\\n        emit GigCancelled(_gigId, GigState.Cancelled, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);\\r\\n    }\\r\\n\\r\\n    function getTotalGigsPosted() external view returns (uint256) {\\r\\n        return postedGigsCounter;\\r\\n    }\\r\\n\\r\\n    // Function to receive Ether\\r\\n    receive() external payable {\\r\\n        revert(\\\"Direct payments not accepted\\\");\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Allows the freelancer to upload a file.\\r\\n     * @param _gigId Gig ID.\\r\\n     * @param _fileParams The content of the file (IPFS hash and comment).\\r\\n     */\\r\\n    function uploadFile(\\r\\n        uint256 _gigId,\\r\\n        FileParams memory _fileParams\\r\\n    ) external onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        require(gig.state == GigState.InProgress, \\\"The gig is not in progress.\\\");\\r\\n\\r\\n        require(bytes(_fileParams.resource).length > 0, \\\"Resource cannot be empty.\\\");\\r\\n        require(bytes(_fileParams.resource).length <= 256, \\\"Resource must be up to 256 characters.\\\");\\r\\n        require(bytes(_fileParams.submissionComment).length <= 256, \\\"Comment must be up to 256 characters.\\\");\\r\\n\\r\\n        FileInfo memory fileInfo = FileInfo({\\r\\n            resource: _fileParams.resource,\\r\\n            submissionComment: _fileParams.submissionComment,\\r\\n            uploadedAt: block.timestamp,\\r\\n            clientResponse: \\\"\\\",\\r\\n            isLink: _fileParams.isLink\\r\\n        });\\r\\n\\r\\n        gig.fileInfo.push(\\r\\n            FileInfo({\\r\\n                resource: _fileParams.resource,\\r\\n                submissionComment: _fileParams.submissionComment,\\r\\n                uploadedAt: block.timestamp,\\r\\n                clientResponse: \\\"\\\",\\r\\n                isLink: _fileParams.isLink\\r\\n            })\\r\\n        );\\r\\n\\r\\n        emit FileUploaded(\\r\\n            _gigId,\\r\\n            msg.sender,\\r\\n            fileInfo.resource,\\r\\n            fileInfo.submissionComment,\\r\\n            fileInfo.isLink,\\r\\n            fileInfo.uploadedAt\\r\\n        );\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Allows the client to add a response to the last uploaded file.\\r\\n     * @param _gigId Gig ID.\\r\\n     * @param _comment Comment text.\\r\\n     */\\r\\n    function addCommentToGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n        FileInfo storage fileInfo = gig.fileInfo[gig.fileInfo.length - 1];\\r\\n\\r\\n        require(gig.state == GigState.InProgress, \\\"The gig is not in progress.\\\");\\r\\n        require(bytes(_comment).length > 0, \\\"Comment cannot be empty.\\\");\\r\\n        require(bytes(_comment).length <= 256, \\\"Comment must be up to 256 characters.\\\");\\r\\n\\r\\n        fileInfo.clientResponse = _comment;\\r\\n\\r\\n        emit CommentAdded(_gigId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);\\r\\n    }\\r\\n\\r\\n    function rejectGig(uint256 _gigId) external onlyClient(_gigId) gigExists(_gigId) {\\r\\n        Gig storage gig = postedGigs[_gigId];\\r\\n\\r\\n        require(gig.state == GigState.InProgress, \\\"The gig is not in progress.\\\");\\r\\n        require(gig.client != address(0), \\\"The gig has no assigned client.\\\");\\r\\n        require(gig.acceptedFreelancer != address(0), \\\"The gig has no assigned freelancer.\\\");\\r\\n\\r\\n        gig.freelancerDelivered = false;\\r\\n        gig.clientReceived = false;\\r\\n        gig.clientRejected = true;\\r\\n        gig.rejectedAt = block.timestamp;\\r\\n\\r\\n        emit GigRejected(\\r\\n            _gigId,\\r\\n            gig.client,\\r\\n            gig.freelancerDelivered,\\r\\n            gig.clientReceived,\\r\\n            gig.clientRejected,\\r\\n            gig.rejectedAt\\r\\n        );\\r\\n    }\\r\\n}\\r\\n\",\"keccak256\":\"0x399d17d66fa74995ccf26ea28ce1353f0009e30ace39df902e39a7a678035b9a\",\"license\":\"MIT\"},\"contracts/common/FileInfo.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\npragma solidity ^0.8.19;\\r\\n\\r\\nstruct FileInfo {\\r\\n    string resource;\\r\\n    uint256 uploadedAt;\\r\\n    string submissionComment;\\r\\n    string clientResponse;\\r\\n    bool isLink; // Whether the file is a link or an uploaded file\\r\\n}\\r\\n\\r\\nstruct FileParams {\\r\\n    string resource;\\r\\n    string submissionComment;\\r\\n    bool isLink;\\r\\n}\\r\\n\",\"keccak256\":\"0x02e773333686ae99389282934836fb3c90b7e2933e06900a9011bf4717171d42\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x60803461007657601f6200326438819003918201601f19168301916001600160401b0383118484101761007b5780849260209460405283398101031261007657516001600160a01b0381169081900361007657600280546001600160a01b0319169190911790556040516131d29081620000928239f35b600080fd5b634e487b7160e01b600052604160045260246000fdfe6101c0604052600436101561005f575b361561001a57600080fd5b60405162461bcd60e51b815260206004820152601c60248201527f446972656374207061796d656e7473206e6f74206163636570746564000000006044820152606490fd5b60003560e01c8063210be835146129e557806338f57e751461277c57806339440310146125f45780634bca9a88146123b257806352b4a29a146116f75780635d4fa2be14611e0d57806383f67f6e14611a6f5780638da5cb5b14611a4657806394aeb61314611715578063ca84b557146116f7578063dad2aecf14611511578063dd75cd9b14611423578063e32ba8f1146111c8578063f48f5ea814610bcb578063f6205bb9146109485763fc7789d90361000f57346109435760031960203682011261094357600435906001600160401b0382116109435760c0908236030112610943576040519060c082018281106001600160401b038211176105925760405280600401356001600160401b038111610943576101849060043691840101612d23565b825260248101356001600160401b038111610943576101a99060043691840101612d23565b60208301526044808201356001600160401b038111610943576101d29060043691850101612d23565b6040840152606480830135606085015260849283810135906001600160401b0382116109435761020a60a49260043691840101612d23565b6080870152013560a085015261022560608501511515612d8f565b8351511561090957602084015151156108c757604084015151156108855760a084015115610839576040845151116107ef576102006020850151511161079e5760408085015151116107525760808085015151116106fb578360015461028a81612ddb565b600155806000526000602052604060002091818355600183016001600160601b0360a01b9033828254161790556002840190815416905560a0810151600384015560006004840155805180516001600160401b038111610592578060058601926102fe826102f88654612b84565b86612e01565b602090601f83116001146106955760009261068a575b50508160011b916000199060031b1c19161790555b602081015180516001600160401b03811161059257806006860192610352826102f88654612b84565b602090601f831160011461062457600092610619575b50508160011b916000199060031b1c19161790555b604081015180516001600160401b038111610592578060078601926103a6826102f88654612b84565b602090601f83116001146105b3576000926105a8575b50508160011b916000199060031b1c19161790555b60608101516008840155600060098401556000600a840155600b830160ff19815416905542600c8401556000600d8401556011830162ffffff1981541690556000601384015560808101519283516001600160401b0381116105925760209461044a826104416014860154612b84565b60148601612e01565b8590601f8311600114610524576014929160009183610519575b50508160011b916000199060031b1c1916179101555b817fa4310d29a827e00ff6f93e925d8ec697109888b3967ea46dcdd16c685057f69e60a083015183519061050e87860151956104f960408201516104eb60806060850151940151996104dd604051988998895260c08f8a015260c0890190612cd6565b908782036040890152612cd6565b908582036060870152612cd6565b90608084015282810360a08401523396612cd6565b0390a3604051908152f35b015190508780610464565b9060148401600052866000209160005b601f198516811061057b5750918391600193601495601f19811610610562575b505050811b0191015561047a565b015160001960f88460031b161c19169055878080610554565b919288600181928685015181550194019201610534565b634e487b7160e01b600052604160045260246000fd5b0151905086806103bc565b6000858152602081209350601f198516905b81811061060157509084600195949392106105e8575b505050811b0190556103d1565b015160001960f88460031b161c191690558680806105db565b929360206001819287860151815501950193016105c5565b015190508680610368565b6000858152602081209350601f198516905b8181106106725750908460019594939210610659575b505050811b01905561037d565b015160001960f88460031b161c1916905586808061064c565b92936020600181928786015181550195019301610636565b015190508680610314565b6000858152602081209350601f198516905b8181106106e357509084600195949392106106ca575b505050811b019055610329565b015160001960f88460031b161c191690558680806106bd565b929360206001819287860151815501950193016106a7565b6d313238206368617261637465727360901b907f42616e6e657220696d6167652068617368206d75737420626520757020746f206040519362461bcd60e51b855260206004860152602e6024860152840152820152fd5b637465727360e01b907f43617465676f7279206d75737420626520757020746f203634206368617261636040519362461bcd60e51b855260206004860152602480860152840152820152fd5b67617261637465727360c01b907f4465736372697074696f6e206d75737420626520757020746f203531322063686040519362461bcd60e51b85526020600486015260286024860152840152820152fd5b607360f81b907f5469746c65206d75737420626520757020746f203634206368617261637465726040519362461bcd60e51b85526020600486015260216024860152840152820152fd5b6206e20360ec1b907f42617365207061796d656e74206d7573742062652067726561746572207468616040519362461bcd60e51b85526020600486015260236024860152840152820152fd5b907f43617465676f72792063616e6e6f7420626520656d70747900000000000000006040519162461bcd60e51b83526020600484015260186024840152820152fd5b907f4465736372697074696f6e2063616e6e6f7420626520656d70747900000000006040519162461bcd60e51b835260206004840152601b6024840152820152fd5b90745469746c652063616e6e6f7420626520656d70747960581b6040519162461bcd60e51b83526020600484015260156024840152820152fd5b600080fd5b34610943576040366003190112610943576001600160401b0360043560248035838111610943573660238201121561094357806004013593841161094357368285830101116109435782600052602091600083526001926109b960018060a01b038560406000200154163314612f5b565b6109c584548610612e46565b84600052600081526040600020936016850194855460001996878201918211610bb6576109f660ff92600b92613180565b50920154166005811015610ba15782610a0f91146130da565b8715610b5d57908791610a26610100841115613126565b60038101610a3e84610a388354612b84565b83612e01565b600097601f8511600114610ad35784877f952b2684ebe1ee36c3502193d2167f289eee9ec50e3ef37a2907d533414b693a9a600092610ac6575b505085851b918660031b1c19161790555b01549260405194606086528260608701520160808501376000608087850101528201524260408201526080813395601f80199101168101030190a3005b8a0101359050878d610a78565b97601f1985169082600052866000209160005b818110610b4357507f952b2684ebe1ee36c3502193d2167f289eee9ec50e3ef37a2907d533414b693a9a878a9210610b29575b505050508284811b019055610a89565b60f88860031b161c19918a0101351690558a808781610b19565b8a83018a013584558d975092860192918801918801610ae6565b60405162461bcd60e51b8152600481018490526018818601527f436f6d6d656e742063616e6e6f7420626520656d7074792e00000000000000006044820152606490fd5b84634e487b7160e01b60005260216004526000fd5b85634e487b7160e01b60005260116004526000fd5b346109435760031960403682011261094357602435906001600160401b03821161094357606090823603011261094357604051610c0781612bbe565b816004013581526024820135602082015260449182810135906001600160401b038211610943576004610c3d9236920101612d23565b6040820152610c5160015460043510612e46565b600435600052600060205260406000209160ff600b840154166005811015610fea57610c7d9015612e87565b60018301546001600160a01b031633146111785781511561112457610ca760208301511515612d8f565b604082015151156110e057610200604083015151116110865760043560005260006020526040600020906012600092018054925b8381106110165785856012820154815192602083015160408401519060405195866101008101106001600160401b036101008901111761059257610100870160405284875233602088015260408701526060860152600060808601524260a086015260c0850152604051610d4e81612bf4565b6000815260e0850152600160401b82101561059257816012610d7892600183018282015501612edd565b61100057835181556001810160018060a01b036020860151166001600160601b0360a01b82541617905560408401516002820155606084015160038201556004810160808501516004811015610fea5760ff8019835416911617905560a0840151600582015560c08401518051906001600160401b03821161059257610e0e82610e056006860154612b84565b60068601612e01565b602090601f8311600114610f7557918060e09492600794600092610f6a575b50508160011b916000199060031b1c19161760068201555b019301519283516001600160401b03811161059257610e6e81610e688454612b84565b84612e01565b602094601f8211600114610f0457948192939495600092610ef9575b50508160011b916000199060031b1c19161790555b81519160406020820151910151906040519384526020840152606060408401527f53d8220031f7b3ba7cd9d5e19d287c5927fd093031aa3d970a308b3056384df0339380610ef4600435946060830190612cd6565b0390a4005b015190508580610e8a565b601f198216958360005260206000209160005b888110610f5257508360019596979810610f39575b505050811b019055610e9f565b015160001960f88460031b161c19169055858080610f2c565b91926020600181928685015181550194019201610f17565b015190508880610e2d565b906006840160005260206000209160005b601f1985168110610fd257509260e0949260019260079583601f19811610610fb9575b505050811b016006820155610e45565b015160001960f88460031b161c19169055888080610fa9565b91926020600181928685015181550194019201610f86565b634e487b7160e01b600052602160045260246000fd5b634e487b7160e01b600052600060045260246000fd5b6110208183612edd565b50600101546001600160a01b031633146110425761103d90612ddb565b610cdb565b60405162461bcd60e51b815260206004820152601b60248201527f416c7265616479206170706c69656420746f207468697320676967000000000081850152606490fd5b6084907f50726f706f73616c20636f6d6d656e74206d75737420626520757020746f20356040519162461bcd60e51b835260206004840152602d60248401528201526c3132206368617261637465727360981b6064820152fd5b6064907f50726f706f73616c20636f6d6d656e742063616e6e6f7420626520656d7074796040519162461bcd60e51b83526020600484015260206024840152820152fd5b6084907f50726f706f736564207061796d656e74206d75737420626520677265617465726040519162461bcd60e51b83526020600484015260276024840152820152660207468616e20360cc1b6064820152fd5b6084907f436c69656e742063616e6e6f74206170706c7920746f207468656972206f776e6040519162461bcd60e51b835260206004840152602480840152820152632067696760e01b6064820152fd5b34610943576060366003190112610943576004356001600160401b03602435604435828111610943576111ff903690600401612d23565b9260019361120f85548310612e46565b816000526020946000865261122d6012604060002001548510612f0f565b826000526000865260018060a01b0390611251828260406000200154163314612f5b565b8360005260008752604060002060ff600b61126f8860128501612edd565b50920154166005811015610fea576112879015612e87565b60048101805460ff81166004811015610fea576112a49015612fa7565b6102008651116113c75760ff1916600217905583519660078201908811610592576112d388610a388354612b84565b88601f89116001146113435797807f4d5b20aedec5affb6b0176d962b56fa59512c0c5ff16499bad78898e4077d185979899600091611338575b50600019600383901b1c191690841b1790555b01541694610ef4604051928284938452830190612cd6565b90508601518b61130d565b601f19891690826000528a6000209160005b8c8282106113b3575050918a917f4d5b20aedec5affb6b0176d962b56fa59512c0c5ff16499bad78898e4077d185999a9b87941061139a575b5050811b019055611320565b88015160001960f88460031b161c191690558b8061138e565b898401518555938701939283019201611355565b60405162461bcd60e51b8152600481018b9052602e60248201527f52656a656374696f6e20636f6d6d656e74206d75737420626520757020746f2060448201526d353132206368617261637465727360901b6064820152608490fd5b3461094357602036600319011261094357600254600435906001600160a01b031633036114cc576114576001548210612e46565b8060005260006020527f9fa9f7b41e4f62964bcf9c590177d3b2b01cd9ad9bee19d329455dc1e5a07d94608060156040600020600b8101600360ff1982541617905542600e820155015460ff6040519160038352818160081c161515602084015260101c1615156040820152426060820152a2005b60405162461bcd60e51b815260206004820152601860248201527f4f6e6c79206f776e65722063616e2063616c6c207468697300000000000000006044820152606490fd5b346109435761151f36612d79565b61152c6001548310612e46565b816000526020916000835261154a6012604060002001548310612f0f565b8060005260008352611563826012604060002001612edd565b5060018101546001600160a01b031633036116985760048101805460ff81166004811015610fea57611640576231b2b960e91b92600192600360079360ff191617905501946115b28654612b84565b601f811161161c575b5060478655856000526000207f4170706c69636174696f6e2077697468647261776e20627920667265656c616e815501557f85e5378da1c08ad4b242ef199d226aacd036808813b409b3b622e4b2cb4b036c60405180610ef4339682612ff3565b61163a90876000526002601f84600020920160051c82019101612dea565b866115bb565b60405162461bcd60e51b815260048101879052602a60248201527f4f6e6c792070656e64696e67206170706c69636174696f6e732063616e206265604482015269103bb4ba34323930bbb760b11b6064820152608490fd5b60405162461bcd60e51b815260048101859052603160248201527f4f6e6c7920746865206170706c6963616e742063616e207769746864726177206044820152703a3432b4b91030b8383634b1b0ba34b7b760791b6064820152608490fd5b34610943576000366003190112610943576020600154604051908152f35b3461094357602080600319360112610943576004359060019061173a82548410612e46565b600083815280825260409020828101546001600160a01b03929161176a9184163314908115611a36575b5061308e565b8360005260008152604060002060ff600b820154166005811015610fea5784036119f85782600282015416156119ba57828482015416331460001461190e5760118101805460ff81166118be5760ff191685179055604080513381524260208201526011929187917f402b98dfa572aff7e87e1a43948fc5a3fed31d48e92d38af810016682cec9def9190a25b015460ff811690816118b0575b5061180b57005b8360005260008152604060002090600b8201600260ff198254161790556010820142815560028301938085541690600080808060048901958654908282156118a7575bf11561189b577fb5a986770aafe15f8fc808fb71e7c14b0cd80516904d07c4c19ccbec6e81c9889681608097541695015416905491549260405194855284015260408301526060820152a2005b6040513d6000823e3d90fd5b506108fc61184e565b60ff915060081c1685611804565b60405162461bcd60e51b815260048101859052602260248201527f436c69656e7420616c726561647920636f6e6669726d6564207265636570746960448201526137b760f11b6064820152608490fd5b60118101805460ff8160081c166119665761ff001916610100179055604080513381524260208201526011929187917f2261d1abfc2747e3801a04fc78c760deff60283d950420e60ac2d733a70a62ee9190a26117f7565b60405162461bcd60e51b815260048101859052602660248201527f467265656c616e63657220616c7265616479206d61726b65642061732064656c6044820152651a5d995c995960d21b6064820152608490fd5b60405162461bcd60e51b8152600481018390526016602482015275139bc8199c99595b185b98d95c88185cdcda59db995960521b6044820152606490fd5b60405162461bcd60e51b8152600481018390526016602482015275476967206973206e6f7420696e2070726f677265737360501b6044820152606490fd5b6002015484163314905086611764565b34610943576000366003190112610943576002546040516001600160a01b039091168152602090f35b611a7836612d79565b611a856001548310612e46565b816000526000602052611aa16012604060002001548210612f0f565b816000526000602052611ac560018060a01b03600160406000200154163314612f5b565b816000526000602052604060002060ff600b611ae48460128501612edd565b50920154166005811015610fea57611afc9015612e87565b60ff600482015416906004821015610fea57611b1a60029215612fa7565b01543403611dc8578160005260006020526040600020611b3d8260128301612edd565b50600b820160ff8154166005811015610fea57611b5a9015612e87565b60048201805460ff8116906004821015610fea57611b7a60019215612fa7565b60ff191617905560018060a01b0360018301541660028401906001600160601b0360a01b8254161790556002820154600484015560038201546009840155836013840155600160ff1982541617905542600d830155600381015491610e1092838102938185041490151715611db2578242014211611db2577fe09a8afc6643ac4f01695f23d94acfa17a05d58f58567be400ea7c97ac4d678d606085938793600a87420191015560018060a01b036001820154169560036002830154920154604051928352602083015242016040820152a4816000526000602052604060002060005b6012820154811015611db0578281141580611d89575b90611c8191611c8657612ddb565b611c5d565b6004611c958260128601612edd565b5001805460ff19166002179055611caf8160128501612edd565b50600781611cc08280940154612b84565b601f90818111611d63575b5050604182820155016000527f416e6f74686572206170706c69636174696f6e207761732073656c656374656460206000205581867f4d5b20aedec5affb6b0176d962b56fa59512c0c5ff16499bad78898e4077d185611d2e8360128901612edd565b50600101546001600160a01b031693611d4a8460128a01612edd565b50611d5b6040519283920182612ff3565b0390a4612ddb565b6001611d82928585016000526020600020920160051c82019101612dea565b8880611ccb565b5060ff6004611d9b8360128601612edd565b50015416906004821015610fea579015611c73565b005b634e487b7160e01b600052601160045260246000fd5b60405162461bcd60e51b815260206004820152601960248201527f4d757374207061792074686520616772656564207072696365000000000000006044820152606490fd5b346109435760031960403682011261094357602435906001600160401b03821161094357606090823603011261094357604051611e4981612bbe565b81600401356001600160401b03811161094357611e6c9060043691850101612d23565b815260248201356001600160401b03811161094357611e9360449160043691860101612d23565b926020830193845201359081151582036109435760408181019283526004356000908152602081905220600201546001600160a01b0316330361235e57611edf60015460043510612e46565b600435600052600060205260406000209160ff600b840154166005811015610fea576001611f0d91146130da565b815151156123195761010080835151116122c557611f2f908551511115613126565b60168251938551835115159060405196611f4888612bd9565b87524260208801526040870152604051611f6181612bf4565b60008152606087015260808601520191519351905115159060405194611f8686612bd9565b85524260208601526040850152604051611f9f81612bf4565b60008152606085015260808401528054600160401b81101561059257611fca91600182018155613180565b9290926110005780519283516001600160401b03811161059257611ff281610e688454612b84565b6020601f821160011461225c578192939495600092612251575b50508160011b916000199060031b1c19161781555b60208201516001820155604082015180516001600160401b03811161059257806002840192612054826102f88654612b84565b602090601f83116001146121eb576000926121e0575b50508160011b916000199060031b1c19161790555b6003810160608301518051906001600160401b038211610592576120ad826120a78554612b84565b85612e01565b602090601f83116001146121725791806004949260809694600092612167575b50508160011b916000199060031b1c19161790555b01910151151560ff80198354169116179055805190604081015161212f6020608084015115159301519161212160405195608087526080870190612cd6565b908582036020870152612cd6565b91604084015260608301527ff304de8c453106465f74d526fc835183d2c1bba2a20a6cccd4decd3f9ffda750339280600435930390a3005b0151905088806120cd565b90601f198316918460005260206000209260005b8181106121c857509260019285926080989660049896106121af575b505050811b0190556120e2565b015160001960f88460031b161c191690558880806121a2565b92936020600181928786015181550195019301612186565b01519050868061206a565b6000858152602081209350601f198516905b8181106122395750908460019594939210612220575b505050811b01905561207f565b015160001960f88460031b161c19169055868080612213565b929360206001819287860151815501950193016121fd565b01519050858061200c565b8260005260206000209060005b601f19841681106122ad575060019394959683601f19811610612294575b505050811b018155612021565b015160001960f88460031b161c19169055858080612287565b9091602060018192858b015181550193019101612269565b60405162461bcd60e51b815260206004820152602660248201527f5265736f75726365206d75737420626520757020746f2032353620636861726160448201526531ba32b9399760d11b6064820152608490fd5b60405162461bcd60e51b815260206004820152601960248201527f5265736f757263652063616e6e6f7420626520656d7074792e000000000000006044820152606490fd5b60405162461bcd60e51b815260206004820152602660248201527f4f6e6c7920616363657074656420667265656c616e6365722063616e2063616c6044820152656c207468697360d01b6064820152608490fd5b34610943576020366003190112610943576004356123d36001548210612e46565b806000526000602052604060002061240260018060a01b03918260018201541633149081156125e4575061308e565b816000526000602052604060002090600b820160ff91828254166005811015610fea578061249a575050907f9fa9f7b41e4f62964bcf9c590177d3b2b01cd9ad9bee19d329455dc1e5a07d949281608093600360ff198254161781555b541691600e60158301549201549161247a6040518095612d16565b818160081c161515602085015260101c16151560408301526060820152a2005b60010361258a57600184018181541633146000146125655760158501805461ff0019166101001790555b541680151580612555575b80612545575b612507575b50907f9fa9f7b41e4f62964bcf9c590177d3b2b01cd9ad9bee19d329455dc1e5a07d94928160809361245f565b600080808093600360ff9796971988541617875542600e89015560048801549082821561253c575bf11561189b5790846124da565b506108fc61252f565b5082601585015460101c166124d5565b5082601585015460081c166124cf565b8160028601541633036124c45760158501805462ff00001916620100001790556124c4565b60405162461bcd60e51b815260206004820152602c60248201527f4769672063616e6e6f742062652063616e63656c6c656420696e20697473206360448201526b757272656e7420737461746560a01b6064820152608490fd5b6002015483163314905084611764565b34610943576020806003193601126109435760043590816000526000815260018060a01b0390600190612631838360406000200154163314612f5b565b61263d82548510612e46565b8360005260008152604060002060ff600b820154166005811015610fea578361266691146130da565b83838201541693841561273757600282015416156126e6579160007fdbb64c3761fe96a09d16f0e9ea3f65e6fa7d9ee81c5ea17448ddff1420141de0949284601160a0960161ffff198154169055601581018460ff19825416179055600f42910155604051938452830152600060408301526060820152426080820152a2005b60405162461bcd60e51b815260048101839052602360248201527f5468652067696720686173206e6f2061737369676e656420667265656c616e6360448201526232b91760e91b6064820152608490fd5b60405162461bcd60e51b815260048101849052601f60248201527f5468652067696720686173206e6f2061737369676e656420636c69656e742e006044820152606490fd5b3461094357602036600319011261094357600435600052600060205260406000208061012052805490600160a01b6001900390816001820154169160028201541660a052600381015460c0526004810154610140526005016127dd90612c30565b91610120516006016127ee90612c30565b91610120516007016127ff90612c30565b936101205193600885015461018052600985015495600a860154600b87015460ff1691600c88015493600d89015495600e8a015497600f8b01549960108c01549b60118101546101005260138101546101605260140161285e90612c30565b608052610120516015015460e052604051806101a052526101a0516020015260a0516101a0516040015260c0516101a05160600152610140516101a05160800152610320806101a05160a001526101a051016128b991612cd6565b6101a0518082039060c001526128ce91612cd6565b6101a0518082039060e001526128e391612cd6565b97610180516101a05161010001526101a05161012001526101a05161014001526101a0516101600161291491612d16565b6101a05161018001526101a0516101a001526101a0516101c001526101a0516101e001526101a05161020001526101005160ff1615156101a05161022001526101005160081c60ff1615156101a05161024001526101005160101c60ff166101a0516102600152610160516101a05161028001526101a051808203906102a00152608051906129a291612cd6565b60e05160ff1615156101a0516102c0015260e05160081c60ff1615156101a0516102e0015260e05160101c60ff1615156101a05161030001526101a05180910390f35b346109435760403660031901126109435760043560243560ff811680820361094357612a146001548410612e46565b8260005260209160008352612a3a60018060a01b03600160406000200154163314612f5b565b8360005260008352604060002060ff600b820154166005811015610fea57600203612b48576011019081549060ff8260101c16612b0f57600184101580612b04575b15612ace57916060939162ff00007f498af54a614c8f803fa4cff17e2f7f398e8dca29a3e881af50dd2558fdd3114c969460101b169062ff0000191617905560405191338352820152426040820152a2005b60405162461bcd60e51b815260048101869052600e60248201526d496e76616c696420726174696e6760901b6044820152606490fd5b506005841115612a7c565b60405162461bcd60e51b815260048101869052601160248201527011da59c8185b1c9958591e481c985d1959607a1b6044820152606490fd5b60405162461bcd60e51b815260048101859052601460248201527311da59c81a5cc81b9bdd0818dbdb5c1b195d195960621b6044820152606490fd5b90600182811c92168015612bb4575b6020831014612b9e57565b634e487b7160e01b600052602260045260246000fd5b91607f1691612b93565b606081019081106001600160401b0382111761059257604052565b60a081019081106001600160401b0382111761059257604052565b602081019081106001600160401b0382111761059257604052565b90601f801991011681019081106001600160401b0382111761059257604052565b9060405191826000825492612c4484612b84565b908184526001948581169081600014612cb35750600114612c70575b5050612c6e92500383612c0f565b565b9093915060005260209081600020936000915b818310612c9b575050612c6e93508201013880612c60565b85548884018501529485019487945091830191612c83565b915050612c6e94506020925060ff191682840152151560051b8201013880612c60565b919082519283825260005b848110612d02575050826000602080949584010152601f8019910116010190565b602081830181015184830182015201612ce1565b906005821015610fea5752565b81601f82011215610943578035906001600160401b0382116105925760405192612d57601f8401601f191660200185612c0f565b8284526020838301011161094357816000926020809301838601378301015290565b6040906003190112610943576004359060243590565b15612d9657565b60405162461bcd60e51b815260206004820152601f60248201527f4475726174696f6e206d7573742062652067726561746572207468616e2030006044820152606490fd5b6000198114611db25760010190565b818110612df5575050565b60008155600101612dea565b9190601f8111612e1057505050565b612c6e926000526020600020906020601f840160051c83019310612e3c575b601f0160051c0190612dea565b9091508190612e2f565b15612e4d57565b60405162461bcd60e51b815260206004820152601260248201527111da59c8191bd95cc81b9bdd08195e1a5cdd60721b6044820152606490fd5b15612e8e57565b60405162461bcd60e51b815260206004820152602160248201527f476967206973206e6f7420616363657074696e67206170706c69636174696f6e6044820152607360f81b6064820152608490fd5b8054821015612ef95760005260206000209060031b0190600090565b634e487b7160e01b600052603260045260246000fd5b15612f1657565b60405162461bcd60e51b815260206004820152601a60248201527f4170706c69636174696f6e20646f6573206e6f742065786973740000000000006044820152606490fd5b15612f6257565b60405162461bcd60e51b815260206004820152601960248201527f4f6e6c7920636c69656e742063616e2063616c6c2074686973000000000000006044820152606490fd5b15612fae57565b60405162461bcd60e51b815260206004820152601a60248201527f4170706c69636174696f6e206973206e6f742070656e64696e670000000000006044820152606490fd5b90602091828152600092825461300881612b84565b9384838501526001918281169081600014613069575060011461302e575b505050505090565b6000908152828120949550935b858510613055575050506040925001013880808080613026565b80548585016040015293820193810161303b565b93505050506040935060ff929192191683830152151560051b01013880808080613026565b1561309557565b60405162461bcd60e51b815260206004820152601e60248201527f4f6e6c792067696720706172746965732063616e2063616c6c207468697300006044820152606490fd5b156130e157565b60405162461bcd60e51b815260206004820152601b60248201527f54686520676967206973206e6f7420696e2070726f67726573732e00000000006044820152606490fd5b1561312d57565b60405162461bcd60e51b815260206004820152602560248201527f436f6d6d656e74206d75737420626520757020746f20323536206368617261636044820152643a32b9399760d91b6064820152608490fd5b8054821015612ef957600052600560206000209102019060009056fea26469706673582212201c87f8c5eaf6613ef4109675e5ddb859810f5d131064af5181af3dfa9d1c9cd864736f6c63430008140033",
+  "deployedBytecode": "0x6101c0604052600436101561005f575b361561001a57600080fd5b60405162461bcd60e51b815260206004820152601c60248201527f446972656374207061796d656e7473206e6f74206163636570746564000000006044820152606490fd5b60003560e01c8063210be835146129e557806338f57e751461277c57806339440310146125f45780634bca9a88146123b257806352b4a29a146116f75780635d4fa2be14611e0d57806383f67f6e14611a6f5780638da5cb5b14611a4657806394aeb61314611715578063ca84b557146116f7578063dad2aecf14611511578063dd75cd9b14611423578063e32ba8f1146111c8578063f48f5ea814610bcb578063f6205bb9146109485763fc7789d90361000f57346109435760031960203682011261094357600435906001600160401b0382116109435760c0908236030112610943576040519060c082018281106001600160401b038211176105925760405280600401356001600160401b038111610943576101849060043691840101612d23565b825260248101356001600160401b038111610943576101a99060043691840101612d23565b60208301526044808201356001600160401b038111610943576101d29060043691850101612d23565b6040840152606480830135606085015260849283810135906001600160401b0382116109435761020a60a49260043691840101612d23565b6080870152013560a085015261022560608501511515612d8f565b8351511561090957602084015151156108c757604084015151156108855760a084015115610839576040845151116107ef576102006020850151511161079e5760408085015151116107525760808085015151116106fb578360015461028a81612ddb565b600155806000526000602052604060002091818355600183016001600160601b0360a01b9033828254161790556002840190815416905560a0810151600384015560006004840155805180516001600160401b038111610592578060058601926102fe826102f88654612b84565b86612e01565b602090601f83116001146106955760009261068a575b50508160011b916000199060031b1c19161790555b602081015180516001600160401b03811161059257806006860192610352826102f88654612b84565b602090601f831160011461062457600092610619575b50508160011b916000199060031b1c19161790555b604081015180516001600160401b038111610592578060078601926103a6826102f88654612b84565b602090601f83116001146105b3576000926105a8575b50508160011b916000199060031b1c19161790555b60608101516008840155600060098401556000600a840155600b830160ff19815416905542600c8401556000600d8401556011830162ffffff1981541690556000601384015560808101519283516001600160401b0381116105925760209461044a826104416014860154612b84565b60148601612e01565b8590601f8311600114610524576014929160009183610519575b50508160011b916000199060031b1c1916179101555b817fa4310d29a827e00ff6f93e925d8ec697109888b3967ea46dcdd16c685057f69e60a083015183519061050e87860151956104f960408201516104eb60806060850151940151996104dd604051988998895260c08f8a015260c0890190612cd6565b908782036040890152612cd6565b908582036060870152612cd6565b90608084015282810360a08401523396612cd6565b0390a3604051908152f35b015190508780610464565b9060148401600052866000209160005b601f198516811061057b5750918391600193601495601f19811610610562575b505050811b0191015561047a565b015160001960f88460031b161c19169055878080610554565b919288600181928685015181550194019201610534565b634e487b7160e01b600052604160045260246000fd5b0151905086806103bc565b6000858152602081209350601f198516905b81811061060157509084600195949392106105e8575b505050811b0190556103d1565b015160001960f88460031b161c191690558680806105db565b929360206001819287860151815501950193016105c5565b015190508680610368565b6000858152602081209350601f198516905b8181106106725750908460019594939210610659575b505050811b01905561037d565b015160001960f88460031b161c1916905586808061064c565b92936020600181928786015181550195019301610636565b015190508680610314565b6000858152602081209350601f198516905b8181106106e357509084600195949392106106ca575b505050811b019055610329565b015160001960f88460031b161c191690558680806106bd565b929360206001819287860151815501950193016106a7565b6d313238206368617261637465727360901b907f42616e6e657220696d6167652068617368206d75737420626520757020746f206040519362461bcd60e51b855260206004860152602e6024860152840152820152fd5b637465727360e01b907f43617465676f7279206d75737420626520757020746f203634206368617261636040519362461bcd60e51b855260206004860152602480860152840152820152fd5b67617261637465727360c01b907f4465736372697074696f6e206d75737420626520757020746f203531322063686040519362461bcd60e51b85526020600486015260286024860152840152820152fd5b607360f81b907f5469746c65206d75737420626520757020746f203634206368617261637465726040519362461bcd60e51b85526020600486015260216024860152840152820152fd5b6206e20360ec1b907f42617365207061796d656e74206d7573742062652067726561746572207468616040519362461bcd60e51b85526020600486015260236024860152840152820152fd5b907f43617465676f72792063616e6e6f7420626520656d70747900000000000000006040519162461bcd60e51b83526020600484015260186024840152820152fd5b907f4465736372697074696f6e2063616e6e6f7420626520656d70747900000000006040519162461bcd60e51b835260206004840152601b6024840152820152fd5b90745469746c652063616e6e6f7420626520656d70747960581b6040519162461bcd60e51b83526020600484015260156024840152820152fd5b600080fd5b34610943576040366003190112610943576001600160401b0360043560248035838111610943573660238201121561094357806004013593841161094357368285830101116109435782600052602091600083526001926109b960018060a01b038560406000200154163314612f5b565b6109c584548610612e46565b84600052600081526040600020936016850194855460001996878201918211610bb6576109f660ff92600b92613180565b50920154166005811015610ba15782610a0f91146130da565b8715610b5d57908791610a26610100841115613126565b60038101610a3e84610a388354612b84565b83612e01565b600097601f8511600114610ad35784877f952b2684ebe1ee36c3502193d2167f289eee9ec50e3ef37a2907d533414b693a9a600092610ac6575b505085851b918660031b1c19161790555b01549260405194606086528260608701520160808501376000608087850101528201524260408201526080813395601f80199101168101030190a3005b8a0101359050878d610a78565b97601f1985169082600052866000209160005b818110610b4357507f952b2684ebe1ee36c3502193d2167f289eee9ec50e3ef37a2907d533414b693a9a878a9210610b29575b505050508284811b019055610a89565b60f88860031b161c19918a0101351690558a808781610b19565b8a83018a013584558d975092860192918801918801610ae6565b60405162461bcd60e51b8152600481018490526018818601527f436f6d6d656e742063616e6e6f7420626520656d7074792e00000000000000006044820152606490fd5b84634e487b7160e01b60005260216004526000fd5b85634e487b7160e01b60005260116004526000fd5b346109435760031960403682011261094357602435906001600160401b03821161094357606090823603011261094357604051610c0781612bbe565b816004013581526024820135602082015260449182810135906001600160401b038211610943576004610c3d9236920101612d23565b6040820152610c5160015460043510612e46565b600435600052600060205260406000209160ff600b840154166005811015610fea57610c7d9015612e87565b60018301546001600160a01b031633146111785781511561112457610ca760208301511515612d8f565b604082015151156110e057610200604083015151116110865760043560005260006020526040600020906012600092018054925b8381106110165785856012820154815192602083015160408401519060405195866101008101106001600160401b036101008901111761059257610100870160405284875233602088015260408701526060860152600060808601524260a086015260c0850152604051610d4e81612bf4565b6000815260e0850152600160401b82101561059257816012610d7892600183018282015501612edd565b61100057835181556001810160018060a01b036020860151166001600160601b0360a01b82541617905560408401516002820155606084015160038201556004810160808501516004811015610fea5760ff8019835416911617905560a0840151600582015560c08401518051906001600160401b03821161059257610e0e82610e056006860154612b84565b60068601612e01565b602090601f8311600114610f7557918060e09492600794600092610f6a575b50508160011b916000199060031b1c19161760068201555b019301519283516001600160401b03811161059257610e6e81610e688454612b84565b84612e01565b602094601f8211600114610f0457948192939495600092610ef9575b50508160011b916000199060031b1c19161790555b81519160406020820151910151906040519384526020840152606060408401527f53d8220031f7b3ba7cd9d5e19d287c5927fd093031aa3d970a308b3056384df0339380610ef4600435946060830190612cd6565b0390a4005b015190508580610e8a565b601f198216958360005260206000209160005b888110610f5257508360019596979810610f39575b505050811b019055610e9f565b015160001960f88460031b161c19169055858080610f2c565b91926020600181928685015181550194019201610f17565b015190508880610e2d565b906006840160005260206000209160005b601f1985168110610fd257509260e0949260019260079583601f19811610610fb9575b505050811b016006820155610e45565b015160001960f88460031b161c19169055888080610fa9565b91926020600181928685015181550194019201610f86565b634e487b7160e01b600052602160045260246000fd5b634e487b7160e01b600052600060045260246000fd5b6110208183612edd565b50600101546001600160a01b031633146110425761103d90612ddb565b610cdb565b60405162461bcd60e51b815260206004820152601b60248201527f416c7265616479206170706c69656420746f207468697320676967000000000081850152606490fd5b6084907f50726f706f73616c20636f6d6d656e74206d75737420626520757020746f20356040519162461bcd60e51b835260206004840152602d60248401528201526c3132206368617261637465727360981b6064820152fd5b6064907f50726f706f73616c20636f6d6d656e742063616e6e6f7420626520656d7074796040519162461bcd60e51b83526020600484015260206024840152820152fd5b6084907f50726f706f736564207061796d656e74206d75737420626520677265617465726040519162461bcd60e51b83526020600484015260276024840152820152660207468616e20360cc1b6064820152fd5b6084907f436c69656e742063616e6e6f74206170706c7920746f207468656972206f776e6040519162461bcd60e51b835260206004840152602480840152820152632067696760e01b6064820152fd5b34610943576060366003190112610943576004356001600160401b03602435604435828111610943576111ff903690600401612d23565b9260019361120f85548310612e46565b816000526020946000865261122d6012604060002001548510612f0f565b826000526000865260018060a01b0390611251828260406000200154163314612f5b565b8360005260008752604060002060ff600b61126f8860128501612edd565b50920154166005811015610fea576112879015612e87565b60048101805460ff81166004811015610fea576112a49015612fa7565b6102008651116113c75760ff1916600217905583519660078201908811610592576112d388610a388354612b84565b88601f89116001146113435797807f4d5b20aedec5affb6b0176d962b56fa59512c0c5ff16499bad78898e4077d185979899600091611338575b50600019600383901b1c191690841b1790555b01541694610ef4604051928284938452830190612cd6565b90508601518b61130d565b601f19891690826000528a6000209160005b8c8282106113b3575050918a917f4d5b20aedec5affb6b0176d962b56fa59512c0c5ff16499bad78898e4077d185999a9b87941061139a575b5050811b019055611320565b88015160001960f88460031b161c191690558b8061138e565b898401518555938701939283019201611355565b60405162461bcd60e51b8152600481018b9052602e60248201527f52656a656374696f6e20636f6d6d656e74206d75737420626520757020746f2060448201526d353132206368617261637465727360901b6064820152608490fd5b3461094357602036600319011261094357600254600435906001600160a01b031633036114cc576114576001548210612e46565b8060005260006020527f9fa9f7b41e4f62964bcf9c590177d3b2b01cd9ad9bee19d329455dc1e5a07d94608060156040600020600b8101600360ff1982541617905542600e820155015460ff6040519160038352818160081c161515602084015260101c1615156040820152426060820152a2005b60405162461bcd60e51b815260206004820152601860248201527f4f6e6c79206f776e65722063616e2063616c6c207468697300000000000000006044820152606490fd5b346109435761151f36612d79565b61152c6001548310612e46565b816000526020916000835261154a6012604060002001548310612f0f565b8060005260008352611563826012604060002001612edd565b5060018101546001600160a01b031633036116985760048101805460ff81166004811015610fea57611640576231b2b960e91b92600192600360079360ff191617905501946115b28654612b84565b601f811161161c575b5060478655856000526000207f4170706c69636174696f6e2077697468647261776e20627920667265656c616e815501557f85e5378da1c08ad4b242ef199d226aacd036808813b409b3b622e4b2cb4b036c60405180610ef4339682612ff3565b61163a90876000526002601f84600020920160051c82019101612dea565b866115bb565b60405162461bcd60e51b815260048101879052602a60248201527f4f6e6c792070656e64696e67206170706c69636174696f6e732063616e206265604482015269103bb4ba34323930bbb760b11b6064820152608490fd5b60405162461bcd60e51b815260048101859052603160248201527f4f6e6c7920746865206170706c6963616e742063616e207769746864726177206044820152703a3432b4b91030b8383634b1b0ba34b7b760791b6064820152608490fd5b34610943576000366003190112610943576020600154604051908152f35b3461094357602080600319360112610943576004359060019061173a82548410612e46565b600083815280825260409020828101546001600160a01b03929161176a9184163314908115611a36575b5061308e565b8360005260008152604060002060ff600b820154166005811015610fea5784036119f85782600282015416156119ba57828482015416331460001461190e5760118101805460ff81166118be5760ff191685179055604080513381524260208201526011929187917f402b98dfa572aff7e87e1a43948fc5a3fed31d48e92d38af810016682cec9def9190a25b015460ff811690816118b0575b5061180b57005b8360005260008152604060002090600b8201600260ff198254161790556010820142815560028301938085541690600080808060048901958654908282156118a7575bf11561189b577fb5a986770aafe15f8fc808fb71e7c14b0cd80516904d07c4c19ccbec6e81c9889681608097541695015416905491549260405194855284015260408301526060820152a2005b6040513d6000823e3d90fd5b506108fc61184e565b60ff915060081c1685611804565b60405162461bcd60e51b815260048101859052602260248201527f436c69656e7420616c726561647920636f6e6669726d6564207265636570746960448201526137b760f11b6064820152608490fd5b60118101805460ff8160081c166119665761ff001916610100179055604080513381524260208201526011929187917f2261d1abfc2747e3801a04fc78c760deff60283d950420e60ac2d733a70a62ee9190a26117f7565b60405162461bcd60e51b815260048101859052602660248201527f467265656c616e63657220616c7265616479206d61726b65642061732064656c6044820152651a5d995c995960d21b6064820152608490fd5b60405162461bcd60e51b8152600481018390526016602482015275139bc8199c99595b185b98d95c88185cdcda59db995960521b6044820152606490fd5b60405162461bcd60e51b8152600481018390526016602482015275476967206973206e6f7420696e2070726f677265737360501b6044820152606490fd5b6002015484163314905086611764565b34610943576000366003190112610943576002546040516001600160a01b039091168152602090f35b611a7836612d79565b611a856001548310612e46565b816000526000602052611aa16012604060002001548210612f0f565b816000526000602052611ac560018060a01b03600160406000200154163314612f5b565b816000526000602052604060002060ff600b611ae48460128501612edd565b50920154166005811015610fea57611afc9015612e87565b60ff600482015416906004821015610fea57611b1a60029215612fa7565b01543403611dc8578160005260006020526040600020611b3d8260128301612edd565b50600b820160ff8154166005811015610fea57611b5a9015612e87565b60048201805460ff8116906004821015610fea57611b7a60019215612fa7565b60ff191617905560018060a01b0360018301541660028401906001600160601b0360a01b8254161790556002820154600484015560038201546009840155836013840155600160ff1982541617905542600d830155600381015491610e1092838102938185041490151715611db2578242014211611db2577fe09a8afc6643ac4f01695f23d94acfa17a05d58f58567be400ea7c97ac4d678d606085938793600a87420191015560018060a01b036001820154169560036002830154920154604051928352602083015242016040820152a4816000526000602052604060002060005b6012820154811015611db0578281141580611d89575b90611c8191611c8657612ddb565b611c5d565b6004611c958260128601612edd565b5001805460ff19166002179055611caf8160128501612edd565b50600781611cc08280940154612b84565b601f90818111611d63575b5050604182820155016000527f416e6f74686572206170706c69636174696f6e207761732073656c656374656460206000205581867f4d5b20aedec5affb6b0176d962b56fa59512c0c5ff16499bad78898e4077d185611d2e8360128901612edd565b50600101546001600160a01b031693611d4a8460128a01612edd565b50611d5b6040519283920182612ff3565b0390a4612ddb565b6001611d82928585016000526020600020920160051c82019101612dea565b8880611ccb565b5060ff6004611d9b8360128601612edd565b50015416906004821015610fea579015611c73565b005b634e487b7160e01b600052601160045260246000fd5b60405162461bcd60e51b815260206004820152601960248201527f4d757374207061792074686520616772656564207072696365000000000000006044820152606490fd5b346109435760031960403682011261094357602435906001600160401b03821161094357606090823603011261094357604051611e4981612bbe565b81600401356001600160401b03811161094357611e6c9060043691850101612d23565b815260248201356001600160401b03811161094357611e9360449160043691860101612d23565b926020830193845201359081151582036109435760408181019283526004356000908152602081905220600201546001600160a01b0316330361235e57611edf60015460043510612e46565b600435600052600060205260406000209160ff600b840154166005811015610fea576001611f0d91146130da565b815151156123195761010080835151116122c557611f2f908551511115613126565b60168251938551835115159060405196611f4888612bd9565b87524260208801526040870152604051611f6181612bf4565b60008152606087015260808601520191519351905115159060405194611f8686612bd9565b85524260208601526040850152604051611f9f81612bf4565b60008152606085015260808401528054600160401b81101561059257611fca91600182018155613180565b9290926110005780519283516001600160401b03811161059257611ff281610e688454612b84565b6020601f821160011461225c578192939495600092612251575b50508160011b916000199060031b1c19161781555b60208201516001820155604082015180516001600160401b03811161059257806002840192612054826102f88654612b84565b602090601f83116001146121eb576000926121e0575b50508160011b916000199060031b1c19161790555b6003810160608301518051906001600160401b038211610592576120ad826120a78554612b84565b85612e01565b602090601f83116001146121725791806004949260809694600092612167575b50508160011b916000199060031b1c19161790555b01910151151560ff80198354169116179055805190604081015161212f6020608084015115159301519161212160405195608087526080870190612cd6565b908582036020870152612cd6565b91604084015260608301527ff304de8c453106465f74d526fc835183d2c1bba2a20a6cccd4decd3f9ffda750339280600435930390a3005b0151905088806120cd565b90601f198316918460005260206000209260005b8181106121c857509260019285926080989660049896106121af575b505050811b0190556120e2565b015160001960f88460031b161c191690558880806121a2565b92936020600181928786015181550195019301612186565b01519050868061206a565b6000858152602081209350601f198516905b8181106122395750908460019594939210612220575b505050811b01905561207f565b015160001960f88460031b161c19169055868080612213565b929360206001819287860151815501950193016121fd565b01519050858061200c565b8260005260206000209060005b601f19841681106122ad575060019394959683601f19811610612294575b505050811b018155612021565b015160001960f88460031b161c19169055858080612287565b9091602060018192858b015181550193019101612269565b60405162461bcd60e51b815260206004820152602660248201527f5265736f75726365206d75737420626520757020746f2032353620636861726160448201526531ba32b9399760d11b6064820152608490fd5b60405162461bcd60e51b815260206004820152601960248201527f5265736f757263652063616e6e6f7420626520656d7074792e000000000000006044820152606490fd5b60405162461bcd60e51b815260206004820152602660248201527f4f6e6c7920616363657074656420667265656c616e6365722063616e2063616c6044820152656c207468697360d01b6064820152608490fd5b34610943576020366003190112610943576004356123d36001548210612e46565b806000526000602052604060002061240260018060a01b03918260018201541633149081156125e4575061308e565b816000526000602052604060002090600b820160ff91828254166005811015610fea578061249a575050907f9fa9f7b41e4f62964bcf9c590177d3b2b01cd9ad9bee19d329455dc1e5a07d949281608093600360ff198254161781555b541691600e60158301549201549161247a6040518095612d16565b818160081c161515602085015260101c16151560408301526060820152a2005b60010361258a57600184018181541633146000146125655760158501805461ff0019166101001790555b541680151580612555575b80612545575b612507575b50907f9fa9f7b41e4f62964bcf9c590177d3b2b01cd9ad9bee19d329455dc1e5a07d94928160809361245f565b600080808093600360ff9796971988541617875542600e89015560048801549082821561253c575bf11561189b5790846124da565b506108fc61252f565b5082601585015460101c166124d5565b5082601585015460081c166124cf565b8160028601541633036124c45760158501805462ff00001916620100001790556124c4565b60405162461bcd60e51b815260206004820152602c60248201527f4769672063616e6e6f742062652063616e63656c6c656420696e20697473206360448201526b757272656e7420737461746560a01b6064820152608490fd5b6002015483163314905084611764565b34610943576020806003193601126109435760043590816000526000815260018060a01b0390600190612631838360406000200154163314612f5b565b61263d82548510612e46565b8360005260008152604060002060ff600b820154166005811015610fea578361266691146130da565b83838201541693841561273757600282015416156126e6579160007fdbb64c3761fe96a09d16f0e9ea3f65e6fa7d9ee81c5ea17448ddff1420141de0949284601160a0960161ffff198154169055601581018460ff19825416179055600f42910155604051938452830152600060408301526060820152426080820152a2005b60405162461bcd60e51b815260048101839052602360248201527f5468652067696720686173206e6f2061737369676e656420667265656c616e6360448201526232b91760e91b6064820152608490fd5b60405162461bcd60e51b815260048101849052601f60248201527f5468652067696720686173206e6f2061737369676e656420636c69656e742e006044820152606490fd5b3461094357602036600319011261094357600435600052600060205260406000208061012052805490600160a01b6001900390816001820154169160028201541660a052600381015460c0526004810154610140526005016127dd90612c30565b91610120516006016127ee90612c30565b91610120516007016127ff90612c30565b936101205193600885015461018052600985015495600a860154600b87015460ff1691600c88015493600d89015495600e8a015497600f8b01549960108c01549b60118101546101005260138101546101605260140161285e90612c30565b608052610120516015015460e052604051806101a052526101a0516020015260a0516101a0516040015260c0516101a05160600152610140516101a05160800152610320806101a05160a001526101a051016128b991612cd6565b6101a0518082039060c001526128ce91612cd6565b6101a0518082039060e001526128e391612cd6565b97610180516101a05161010001526101a05161012001526101a05161014001526101a0516101600161291491612d16565b6101a05161018001526101a0516101a001526101a0516101c001526101a0516101e001526101a05161020001526101005160ff1615156101a05161022001526101005160081c60ff1615156101a05161024001526101005160101c60ff166101a0516102600152610160516101a05161028001526101a051808203906102a00152608051906129a291612cd6565b60e05160ff1615156101a0516102c0015260e05160081c60ff1615156101a0516102e0015260e05160101c60ff1615156101a05161030001526101a05180910390f35b346109435760403660031901126109435760043560243560ff811680820361094357612a146001548410612e46565b8260005260209160008352612a3a60018060a01b03600160406000200154163314612f5b565b8360005260008352604060002060ff600b820154166005811015610fea57600203612b48576011019081549060ff8260101c16612b0f57600184101580612b04575b15612ace57916060939162ff00007f498af54a614c8f803fa4cff17e2f7f398e8dca29a3e881af50dd2558fdd3114c969460101b169062ff0000191617905560405191338352820152426040820152a2005b60405162461bcd60e51b815260048101869052600e60248201526d496e76616c696420726174696e6760901b6044820152606490fd5b506005841115612a7c565b60405162461bcd60e51b815260048101869052601160248201527011da59c8185b1c9958591e481c985d1959607a1b6044820152606490fd5b60405162461bcd60e51b815260048101859052601460248201527311da59c81a5cc81b9bdd0818dbdb5c1b195d195960621b6044820152606490fd5b90600182811c92168015612bb4575b6020831014612b9e57565b634e487b7160e01b600052602260045260246000fd5b91607f1691612b93565b606081019081106001600160401b0382111761059257604052565b60a081019081106001600160401b0382111761059257604052565b602081019081106001600160401b0382111761059257604052565b90601f801991011681019081106001600160401b0382111761059257604052565b9060405191826000825492612c4484612b84565b908184526001948581169081600014612cb35750600114612c70575b5050612c6e92500383612c0f565b565b9093915060005260209081600020936000915b818310612c9b575050612c6e93508201013880612c60565b85548884018501529485019487945091830191612c83565b915050612c6e94506020925060ff191682840152151560051b8201013880612c60565b919082519283825260005b848110612d02575050826000602080949584010152601f8019910116010190565b602081830181015184830182015201612ce1565b906005821015610fea5752565b81601f82011215610943578035906001600160401b0382116105925760405192612d57601f8401601f191660200185612c0f565b8284526020838301011161094357816000926020809301838601378301015290565b6040906003190112610943576004359060243590565b15612d9657565b60405162461bcd60e51b815260206004820152601f60248201527f4475726174696f6e206d7573742062652067726561746572207468616e2030006044820152606490fd5b6000198114611db25760010190565b818110612df5575050565b60008155600101612dea565b9190601f8111612e1057505050565b612c6e926000526020600020906020601f840160051c83019310612e3c575b601f0160051c0190612dea565b9091508190612e2f565b15612e4d57565b60405162461bcd60e51b815260206004820152601260248201527111da59c8191bd95cc81b9bdd08195e1a5cdd60721b6044820152606490fd5b15612e8e57565b60405162461bcd60e51b815260206004820152602160248201527f476967206973206e6f7420616363657074696e67206170706c69636174696f6e6044820152607360f81b6064820152608490fd5b8054821015612ef95760005260206000209060031b0190600090565b634e487b7160e01b600052603260045260246000fd5b15612f1657565b60405162461bcd60e51b815260206004820152601a60248201527f4170706c69636174696f6e20646f6573206e6f742065786973740000000000006044820152606490fd5b15612f6257565b60405162461bcd60e51b815260206004820152601960248201527f4f6e6c7920636c69656e742063616e2063616c6c2074686973000000000000006044820152606490fd5b15612fae57565b60405162461bcd60e51b815260206004820152601a60248201527f4170706c69636174696f6e206973206e6f742070656e64696e670000000000006044820152606490fd5b90602091828152600092825461300881612b84565b9384838501526001918281169081600014613069575060011461302e575b505050505090565b6000908152828120949550935b858510613055575050506040925001013880808080613026565b80548585016040015293820193810161303b565b93505050506040935060ff929192191683830152151560051b01013880808080613026565b1561309557565b60405162461bcd60e51b815260206004820152601e60248201527f4f6e6c792067696720706172746965732063616e2063616c6c207468697300006044820152606490fd5b156130e157565b60405162461bcd60e51b815260206004820152601b60248201527f54686520676967206973206e6f7420696e2070726f67726573732e00000000006044820152606490fd5b1561312d57565b60405162461bcd60e51b815260206004820152602560248201527f436f6d6d656e74206d75737420626520757020746f20323536206368617261636044820152643a32b9399760d91b6064820152608490fd5b8054821015612ef957600052600560206000209102019060009056fea26469706673582212201c87f8c5eaf6613ef4109675e5ddb859810f5d131064af5181af3dfa9d1c9cd864736f6c63430008140033",
+  "devdoc": {
+    "author": "SmArt",
+    "details": "A contract for managing gigs where clients post work requests and freelancers apply with proposals.",
+    "kind": "dev",
+    "methods": {
+      "acceptApplication(uint256,uint256)": {
+        "details": "Accept an application (Client accepts freelancer's proposal)",
+        "params": {
+          "_applicationId": "The application ID to accept",
+          "_gigId": "The ID of the gig"
+        }
+      },
+      "addCommentToGig(uint256,string)": {
+        "details": "Allows the client to add a response to the last uploaded file.",
+        "params": {
+          "_comment": "Comment text.",
+          "_gigId": "Gig ID."
+        }
+      },
+      "applyToGig(uint256,(uint256,uint256,string))": {
+        "details": "Apply to a gig (Freelancer submits application)",
+        "params": {
+          "_gigId": "The ID of the gig to apply for",
+          "params": "struct containing proposed payment, duration, and proposal comment"
+        }
+      },
+      "cancelGig(uint256)": {
+        "details": "Cancel a gig",
+        "params": {
+          "_gigId": "The gig ID to cancel"
+        }
+      },
+      "confirmCompletion(uint256)": {
+        "details": "Confirm gig completion (both parties must confirm to complete the gig)",
+        "params": {
+          "_gigId": "The gig ID to confirm completion"
+        }
+      },
+      "emergencyCancel(uint256)": {
+        "details": "Emergency cancel by owner (with full refund to client)",
+        "params": {
+          "_gigId": "The gig ID to emergency cancel"
+        }
+      },
+      "rateGig(uint256,uint8)": {
+        "details": "Rate the gig (only client can rate after completion)",
+        "params": {
+          "_gigId": "The gig ID to rate",
+          "_rating": "The rating to give (1-5)"
+        }
+      },
+      "rejectApplication(uint256,uint256,string)": {
+        "details": "Reject an application (Client rejects freelancer's proposal)",
+        "params": {
+          "_applicationId": "The application ID to reject",
+          "_gigId": "The ID of the gig",
+          "_rejectionComment": "Comment explaining why the application was rejected"
+        }
+      },
+      "uploadFile(uint256,(string,string,bool))": {
+        "details": "Allows the freelancer to upload a file.",
+        "params": {
+          "_fileParams": "The content of the file (IPFS hash and comment).",
+          "_gigId": "Gig ID."
+        }
+      }
+    },
+    "title": "GigsContract",
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 117,
+        "contract": "contracts/GigsContract.sol:GigsContract",
+        "label": "postedGigs",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_mapping(t_uint256,t_struct(Gig)112_storage)"
+      },
+      {
+        "astId": 119,
+        "contract": "contracts/GigsContract.sol:GigsContract",
+        "label": "postedGigsCounter",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 121,
+        "contract": "contracts/GigsContract.sol:GigsContract",
+        "label": "owner",
+        "offset": 0,
+        "slot": "2",
+        "type": "t_address"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_struct(Application)32_storage)dyn_storage": {
+        "base": "t_struct(Application)32_storage",
+        "encoding": "dynamic_array",
+        "label": "struct GigsContract.Application[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_struct(FileInfo)3839_storage)dyn_storage": {
+        "base": "t_struct(FileInfo)3839_storage",
+        "encoding": "dynamic_array",
+        "label": "struct FileInfo[]",
+        "numberOfBytes": "32"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_enum(ApplicationState)14": {
+        "encoding": "inplace",
+        "label": "enum GigsContract.ApplicationState",
+        "numberOfBytes": "1"
+      },
+      "t_enum(GigState)9": {
+        "encoding": "inplace",
+        "label": "enum GigsContract.GigState",
+        "numberOfBytes": "1"
+      },
+      "t_mapping(t_uint256,t_struct(Gig)112_storage)": {
+        "encoding": "mapping",
+        "key": "t_uint256",
+        "label": "mapping(uint256 => struct GigsContract.Gig)",
+        "numberOfBytes": "32",
+        "value": "t_struct(Gig)112_storage"
+      },
+      "t_string_storage": {
+        "encoding": "bytes",
+        "label": "string",
+        "numberOfBytes": "32"
+      },
+      "t_struct(Application)32_storage": {
+        "encoding": "inplace",
+        "label": "struct GigsContract.Application",
+        "members": [
+          {
+            "astId": 16,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "applicationId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 18,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "freelancer",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "astId": 20,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "proposedPayment",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 22,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "proposedDurationInHours",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 25,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "state",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_enum(ApplicationState)14"
+          },
+          {
+            "astId": 27,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "createdAt",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 29,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "proposalComment",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 31,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "rejectionComment",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_string_storage"
+          }
+        ],
+        "numberOfBytes": "256"
+      },
+      "t_struct(FileInfo)3839_storage": {
+        "encoding": "inplace",
+        "label": "struct FileInfo",
+        "members": [
+          {
+            "astId": 3830,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "resource",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 3832,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "uploadedAt",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 3834,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "submissionComment",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 3836,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "clientResponse",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 3838,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "isLink",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_bool"
+          }
+        ],
+        "numberOfBytes": "160"
+      },
+      "t_struct(Gig)112_storage": {
+        "encoding": "inplace",
+        "label": "struct GigsContract.Gig",
+        "members": [
+          {
+            "astId": 54,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "gigId",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 56,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "client",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_address"
+          },
+          {
+            "astId": 58,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "acceptedFreelancer",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_address"
+          },
+          {
+            "astId": 60,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "basePayment",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 62,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "finalPayment",
+            "offset": 0,
+            "slot": "4",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 64,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "title",
+            "offset": 0,
+            "slot": "5",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 66,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "description",
+            "offset": 0,
+            "slot": "6",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 68,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "category",
+            "offset": 0,
+            "slot": "7",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 70,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "maxDurationInHours",
+            "offset": 0,
+            "slot": "8",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 72,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "finalDurationInHours",
+            "offset": 0,
+            "slot": "9",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 74,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "deadline",
+            "offset": 0,
+            "slot": "10",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 77,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "state",
+            "offset": 0,
+            "slot": "11",
+            "type": "t_enum(GigState)9"
+          },
+          {
+            "astId": 79,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "createdAt",
+            "offset": 0,
+            "slot": "12",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 81,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "acceptedAt",
+            "offset": 0,
+            "slot": "13",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 83,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "canceledAt",
+            "offset": 0,
+            "slot": "14",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 85,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "rejectedAt",
+            "offset": 0,
+            "slot": "15",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 87,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "finishedAt",
+            "offset": 0,
+            "slot": "16",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 89,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "clientReceived",
+            "offset": 0,
+            "slot": "17",
+            "type": "t_bool"
+          },
+          {
+            "astId": 91,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "freelancerDelivered",
+            "offset": 1,
+            "slot": "17",
+            "type": "t_bool"
+          },
+          {
+            "astId": 93,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "rating",
+            "offset": 2,
+            "slot": "17",
+            "type": "t_uint8"
+          },
+          {
+            "astId": 97,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "applications",
+            "offset": 0,
+            "slot": "18",
+            "type": "t_array(t_struct(Application)32_storage)dyn_storage"
+          },
+          {
+            "astId": 99,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "acceptedApplicationId",
+            "offset": 0,
+            "slot": "19",
+            "type": "t_uint256"
+          },
+          {
+            "astId": 101,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "gigBannerImageHash",
+            "offset": 0,
+            "slot": "20",
+            "type": "t_string_storage"
+          },
+          {
+            "astId": 103,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "clientRejected",
+            "offset": 0,
+            "slot": "21",
+            "type": "t_bool"
+          },
+          {
+            "astId": 105,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "clientCancelled",
+            "offset": 1,
+            "slot": "21",
+            "type": "t_bool"
+          },
+          {
+            "astId": 107,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "freelancerCancelled",
+            "offset": 2,
+            "slot": "21",
+            "type": "t_bool"
+          },
+          {
+            "astId": 111,
+            "contract": "contracts/GigsContract.sol:GigsContract",
+            "label": "fileInfo",
+            "offset": 0,
+            "slot": "22",
+            "type": "t_array(t_struct(FileInfo)3839_storage)dyn_storage"
+          }
+        ],
+        "numberOfBytes": "736"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      },
+      "t_uint8": {
+        "encoding": "inplace",
+        "label": "uint8",
+        "numberOfBytes": "1"
+      }
+    }
+  }
+}
