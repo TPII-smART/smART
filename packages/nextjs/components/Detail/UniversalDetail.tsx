@@ -290,7 +290,9 @@ export default function UniversalDetail({
           <div className="space-y-8">
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardHeader className="p-6">
-                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Job Description</CardTitle>
+                <CardTitle className="text-2xl text-[var(--color-primary-content)]">
+                  {data?.type === "job" ? "Job" : "Gig"} Description
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
                 <div className="bg-[var(--color-primary)]/30 p-6 rounded-lg">
