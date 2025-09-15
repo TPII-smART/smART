@@ -29,16 +29,6 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
     await refetch();
   };
 
-  console.log(
-    "Application id",
-    data?.applications.map(app => app.applicationId),
-  );
-
-  console.log(
-    "Gig Ids",
-    data?.applications.map(app => app.gig?.gigId),
-  );
-
   return (
     <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       {isLoading ? (

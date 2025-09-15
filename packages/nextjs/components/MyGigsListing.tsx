@@ -15,8 +15,6 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
     queryFn: () => fetchMyGigs(userAddress),
   });
 
-  console.log(data);
-
   const isOwner = userAddress === address;
 
   const reload = async () => {
