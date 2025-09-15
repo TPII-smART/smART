@@ -9,7 +9,7 @@ import Tabs from "~~/components/Tabs/Tabs";
 import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 
 interface UploadFileFormProps {
-  onSubmit: (data: FileFormData) => Promise<void>;
+  onSubmit: (fileData?: FileFormData | undefined, clientResponse?: string) => Promise<void>;
   loading?: boolean;
   modalTitle?: string;
   modalDescription?: string;
