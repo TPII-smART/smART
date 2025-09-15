@@ -43,12 +43,6 @@ export default function GigPage() {
     });
   });
 
-  // const reload = async () => {
-  //   queryClient.invalidateQueries({ queryKey: ["gigWithApplication", gigId] });
-  //   await new Promise(resolve => setTimeout(resolve, 1000));
-  //   await refetch();
-  // };
-
   return (
     <>
       <div className="w-full h-full overflow-auto">
@@ -71,9 +65,7 @@ export default function GigPage() {
                         {data?.applications.map(application => (
                           <ApplicationCard
                             key={application.applicationId}
-                            //client={application.gig?.client}
                             application={application}
-                            //reload={reload}
                             highlight={application.applicationId === initialItemId}
                           />
                         ))}

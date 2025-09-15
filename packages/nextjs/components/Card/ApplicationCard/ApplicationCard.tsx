@@ -16,12 +16,7 @@ export default function ApplicationCard({ application, className, highlight }: A
   const { address: userAddress } = useAccount();
   const applicationStatus = application.state as ApplicationState;
 
-  // const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
-  //   contractName: "GigsContract",
-  // });
-
   const isFreelancer = application.freelancer?.toLowerCase() === userAddress?.toLowerCase();
-  //const isClient = client?.toLowerCase() === userAddress?.toLowerCase();
 
   const getApplicationStatus = () => {
     if (applicationStatus === ApplicationState.Pending) {
@@ -67,84 +62,6 @@ export default function ApplicationCard({ application, className, highlight }: A
       description: "Unknown status",
     };
   };
-
-  // const handleAccept = async () => {
-  //   try {
-  //     if (application.state !== ApplicationState.Pending) return;
-  //     await writeContract({
-  //       functionName: "acceptApplication",
-  //       args: [BigInt(application.gigId), BigInt(application.applicationId)],
-  //       value: BigInt(application.proposedPayment),
-  //     });
-  //     if (reload) await reload();
-  //   } catch (err) {
-  //     console.error("Accept application failed:", err);
-  //   }
-  // };
-
-  // const handleReject = async () => {
-  //   try {
-  //     if (application.state !== ApplicationState.Pending) return;
-  //     await writeContract({
-  //       functionName: "rejectApplication",
-  //       // TODO: Add modal for rejection comment
-  //       args: [BigInt(application.gigId), BigInt(application.applicationId), "User rejected the application"],
-  //     });
-  //     if (reload) await reload();
-  //   } catch (err) {
-  //     console.error("Reject application failed:", err);
-  //   }
-  // };
-
-  // const getActionButtons = () => {
-  //   const buttons = [];
-
-  //   if (isClient) {
-  //     if (applicationStatus === ApplicationState.Pending) {
-  //       buttons.push(
-  //         <Button
-  //           variant="danger"
-  //           key="cancel"
-  //           onClick={handleReject}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Cancel Job"
-  //         >
-  //           <XCircleIcon className="h-5 w-5" />
-  //         </Button>,
-  //       );
-  //       buttons.push(
-  //         <Button
-  //           variant="primary"
-  //           key="approve"
-  //           onClick={handleAccept}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Approve Job"
-  //         >
-  //           <CheckCircleIcon className="h-5 w-5" />
-  //         </Button>,
-  //       );
-  //     }
-  //     if (applicationStatus === ApplicationState.Accepted) {
-  //       buttons.push(
-  //         <Button
-  //           variant="outline"
-  //           key="view"
-  //           onClick={() => {
-  //             window.location.href = `/gig/${application.gigId}`;
-  //           }}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Gig Details"
-  //         >
-  //           Gig Details
-  //         </Button>,
-  //       );
-  //     }
-  //   }
-  //   return buttons;
-  // };
 
   const statusInfo = getApplicationStatus();
   const StatusIcon = statusInfo.icon;
@@ -204,7 +121,6 @@ export default function ApplicationCard({ application, className, highlight }: A
       className={className}
       cardVariant="Reduced"
       highlight={highlight}
-      //footerRight={<div className="flex items-center gap-2">{getActionButtons(}</div>}
       onClick={handleCardClick}
     />
   );
