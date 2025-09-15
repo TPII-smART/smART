@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/dist/client/components/navigation";
-import JobDetail from "@/components/JobDetail/JobDetail";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
+import JobDetail from "~~/components/Detail/JobDetail/JobDetail";
 
 export default function JobPosting() {
   const { address: userAddress } = useAccount();

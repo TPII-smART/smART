@@ -1,93 +1,75 @@
 import { useEffect, useState } from "react";
+import { UniversalRoadmap } from "../Roadmap/UniversalRoadmap";
+import { UniversalDetailProps } from "./type";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { JobRoadmap } from "@/components/JobRoadmap/JobRoadmap";
 import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
 import { isImageUrl } from "@/lib/utils";
 import { JobState } from "@se-2/common";
-import { fetchJob } from "@services/graphql/fetchers/job";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
-import { StarIcon } from "@heroicons/react/20/solid";
 import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
-import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
 import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
-import { FileFormData } from "~~/components/UploadFileForm/types";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
-import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
-import { fetchDeliverablesForJob } from "~~/services/graphql/fetchers/job/job.service";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
-import { Deliverable } from "~~/types/deliverable";
-import { Job } from "~~/types/job";
 import { UserProfile } from "~~/types/user-profile.type";
 
-export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
+export default function UniversalDetail({
+  data,
+  deliverables,
+  statusBadge,
+  actionButtons,
+  statusMessage,
+  loading,
+  error,
+  reload,
+  isUploadModalOpen,
+  onCloseUploadModal,
+  isDeliverableModalOpen,
+  onCloseDeliverableModal,
+  isRatingModalOpen,
+  onCloseRatingModal,
+  isMining,
+  isDeliverableLoading,
+  handleConfirmCompletion,
+  handleRejectJob,
+  handleRateJob,
+}: UniversalDetailProps) {
   const { address: userAddress } = useAccount();
 
   // Information related to the users (client and freelancer)
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
   const [freelancerProfile, setFreelancerProfile] = useState<UserProfile | null>(null);
 
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showDeliverableModal, setShowDeliverableModal] = useState(false);
-  const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
-
-  const queryClient = useQueryClient();
-
   // Logic related to parsing from ETH to USD
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   // const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
   const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: false });
 
-  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
-    contractName: "JobsContract",
-  });
-
-  const { data, isLoading, error, refetch } = useQuery<Job>({
-    queryKey: ["jobDetail", jobId],
-    queryFn: () => fetchJob(postingId, jobId),
-  });
-
-  const {
-    data: deliverables,
-    isLoading: isDeliverableLoading,
-    refetch: refetchDeliverables,
-  } = useQuery<Deliverable[]>({
-    queryKey: ["jobDeliverable", postingId, jobId],
-    queryFn: async () => {
-      const result = await fetchDeliverablesForJob(postingId, jobId);
-      return result;
-    },
-  });
-  const job = data as Job;
-  const isRejected = job?.clientRejected;
-  const isFreelancer = job?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
-  const isClient = job?.client?.toLowerCase() === userAddress?.toLowerCase();
-  const jobStatus = job?.state as JobState;
+  const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
+  const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
 
   // Add this useEffect to fetch user profiles
   useEffect(() => {
-    const fetchProfiles = async () => {
-      if (data?.client) {
+    const fetchProfiles = async (client: string, freelancer: string) => {
+      if (client) {
         try {
-          const profile = await fetchUserProfile(data.client);
+          const profile = await fetchUserProfile(client);
           setClientProfile(profile);
         } catch (error) {
           console.error("Failed to fetch client profile:", error);
         }
       }
-      if (data?.freelancer) {
+      if (freelancer) {
         try {
-          const profile = await fetchUserProfile(data.freelancer);
+          const profile = await fetchUserProfile(freelancer);
           setFreelancerProfile(profile);
         } catch (error) {
           console.error("Failed to fetch freelancer profile:", error);
@@ -96,9 +78,9 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     };
 
     if (data) {
-      fetchProfiles();
+      fetchProfiles(data?.client || "", data?.freelancer || "");
     }
-  }, [data, isLoading]);
+  }, [data, loading]);
 
   const getAvatarSrc = (role: "client" | "freelancer") => {
     const user = role === "client" ? clientProfile : freelancerProfile;
@@ -121,49 +103,11 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     }
   };
 
-  const reload = async () => {
-    queryClient.invalidateQueries({ queryKey: ["jobDetail", postingId, jobId] });
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await refetch();
-  };
-
-  const getStatusBadge = (status: number) => {
-    const badgeClass = "min-w-[140px] text-center justify-center px-4 py-2";
-    switch (status) {
-      case JobState.WaitingForApproval:
-        return (
-          <Badge
-            className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
-          >
-            Waiting for approval
-          </Badge>
-        );
-      case JobState.Ongoing:
-        return (
-          <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
-            Ongoing
-          </Badge>
-        );
-      case JobState.Cancelled:
-        return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Cancelled</Badge>;
-      case JobState.Finished:
-        return (
-          <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
-            Completed
-          </Badge>
-        );
-      case JobState.Disputed:
-        return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
-      default:
-        return null;
-    }
-  };
-
   const formatDate = (dateString: string | undefined) => {
     return dateString ? new Date(Number(dateString) * 1000).toLocaleDateString() : "N/A";
   };
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center w-full h-64">
         <Spinner />
@@ -188,262 +132,6 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       totalHours > 0 ? `${totalHours} hour${totalHours > 1 ? "s" : ""}` : ""
     }`.trim();
   };
-
-  const handleAccept = async () => {
-    try {
-      if (data?.state !== JobState.WaitingForApproval) return;
-      if (!data?.payment || !data?.jobId) return;
-      await writeContract({
-        functionName: "acceptJob",
-        args: [BigInt(data?.postingId), BigInt(data?.jobId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Accept job failed:", err);
-    }
-  };
-
-  const handleCancel = async () => {
-    try {
-      if (!data?.payment || !data?.jobId) return;
-      await writeContract({
-        functionName: "cancelJob",
-        args: [BigInt(data?.postingId), BigInt(data?.jobId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Cancel job failed:", err);
-    }
-  };
-
-  const handleFileUploadToIPFS = async (file: File | undefined) => {
-    if (!file) return;
-
-    return await uploadToIPFS(file);
-  };
-
-  const handleUploadFile = async (fileData: FileFormData) => {
-    try {
-      let resource = "";
-      const isLink = fileData.isLink;
-
-      if (!job.jobId) return;
-
-      if (fileData.file && !isLink) {
-        resource = (await handleFileUploadToIPFS(fileData.file)) || "";
-      } else if (!fileData.file && isLink) {
-        resource = fileData.link || "";
-      }
-
-      await writeContract({
-        functionName: "uploadFile",
-        args: [
-          BigInt(job.postingId),
-          BigInt(job.jobId),
-          { resource, submissionComment: fileData.submissionComment, isLink },
-        ],
-      });
-      await refetchDeliverables();
-    } catch (err) {
-      console.error("Upload file failed:", err);
-    }
-  };
-
-  const handleAddComment = async (comment: string) => {
-    try {
-      await writeContract({
-        functionName: "addCommentToJob",
-        args: [BigInt(job.postingId), BigInt(job.jobId), comment],
-      });
-      if (reload) await reload();
-      await refetchDeliverables();
-    } catch (err) {
-      console.error("Write comment failed:", err);
-    }
-  };
-
-  const handleRateJob = async (rating: number) => {
-    try {
-      if (!job.jobId) return;
-      await writeContract({
-        functionName: "rateJob",
-        args: [BigInt(job.postingId), BigInt(job.jobId), rating],
-      });
-      setIsRatingModalOpen(false);
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Rate job failed:", err);
-    }
-  };
-
-  const handleConfirmCompletion = async (fileData?: FileFormData, clientResponse?: string) => {
-    try {
-      if (isFreelancer && fileData) {
-        await handleUploadFile(fileData);
-        await refetch();
-      }
-
-      if (isClient && clientResponse) {
-        await handleAddComment(clientResponse);
-      }
-
-      await writeContract({
-        functionName: "confirmCompletion",
-        args: [BigInt(job.postingId), BigInt(job.jobId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Confirm job completion failed:", err);
-    } finally {
-      setShowUploadModal(false);
-    }
-  };
-
-  const handleRejectJob = async (reason: string) => {
-    try {
-      if (!job.jobId) return;
-      await writeContract({
-        functionName: "rejectJob",
-        args: [BigInt(job.postingId), BigInt(job.jobId)],
-      });
-      if (reload) await reload();
-
-      await handleAddComment(reason);
-    } catch (err) {
-      console.error("Reject deliverable failed:", err);
-    } finally {
-      setShowDeliverableModal(false);
-    }
-  };
-
-  // Get status message based on job state and user role
-  const getStatusMessage = () => {
-    if (data?.state === JobState.WaitingForApproval) {
-      if (isClient) {
-        return "Waiting for freelancer to accept the job. You can cancel if needed.";
-      } else if (isFreelancer) {
-        return "Please review the job details and accept to start working.";
-      } else {
-        return "Job is waiting for freelancer approval.";
-      }
-    }
-
-    if (data?.state != undefined && data?.state >= JobState.Ongoing) {
-      return "¿Facing any problems with this job?";
-    }
-
-    return "";
-  };
-
-  // Action buttons based on user role and job state
-  const getActionButtons = () => {
-    const buttons = [];
-
-    // Freelancer actions
-    if (isFreelancer) {
-      if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled && !job.freelancerCancelled) {
-        buttons.push(
-          <Button
-            variant="danger"
-            key="FreelancerCancel"
-            onClick={handleCancel}
-            disabled={isMining}
-            size="sm"
-            tooltip="Cancel Job"
-          >
-            <XCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-      if (jobStatus === JobState.WaitingForApproval) {
-        buttons.push(
-          <Button
-            variant="primary"
-            key="accept"
-            onClick={handleAccept}
-            disabled={isMining}
-            size="sm"
-            tooltip="Accept Job"
-          >
-            <CheckCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-      if (
-        jobStatus === JobState.Ongoing &&
-        !job.freelancerDelivered &&
-        !job.freelancerCancelled &&
-        !job.clientCancelled
-      ) {
-        buttons.push(
-          <Button
-            variant="primary"
-            key="deliver"
-            onClick={() => (isRejected ? setShowDeliverableModal(true) : setShowUploadModal(true))}
-            disabled={isMining}
-            size="sm"
-            tooltip="Mark as Delivered"
-          >
-            <PaperAirplaneIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-    }
-
-    // Client actions
-    if (isClient) {
-      if (jobStatus === JobState.Ongoing) {
-        if (job.freelancerDelivered && !job.clientReceived) {
-          buttons.push(
-            <Button
-              variant="primary"
-              key="receive"
-              onClick={() => setShowDeliverableModal(true)}
-              disabled={isMining}
-              size="sm"
-              tooltip="Mark as Received"
-            >
-              <ArrowDownTrayIcon className="h-5 w-5" />
-            </Button>,
-          );
-        }
-      }
-
-      if (jobStatus === JobState.Finished && !job.rating) {
-        buttons.push(
-          <Button
-            variant="primary"
-            key="rate"
-            onClick={() => setIsRatingModalOpen(true)}
-            disabled={isMining}
-            size="sm"
-            tooltip="Rate Freelancer"
-          >
-            <StarIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-
-      if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled && !job.clientCancelled) {
-        buttons.push(
-          <Button
-            variant="danger"
-            key="ClientCancel"
-            onClick={handleCancel}
-            disabled={isMining}
-            size="sm"
-            tooltip="Cancel Job"
-          >
-            <XCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-    }
-
-    return buttons;
-  };
-
-  const actionButtons = getActionButtons();
 
   if (error || !data) {
     return (
@@ -484,6 +172,33 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const submissionComment = deliverables?.[deliverables?.length - 1]?.submissionComment;
   const clientResponse = deliverables?.[deliverables?.length - 1]?.clientResponse;
 
+  if (error || !data) {
+    return (
+      <div className="min-h-screen w-full p-8 bg-[var(--color-primary)]">
+        <div className="max-w-6xl mx-auto">
+          <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
+            <CardContent className="pt-12 pb-12">
+              <div className="text-center">
+                <ExclamationCircleIcon className="w-16 h-16 text-[var(--color-error)] mx-auto mb-6" />
+                <h3 className="text-2xl font-semibold mb-4 text-[var(--color-primary-content)]">Error loading job</h3>
+                <p className="text-[var(--color-skeleton)] mb-6 text-lg">
+                  {error?.message || "Failed to load job details"}
+                </p>
+                <Button
+                  variant={"primary"}
+                  onClick={reload}
+                  className="bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white px-8 py-3"
+                >
+                  Try Again
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full p-8 bg-[var(--color-primary)]">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -496,7 +211,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                   {data.title}
                 </CardTitle>
                 <div className="flex items-center gap-6">
-                  {getStatusBadge(data.state)}
+                  {statusBadge}
                   <Badge className="bg-[var(--color-secondary)] text-[var(--color-secondary-content)] px-4 py-2 text-base">
                     {data.category}
                   </Badge>
@@ -509,7 +224,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               >
                 <div className="flex items-center text-4xl font-bold text-[var(--color-success)]">
                   {displayUsdMode ? <CurrencyDollarIcon className="w-8 h-8 mr-2" /> : null}
-                  {formatPaymentDisplay(BigInt(data?.payment || "0"))}
+                  {formatPaymentDisplay(BigInt(data.payment || "0"))}
                 </div>
               </div>
             </div>
@@ -595,7 +310,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
                   </div>
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Duration</p>
-                    <p className="text-[var(--color-skeleton)] text-base">{formatDurationHours(data.jobDuration)}</p>
+                    <p className="text-[var(--color-skeleton)] text-base">{formatDurationHours(data.duration)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">
@@ -653,7 +368,8 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
           {/* Right Column - Job Roadmap */}
           <div className="space-y-8">
-            <JobRoadmap job={data} />
+            {/* <JobRoadmap job={data} /> */}
+            <UniversalRoadmap data={data} type={data.type} />
           </div>
         </div>
 
@@ -663,11 +379,9 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
             <CardContent className="p-6">
               <div className="space-y-4">
-                {getStatusMessage() && (
+                {statusMessage && (
                   <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg">
-                    <p className="text-[var(--color-primary-content)] text-base leading-relaxed">
-                      {getStatusMessage()}
-                    </p>
+                    <p className="text-[var(--color-primary-content)] text-base leading-relaxed">{statusMessage}</p>
                   </div>
                 )}
               </div>
@@ -676,7 +390,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
           {/* Action Buttons Box */}
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
-            <CardContent className="p-6">
+            <CardContent className="p-12">
               <div className="flex justify-center items-center h-full">
                 <div className="flex gap-6 flex-wrap justify-center">{actionButtons}</div>
               </div>
@@ -685,27 +399,28 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
         </div>
       </div>
       <div className="h-8 mb-8" />
+
       {/* Confirm Modal */}
       <UploadFileForm
         onSubmit={handleConfirmCompletion}
         loading={isMining && isDeliverableLoading}
-        isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
+        isOpen={isUploadModalOpen}
+        onClose={onCloseUploadModal}
         modalTitle="Submit Deliverable"
-        modalDescription={`You are about to submit your deliverable for this job.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+        modalDescription={`You are about to submit your deliverable .\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
       />
 
       <DeliverableReviewModal
-        isOpen={showDeliverableModal}
+        isOpen={isDeliverableModalOpen}
         onApprove={handleConfirmCompletion}
         onReject={reason => handleRejectJob(reason)}
-        onClose={() => setShowDeliverableModal(false)}
+        onClose={onCloseDeliverableModal}
         modalTitle="Deliverable Review"
         modalDescription="Please review the deliverable and provide your feedback."
         resource={resource || ""}
         isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
-        canUploadFile={isFreelancer && isRejected}
+        canUploadFile={isFreelancer && data.isRejected}
         loading={isMining && isDeliverableLoading}
       />
 
@@ -713,7 +428,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       <FormModal
         modalProps={{
           title: "Rate Freelancer's Work",
-          onClose: () => setIsRatingModalOpen(false),
+          onClose: onCloseRatingModal,
           isOpen: isRatingModalOpen,
           loading: isMining,
         }}
