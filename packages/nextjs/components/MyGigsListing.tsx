@@ -12,7 +12,7 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
   const queryClient = useQueryClient();
   const { data, isLoading, refetch } = useQuery<GigsData>({
     queryKey: ["gigsFromUser", userAddress],
-    queryFn: () => fetchMyGigs(userAddress),
+    queryFn: () => fetchMyGigs(userAddress, address ?? ""),
   });
 
   const isOwner = userAddress === address;
