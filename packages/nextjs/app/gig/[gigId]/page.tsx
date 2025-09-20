@@ -55,7 +55,7 @@ export default function GigPage() {
             ) : (
               <div>
                 {gigState === GigState.Open ? (
-                  <div className="mb-8 mt-8">
+                  <div className="mb-8 mt-2">
                     <InfoHeader data={data?.gig} />
                     <h1 className="text-xl font-bold text-content-primary mb-4 mt-6">
                       Manage Applications for this Gig

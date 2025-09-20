@@ -223,7 +223,7 @@ export default function ActivityFeed() {
         className="overflow-y-auto h-full"
         onScroll={event => fetchScroll(event as unknown as PaginationScrollEvent)}
       >
-        <div className="mx-30 space-y-4 py-4 px-5 ">
+        <div className="mx-5 space-y-4 py-4 px-5 ">
           {orderedData.map(activity => (
             <FeedActivityCard
               key={activity.id}
