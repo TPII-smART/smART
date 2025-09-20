@@ -12,7 +12,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 
-export default function ApplicationCard({ application, className, highlight }: ApplicationProps) {
+export default function ApplicationCard({ application, className, highlight, variant }: ApplicationProps) {
   const { address: userAddress } = useAccount();
   const applicationStatus = application.state as ApplicationState;
 
@@ -97,7 +97,26 @@ export default function ApplicationCard({ application, className, highlight }: A
   );
 
   const extraInfo = (
-    <div className="text-sm text-content-secondary">{application.proposalComment || "No proposal provided"}</div>
+    <div
+      className="
+        w-full
+        bg-black/10
+        rounded-xl
+        px-4
+        py-3
+        flex flex-col
+        shadow-lg
+        "
+      style={{
+        backdropFilter: "blur(6px)",
+        border: "1px solid var(--color-border)",
+      }}
+    >
+      <span className="text-xs font-semibold text-content-primary mb-0.5">Proposal</span>
+      <span className="text-sm text-content-secondary break-words">
+        {application.proposalComment || "No proposal provided"}
+      </span>
+    </div>
   );
 
   const handleCardClick = () => {
@@ -110,8 +129,12 @@ export default function ApplicationCard({ application, className, highlight }: A
 
   return (
     <UniversalCard
-      avatarAddress={application.freelancer}
-      title={application.proposalComment || "Gig Title Not Available"}
+      avatarAddress={(variant || "profile") === "gig" ? application.freelancer : application.gig?.client || undefined}
+      title={
+        (variant || "profile") === "gig"
+          ? application.proposalComment || "No proposal provided"
+          : application.gig?.title || "Title not available"
+      }
       description={application.gig?.description || "Description not available"}
       time={application.proposedDurationInHours}
       timeLabel="Proposed Duration"
@@ -119,7 +142,7 @@ export default function ApplicationCard({ application, className, highlight }: A
       category={application.gig?.category || "Category not available"}
       paymentDisplay={statusDisplay}
       className={className}
-      cardVariant="Reduced"
+      cardVariant={(variant || "profile") === "gig" ? "Reduced" : "Partial"}
       highlight={highlight}
       onClick={handleCardClick}
     />

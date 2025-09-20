@@ -4,4 +4,5 @@ export interface ApplicationProps {
   application: Application;
   className?: string;
   highlight?: boolean;
+  variant?: "profile" | "gig";
 }

@@ -111,8 +111,8 @@ export function UniversalCard({
   const { profilePicture, isLoading } = useUserProfile(avatarAddress);
 
   // Determine avatar size based on card variant
-  const avatarSize = cardVariant === "Reduced" ? 64 : 96;
-  const avatarClasses = cardVariant === "Reduced" ? "h-16 w-16" : "h-24 w-24";
+  const avatarSize = cardVariant === "Reduced" || cardVariant === "Partial" ? 64 : 96;
+  const avatarClasses = cardVariant === "Reduced" || cardVariant === "Partial" ? "h-16 w-16" : "h-24 w-24";
 
   const handleNavigateToProfile = async () => {
     if (avatarAddress) {
@@ -153,7 +153,7 @@ export function UniversalCard({
     return <BlockieAvatar address={avatarAddress ? avatarAddress : ""} size={avatarSize} />;
   };
 
-  return cardVariant == "Reduced" ? (
+  return cardVariant == "Reduced" || cardVariant == "Partial" ? (
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 ease-in-out",
@@ -176,7 +176,7 @@ export function UniversalCard({
 
         <div className="flex flex-col flex-1 min-w-0">
           {/* Title Section */}
-          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2 mb-2" style={{ minHeight: "2.5rem" }}>
+          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2" style={{ minHeight: "2.5rem" }}>
             {title}
           </CardTitle>
 
@@ -190,7 +190,11 @@ export function UniversalCard({
           />
         </div>
       </CardContent>
-
+      {extraInfo && cardVariant === "Partial" && (
+        <CardContent>
+          <div>{extraInfo}</div>
+        </CardContent>
+      )}
       <CardFooter className="flex justify-between items-center px-6 py-4 mt-auto">
         <div className="flex items-center">{footerLeft ?? paymentDisplay}</div>
         <div className="flex items-center">{footerRight}</div>
