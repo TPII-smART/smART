@@ -87,7 +87,6 @@ export default function ApplicationCard({ application, className, highlight, var
   // Status display for footer left
   const statusDisplay = (
     <div className="flex flex-col justify-between">
-      {paymentDisplay}
       <div className="flex items-center gap-2 mt-2">
         <div className={cn("h-3 w-3 rounded-full", statusInfo.color)}></div>
         <span className="text-sm font-medium text-content-secondary">{statusInfo.label}</span>
@@ -140,7 +139,8 @@ export default function ApplicationCard({ application, className, highlight, var
       timeLabel="Proposed Duration"
       extraInfo={extraInfo}
       category={application.gig?.category || "Category not available"}
-      paymentDisplay={statusDisplay}
+      footerLeft={statusDisplay}
+      footerRight={paymentDisplay}
       className={className}
       cardVariant={(variant || "profile") === "gig" ? "Reduced" : "Partial"}
       highlight={highlight}

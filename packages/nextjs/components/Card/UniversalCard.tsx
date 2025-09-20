@@ -114,7 +114,8 @@ export function UniversalCard({
   const avatarSize = cardVariant === "Reduced" || cardVariant === "Partial" ? 64 : 96;
   const avatarClasses = cardVariant === "Reduced" || cardVariant === "Partial" ? "h-16 w-16" : "h-24 w-24";
 
-  const handleNavigateToProfile = async () => {
+  const handleNavigateToProfile = async (e: React.MouseEvent) => {
+    e?.stopPropagation();
     if (avatarAddress) {
       // Navigate to the user profile page
       window.location.href = `/profile/${avatarAddress}`;
@@ -159,6 +160,7 @@ export function UniversalCard({
         "group relative overflow-hidden transition-all duration-300 ease-in-out",
         // Only shadow and translate on hover, not scale or blur
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
+        (cardVariant === "Reduced" || cardVariant === "Partial") && "cursor-pointer",
         className,
       )}
       highlight={highlight}
