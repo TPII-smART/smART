@@ -33,14 +33,14 @@ export function JobRoadmap({ job }: { job: Job }) {
         state: "accepted",
       },
       {
-        title: "Freelancer Delivered",
+        title: "Freelancer delivered final work",
         date: job.freelancerDelivered ? "Delivered" : null,
         completed: job.freelancerDelivered || false,
         current: job.state === JobState.Ongoing && !job.freelancerDelivered,
         state: "delivered",
       },
       {
-        title: "Client Received",
+        title: "Client marked the work as received",
         date: job.clientReceived ? "Received" : null,
         completed: job.clientReceived || false,
         current: job.state === JobState.Ongoing && job.freelancerDelivered && !job.clientReceived,

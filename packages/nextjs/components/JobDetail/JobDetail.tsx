@@ -8,7 +8,7 @@ import { isImageUrl } from "@/lib/utils";
 import { JobState } from "@se-2/common";
 import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
@@ -22,6 +22,26 @@ import { UserProfile } from "~~/types/user-profile.type";
 
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
   const { address: userAddress } = useAccount();
+
+  const { writeContractAsync: realityContractWrite } = useScaffoldWriteContract({
+    contractName: "RealityETH",
+  });
+
+  const initiateConflictResolution = async () => {
+    const result = await realityContractWrite({
+      functionName: "askQuestion",
+      args: [
+        0n, // template_id (uint256) --> In this case 0: {"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}
+        "¿Does this question pop up in Reality.eth? I'm performing a test", // question (string)
+        "0x9eA293EDEb7f356bcb12581202EeA6b75Cfb949E", // Custom arbitrator address
+        2, // timeout (uint32)
+        0, // opening_ts (uint32)
+        0n, // nonce (uint256)
+      ],
+      value: parseEther("0.0001"), // payableAmount (ether, in wei)
+    });
+    console.log(result);
+  };
 
   // Information related to the users (client and freelancer)
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
@@ -259,8 +279,8 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               tooltip="Mark as Delivered"
             >
               <PaperAirplaneIcon className="h-8 w-8" />
-              <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Mark as Delivered</p>
             </Button>
+            <p className="text-[var(--color-primary-content)] text-lg leading-relaxed">Mark as delivered</p>
           </div>,
         );
       }
@@ -496,12 +516,30 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           {/* Status Message Box */}
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
             <CardContent className="p-6">
-              <div className="space-y-4">
+              <div className="space-y-4 h-full flex flex-row">
                 {getStatusMessage() && (
-                  <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg">
-                    <p className="text-[var(--color-primary-content)] text-base leading-relaxed">
-                      {getStatusMessage()}
-                    </p>
+                  <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg flex-1">
+                    <div className="flex items-center space-x-4 mt-2 justify-around ">
+                      <p className="text-[var(--color-primary-content)] text-base leading-relaxed m-0">
+                        {getStatusMessage()}
+                      </p>
+                      {data?.state === JobState.Ongoing && (
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="primary"
+                            size={"md"}
+                            onClick={() => {
+                              initiateConflictResolution();
+                            }}
+                            disabled={isMining}
+                            tooltip="Dispute resolution"
+                            circular={true}
+                          >
+                            <ExclamationCircleIcon className="h-8 w-8" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
