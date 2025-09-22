@@ -18,7 +18,7 @@ type GigData = {
 };
 
 export default function GigPage() {
-  const { gigId, applicationId } = useParams();
+  const { gigId } = useParams();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
 
@@ -36,6 +36,7 @@ export default function GigPage() {
 
   const initialItemId = searchParams?.get("itemId") || "";
   const gigState = data?.gig.state as GigState;
+  const applicationId = data?.gig.acceptedApplicationId || "";
 
   useEffect(() => {
     queryClient.invalidateQueries({
@@ -81,7 +82,7 @@ export default function GigPage() {
                   <div className="flex flex-col mb-4 text-start p-4 ml-2 h-full overflow-auto">
                     <h1 className="text-3xl font-bold tracking-tight text-content-primary">Gig Details</h1>
                     <p className="text-muted-foreground mt-2">View and manage your freelance Gig</p>
-                    <GigDetail gigId={String(gigId)} applicationId={String(applicationId)} type={GigDetailType.final} />
+                    <GigDetail gigId={String(gigId)} applicationId={applicationId} type={GigDetailType.final} />
                   </div>
                 )}
               </div>

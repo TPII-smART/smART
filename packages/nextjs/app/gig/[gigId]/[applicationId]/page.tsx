@@ -20,8 +20,8 @@ export default function Application() {
 
   return (
     <div className="flex flex-col mb-4 text-start p-4 ml-2 h-full overflow-auto">
-      <h1 className="text-3xl font-bold tracking-tight text-content-primary">Gig Details</h1>
-      <p className="text-muted-foreground mt-2">View and manage your freelance gig</p>
+      <h1 className="text-3xl font-bold tracking-tight text-content-primary">Application Details</h1>
+      <p className="text-muted-foreground mt-2">View and manage your freelance application</p>
       <GigDetail gigId={String(gigId)} applicationId={String(applicationId)} type={GigDetailType.partial} />
     </div>
   );
