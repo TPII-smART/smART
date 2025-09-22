@@ -35,7 +35,9 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
         <div className="w-full">
           {data?.gigs && data.gigs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {data?.gigs.map(gig => <GigCard key={gig.gigId} gig={gig} reload={reload} />)}
+              {data?.gigs.map(gig => (
+                <GigCard key={gig.gigId} gig={gig} reload={reload} />
+              ))}
             </div>
           ) : (
             <div className="text-center py-12">
