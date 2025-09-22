@@ -46,8 +46,6 @@ export default function GigDetail({
     contractName: "GigsContract",
   });
 
-  console.log("GigDetail props", { gigId, applicationId, type });
-
   const { data, isLoading, error, refetch } = useQuery<GigData>({
     queryKey: ["gigWithApplicationAndDeliverables", gigId],
     queryFn: async () => {
@@ -61,9 +59,7 @@ export default function GigDetail({
     enabled: typeof gigId === "string" && !!gigId,
   });
 
-  console.log("GigDetail data", data);
   const application = data?.applications.find(app => String(app.applicationId) === String(applicationId));
-
   const gigState = data?.gig.state as GigState;
   const applicationState = application?.state as ApplicationState;
   const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
@@ -193,6 +189,8 @@ export default function GigDetail({
         value: BigInt(application.proposedPayment),
       });
       if (reload) await reload();
+
+      //window.location.href = `/gig/${application?.gigId}`;
     } catch (err) {
       console.error("Accept application failed:", err);
     }
@@ -370,91 +368,6 @@ export default function GigDetail({
     return buttons;
   };
 
-  // Action buttons based on user role and gig state
-  // const getActionButtons = () => {
-  //   const buttons = [];
-
-  //   if (isClient) {
-  //     if (applicationStatus === ApplicationState.Pending) {
-  //       buttons.push(
-  //         <Button
-  //           variant="danger"
-  //           key="cancel"
-  //           onClick={handleReject}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Cancel Job"
-  //         >
-  //           <XCircleIcon className="h-5 w-5" />
-  //         </Button>,
-  //       );
-  //       buttons.push(
-  //         <Button
-  //           variant="primary"
-  //           key="approve"
-  //           onClick={handleAccept}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Approve Job"
-  //         >
-  //           <CheckCircleIcon className="h-5 w-5" />
-  //         </Button>,
-  //       );
-  //     }
-  //     if (applicationStatus === ApplicationState.Accepted) {
-  //       buttons.push(
-  //         <Button
-  //           variant="outline"
-  //           key="view"
-  //           onClick={() => {
-  //             window.location.href = `/gig/${application.gigId}`;
-  //           }}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Gig Details"
-  //         >
-  //           Gig Details
-  //         </Button>,
-  //       );
-  //     }
-  //   }
-
-  //   if (isFreelancer) {
-  //     if (applicationStatus === ApplicationState.Pending) {
-  //       buttons.push(
-  //         <Button
-  //           variant="danger"
-  //           key="cancel"
-  //           onClick={handleWithdraw}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Withdraw application"
-  //         >
-  //           <XCircleIcon className="h-5 w-5" />
-  //         </Button>,
-  //       );
-  //     }
-  //     if (applicationStatus === ApplicationState.Accepted) {
-  //       buttons.push(
-  //         <Button
-  //           variant="outline"
-  //           key="view"
-  //           onClick={() => {
-  //             window.location.href = `/gig/${application.gigId}`;
-  //           }}
-  //           disabled={isMining}
-  //           size="sm"
-  //           tooltip="Gig Details"
-  //         >
-  //           Gig Details
-  //         </Button>,
-  //       );
-  //     }
-  //   }
-
-  //   return buttons;
-  // };
-
   const getStatusMessage = () => {
     if (data?.gig.state === GigState.Open) {
       if (isClient) {
@@ -464,6 +377,9 @@ export default function GigDetail({
       } else {
         return "Gig is waiting for freelancer approval.";
       }
+    } else if (data?.gig.state === GigState.Completed) {
+      // TODO  show rating
+      return "This gig has been completed.";
     }
 
     if (data?.gig.state != undefined && data?.gig.state >= GigState.InProgress) {
@@ -508,6 +424,7 @@ export default function GigDetail({
   const partialData: DetailData = {
     type: "gig",
     title: data?.gig.title || "",
+    proposalComment: application?.proposalComment || "",
     description: data?.gig.description || "",
     client: data?.gig.client,
     freelancer: data?.applications[parseInt(applicationId)]?.freelancer,
@@ -528,6 +445,7 @@ export default function GigDetail({
   const finalDetailData: DetailData = {
     type: "gig",
     title: data?.gig.title || "",
+    proposalComment: application?.proposalComment || "",
     description: data?.gig.description || "",
     client: data?.gig.client,
     freelancer: data?.gig.acceptedFreelancer,
@@ -543,6 +461,7 @@ export default function GigDetail({
     acceptedAt: data?.gig.acceptedAt || "",
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
+    rating: data?.gig.rating || 0,
   };
 
   return (

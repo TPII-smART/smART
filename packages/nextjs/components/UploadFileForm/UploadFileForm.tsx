@@ -81,12 +81,7 @@ const UploadFileForm = ({
               />
             </div>
             {selectedTab === "file" ? (
-              <FileUploadBox
-                onUploadSuccess={(val: File) => setFieldValue("file", val)}
-                acceptedFileType={"Image"}
-                //onUploadError={Render error message}
-                //onUploadError={error => setFieldValue("file", undefined)}
-              />
+              <FileUploadBox onUploadSuccess={(val: File) => setFieldValue("file", val)} acceptedFileType={"Image"} />
             ) : (
               <InputBase
                 placeholder="Paste your link here"
