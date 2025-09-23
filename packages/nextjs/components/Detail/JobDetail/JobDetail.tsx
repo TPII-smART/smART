@@ -376,6 +376,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     acceptedAt: data?.acceptedAt || "",
     canceledAt: data?.canceledAt || "",
     finishedAt: data?.finishedAt || "",
+    rating: data?.rating || 0,
   };
 
   return (

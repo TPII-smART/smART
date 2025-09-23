@@ -341,6 +341,7 @@ export const getJob = gql`
       clientRejected
       clientReceived
       freelancerDelivered
+      rating
       lastTransactionHash
     }
   }
