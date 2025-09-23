@@ -44,6 +44,7 @@ export const job = onchainTable(
 		clientCancelled: t.boolean().notNull(),
 		freelancerCancelled: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
+		disputeQuestionId: t.varchar({ length: 256 }), // Question ID from Reality.eth if a dispute was created
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({

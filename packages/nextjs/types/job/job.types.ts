@@ -80,6 +80,9 @@ export interface Job {
 
   /** (Optional) Ethereum address of the user who emitted the job event, formatted as a hexadecimal string. */
   emitBy?: `0x${string}`;
+
+  /** (Optional) Identifier for the dispute question associated with the job, if any. */
+  disputeQuestionId?: string;
 }
 
 export interface JobsData {

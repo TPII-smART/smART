@@ -13,7 +13,7 @@ import { useAccount } from "wagmi";
 import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
@@ -23,25 +23,37 @@ import { UserProfile } from "~~/types/user-profile.type";
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
   const { address: userAddress } = useAccount();
 
-  const { writeContractAsync: realityContractWrite } = useScaffoldWriteContract({
-    contractName: "RealityETH",
+  const { data, isLoading, error, refetch } = useQuery<Job>({
+    queryKey: ["jobDetail", jobId],
+    queryFn: () => fetchJob(postingId, jobId),
+  });
+
+  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
+    contractName: "JobsContract",
   });
 
   const initiateConflictResolution = async () => {
-    const result = await realityContractWrite({
-      functionName: "askQuestion",
+    const tstamp = Math.floor(Date.now() / 1000);
+    const question = `Does this question pop up in Reality.eth? I'm performing a test (id ${jobId}${tstamp})`;
+    console.log(data?.state, JobState.Ongoing);
+    const bond = parseEther("0.0001");
+    const result = await writeContract({
+      functionName: "startDispute",
       args: [
-        0n, // template_id (uint256) --> In this case 0: {"title": "%s", "type": "bool", "category": "%s", "lang": "%s"}
-        "¿Does this question pop up in Reality.eth? I'm performing a test", // question (string)
-        "0x9eA293EDEb7f356bcb12581202EeA6b75Cfb949E", // Custom arbitrator address
-        2, // timeout (uint32)
-        0, // opening_ts (uint32)
-        0n, // nonce (uint256)
+        BigInt(postingId), // postingId (uint256)
+        BigInt(jobId), // jobId (uint256)
+        question, // question (string)
       ],
-      value: parseEther("0.0001"), // payableAmount (ether, in wei)
+      value: bond,
     });
     console.log(result);
   };
+
+  const questionStatus = useScaffoldReadContract({
+    contractName: "JobsContract",
+    functionName: "getDisputeResult",
+    args: [BigInt(postingId), BigInt(jobId)],
+  });
 
   // Information related to the users (client and freelancer)
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
@@ -53,15 +65,6 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const nativeCurrencyPrice = useGlobalState(state => state.nativeCurrency.price);
   // const isNativeCurrencyPriceFetching = useGlobalState(state => state.nativeCurrency.isFetching);
   const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: false });
-
-  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
-    contractName: "JobsContract",
-  });
-
-  const { data, isLoading, error, refetch } = useQuery<Job>({
-    queryKey: ["jobDetail", jobId],
-    queryFn: () => fetchJob(postingId, jobId),
-  });
 
   const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
@@ -234,7 +237,11 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     }
 
     if (data?.state != undefined && data?.state >= JobState.Ongoing) {
-      return "¿Facing any problems with this job?";
+      if (data?.disputeQuestionId) {
+        return `This job is currently disputed. Check Reality.eth question ID: ${data.disputeQuestionId} for updates. Currently: ${questionStatus.data}`;
+      } else {
+        return "Got any problems? Initiate a dispute to resolve the issue.";
+      }
     }
 
     return "";

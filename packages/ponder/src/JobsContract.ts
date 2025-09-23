@@ -347,3 +347,18 @@ ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 		itemId: event.args.jobId,
 	});
 });
+
+ponder.on("JobsContract:DisputeStarted", async ({ event, context }) => {
+	// Updates the job to mark it as in dispute
+	await context.db
+		.update(job, {
+			jobId: event.args.jobId,
+			postingId: event.args.postingId,
+		})
+		.set({
+			state: JobState.Disputed,
+			emitBy: event.transaction.from,
+			disputeQuestionId: event.args.questionId,
+			lastTransactionHash: event.transaction.hash,
+		});
+});

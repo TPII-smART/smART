@@ -22,9 +22,12 @@ ponder.on(
 		const { ids, status, user } = event.args;
 
 		for (const id of ids) {
-			await context.db
-				.update(notification, { user, id })
-				.set({ status, lastTransactionHash: event.transaction.hash });
+			const existing = await context.db.find(notification, { user, id });
+			if (existing) {
+				await context.db
+					.update(notification, { user, id })
+					.set({ status, lastTransactionHash: event.transaction.hash });
+			}				
 		}
 	}
 );

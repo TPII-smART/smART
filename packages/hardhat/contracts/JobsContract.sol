@@ -3,12 +3,30 @@ pragma solidity ^0.8.19;
 
 import "./common/FileInfo.sol";
 
+interface IRealityETH {
+    function askQuestion(
+        uint256 template_id,
+        string calldata question,
+        address arbitrator,
+        uint32 timeout,
+        uint32 opening_ts,
+        uint256 nonce
+    ) external payable returns (bytes32);
+    function resultFor(bytes32 question_id) external view returns (bytes32);
+}        
+
 /**
  * @title JobsContract
  * @dev A simplified escrow contract for managing freelance job postings.
  * @author SmArt
  */
 contract JobsContract {
+
+    // Reality.eth contract address
+    IRealityETH public reality;
+
+    address public arbitratorAddress;
+
     // Enums for job states
     enum JobState {
         WaitingForApproval,
@@ -43,6 +61,7 @@ contract JobsContract {
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
         FileInfo[] fileInfo; // Store the file related to the job
+        uint256 disputeQuestionId; // Question ID for dispute resolution
     }
 
     // Struct that reduces the amount of parameters needed when submitting a Job
@@ -170,6 +189,13 @@ contract JobsContract {
         uint256 timestamp
     );
 
+    event DisputeStarted(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        bytes32 questionId,
+        address indexed requester
+    );
+
     // Modifiers
     modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
         require(postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
@@ -212,8 +238,17 @@ contract JobsContract {
         require(msg.sender == owner, "Only owner can call this");
         _;
     }
-
-    constructor(address _owner) {
+    
+    /**
+     * @dev Constructor
+     * @param _owner Address of the contract owner
+     * @param _reality Address of the Reality.eth contract
+     * @param _arbitrator Address of the arbitrator for dispute resolution
+     */
+    constructor(address _owner, address _reality, address _arbitrator) {
+        require(_reality != address(0), "Invalid Reality.eth address");
+        reality = IRealityETH(_reality);
+        arbitratorAddress = _arbitrator;
         owner = _owner;
     }
 
@@ -313,7 +348,8 @@ contract JobsContract {
             clientRejected: false,
             clientCancelled: false,
             freelancerCancelled: false,
-            fileInfo: new FileInfo[](0)
+            fileInfo: new FileInfo[](0),
+            disputeQuestionId: 0 // No dispute initially
         });
 
         // Add job to the posting
@@ -600,5 +636,73 @@ contract JobsContract {
             job.clientRejected,
             job.rejectedAt
         );
+    }
+
+    /**
+     * @dev Start a dispute for a job using Reality.eth
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to dispute
+     * @param _question The question to ask Reality.eth for dispute resolution
+     */
+    function startDispute(
+        uint256 _postingId,
+        uint256 _jobId,
+        string memory _question
+    ) external payable onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        require(job.state == JobState.Ongoing, "Job not ongoing");
+        require(bytes(_question).length > 0, "Question cannot be empty");
+        require(msg.value > 0, "Bond amount must be greater than 0");
+
+        // Forward only the bond to Reality.eth
+        try reality.askQuestion{value: msg.value}(
+            uint256(0),
+            _question,
+            arbitratorAddress,
+            uint32(60),
+            uint32(block.timestamp),
+            uint256(_postingId * 1e6 + _jobId)
+        ) returns (bytes32 questionId) {
+            job.state = JobState.Disputed;
+            job.disputeQuestionId = uint256(questionId);
+
+            emit DisputeStarted(_postingId, _jobId, questionId, msg.sender);
+        } catch {
+            revert("Reality.eth failed: low-level error");
+        }
+    }
+
+    function getDisputeResult(uint256 _postingId, uint256 _jobId) external view jobExists(_postingId, _jobId) returns (bytes32) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Disputed, "Job is not disputed");
+        require(job.disputeQuestionId != 0, "No dispute question ID");
+
+        bytes32 questionId = bytes32(job.disputeQuestionId);
+        return reality.resultFor(questionId);
+    }
+
+    function resolveDispute(uint256 _postingId, uint256 _jobId) external onlyOwner jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Disputed, "Job is not disputed");
+        require(job.disputeQuestionId != 0, "No dispute question ID");
+
+        bytes32 questionId = bytes32(job.disputeQuestionId);
+        bytes32 result = reality.resultFor(questionId);
+        require(result != bytes32(0), "Dispute not yet resolved");
+
+        // Example logic: if result is "0x01", client wins; if "0x02", freelancer wins
+        if (result == 0x0000000000000000000000000000000000000000000000000000000000000001) {
+            // Client wins, refund payment
+            payable(job.client).transfer(job.payment);
+        } else if (result == 0x0000000000000000000000000000000000000000000000000000000000000002) {
+            // Freelancer wins, release payment
+            payable(job.freelancer).transfer(job.payment);
+        }
+
+        job.state = JobState.Finished;
+        job.finishedAt = block.timestamp;
+        emit JobFinished(_postingId, _jobId, job.freelancer, job.client, job.payment, job.finishedAt);
     }
 }

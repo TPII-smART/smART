@@ -147,6 +147,7 @@ export const getJobsFromPosting = gql`
         clientRejected
         clientCancelled
         freelancerCancelled
+        disputeQuestionId
       }
     }
   }
@@ -192,6 +193,7 @@ export const getMyJobs = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        disputeQuestionId
       }
     }
   }
@@ -223,6 +225,7 @@ export const getHires = gql`
         freelancerDelivered
         clientCancelled
         freelancerCancelled
+        disputeQuestionId
       }
     }
   }
@@ -256,6 +259,7 @@ export const getJobAndHires = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        disputeQuestionId
       }
     }
   }
@@ -292,6 +296,7 @@ export const getJobAndHiresPaginated = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        disputeQuestionId
       }
       pageInfo {
         endCursor
@@ -340,6 +345,7 @@ export const getJob = gql`
       canceledAt
       clientReceived
       freelancerDelivered
+      disputeQuestionId
       lastTransactionHash
     }
   }
