@@ -332,18 +332,34 @@ export default function GigDetail({
         }
 
         // Rating button for client when gig is completed
-        if (gigState === GigState.Completed && !data?.gig.rating) {
+
+        if (gigState === GigState.Completed) {
+          if (!data?.gig.rating) {
+            buttons.push(
+              <Button
+                variant="primary"
+                key="rate"
+                onClick={() => setIsRatingModalOpen(true)}
+                disabled={isMining}
+                size="sm"
+                tooltip="Rate Freelancer"
+              >
+                <StarIcon className="h-5 w-5" />
+                Rate Freelancer
+              </Button>,
+            );
+          }
           buttons.push(
             <Button
               variant="primary"
-              key="rate"
-              onClick={() => setIsRatingModalOpen(true)}
+              key="uploadFile"
+              onClick={() => setShowDeliverableModal(true)}
               disabled={isMining}
               size="sm"
-              tooltip="Rate Freelancer"
+              tooltip="Upload File"
             >
-              <StarIcon className="h-5 w-5" />
-              Rate Freelancer
+              <ArrowDownTrayIcon className="h-5 w-5" />
+              Download Deliverable
             </Button>,
           );
         }

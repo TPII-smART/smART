@@ -392,7 +392,7 @@ export default function UniversalDetail({
 
         {/* Action Section - Split into two boxes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {data.type === "gig" && data.state === GigState.Completed ? (
+          {data.state === GigState.Completed || data.state === JobState.Finished ? (
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardContent className="p-6">
                 <div className="space-y-4">
