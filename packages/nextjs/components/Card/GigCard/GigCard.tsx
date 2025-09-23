@@ -78,6 +78,14 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
     </span>
   );
 
+  const navigateToGigDetails = () => {
+    if (gig?.acceptedApplicationId) {
+      window.location.href = `/gig/${gig?.gigId}?applicationId=${gig.acceptedApplicationId || ""} `;
+    } else {
+      window.location.href = `/gig/${gig?.gigId}`;
+    }
+  };
+
   // Apply button
   const applyButton =
     !isMyOwnGig && gigState === GigState.Open ? (
@@ -85,7 +93,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
         Apply
       </Button>
     ) : (
-      <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
+      <Button variant="outline" onClick={() => navigateToGigDetails()}>
         Details
       </Button>
     );

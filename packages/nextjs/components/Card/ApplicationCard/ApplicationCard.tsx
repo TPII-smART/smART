@@ -101,11 +101,7 @@ export default function ApplicationCard({ application, className, highlight }: A
   );
 
   const handleCardClick = () => {
-    if (applicationStatus === ApplicationState.Pending) {
-      window.location.href = `/gig/${application?.gigId}/${application?.applicationId}`;
-    } else {
-      window.location.href = `/gig/${application?.gigId}`;
-    }
+    window.location.href = `/gig/${application?.gigId}?applicationId=${application?.applicationId}`;
   };
 
   return (

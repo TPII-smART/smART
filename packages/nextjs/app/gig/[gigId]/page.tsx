@@ -34,9 +34,10 @@ export default function GigPage() {
     enabled: typeof gigId === "string" && !!gigId,
   });
 
+  const applicationId = searchParams.get("applicationId") || "";
   const initialItemId = searchParams?.get("itemId") || "";
   const gigState = data?.gig.state as GigState;
-  const applicationId = data?.gig.acceptedApplicationId || "";
+  //const applicationId = data?.gig.acceptedApplicationId || "";
 
   useEffect(() => {
     queryClient.invalidateQueries({
@@ -55,7 +56,7 @@ export default function GigPage() {
               </div>
             ) : (
               <div>
-                {gigState === GigState.Open ? (
+                {gigState === GigState.Open && !applicationId ? (
                   <div className="mb-8 mt-8">
                     <InfoHeader data={data?.gig} />
                     <h1 className="text-xl font-bold text-content-primary mb-4 mt-6">
