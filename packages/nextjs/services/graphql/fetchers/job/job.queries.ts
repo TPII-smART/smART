@@ -343,9 +343,11 @@ export const getJob = gql`
       acceptedAt
       finishedAt
       canceledAt
+      clientRejected
       clientReceived
       freelancerDelivered
       disputeQuestionId
+      rating
       lastTransactionHash
     }
   }

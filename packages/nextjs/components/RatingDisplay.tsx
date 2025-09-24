@@ -6,6 +6,7 @@ import { RatingData } from "~~/types/user-profile.type";
 interface RatingDisplayProps {
   ratingData: RatingData;
   tooltipPosition?: "left" | "right";
+  interactive?: boolean;
 }
 
 // Custom star component that can be partially filled
@@ -38,7 +39,11 @@ const PartialStar = ({ fillPercentage, className }: { fillPercentage: number; cl
   );
 };
 
-export default function RatingDisplay({ ratingData, tooltipPosition = "right" }: RatingDisplayProps) {
+export default function RatingDisplay({
+  ratingData,
+  tooltipPosition = "right",
+  interactive = true,
+}: RatingDisplayProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Don't render if no ratings
@@ -80,28 +85,40 @@ export default function RatingDisplay({ ratingData, tooltipPosition = "right" }:
 
   return (
     <div className="relative inline-block">
-      <div
-        className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-border)]"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <div className="flex items-center gap-1">{renderStars(ratingData.averageRating)}</div>
-        <span
-          className="text-lg font-semibold text-[var(--color-white)]"
-          style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+      {interactive ? (
+        <div
+          className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-border)]"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
         >
-          {ratingData.averageRating.toFixed(1)}
-        </span>
-        <span
-          className="text-sm text-[var(--color-white)]"
-          style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
-        >
-          ({ratingData.totalRatings.toLocaleString()})
-        </span>
-      </div>
+          <div className="flex items-center gap-1">{renderStars(ratingData.averageRating)}</div>
+          <span
+            className="text-lg font-semibold text-[var(--color-white)]"
+            style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+          >
+            {ratingData.averageRating.toFixed(1)}
+          </span>
+          <span
+            className="text-sm text-[var(--color-white)]"
+            style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+          >
+            ({ratingData.totalRatings.toLocaleString()})
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-transparent cursor-default">
+          <div className="flex items-center gap-1">{renderStars(ratingData.averageRating)}</div>
+          <span
+            className="text-lg font-semibold text-[var(--color-white)]"
+            style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+          >
+            {ratingData.averageRating.toFixed(1)}
+          </span>
+        </div>
+      )}
 
       {/* Tooltip */}
-      {showTooltip && (
+      {showTooltip && interactive && (
         <div
           className={`absolute mt-2 mb-2 z-50 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg p-4 min-w-[300px] ${tooltipPosition === "left" ? "right-0" : "left-0"}`}
         >

@@ -97,6 +97,9 @@ export class Gig {
   /** (Optional) Boolean indicating if the freelancer has canceled the job. */
   freelancerCancelled?: boolean;
 
+  /** (Optional) Application ID if the user has applied to this gig. Null if not applied. */
+  userApplication?: string | null;
+
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;
@@ -125,6 +128,7 @@ export class Gig {
     this.clientReceived = false;
     this.freelancerDelivered = false;
     this.acceptedApplicationId = "";
+    this.userApplication = null;
   }
 
   static mapFormDataToContractArgs(

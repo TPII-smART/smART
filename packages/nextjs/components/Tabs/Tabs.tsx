@@ -4,12 +4,15 @@ import { Box, Tab as MUITab, Tabs as MUITabs } from "@mui/material";
 
 const Tabs: React.FC<TabsProps> = ({
   tabs,
+  initialSelectedTab,
   color = "var(--color-accent)",
   onChange,
   variant = "fullWidth",
   centered = true,
 }) => {
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = React.useState(
+    initialSelectedTab ? tabs.findIndex(tab => tab.id === initialSelectedTab) : 0,
+  );
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);

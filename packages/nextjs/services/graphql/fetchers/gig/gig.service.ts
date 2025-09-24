@@ -28,6 +28,7 @@ export const fetchGigsPaginated = async (
   minPayment?: number,
   maxPayment?: number,
   categories?: string[],
+  userAddress?: string,
 ): Promise<Paginated<Gig>> => {
   const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getGigsPaginated, {
     limit: meta.limit,
@@ -40,9 +41,15 @@ export const fetchGigsPaginated = async (
     maxPayment: maxPayment ? maxPayment * 1e18 : undefined, // Convert ether to wei
     categories,
   });
+  const applications = await fetchApplications(userAddress ?? "");
+  const applicationsMap = new Map(applications.applications.map(app => [app.gigId, app.applicationId]));
+  const gigs = res.gigs.items.map(gig => ({
+    ...gig,
+    userApplication: applicationsMap.get(gig.gigId) || null,
+  }));
 
   return {
-    data: res.gigs.items,
+    data: gigs,
     meta: {
       endCursor: res.gigs.pageInfo.endCursor,
       hasNextPage: res.gigs.pageInfo.hasNextPage,
@@ -59,11 +66,17 @@ export const fetchMyGigRatings = async (userAddress: string) => {
   return { gigs: res.gigs.items };
 };
 
-export const fetchMyGigs = async (userAddress: string) => {
+export const fetchMyGigs = async (userAddress: string, appAddress: string) => {
   const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getMyGigs, {
     userAddress: userAddress,
   });
-  return { gigs: res.gigs.items };
+  const applications = await fetchApplications(appAddress ?? "");
+  const applicationsMap = new Map(applications.applications.map(app => [app.gigId, app.applicationId]));
+  const gigs = res.gigs.items.map(gig => ({
+    ...gig,
+    userApplication: applicationsMap.get(gig.gigId) || null,
+  }));
+  return { gigs };
 };
 
 export const fetchApplications = async (userAddress: string) => {

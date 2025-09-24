@@ -66,15 +66,14 @@
 	"dependencies": {
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.1",
-		"@fontsource/roboto": "^5.2.6",
+		"@fontsource/roboto": "^5.2.8",
 		"@heroicons/react": "^2.2.0",
-		"@mui/icons-material": "^7.1.1",
+		"@mui/icons-material": "^7.3.2",
 		"@mui/material": "^7.3.2",
-		"@openzeppelin/contracts": "^5.4.0",
 		"@thirdweb-dev/storage": "^2.0.15",
 		"class-variance-authority": "^0.7.1",
-		"framer-motion": "^12.18.1",
-		"motion": "^12.23.12",
+		"framer-motion": "^12.23.18",
+		"motion": "^12.23.18",
 		"tailwind-merge": "^3.3.1"
 	}
 }

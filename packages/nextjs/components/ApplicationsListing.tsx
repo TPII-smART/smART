@@ -1,7 +1,7 @@
 "use client";
 
 import Spinner from "@/components//Spinner/Spinner";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Application } from "~~/types/gig/gig.types";
@@ -11,8 +11,7 @@ type ApplicationsData = {
 };
 
 export default function ApplicationsListing({ userAddress }: { userAddress: string }) {
-  const queryClient = useQueryClient();
-  const { data, isLoading, refetch } = useQuery<ApplicationsData>({
+  const { data, isLoading } = useQuery<ApplicationsData>({
     queryKey: ["applicationsFromUser", userAddress],
     queryFn: async () => {
       const result = await fetchApplicationsWithGigDetails(userAddress);
@@ -22,22 +21,6 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
     enabled: !!userAddress, // Only run query if userAddress exists
     staleTime: 0, // Force fresh data
   });
-
-  const reload = async () => {
-    queryClient.invalidateQueries({ queryKey: ["applicationsFromUser", userAddress] });
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await refetch();
-  };
-
-  console.log(
-    "Application id",
-    data?.applications.map(app => app.applicationId),
-  );
-
-  console.log(
-    "Gig Ids",
-    data?.applications.map(app => app.gig?.gigId),
-  );
 
   return (
     <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
@@ -52,9 +35,8 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
               {data?.applications.map(application => (
                 <ApplicationCard
                   key={`${application.gig?.gigId}-${application.applicationId}`}
-                  client={application.gig?.client}
                   application={application}
-                  reload={reload}
+                  variant="profile"
                 />
               ))}
             </div>

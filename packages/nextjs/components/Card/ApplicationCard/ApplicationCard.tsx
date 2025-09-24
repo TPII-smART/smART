@@ -11,19 +11,12 @@ import {
   ExclamationCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
-import Button from "~~/components/Button/Button";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 
-export default function ApplicationCard({ application, client, className, reload, highlight }: ApplicationProps) {
+export default function ApplicationCard({ application, className, highlight, variant }: ApplicationProps) {
   const { address: userAddress } = useAccount();
   const applicationStatus = application.state as ApplicationState;
 
-  const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
-    contractName: "GigsContract",
-  });
-
   const isFreelancer = application.freelancer?.toLowerCase() === userAddress?.toLowerCase();
-  const isClient = client?.toLowerCase() === userAddress?.toLowerCase();
 
   const getApplicationStatus = () => {
     if (applicationStatus === ApplicationState.Pending) {
@@ -70,47 +63,6 @@ export default function ApplicationCard({ application, client, className, reload
     };
   };
 
-  const handleAccept = async () => {
-    try {
-      if (application.state !== ApplicationState.Pending) return;
-      await writeContract({
-        functionName: "acceptApplication",
-        args: [BigInt(application.gigId), BigInt(application.applicationId)],
-        value: BigInt(application.proposedPayment),
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Accept application failed:", err);
-    }
-  };
-
-  const handleReject = async () => {
-    try {
-      if (application.state !== ApplicationState.Pending) return;
-      await writeContract({
-        functionName: "rejectApplication",
-        // TODO: Add modal for rejection comment
-        args: [BigInt(application.gigId), BigInt(application.applicationId), "User rejected the application"],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Reject application failed:", err);
-    }
-  };
-
-  const handleWithdraw = async () => {
-    try {
-      if (application.state !== ApplicationState.Pending) return;
-      await writeContract({
-        functionName: "withdrawApplication",
-        args: [BigInt(application.gigId), BigInt(application.applicationId)],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Withdraw application failed:", err);
-    }
-  };
-
   const statusInfo = getApplicationStatus();
   const StatusIcon = statusInfo.icon;
 
@@ -135,7 +87,6 @@ export default function ApplicationCard({ application, client, className, reload
   // Status display for footer left
   const statusDisplay = (
     <div className="flex flex-col justify-between">
-      {paymentDisplay}
       <div className="flex items-center gap-2 mt-2">
         <div className={cn("h-3 w-3 rounded-full", statusInfo.color)}></div>
         <span className="text-sm font-medium text-content-secondary">{statusInfo.label}</span>
@@ -145,110 +96,55 @@ export default function ApplicationCard({ application, client, className, reload
   );
 
   const extraInfo = (
-    <div className="text-sm text-content-secondary">{application.proposalComment || "No proposal provided"}</div>
+    <div
+      className="
+        w-full
+        bg-black/10
+        rounded-xl
+        px-4
+        py-3
+        flex flex-col
+        shadow-lg
+        "
+      style={{
+        backdropFilter: "blur(6px)",
+        border: "1px solid var(--color-border)",
+      }}
+    >
+      <span className="text-xs font-semibold text-content-primary mb-0.5">Proposal</span>
+      <span className="text-sm text-content-secondary break-words">
+        {application.proposalComment || "No proposal provided"}
+      </span>
+    </div>
   );
 
-  // Action buttons based on user role and gig state
-  const getActionButtons = () => {
-    const buttons = [];
-
-    if (isClient) {
-      if (applicationStatus === ApplicationState.Pending) {
-        buttons.push(
-          <Button
-            variant="danger"
-            key="cancel"
-            onClick={handleReject}
-            disabled={isMining}
-            size="sm"
-            tooltip="Cancel Job"
-          >
-            <XCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-        buttons.push(
-          <Button
-            variant="primary"
-            key="approve"
-            onClick={handleAccept}
-            disabled={isMining}
-            size="sm"
-            tooltip="Approve Job"
-          >
-            <CheckCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-      if (applicationStatus === ApplicationState.Accepted) {
-        buttons.push(
-          <Button
-            variant="outline"
-            key="view"
-            onClick={() => {
-              window.location.href = `/gig/${application.gigId}`;
-            }}
-            disabled={isMining}
-            size="sm"
-            tooltip="Gig Details"
-          >
-            Gig Details
-          </Button>,
-        );
-      }
+  const handleCardClick = () => {
+    if (applicationStatus === ApplicationState.Accepted) {
+      window.location.href = `/gig/${application?.gigId}`;
+    } else {
+      window.location.href = `/gig/${application?.gigId}?applicationId=${application?.applicationId}`;
     }
-
-    if (isFreelancer) {
-      if (applicationStatus === ApplicationState.Pending) {
-        buttons.push(
-          <Button
-            variant="danger"
-            key="cancel"
-            onClick={handleWithdraw}
-            disabled={isMining}
-            size="sm"
-            tooltip="Withdraw application"
-          >
-            <XCircleIcon className="h-5 w-5" />
-          </Button>,
-        );
-      }
-      if (applicationStatus === ApplicationState.Accepted) {
-        buttons.push(
-          <Button
-            variant="outline"
-            key="view"
-            onClick={() => {
-              window.location.href = `/gig/${application.gigId}`;
-            }}
-            disabled={isMining}
-            size="sm"
-            tooltip="Gig Details"
-          >
-            Gig Details
-          </Button>,
-        );
-      }
-    }
-
-    return buttons;
   };
-
-  const actionButtons = getActionButtons();
 
   return (
     <UniversalCard
-      avatarAddress={application.freelancer}
-      title={application.proposalComment || "Gig Title Not Available"}
+      avatarAddress={(variant || "profile") === "gig" ? application.freelancer : application.gig?.client || undefined}
+      title={
+        (variant || "profile") === "gig"
+          ? application.proposalComment || "No proposal provided"
+          : application.gig?.title || "Title not available"
+      }
       description={application.gig?.description || "Description not available"}
       time={application.proposedDurationInHours}
       timeLabel="Proposed Duration"
       extraInfo={extraInfo}
       category={application.gig?.category || "Category not available"}
-      paymentDisplay={statusDisplay}
-      footerRight={<div className="flex items-center gap-2">{actionButtons}</div>}
+      footerLeft={statusDisplay}
+      footerRight={paymentDisplay}
       className={className}
-      cardVariant="Reduced"
+      cardVariant={(variant || "profile") === "gig" ? "Reduced" : "Partial"}
       highlight={highlight}
+      onClick={handleCardClick}
     />
   );
 }

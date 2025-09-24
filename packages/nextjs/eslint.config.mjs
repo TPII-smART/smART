@@ -12,6 +12,9 @@ const compat = new FlatCompat({
 
 export default defineConfig([
   {
+    ignores: ["node_modules/**", ".next/**"], // Exclude node_modules and .next from linting
+  },
+  {
     plugins: {
       prettier: prettierPlugin,
     },
@@ -20,6 +23,7 @@ export default defineConfig([
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/triple-slash-reference": "off",
 
       "prettier/prettier": [
         "warn",

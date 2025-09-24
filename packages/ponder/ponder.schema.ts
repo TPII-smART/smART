@@ -72,7 +72,6 @@ export const gig = onchainTable("gig", (t) => ({
 	canceledAt: t.bigint(),
 	deliveredAt: t.bigint(), // When the job was delivered
 	rejectedAt: t.bigint(), // When the job was rejected by the client
-	uploadedAt: t.bigint(),
 	emitBy: t.varchar({ length: 128 }),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
