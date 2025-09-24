@@ -79,7 +79,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   );
 
   const navigateToGigDetails = () => {
-    if (gig?.acceptedApplicationId) {
+    if (gig?.acceptedApplicationId && gigState == GigState.Open) {
       window.location.href = `/gig/${gig?.gigId}?applicationId=${gig.acceptedApplicationId || ""} `;
     } else {
       window.location.href = `/gig/${gig?.gigId}`;
