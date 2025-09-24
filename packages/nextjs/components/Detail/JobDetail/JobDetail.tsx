@@ -8,10 +8,10 @@ import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
-import { StarIcon } from "@heroicons/react/20/solid";
+import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { FileFormData } from "~~/components/UploadFileForm/types";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { fetchDeliverablesForJob } from "~~/services/graphql/fetchers/job/job.service";
 import { Deliverable } from "~~/types/deliverable";
@@ -36,8 +36,33 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     queryFn: () => fetchJob(postingId, jobId),
   });
 
+  const { data: disputeFinalized, isLoading: isDisputeFinalizedLoading } = useScaffoldReadContract({
+    contractName: "RealityETH",
+    functionName: "isFinalized",
+    args:
+      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
+        ? [data.disputeQuestionId as `0x${string}`]
+        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
+    watch: !!data?.disputeQuestionId,
+  });
+
+  const { data: disputeResultData, isLoading: isDisputeResultLoading } = useScaffoldReadContract({
+    contractName: "RealityETH",
+    functionName: "resultFor",
+    args:
+      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
+        ? [data.disputeQuestionId as `0x${string}`]
+        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
+    watch: !!data?.disputeQuestionId,
+  });
+
+  const disputeLoading = isDisputeFinalizedLoading || isDisputeResultLoading;
+
+  const disputeResult =
+    disputeResultData && disputeResultData === "0x0000000000000000000000000000000000000000000000000000000000000001";
+
   const initiateConflictResolution = async () => {
-    const comment = "Testing dispute initiation, I asked for two cat pictures and got dog pictures instead.";
+    const comment = "Testing dispute initiation.";
     console.log(data?.state, JobState.Ongoing);
     const bond = parseEther("0.001");
     const result = await writeContract({
@@ -51,6 +76,17 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     });
     console.log(result);
   };
+
+  const handleFinalizeDispute = async () => {
+    if (!data?.postingId || !data?.jobId) return;
+    await writeContract({
+      functionName: "resolveDispute",
+      args: [BigInt(data.postingId), BigInt(data.jobId)],
+    });
+    queryClient.invalidateQueries({ queryKey: ["jobDetail", jobId] });
+  };
+
+  const requestArbitration = async () => {};
 
   const {
     data: deliverables,
@@ -257,7 +293,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     if (data?.state != undefined && data?.state >= JobState.Ongoing) {
       if (data?.disputeQuestionId) {
         return (
-          <p>
+          <span>
             A dispute has been initiated for this job. Check the question at{" "}
             <a
               href={`https://reality.eth.limo/app/#!/question/0xb7982f20cc159a40eba4b0ea86fd6cba6ff810e1-${data.disputeQuestionId}`}
@@ -266,7 +302,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
             >
               Reality.eth
             </a>
-          </p>
+          </span>
         );
       } else {
         return "Got any problems? Initiate a dispute to resolve the issue.";
@@ -282,7 +318,12 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
     // Freelancer actions
     if (isFreelancer) {
-      if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled && !job.freelancerCancelled) {
+      if (
+        jobStatus !== JobState.Finished &&
+        jobStatus !== JobState.Cancelled &&
+        jobStatus !== JobState.Disputed &&
+        !job.freelancerCancelled
+      ) {
         buttons.push(
           <Button
             variant="danger"
@@ -332,6 +373,36 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </Button>,
         );
       }
+      if (jobStatus === JobState.Disputed && !disputeLoading) {
+        if (disputeFinalized) {
+          buttons.push(
+            <Button
+              variant="primary"
+              key="finalizeDispute"
+              onClick={() => handleFinalizeDispute()}
+              disabled={isMining}
+              size="sm"
+              tooltip="Finalize dispute and release funds"
+            >
+              <TrophyIcon className="h-5 w-5" />
+              <span>Finalize Dispute</span>
+            </Button>,
+          );
+        }
+        buttons.push(
+          <Button
+            variant="outline"
+            key="requestArbitration"
+            onClick={() => requestArbitration()}
+            disabled={isMining}
+            size="sm"
+            tooltip="Request arbitration from Kleros"
+          >
+            <ScaleIcon className="h-5 w-5" />
+            <span>Request Arbitration</span>
+          </Button>,
+        );
+      }
     }
 
     // Client actions
@@ -370,7 +441,12 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
         );
       }
 
-      if (jobStatus !== JobState.Finished && jobStatus !== JobState.Cancelled && !job.clientCancelled) {
+      if (
+        jobStatus !== JobState.Finished &&
+        jobStatus !== JobState.Cancelled &&
+        jobStatus !== JobState.Disputed &&
+        !job.clientCancelled
+      ) {
         buttons.push(
           <Button
             variant="danger"
@@ -382,6 +458,36 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           >
             <XCircleIcon className="h-5 w-5" />
             <span>Cancel</span>
+          </Button>,
+        );
+      }
+      if (jobStatus === JobState.Disputed && !disputeLoading) {
+        if (disputeFinalized) {
+          buttons.push(
+            <Button
+              variant="primary"
+              key="finalizeDispute"
+              onClick={() => handleFinalizeDispute()}
+              disabled={isMining}
+              size="sm"
+              tooltip="Finalize dispute and release funds"
+            >
+              <TrophyIcon className="h-5 w-5" />
+              <span>Finalize Dispute</span>
+            </Button>,
+          );
+        }
+        buttons.push(
+          <Button
+            variant="outline"
+            key="requestArbitration"
+            onClick={() => requestArbitration()}
+            disabled={isMining}
+            size="sm"
+            tooltip="Request arbitration from Kleros"
+          >
+            <ScaleIcon className="h-5 w-5" />
+            <span>Request Arbitration</span>
           </Button>,
         );
       }
@@ -409,6 +515,9 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     canceledAt: data?.canceledAt || "",
     finishedAt: data?.finishedAt || "",
     rating: data?.rating || 0,
+    wasDisputed: !!data?.disputeQuestionId,
+    disputeFinalized: disputeFinalized,
+    disputeResult: disputeResult,
   };
 
   return (

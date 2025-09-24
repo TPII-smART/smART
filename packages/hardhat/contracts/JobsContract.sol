@@ -738,7 +738,7 @@ contract JobsContract {
         return reality.resultFor(questionId);
     }
 
-    function resolveDispute(uint256 _postingId, uint256 _jobId) external onlyOwner jobExists(_postingId, _jobId) {
+    function resolveDispute(uint256 _postingId, uint256 _jobId) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Disputed, "Job is not disputed");

@@ -51,6 +51,22 @@ function getAllRoadmapSteps(data: any, type: "job" | "gig") {
         state: "received",
       },
     ];
+    if (job.wasDisputed) {
+      baseSteps.push({
+        title: "Job Disputed",
+        date: "In Dispute",
+        completed: true,
+        current: job.state === JobState.Disputed,
+        state: "disputed",
+      });
+      baseSteps.push({
+        title: job.disputeResult ? "Dispute Resolved: Freelancer Wins" : "Dispute Resolved: Client Wins",
+        date: job.finishedAt ? formatDate(job.finishedAt) : null,
+        completed: true,
+        current: false,
+        state: "disputed",
+      });
+    }
 
     if (job.state === JobState.Cancelled) {
       baseSteps.push({
@@ -60,17 +76,9 @@ function getAllRoadmapSteps(data: any, type: "job" | "gig") {
         current: false,
         state: "cancelled",
       });
-    } else if (job.state === JobState.Disputed) {
-      baseSteps.push({
-        title: "Job Disputed",
-        date: "In Dispute",
-        completed: true,
-        current: false,
-        state: "disputed",
-      });
     } else {
       baseSteps.push({
-        title: "Job Completed",
+        title: job.wasDisputed ? "Job Finalized After Dispute" : "Job Completed",
         date: job.finishedAt ? formatDate(job.finishedAt) : null,
         completed: job.state === JobState.Finished,
         current: false,
