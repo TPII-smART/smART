@@ -4287,6 +4287,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@openzeppelin/contracts@npm:^5.4.0":
+  version: 5.4.0
+  resolution: "@openzeppelin/contracts@npm:5.4.0"
+  checksum: 8a0c64266f5213801029251fdc9815798917b311b7fc9acb94db13a479a3a0d044e0312f57e739f13b87161105157cb8da023124b4f026cf6b72a718a333ef64
+  languageName: node
+  linkType: hard
+
 "@openzeppelin/contracts@npm:~5.0.2":
   version: 5.0.2
   resolution: "@openzeppelin/contracts@npm:5.0.2"
@@ -18693,6 +18700,7 @@ __metadata:
     "@heroicons/react": ^2.2.0
     "@mui/icons-material": ^7.1.1
     "@mui/material": ^7.3.2
+    "@openzeppelin/contracts": ^5.4.0
     "@thirdweb-dev/storage": ^2.0.15
     class-variance-authority: ^0.7.1
     framer-motion: ^12.18.1

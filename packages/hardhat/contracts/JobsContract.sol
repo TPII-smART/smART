@@ -196,6 +196,8 @@ contract JobsContract {
         address indexed requester
     );
 
+    event DebugQuestionData(string questionData);
+
     // Modifiers
     modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
         require(postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
@@ -638,28 +640,82 @@ contract JobsContract {
         );
     }
 
-    /**
-     * @dev Start a dispute for a job using Reality.eth
-     * @param _postingId The ID of the job posting this job belongs to
-     * @param _jobId The job ID to dispute
-     * @param _question The question to ask Reality.eth for dispute resolution
-     */
+    // Convert uints to strings properly
+    function uint2str(uint256 _i) internal pure returns (string memory) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
+        while (_i != 0) {
+            k = k-1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
+        }
+        return string(bstr);
+    }
+
     function startDispute(
         uint256 _postingId,
         uint256 _jobId,
-        string memory _question
+        string memory _comment
     ) external payable onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
         require(job.state == JobState.Ongoing, "Job not ongoing");
-        require(bytes(_question).length > 0, "Question cannot be empty");
+        require(bytes(_comment).length > 0, "Comment cannot be empty");
         require(msg.value > 0, "Bond amount must be greater than 0");
+
+        string memory senderRole = msg.sender == job.client ? "Client" : "Freelancer";
+        string memory comment = string(
+            abi.encodePacked(senderRole, "\u0027s comment\u003A ", _comment)
+        );
+
+        string memory filesString = "";
+        if (job.fileInfo.length == 0) {
+            filesString = "No files attached";
+        } else {
+            for (uint256 i = 0; i < job.fileInfo.length; i++) {
+                filesString = string(abi.encodePacked(
+                    filesString,
+                    job.fileInfo[i].isLink ? "Link\u003A " : "IPFS\u003A ",
+                    job.fileInfo[i].resource                 
+                ));
+                if (i < job.fileInfo.length - 1) {
+                    filesString = string(abi.encodePacked(filesString, " \u007C "));
+                }
+            }
+        }
+
+        string memory questionData = string(
+            abi.encodePacked(
+                "Did the freelancer fulfill the job contract agreement? -> ",
+                comment,
+                " -> Files: \u007C ",
+                filesString,
+                "\u241f",
+                "freelance",
+                "\u241f",
+                "en"
+            )
+        );
+
+        // Debug: Emit the question data
+        emit DebugQuestionData(questionData);
 
         // Forward only the bond to Reality.eth
         try reality.askQuestion{value: msg.value}(
             uint256(0),
-            _question,
+            questionData,
             arbitratorAddress,
-            uint32(60),
+            uint32(300),
             uint32(block.timestamp),
             uint256(_postingId * 1e6 + _jobId)
         ) returns (bytes32 questionId) {
@@ -689,20 +745,28 @@ contract JobsContract {
         require(job.disputeQuestionId != 0, "No dispute question ID");
 
         bytes32 questionId = bytes32(job.disputeQuestionId);
-        bytes32 result = reality.resultFor(questionId);
-        require(result != bytes32(0), "Dispute not yet resolved");
+        bytes32 result;
+        try reality.resultFor(questionId) returns (bytes32 r) {
+            result = r;
+        } catch (bytes memory revertData) {
+            if (revertData.length == 32 && keccak256(revertData) == keccak256(abi.encodePacked(bytes32("question must be finalized")))) {
+            revert("question must be finalized");
+            } else {
+            revert("Reality.eth failed: low-level error");
+            }
+        }
 
-        // Example logic: if result is "0x01", client wins; if "0x02", freelancer wins
-        if (result == 0x0000000000000000000000000000000000000000000000000000000000000001) {
-            // Client wins, refund payment
-            payable(job.client).transfer(job.payment);
-        } else if (result == 0x0000000000000000000000000000000000000000000000000000000000000002) {
+        // If result is bytes32(0), treat as "No" answer (client wins)
+        if (result == bytes32(uint256(1))) {
             // Freelancer wins, release payment
             payable(job.freelancer).transfer(job.payment);
+        } else {
+            // Client wins, refund payment
+            payable(job.client).transfer(job.payment);
         }
 
         job.state = JobState.Finished;
         job.finishedAt = block.timestamp;
         emit JobFinished(_postingId, _jobId, job.freelancer, job.client, job.payment, job.finishedAt);
+        }
     }
-}

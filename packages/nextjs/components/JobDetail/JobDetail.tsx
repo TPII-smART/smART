@@ -33,16 +33,15 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   });
 
   const initiateConflictResolution = async () => {
-    const tstamp = Math.floor(Date.now() / 1000);
-    const question = `Does this question pop up in Reality.eth? I'm performing a test (id ${jobId}${tstamp})`;
+    const comment = "Testing dispute initiation, I asked for two cat pictures and got dog pictures instead.";
     console.log(data?.state, JobState.Ongoing);
-    const bond = parseEther("0.0001");
+    const bond = parseEther("0.001");
     const result = await writeContract({
       functionName: "startDispute",
       args: [
         BigInt(postingId), // postingId (uint256)
         BigInt(jobId), // jobId (uint256)
-        question, // question (string)
+        comment, // question (string)
       ],
       value: bond,
     });

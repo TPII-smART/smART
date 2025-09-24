@@ -3556,7 +3556,7 @@ const deployedContracts = {
       },
     },
     JobsContract: {
-      address: "0x480bbD9ed9f96e2a2412C3B716114108CccF6620",
+      address: "0x3eAE48b292BA48FdfE63bAd8f38a3360066C0055",
       abi: [
         {
           inputs: [
@@ -3651,6 +3651,19 @@ const deployedContracts = {
             },
           ],
           name: "CommentAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string",
+              name: "questionData",
+              type: "string",
+            },
+          ],
+          name: "DebugQuestionData",
           type: "event",
         },
         {
@@ -4565,7 +4578,7 @@ const deployedContracts = {
             },
             {
               internalType: "string",
-              name: "_question",
+              name: "_comment",
               type: "string",
             },
           ],
@@ -4623,16 +4636,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x480bbD9ed9f96e2a2412C3B716114108CccF6620",
-        transactionIndex: 75,
-        gasUsed: "3354699",
+        contractAddress: "0x3eAE48b292BA48FdfE63bAd8f38a3360066C0055",
+        transactionIndex: 158,
+        gasUsed: "3628857",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xaa8e32518322280d6296173e39dc444e45c4315a42dd7f3427854e4cd79ceb20",
-        transactionHash: "0x49e8e630981caedd6fa795ae6b78cf45a6454e9b871b304b19402ef74bd59c15",
+        blockHash: "0x27ba3d63afe1a21e2d98152f060841db14129038c67b2ac0c6d2501c94de7b52",
+        transactionHash: "0x3f906b3b5943e5ba4c2ef324c66fae46716c9845ff6bd4496afb70bf6518571c",
         logs: [],
-        blockNumber: 9264007,
-        cumulativeGasUsed: "16888340",
+        blockNumber: 9270022,
+        cumulativeGasUsed: "24932257",
         status: 1,
         byzantium: true,
       },

@@ -70,6 +70,7 @@
 		"@heroicons/react": "^2.2.0",
 		"@mui/icons-material": "^7.1.1",
 		"@mui/material": "^7.3.2",
+		"@openzeppelin/contracts": "^5.4.0",
 		"@thirdweb-dev/storage": "^2.0.15",
 		"class-variance-authority": "^0.7.1",
 		"framer-motion": "^12.18.1",
