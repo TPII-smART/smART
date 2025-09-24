@@ -13,7 +13,7 @@ import { useAccount } from "wagmi";
 import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
@@ -47,12 +47,6 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     });
     console.log(result);
   };
-
-  const questionStatus = useScaffoldReadContract({
-    contractName: "JobsContract",
-    functionName: "getDisputeResult",
-    args: [BigInt(postingId), BigInt(jobId)],
-  });
 
   // Information related to the users (client and freelancer)
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
@@ -237,7 +231,20 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
 
     if (data?.state != undefined && data?.state >= JobState.Ongoing) {
       if (data?.disputeQuestionId) {
-        return `This job is currently disputed. Check Reality.eth question ID: ${data.disputeQuestionId} for updates. Currently: ${questionStatus.data}`;
+        return (
+          <div>
+            <p>
+              A dispute has been initiated for this job. Check the question at{" "}
+              <a
+                href={`https://reality.eth.limo/app/#!/question/0xb7982f20cc159a40eba4b0ea86fd6cba6ff810e1-${data.disputeQuestionId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Reality.eth
+              </a>
+            </p>
+          </div>
+        );
       } else {
         return "Got any problems? Initiate a dispute to resolve the issue.";
       }
