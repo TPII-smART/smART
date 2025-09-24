@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
 import { isImageUrl } from "@/lib/utils";
-import { JobState } from "@se-2/common";
+import { GigState, JobState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -15,6 +15,7 @@ import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon 
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import RatingDisplay from "~~/components/RatingDisplay";
 import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
@@ -301,6 +302,21 @@ export default function UniversalDetail({
               </CardContent>
             </Card>
 
+            {data?.type === "gig" && (
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+                <CardHeader className="p-6">
+                  <CardTitle className="text-2xl text-[var(--color-primary-content)]">Freelancer Proposal</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 pt-0">
+                  <div className="bg-[var(--color-primary)]/30 p-6 rounded-lg">
+                    <p className="text-[var(--color-primary-content)] leading-relaxed text-lg">
+                      {data.proposalComment}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardHeader className="p-6">
                 <CardTitle className="text-2xl text-[var(--color-primary-content)]">Timeline & Duration</CardTitle>
@@ -370,25 +386,45 @@ export default function UniversalDetail({
 
           {/* Right Column - Job Roadmap */}
           <div className="space-y-8">
-            {/* <JobRoadmap job={data} /> */}
             <UniversalRoadmap data={data} type={data.type} />
           </div>
         </div>
 
         {/* Action Section - Split into two boxes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Status Message Box */}
-          <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {statusMessage && (
-                  <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg">
-                    <p className="text-[var(--color-primary-content)] text-base leading-relaxed">{statusMessage}</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {data.state === GigState.Completed || data.state === JobState.Finished ? (
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {statusMessage && (
+                    <div className="bg-[var(--color-primary)]/20 p-2 rounded-lg flex justify-center">
+                      <RatingDisplay
+                        ratingData={{
+                          averageRating: data.rating || 0,
+                          totalRatings: 1,
+                          jobRatings: {},
+                          gigRatings: {},
+                        }}
+                        interactive={false}
+                      />
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {statusMessage && (
+                    <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg">
+                      <p className="text-[var(--color-primary-content)] text-base leading-relaxed">{statusMessage}</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Action Buttons Box */}
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
@@ -433,6 +469,7 @@ export default function UniversalDetail({
           onClose: onCloseRatingModal,
           isOpen: isRatingModalOpen,
           loading: isMining,
+          width: 350,
         }}
         formikProps={{
           onSubmit: values => handleRateJob(values.rating),

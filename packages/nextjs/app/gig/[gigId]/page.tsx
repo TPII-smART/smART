@@ -18,7 +18,7 @@ type GigData = {
 };
 
 export default function GigPage() {
-  const { gigId, applicationId } = useParams();
+  const { gigId } = useParams();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
 
@@ -34,6 +34,7 @@ export default function GigPage() {
     enabled: typeof gigId === "string" && !!gigId,
   });
 
+  const applicationId = searchParams.get("applicationId") || "";
   const initialItemId = searchParams?.get("itemId") || "";
   const gigState = data?.gig.state as GigState;
 
@@ -54,8 +55,8 @@ export default function GigPage() {
               </div>
             ) : (
               <div>
-                {gigState === GigState.Open ? (
-                  <div className="mb-8 mt-2">
+                {gigState === GigState.Open && !applicationId ? (
+                  <div className="mb-8 mt-8">
                     <InfoHeader data={data?.gig} />
                     <h1 className="text-xl font-bold text-content-primary mb-4 mt-6">
                       Manage Applications for this Gig
@@ -80,9 +81,24 @@ export default function GigPage() {
                   </div>
                 ) : (
                   <div className="flex flex-col mb-4 text-start p-4 ml-2 h-full overflow-auto">
-                    <h1 className="text-3xl font-bold tracking-tight text-content-primary">Gig Details</h1>
-                    <p className="text-muted-foreground mt-2">View and manage your freelance Gig</p>
-                    <GigDetail gigId={String(gigId)} applicationId={String(applicationId)} type={GigDetailType.final} />
+                    {data?.gig.acceptedApplicationId ? (
+                      <>
+                        <h1 className="text-3xl font-bold tracking-tight text-content-primary">Gig Details</h1>
+                        <p className="text-muted-foreground mt-2">View and manage your freelance Gig</p>
+
+                        <GigDetail gigId={String(gigId)} applicationId={applicationId} type={GigDetailType.final} />
+                      </>
+                    ) : (
+                      <>
+                        <h1 className="text-3xl font-bold tracking-tight text-content-primary">Application Details</h1>
+                        <p className="text-muted-foreground mt-2">View and manage your freelance application</p>
+                        <GigDetail
+                          gigId={String(gigId)}
+                          applicationId={String(applicationId)}
+                          type={GigDetailType.partial}
+                        />
+                      </>
+                    )}
                   </div>
                 )}
               </div>

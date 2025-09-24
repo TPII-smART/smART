@@ -376,6 +376,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     acceptedAt: data?.acceptedAt || "",
     canceledAt: data?.canceledAt || "",
     finishedAt: data?.finishedAt || "",
+    rating: data?.rating || 0,
   };
 
   return (
@@ -383,19 +384,19 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       <UniversalDetail
         data={detailData}
         deliverables={deliverables}
-        statusBadge={getStatusBadge((data?.state as number) || 0)}
-        actionButtons={getActionButtons()}
-        statusMessage={getStatusMessage()}
+        isMining={isMining}
         loading={isLoading}
         error={error}
         reload={reload}
+        statusBadge={getStatusBadge((data?.state as number) || 0)}
+        actionButtons={getActionButtons()}
+        statusMessage={getStatusMessage()}
         isUploadModalOpen={showUploadModal}
         onCloseUploadModal={() => setShowUploadModal(false)}
         isDeliverableModalOpen={showDeliverableModal}
         onCloseDeliverableModal={() => setShowDeliverableModal(false)}
         isRatingModalOpen={isRatingModalOpen}
         onCloseRatingModal={() => setIsRatingModalOpen(false)}
-        isMining={isMining}
         isDeliverableLoading={isDeliverableLoading}
         handleConfirmCompletion={handleConfirmCompletion}
         handleRejectJob={handleRejectJob}

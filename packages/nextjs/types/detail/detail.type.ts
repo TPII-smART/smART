@@ -7,6 +7,7 @@ export interface DetailData {
   type: "job" | "gig";
   title: string;
   description?: string;
+  proposalComment?: string;
   client?: string;
   freelancer?: string;
   category?: string;
@@ -14,6 +15,7 @@ export interface DetailData {
   duration?: string;
   deadline?: number | string;
   state: number;
+  rating?: number;
   freelancerDelivered: boolean;
   clientReceived: boolean;
   isRejected: boolean;

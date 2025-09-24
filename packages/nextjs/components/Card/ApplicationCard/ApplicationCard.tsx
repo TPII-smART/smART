@@ -119,10 +119,10 @@ export default function ApplicationCard({ application, className, highlight, var
   );
 
   const handleCardClick = () => {
-    if (applicationStatus === ApplicationState.Pending) {
-      window.location.href = `/gig/${application?.gigId}/${application?.applicationId}`;
-    } else {
+    if (applicationStatus === ApplicationState.Accepted) {
       window.location.href = `/gig/${application?.gigId}`;
+    } else {
+      window.location.href = `/gig/${application?.gigId}?applicationId=${application?.applicationId}`;
     }
   };
 
