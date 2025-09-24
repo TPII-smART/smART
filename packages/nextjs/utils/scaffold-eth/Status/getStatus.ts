@@ -12,8 +12,8 @@ import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/
 import { Application, Gig } from "~~/types/gig/gig.types";
 import { Job } from "~~/types/job/job.types";
 
-export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolean, isClient: boolean) {
-  if (jobStatus === JobState.WaitingForApproval) {
+export function getJobStatus(jobState: JobState, job: Job, isFreelancer: boolean, isClient: boolean) {
+  if (jobState === JobState.WaitingForApproval) {
     return {
       label: "Waiting for Approval",
       color: "bg-amber-500",
@@ -22,7 +22,7 @@ export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolea
     };
   }
 
-  if (jobStatus === JobState.Ongoing) {
+  if (jobState === JobState.Ongoing) {
     // Check delivery status for ongoing jobs
     if (job.freelancerCancelled) {
       return {
@@ -71,7 +71,7 @@ export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolea
     }
   }
 
-  if (jobStatus === JobState.Finished) {
+  if (jobState === JobState.Finished) {
     return {
       label: "Completed",
       color: "bg-emerald-500",
@@ -80,7 +80,7 @@ export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolea
     };
   }
 
-  if (jobStatus === JobState.Cancelled) {
+  if (jobState === JobState.Cancelled) {
     return {
       label: "Cancelled",
       color: "bg-red-500",

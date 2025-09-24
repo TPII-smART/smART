@@ -9,7 +9,7 @@ import Tabs from "~~/components/Tabs/Tabs";
 import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 
 interface UploadFileFormProps {
-  onSubmit: (data: FileFormData) => Promise<void>;
+  onSubmit: (fileData?: FileFormData | undefined, clientResponse?: string) => Promise<void>;
   loading?: boolean;
   modalTitle?: string;
   modalDescription?: string;
@@ -81,12 +81,7 @@ const UploadFileForm = ({
               />
             </div>
             {selectedTab === "file" ? (
-              <FileUploadBox
-                onUploadSuccess={(val: File) => setFieldValue("file", val)}
-                acceptedFileType={"Image"}
-                //onUploadError={Render error message}
-                //onUploadError={error => setFieldValue("file", undefined)}
-              />
+              <FileUploadBox onUploadSuccess={(val: File) => setFieldValue("file", val)} acceptedFileType={"Image"} />
             ) : (
               <InputBase
                 placeholder="Paste your link here"
