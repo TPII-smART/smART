@@ -89,9 +89,15 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   // Apply button
   const applyButton =
     !isMyOwnGig && gigState === GigState.Open ? (
-      <Button variant="primary" onClick={() => setShowApplyModal(true)}>
-        Apply
-      </Button>
+      !gig.userApplication ? (
+        <Button variant="primary" onClick={() => setShowApplyModal(true)}>
+          Apply
+        </Button>
+      ) : (
+        <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}/${gig.userApplication}`)}>
+          My Application
+        </Button>
+      )
     ) : (
       <Button variant="outline" onClick={() => navigateToGigDetails()}>
         Details
@@ -112,7 +118,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
         title={gig?.title}
         description={gig?.description}
         time={gig?.maxDurationInHours}
-        timeLabel="Max work duration"
+        timeLabel="Work duration"
         category={gig?.category}
         paymentDisplay={paymentDisplay}
         footerLeft={<div className="flex items-center gap-4">{paymentDisplay}</div>}
@@ -124,7 +130,10 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
       {/* Confirm Modal */}
       <FormModal
         modalProps={{
-          title: "Hire this Freelancer",
+          title: "Apply to this Gig",
+          description: `You are applying to the gig: "${gig?.title}". Base payment of ${
+            gig?.basePayment ? formatEthPrice(BigInt(gig.basePayment)) : "Free"
+          } and base duration of ${gig?.maxDurationInHours} hours.`,
           onClose: () => setShowApplyModal(false),
           isOpen: showApplyModal,
           loading: isMining,

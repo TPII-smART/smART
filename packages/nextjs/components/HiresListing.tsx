@@ -35,9 +35,7 @@ export default function HiresListing({ userAddress }: { userAddress: string }) {
         <div className="w-full">
           {data?.jobs && data.jobs.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {data?.jobs.map(job => (
-                <JobCard key={`${job.jobId}-${job.postingId}`} job={job} reload={reload} />
-              ))}
+              {data?.jobs.map(job => <JobCard key={`${job.jobId}-${job.postingId}`} job={job} reload={reload} />)}
             </div>
           ) : (
             <div className="text-center py-12">

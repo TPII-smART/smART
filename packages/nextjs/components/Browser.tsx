@@ -7,6 +7,7 @@ import Slider from "@/components/Slider/Slider";
 import Spinner from "@/components/Spinner/Spinner";
 import { InputBase } from "@/components/scaffold-eth";
 import { Chip } from "@mui/material";
+import { useAccount } from "wagmi";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
 import { jobCategories } from "~~/components/Card/JobCategory/jobCategory.data";
 import { JobPostingCard } from "~~/components/Card/JobPostingCard/JobPostingCard";
@@ -30,6 +31,7 @@ interface BrowsePageProps {
 }
 
 export default function BrowsePage({ type }: BrowsePageProps) {
+  const { address: userAddress } = useAccount();
   const [maxPaymentETH, setMaxPaymentETH] = useState<number>(1);
   const [categories, setCategories] = useState<Set<string>>(new Set(["all"]));
   const [sortBy, setSortBy] = useState<string>("recent");
@@ -66,13 +68,14 @@ export default function BrowsePage({ type }: BrowsePageProps) {
         priceRange[0],
         priceRange[1],
         categories.has("all") ? undefined : Array.from(categories),
+        userAddress,
       );
 
       if (scrollRef.current) {
         scrollRef.current.scrollTop = 0;
       }
     },
-    [type, priceRange, sortBy, search, fetchPaginatedData, scrollRef, categories, loadingMax],
+    [fetchPaginatedData, type, search, priceRange, categories, userAddress, sortBy],
   );
 
   const fetchMaxPaymentETH = useCallback(async () => {

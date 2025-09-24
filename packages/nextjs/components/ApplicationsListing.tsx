@@ -36,6 +36,7 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
                 <ApplicationCard
                   key={`${application.gig?.gigId}-${application.applicationId}`}
                   application={application}
+                  variant="profile"
                 />
               ))}
             </div>

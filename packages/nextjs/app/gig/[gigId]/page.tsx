@@ -68,6 +68,7 @@ export default function GigPage() {
                             key={application.applicationId}
                             application={application}
                             highlight={application.applicationId === initialItemId}
+                            variant="gig"
                           />
                         ))}
                       </div>
