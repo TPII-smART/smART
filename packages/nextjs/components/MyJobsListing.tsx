@@ -47,7 +47,7 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
       return;
     }
 
-    fetchPaginatedData(false, "jobs", postingId, search, selectedState);
+    fetchPaginatedData(false, `${selectedState}`, postingId, search, selectedState);
   }, [postingId, search, selectedState, fetchPaginatedData]);
 
   useEffect(() => {
@@ -57,13 +57,14 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
 
     fetchJobPostingById(postingId).then(result => setPosting(result));
     fetchJobPostingAverageRating(postingId).then(avg => setRating(avg));
-    fetchPaginatedData(true, "jobs", postingId);
+    fetchPaginatedData(true, `${selectedState}`, postingId, search, selectedState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postingId, fetchPaginatedData]);
 
   return (
     <div
       className="w-full h-full flex flex-col overflow-auto"
-      onScroll={e => handleScroll(e, "jobs", postingId, search, selectedState)}
+      onScroll={e => handleScroll(e, `${selectedState}`, postingId, search, selectedState)}
     >
       <div className="px-4 md:px-6 lg:px-8">
         <div className="mt-8 mb-8">
@@ -87,6 +88,7 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
                 }}
                 value={selectedState}
                 options={jobStatesWithAll}
+                style={{ marginTop: 8 }}
               />
             </div>
           </div>
