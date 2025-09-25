@@ -96,6 +96,39 @@ export const getMyJobPostings = gql`
   }
 `;
 
+export const getMyJobPostingsPaginated = gql`
+  query GetMyJobPostingsPaginated($userAddress: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    jobPostings(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { freelancer: $userAddress }
+      orderBy: "createdAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        postingId
+        freelancer
+        basePayment
+        title
+        description
+        category
+        bannerImageHash
+        minimumNoticeTime
+        averageWorkDuration
+        createdAt
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
 export const getRatingsByPostingIds = gql`
   query GetRatingsByPostingIds($postingIds: [BigInt!]!) {
     jobs(where: { postingId_in: $postingIds }) {

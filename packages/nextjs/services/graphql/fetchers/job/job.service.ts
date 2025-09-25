@@ -105,6 +105,41 @@ export const fetchMyJobPostings = async (userAddress: string) => {
   return { jobPostings: jobPostingsWithRatings };
 };
 
+export const fetchMyJobPostingsPaginated = async (
+  meta: PaginationMetaArg,
+  userAddress: string,
+): Promise<Paginated<JobPosting>> => {
+  const res = await request<{ jobPostings: PaginationQueryResponse<JobPosting> }>(
+    endpoint,
+    JobQueries.getMyJobPostingsPaginated,
+    {
+      userAddress: userAddress,
+      limit: meta.limit,
+      startCursor: meta.startCursor,
+      endCursor: meta.endCursor,
+    },
+  );
+
+  const postingIds = res.jobPostings.items.map(item => item.postingId);
+  const ratings = await fetchRatingsGroupedByPosting(postingIds);
+  // Calculate average rating for each job posting
+  const jobPostingsWithRatings = res.jobPostings.items.map(item => ({
+    ...item,
+    rating: ratings[item.postingId]?.reduce((acc, r) => acc + r, 0) / (ratings[item.postingId]?.length || 1),
+  }));
+
+  return {
+    data: jobPostingsWithRatings,
+    meta: {
+      endCursor: res.jobPostings.pageInfo.endCursor,
+      hasNextPage: res.jobPostings.pageInfo.hasNextPage,
+      totalCount: res.jobPostings.totalCount,
+      startCursor: res.jobPostings.pageInfo.startCursor,
+      // hasPreviousPage: res.jobPostings.pageInfo.hasPreviousPage,
+    },
+  };
+};
+
 export const fetchJobsFromPosting = async (postingId: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getJobsFromPosting, {
     postingId: postingId,
