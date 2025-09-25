@@ -249,6 +249,33 @@ export const fetchGigWithApplication = async (gigId: string) => {
   return { gig, applications };
 };
 
+export const getApplicationsForGigPaginated = async (
+  meta: PaginationMetaArg,
+  gig: Gig,
+): Promise<Paginated<Application>> => {
+  const res = await request<{ gigApplications: PaginationQueryResponse<Application> }>(
+    endpoint,
+    GigQueries.getApplicationsForGigPaginated,
+    {
+      gigId: gig.gigId,
+      limit: meta.limit,
+      startCursor: meta.startCursor,
+      endCursor: meta.endCursor,
+    },
+  );
+
+  return {
+    data: res.gigApplications.items.map(app => ({ ...app, gig })),
+    meta: {
+      endCursor: res.gigApplications.pageInfo.endCursor,
+      hasNextPage: res.gigApplications.pageInfo.hasNextPage,
+      totalCount: res.gigApplications.totalCount,
+      startCursor: res.gigApplications.pageInfo.startCursor,
+      // hasPreviousPage: res.gigApplications.pageInfo.hasPreviousPage,
+    },
+  };
+};
+
 export const fetchGigWithApplicationAndDeliverables = async (gigId: string) => {
   const [gig, applications, deliverables] = await Promise.all([
     fetchGigById(gigId),
