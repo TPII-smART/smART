@@ -42,6 +42,7 @@ contract JobsContract {
         bool clientRejected; // Whether the client has rejected the job results
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
+        bool freelancerUploaded; // Whether the freelancer has uploaded a deliverable
         FileInfo[] fileInfo; // Store the file related to the job
     }
 
@@ -149,6 +150,7 @@ contract JobsContract {
         string resource,
         string submissionComment,
         bool isLink,
+        bool freelancerUpload,
         uint256 timestamp
     );
 
@@ -167,6 +169,7 @@ contract JobsContract {
         bool freelancerDelivered,
         bool clientReceived,
         bool clientRejected,
+        bool freelancerUploaded,
         uint256 timestamp
     );
 
@@ -313,6 +316,7 @@ contract JobsContract {
             clientRejected: false,
             clientCancelled: false,
             freelancerCancelled: false,
+            freelancerUploaded: false,
             fileInfo: new FileInfo[](0)
         });
 
@@ -355,32 +359,59 @@ contract JobsContract {
     }
 
     /**
-     * @dev Confirm job completion (both parties must confirm in order to complete the job)
+     * @dev Confirm client job completion (both parties must confirm in order to complete the job)
      * This function allows either the client or freelancer to confirm that the job has been completed.
      * If both parties confirm, the job is marked as finished and payment is released.
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
      */
-    function confirmCompletion(
+    function confirmClientCompletion(
+        uint256 _postingId,
+        uint256 _jobId,
+        string calldata _comment
+    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
+
+        require(job.state == JobState.Ongoing, "Job is not ongoing");
+        require(job.client != address(0), "Job has no assigned client");
+        require(job.freelancer != address(0), "Job has no assigned freelancer");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+
+        require(!job.clientReceived, "Client already confirmed job reception");
+        job.clientReceived = true;
+        fileInfo.clientResponse = _comment;
+
+        emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
+
+        // If both parties have confirmed, complete the job
+        if (job.clientReceived && job.freelancerDelivered) {
+            _completeJob(_postingId, _jobId);
+        }
+    }
+
+    /**
+     * @dev Confirm client job completion (both parties must confirm in order to complete the job)
+     * This function allows either the client or freelancer to confirm that the job has been completed.
+     * If both parties confirm, the job is marked as finished and payment is released.
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to confirm completion
+     */
+    function confirmFreelancerCompletion(
         uint256 _postingId,
         uint256 _jobId
-    ) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
+    ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
 
-        // Set confirmation based on who is calling
-        if (msg.sender == job.client) {
-            require(!job.clientReceived, "Client already confirmed job reception");
-            job.clientReceived = true;
-            emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
-        } else {
-            require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
-            job.freelancerDelivered = true;
-            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
-        }
+        require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
+        job.freelancerDelivered = true;
+        emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
 
         // If both parties have confirmed, complete the job
         if (job.clientReceived && job.freelancerDelivered) {
@@ -541,6 +572,7 @@ contract JobsContract {
             isLink: _fileParams.isLink
         });
 
+        job.freelancerUploaded = true;
         job.fileInfo.push(fileToUpload);
 
         emit FileUploaded(
@@ -550,6 +582,7 @@ contract JobsContract {
             fileToUpload.resource,
             fileToUpload.submissionComment,
             fileToUpload.isLink,
+            job.freelancerUploaded,
             fileToUpload.uploadedAt
         );
     }
@@ -579,17 +612,23 @@ contract JobsContract {
 
     function rejectJob(
         uint256 _postingId,
-        uint256 _jobId
+        uint256 _jobId,
+        string calldata _comment
     ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
+        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
 
         job.freelancerDelivered = false;
         job.clientReceived = false;
         job.clientRejected = true;
+        job.freelancerUploaded = false;
+        fileInfo.clientResponse = _comment;
         job.rejectedAt = block.timestamp;
 
         emit JobRejected(
@@ -598,7 +637,9 @@ contract JobsContract {
             job.freelancerDelivered,
             job.clientReceived,
             job.clientRejected,
+            job.freelancerUploaded,
             job.rejectedAt
         );
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
     }
 }

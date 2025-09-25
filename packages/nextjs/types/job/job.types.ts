@@ -78,6 +78,9 @@ export interface Job {
   /** (Optional) Boolean indicating if the freelancer has canceled the job. */
   freelancerCancelled?: boolean;
 
+  /** (Optional) Boolean indicating if the freelancer has uploaded a deliverable. */
+  freelancerUploaded?: boolean;
+
   /** (Optional) Ethereum address of the user who emitted the job event, formatted as a hexadecimal string. */
   emitBy?: `0x${string}`;
 }

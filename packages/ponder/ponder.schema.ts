@@ -44,6 +44,7 @@ export const job = onchainTable(
 		clientCancelled: t.boolean().notNull(),
 		freelancerCancelled: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
+		freelancerUploaded: t.boolean().notNull().default(false),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({

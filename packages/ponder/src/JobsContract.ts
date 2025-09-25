@@ -147,6 +147,16 @@ ponder.on(
 				uploadedAt: BigInt(event.block.timestamp),
 				lastTransactionHash: event.transaction.hash,
 			});
+
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({
+				freelancerUploaded: true,
+				lastTransactionHash: event.transaction.hash,
+			});
 	}
 );
 
@@ -315,8 +325,6 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 	// Updates the job to mark it as cancelled
 
-	console.log("Rejecting job from:", event.transaction.from);
-	console.log("Event args:", event.args);
 
 	await context.db
 		.update(job, {
@@ -329,6 +337,7 @@ ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 			freelancerDelivered: event.args.freelancerDelivered,
 			clientRejected: event.args.clientRejected,
 			emitBy: event.transaction.from,
+			freelancerUploaded: event.args.freelancerUploaded,
 			lastTransactionHash: event.transaction.hash,
 		});
 

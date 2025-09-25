@@ -42,6 +42,7 @@ export default function GigDetail({
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
@@ -79,7 +80,7 @@ export default function GigDetail({
     return await uploadToIPFS(file);
   };
 
-  const handleUploadFile = async (fileData: FileFormData) => {
+  const handleUploadDeliverable = async (fileData: FileFormData) => {
     try {
       let resource = "";
       const isLink = fileData.isLink;
@@ -101,12 +102,8 @@ export default function GigDetail({
     }
   };
 
-  const handleConfirmCompletion = async (fileData?: FileFormData, clientResponse?: string) => {
+  const handleClientConfirmCompletion = async (clientResponse?: string) => {
     try {
-      if (isFreelancer && fileData) {
-        await handleUploadFile(fileData);
-      }
-
       if (isClient && clientResponse) {
         await handleAddComment(clientResponse);
       }
@@ -456,6 +453,7 @@ export default function GigDetail({
     acceptedAt: data?.gig.acceptedAt || "",
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
+    clientRejected: false,
   };
 
   const finalDetailData: DetailData = {
@@ -478,6 +476,7 @@ export default function GigDetail({
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
     rating: data?.gig.rating || 0,
+    clientRejected: data?.gig.clientRejected || false,
   };
 
   return (
@@ -499,9 +498,12 @@ export default function GigDetail({
         isRatingModalOpen={isRatingModalOpen}
         onCloseRatingModal={() => setIsRatingModalOpen(false)}
         isDeliverableLoading={isLoading}
-        handleConfirmCompletion={handleConfirmCompletion}
+        isPreviewModalOpen={showReviewModal}
+        onClosePreviewModal={() => setShowReviewModal(false)}
+        handleClientConfirmCompletion={handleClientConfirmCompletion}
         handleRejectJob={handleRejectGig}
         handleRateJob={handleRateGig}
+        handleUploadDeliverable={handleUploadDeliverable}
       />
     </>
   );
