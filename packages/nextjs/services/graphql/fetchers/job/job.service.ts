@@ -112,6 +112,32 @@ export const fetchJobsFromPosting = async (postingId: string) => {
   return res.jobs.items;
 };
 
+export const fetchJobsFromPostingPaginated = async (
+  meta: PaginationMetaArg,
+  postingId: string,
+  search?: string,
+  state?: number,
+): Promise<Paginated<Job>> => {
+  const res = await request<{ jobs: PaginationQueryResponse<Job> }>(endpoint, JobQueries.getJobsFromPostingPaginated, {
+    postingId: postingId,
+    limit: meta.limit,
+    startCursor: meta.startCursor,
+    endCursor: meta.endCursor,
+    search,
+    state: state && state < 0 ? undefined : state,
+  });
+  return {
+    data: res.jobs.items,
+    meta: {
+      endCursor: res.jobs.pageInfo.endCursor,
+      hasNextPage: res.jobs.pageInfo.hasNextPage,
+      totalCount: res.jobs.totalCount,
+      startCursor: res.jobs.pageInfo.startCursor,
+      // hasPreviousPage: res.jobs.pageInfo.hasPreviousPage,
+    },
+  };
+};
+
 export const fetchJobPostingById = async (postingId: string) => {
   const res = await request<{ jobPosting: JobPosting }>(endpoint, JobQueries.getJobPostingById, {
     postingId: postingId,
@@ -132,6 +158,41 @@ export const fetchMyJobs = async (userAddress: string) => {
 export const fetchHires = async (userAddress: string) => {
   const res = await request<{ jobs: { items: Job[] } }>(endpoint, JobQueries.getHires, { client: userAddress });
   return { jobs: res.jobs.items };
+};
+
+export const fetchHiresPaginated = async (meta: PaginationMetaArg, userAddress: string): Promise<Paginated<Job>> => {
+  const res = await request<{ jobs: PaginationQueryResponse<Job> }>(endpoint, JobQueries.getHiresPaginated, {
+    client: userAddress,
+    limit: meta.limit,
+    startCursor: meta.startCursor,
+    endCursor: meta.endCursor,
+  });
+
+  return {
+    data: res.jobs.items,
+    meta: {
+      endCursor: res.jobs.pageInfo.endCursor,
+      hasNextPage: res.jobs.pageInfo.hasNextPage,
+      totalCount: res.jobs.totalCount,
+      startCursor: res.jobs.pageInfo.startCursor,
+      // hasPreviousPage: res.jobs.pageInfo.hasPreviousPage,
+    },
+  };
+};
+
+export const fetchJobPostingAverageRating = async (postingId: string) => {
+  const res = await request<{ jobs: { items: { rating: number }[] } }>(endpoint, JobQueries.getJobPostingRatings, {
+    postingId: postingId,
+  });
+
+  const averageRating = res.jobs.items.length
+    ? res.jobs.items.reduce((acc, { rating }) => acc + rating, 0) / res.jobs.items.length
+    : 0;
+
+  console.log(res);
+  console.log(averageRating);
+
+  return averageRating;
 };
 
 export const fetchJob = async (postingId: string, jobId: string) => {

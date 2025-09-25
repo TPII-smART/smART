@@ -152,6 +152,69 @@ export const getJobsFromPosting = gql`
   }
 `;
 
+export const getJobsFromPostingPaginated = gql`
+  query GetJobsFromPostingPaginated(
+    $postingId: BigInt!
+    $limit: Int!
+    $startCursor: String
+    $endCursor: String
+    $search: String
+    $state: Int
+  ) {
+    jobs(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { postingId: $postingId, state: $state, title_contains: $search }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        rating
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        rejectedAt
+        clientReceived
+        freelancerDelivered
+        clientRejected
+        clientCancelled
+        freelancerCancelled
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
+export const getJobPostingRatings = gql`
+  query GetJobPostingRatings($postingId: BigInt!) {
+    jobs(where: { postingId: $postingId, rating_gt: 0 }) {
+      items {
+        rating
+      }
+    }
+  }
+`;
+
 export const getJobPostingById = gql`
   query GetJobPosting($postingId: BigInt!) {
     jobPosting(postingId: $postingId) {
@@ -224,6 +287,51 @@ export const getHires = gql`
         clientCancelled
         freelancerCancelled
       }
+    }
+  }
+`;
+
+export const getHiresPaginated = gql`
+  query GetHiresPaginated($client: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    jobs(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { client: $client }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
+        clientReceived
+        freelancerDelivered
+        clientCancelled
+        freelancerCancelled
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
     }
   }
 `;

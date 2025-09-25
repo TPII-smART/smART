@@ -10,10 +10,6 @@ export type JobCardProps = React.HTMLAttributes<HTMLDivElement> & {
    */
   job: Job;
   /**
-   * A function to reload the job data.
-   */
-  reload?: () => Promise<void>;
-  /**
    * If true, highlights the card (e.g., for emphasis).
    */
   highlight?: boolean;
