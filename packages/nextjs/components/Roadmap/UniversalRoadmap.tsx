@@ -54,15 +54,19 @@ function getAllRoadmapSteps(data: any, type: "job" | "gig") {
     if (job.wasDisputed) {
       baseSteps.push({
         title: "Job Disputed",
-        date: "In Dispute",
+        date: `In Dispute${job.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
         completed: true,
         current: job.state === JobState.Disputed,
         state: "disputed",
       });
       baseSteps.push({
-        title: job.disputeResult ? "Dispute Resolved: Freelancer Wins" : "Dispute Resolved: Client Wins",
+        title: job.disputeFinalized
+          ? job.disputeResult
+            ? "Dispute Resolved: Freelancer Wins"
+            : "Dispute Resolved: Client Wins"
+          : "Dispute Resolution",
         date: job.finishedAt ? formatDate(job.finishedAt) : null,
-        completed: true,
+        completed: job.disputeFinalized || false,
         current: false,
         state: "disputed",
       });

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IRealityETH {
-    function notifyOfArbitrationRequest(bytes32 question_id, address requester) external;
+    function notifyOfArbitrationRequest(bytes32 question_id, address requester, uint256 max_previous) external;
     function submitAnswerByArbitrator(bytes32 question_id, bytes32 answer, address answerer) external;
     function assignWinnerAndSubmitAnswerByArbitrator(
         bytes32 question_id,
@@ -80,8 +80,9 @@ contract ArbiterContract {
     /**
      * @dev Request arbitration for a question
      * @param question_id The ID of the question to arbitrate
+     * @param lastSeenBond The last seen bond (not used in this simple implementation)
      */
-    function requestArbitration(bytes32 question_id) external payable validQuestion(question_id) {
+    function requestArbitration(bytes32 question_id, uint256 lastSeenBond) external payable validQuestion(question_id) {
         require(msg.value >= arbitrationFee, "Insufficient arbitration fee");
         require(!arbitrationRequests[question_id].isPending, "Arbitration already requested");
 
@@ -93,10 +94,13 @@ contract ArbiterContract {
             isSettled: false
         });
 
-        // Notify Reality.eth contract
-        realitio.notifyOfArbitrationRequest(question_id, msg.sender);
-
-        emit ArbitrationRequested(question_id, msg.sender, msg.value);
+        try realitio.notifyOfArbitrationRequest(question_id, msg.sender, lastSeenBond) {
+            emit ArbitrationRequested(question_id, msg.sender, msg.value);
+        } catch Error(string memory reason) {
+            revert(reason);
+        } catch (bytes memory lowLevelData) {
+            revert(string(lowLevelData));
+        }
     }
 
     /**

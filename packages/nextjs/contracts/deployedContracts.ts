@@ -2232,7 +2232,7 @@ const deployedContracts = {
   },
   11155111: {
     ArbiterContract: {
-      address: "0x9eA293EDEb7f356bcb12581202EeA6b75Cfb949E",
+      address: "0xd32821572710444a37f26FBAC1b216d9C0857C3C",
       abi: [
         {
           inputs: [
@@ -2472,6 +2472,11 @@ const deployedContracts = {
               name: "question_id",
               type: "bytes32",
             },
+            {
+              internalType: "uint256",
+              name: "lastSeenBond",
+              type: "uint256",
+            },
           ],
           name: "requestArbitration",
           outputs: [],
@@ -2577,16 +2582,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x9eA293EDEb7f356bcb12581202EeA6b75Cfb949E",
-        transactionIndex: 152,
-        gasUsed: "719144",
+        contractAddress: "0xd32821572710444a37f26FBAC1b216d9C0857C3C",
+        transactionIndex: 67,
+        gasUsed: "783948",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xdbd115d00254d8461d41acf01000d6c2971efe88506907eb86fa80f7cd22261e",
-        transactionHash: "0xb0f652302cd1d6e48ffeb394691c6e4a750ae98f0dbb3f631f77434dc040f144",
+        blockHash: "0x93eddd9835c1c7ce53bf12756b599e341b03354c582341678f2f365aaa91e009",
+        transactionHash: "0xf138a3973c82b4baba590ff5ad0f787a8704529181a138ed136e449c413f4e80",
         logs: [],
-        blockNumber: 9212535,
-        cumulativeGasUsed: "17938859",
+        blockNumber: 9277769,
+        cumulativeGasUsed: "9716973",
         status: 1,
         byzantium: true,
       },
@@ -3556,7 +3561,7 @@ const deployedContracts = {
       },
     },
     JobsContract: {
-      address: "0x9680D60BE1D68eDfE4c65ceE5d084fB2666AAd50",
+      address: "0xc98d2Dd5a37E0297796dE820f319b8bCf202Dc23",
       abi: [
         {
           inputs: [
@@ -3651,19 +3656,6 @@ const deployedContracts = {
             },
           ],
           name: "CommentAdded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: "string",
-              name: "questionData",
-              type: "string",
-            },
-          ],
-          name: "DebugQuestionData",
           type: "event",
         },
         {
@@ -4154,7 +4146,7 @@ const deployedContracts = {
           name: "arbitratorAddress",
           outputs: [
             {
-              internalType: "address",
+              internalType: "contract IArbiterContract",
               name: "",
               type: "address",
             },
@@ -4581,6 +4573,21 @@ const deployedContracts = {
               name: "_comment",
               type: "string",
             },
+            {
+              internalType: "uint256",
+              name: "_bountyAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_bondAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "_escalateToArbitrator",
+              type: "bool",
+            },
           ],
           name: "startDispute",
           outputs: [],
@@ -4636,16 +4643,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x9680D60BE1D68eDfE4c65ceE5d084fB2666AAd50",
-        transactionIndex: 51,
-        gasUsed: "3644161",
+        contractAddress: "0xc98d2Dd5a37E0297796dE820f319b8bCf202Dc23",
+        transactionIndex: 77,
+        gasUsed: "3880151",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x2dcfe5033464065c24e03cb48a44655085cb37531554f670e65199a610bb966d",
-        transactionHash: "0xbd3d65361fea7ed13e06a848483cb9638a6965d2a12c26f27e155899e9785970",
+        blockHash: "0xb6d9a67cb0291e4946b66e1de2d68431db1d2b0be98d20c6492d90e480051b2a",
+        transactionHash: "0x8afc6b4fc799d2df0d5b20f4461b3f81a491217fbf491cd28518b5dc70a6d645",
         logs: [],
-        blockNumber: 9272623,
-        cumulativeGasUsed: "8068810",
+        blockNumber: 9281200,
+        cumulativeGasUsed: "36600539",
         status: 1,
         byzantium: true,
       },

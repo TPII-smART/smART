@@ -2,6 +2,7 @@ import { useState } from "react";
 import UniversalDetail from "../UniversalDetail";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
+import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
 import Spinner from "@/components/Spinner/Spinner";
 import { JobState } from "@se-2/common";
 import { fetchJob } from "@services/graphql/fetchers/job";
@@ -18,12 +19,17 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Job } from "~~/types/job";
 
+// or your modal component
+
 export default function JobDetail({ postingId, jobId }: { postingId: string; jobId: string }) {
   const { address: userAddress } = useAccount();
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
+
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -56,25 +62,43 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     watch: !!data?.disputeQuestionId,
   });
 
-  const disputeLoading = isDisputeFinalizedLoading || isDisputeResultLoading;
+  const { data: disputeBeingArbitrated, isLoading: isDisputeArbitrationLoading } = useScaffoldReadContract({
+    contractName: "RealityETH",
+    functionName: "isPendingArbitration",
+    args:
+      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
+        ? [data.disputeQuestionId as `0x${string}`]
+        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
+    watch: !!data?.disputeQuestionId,
+  });
+
+  const disputeLoading = isDisputeFinalizedLoading || isDisputeResultLoading || isDisputeArbitrationLoading;
 
   const disputeResult =
     disputeResultData && disputeResultData === "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-  const initiateConflictResolution = async () => {
-    const comment = "Testing dispute initiation.";
-    console.log(data?.state, JobState.Ongoing);
-    const bond = parseEther("0.001");
-    const result = await writeContract({
+  const arbitrationFee = useScaffoldReadContract({
+    contractName: "ArbiterContract",
+    functionName: "arbitrationFee",
+  });
+
+  const initiateConflictResolution = async (values: DisputeFormData) => {
+    console.log("Dispute form values:", values);
+    await writeContract({
       functionName: "startDispute",
       args: [
-        BigInt(postingId), // postingId (uint256)
-        BigInt(jobId), // jobId (uint256)
-        comment, // question (string)
+        BigInt(postingId),
+        BigInt(jobId),
+        values.comment,
+        parseEther(values.bounty),
+        parseEther(values.bond),
+        values.arbitration,
       ],
-      value: bond,
+      value:
+        parseEther(values.bounty) +
+        parseEther(values.bond) +
+        (values.arbitration ? BigInt(arbitrationFee.data ?? 0) : BigInt(0)),
     });
-    console.log(result);
   };
 
   const handleFinalizeDispute = async () => {
@@ -473,23 +497,25 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               tooltip="Finalize dispute and release funds"
             >
               <TrophyIcon className="h-5 w-5" />
-              <span>Finalize Dispute</span>
+              <span>Release Funds</span>
             </Button>,
           );
         }
-        buttons.push(
-          <Button
-            variant="outline"
-            key="requestArbitration"
-            onClick={() => requestArbitration()}
-            disabled={isMining}
-            size="sm"
-            tooltip="Request arbitration from Kleros"
-          >
-            <ScaleIcon className="h-5 w-5" />
-            <span>Request Arbitration</span>
-          </Button>,
-        );
+        if (!disputeBeingArbitrated) {
+          buttons.push(
+            <Button
+              variant="outline"
+              key="requestArbitration"
+              onClick={() => requestArbitration()}
+              disabled={isMining}
+              size="sm"
+              tooltip="Request arbitration from Kleros"
+            >
+              <ScaleIcon className="h-5 w-5" />
+              <span>Request Arbitration</span>
+            </Button>,
+          );
+        }
       }
     }
 
@@ -518,6 +544,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     wasDisputed: !!data?.disputeQuestionId,
     disputeFinalized: disputeFinalized,
     disputeResult: disputeResult,
+    disputeBeingArbitrated: disputeBeingArbitrated,
   };
 
   return (
@@ -542,7 +569,22 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
         handleConfirmCompletion={handleConfirmCompletion}
         handleRejectJob={handleRejectJob}
         handleRateJob={handleRateJob}
-        initiateConflictResolution={initiateConflictResolution}
+        initiateConflictResolution={() => setShowDisputeModal(true)}
+      />
+      <DisputeFormModal
+        isOpen={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        loading={isSubmittingDispute}
+        arbitrationFee={arbitrationFee.data?.toString() || "0"}
+        onSubmit={async (values: DisputeFormData) => {
+          setIsSubmittingDispute(true);
+          try {
+            await initiateConflictResolution(values);
+            setShowDisputeModal(false);
+          } finally {
+            setIsSubmittingDispute(false);
+          }
+        }}
       />
     </>
   );

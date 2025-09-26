@@ -12,12 +12,12 @@ const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvi
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
 
-  const arbitrationFee = parseEther("0.001"); // Set arbitration fee to 0.001 ETH
+  const arbitrationFee = parseEther("0.01"); // Set arbitration fee to 0.01 ETH
 
   await deploy(CONTRACT_NAME, {
     from: deployer,
     args: [
-      "0xeAD0ca922390a5E383A9D5Ba4366F7cfdc6f0dbA", // Reality.eth contract address on Sepolia
+      "0xB7982f20CC159a40eba4b0eA86fd6cbA6Ff810e1", // Reality.eth contract address on Sepolia
       arbitrationFee,
     ],
     log: true,

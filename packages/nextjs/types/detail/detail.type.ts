@@ -26,4 +26,5 @@ export interface DetailData {
   wasDisputed?: boolean;
   disputeFinalized?: boolean;
   disputeResult?: boolean;
+  disputeBeingArbitrated?: boolean;
 }

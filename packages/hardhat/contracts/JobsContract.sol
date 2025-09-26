@@ -13,7 +13,18 @@ interface IRealityETH {
         uint256 nonce
     ) external payable returns (bytes32);
     function resultFor(bytes32 question_id) external view returns (bytes32);
-}        
+    function submitAnswerFor(
+        bytes32 question_id,
+        bytes32 answer,
+        uint256 max_previous,
+        address answerer
+    ) external payable;
+}
+
+interface IArbiterContract {
+    function arbitrationFee() external view returns (uint256);
+    function requestArbitration(bytes32 question_id, uint256 lastSeenBond) external payable;
+}
 
 /**
  * @title JobsContract
@@ -25,7 +36,7 @@ contract JobsContract {
     // Reality.eth contract address
     IRealityETH public reality;
 
-    address public arbitratorAddress;
+    IArbiterContract public arbitratorAddress;
 
     // Enums for job states
     enum JobState {
@@ -196,8 +207,6 @@ contract JobsContract {
         address indexed requester
     );
 
-    event DebugQuestionData(string questionData);
-
     // Modifiers
     modifier onlyFreelancer(uint256 _postingId, uint256 _jobId) {
         require(postedJobs[_postingId].jobs[_jobId].freelancer == msg.sender, "Only freelancer can call this");
@@ -250,7 +259,7 @@ contract JobsContract {
     constructor(address _owner, address _reality, address _arbitrator) {
         require(_reality != address(0), "Invalid Reality.eth address");
         reality = IRealityETH(_reality);
-        arbitratorAddress = _arbitrator;
+        arbitratorAddress = IArbiterContract(_arbitrator);
         owner = _owner;
     }
 
@@ -663,15 +672,38 @@ contract JobsContract {
         return string(bstr);
     }
 
+
+    /**
+     * @dev Start a dispute for a job (either party can start a dispute)
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to dispute
+     * @param _comment Comment explaining the reason for the dispute
+     * @param _bountyAmount Amount to be used as bounty for the dispute
+     * @param _bondAmount Amount to be used as bond for the first answer
+     * @param _escalateToArbitrator Whether to escalate the dispute to an arbitrator immediately
+     */
     function startDispute(
         uint256 _postingId,
         uint256 _jobId,
-        string memory _comment
+        string memory _comment,
+        uint256 _bountyAmount,
+        uint256 _bondAmount,
+        bool _escalateToArbitrator
     ) external payable onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
         require(job.state == JobState.Ongoing, "Job not ongoing");
         require(bytes(_comment).length > 0, "Comment cannot be empty");
-        require(msg.value > 0, "Bond amount must be greater than 0");
+        require(msg.value > 0, "Payed amount must be greater than 0");
+        require(_bountyAmount > 0, "Bounty amount must be greater than 0");
+        require(_bondAmount > 0, "Bond amount must be greater than 0");
+        // Get arbitration fee from arbitrator contract
+        uint256 arbitrationFee = arbitratorAddress.arbitrationFee();
+        require(arbitrationFee > 0, "Arbitration fee must be greater than 0");
+        if (_escalateToArbitrator) {
+            require(msg.value >= _bondAmount + _bountyAmount + arbitrationFee, "Insufficient funds to cover bounty, bond, and arbitration fee");
+        } else {
+            require(msg.value >= _bondAmount + _bountyAmount, "Insufficient funds to cover bounty and bond");
+        }
 
         string memory senderRole = msg.sender == job.client ? "Client" : "Freelancer";
         string memory comment = string(
@@ -707,20 +739,32 @@ contract JobsContract {
             )
         );
 
-        // Debug: Emit the question data
-        emit DebugQuestionData(questionData);
-
-        // Forward only the bond to Reality.eth
-        try reality.askQuestion{value: msg.value}(
+        // Forward the bounty to Reality.eth and create the question
+        try reality.askQuestion{value: _bountyAmount}(
             uint256(0),
             questionData,
-            arbitratorAddress,
+            address(arbitratorAddress),
             uint32(300),
             uint32(block.timestamp),
             uint256(_postingId * 1e6 + _jobId)
         ) returns (bytes32 questionId) {
+            // Store the question ID in the job
             job.state = JobState.Disputed;
             job.disputeQuestionId = uint256(questionId);
+
+            // Answer the question depending on who is calling
+            // Client wants to answer "No" (freelancer did not fulfill)
+            // Freelancer wants to answer "Yes" (freelancer did fulfill)
+            uint256 answer = msg.sender == job.client ? uint256(0) : uint256(1);
+
+            require(address(this).balance >= _bondAmount, "Not enough left for bond");
+
+            // Submit the answer with the provided bond
+            reality.submitAnswerFor{value: _bondAmount}(questionId, bytes32(answer), 0, msg.sender);
+            // If escalateToArbitrator is true, request arbitration
+            if (_escalateToArbitrator) {
+                arbitratorAddress.requestArbitration{value: arbitrationFee}(questionId, _bondAmount);
+            }
 
             emit DisputeStarted(_postingId, _jobId, questionId, msg.sender);
         } catch {
