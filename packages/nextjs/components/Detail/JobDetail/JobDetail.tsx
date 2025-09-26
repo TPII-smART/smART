@@ -398,7 +398,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               tooltip="Finalize dispute and release funds"
             >
               <TrophyIcon className="h-5 w-5" />
-              <span>Finalize Dispute</span>
+              <span>Release Funds</span>
             </Button>,
           );
         } else if (!disputeBeingArbitrated) {
@@ -406,7 +406,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
             <Button
               variant="outline"
               key="requestArbitration"
-              onClick={() => requestArbitration()}
+              onClick={() => setShowRequestArbitrationModal(true)}
               disabled={isMining || disputeLoading}
               size="sm"
               tooltip="Request arbitration from Kleros"
@@ -482,7 +482,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               variant="primary"
               key="finalizeDispute"
               onClick={() => handleFinalizeDispute()}
-              disabled={isMining}
+              disabled={isMining || disputeLoading}
               size="sm"
               tooltip="Finalize dispute and release funds"
             >
@@ -496,7 +496,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               variant="outline"
               key="requestArbitration"
               onClick={() => setShowRequestArbitrationModal(true)}
-              disabled={isMining}
+              disabled={isMining || disputeLoading}
               size="sm"
               tooltip="Request arbitration from Kleros"
             >
@@ -565,6 +565,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
         onClose={() => setShowDisputeModal(false)}
         loading={isSubmittingDispute}
         arbitrationFee={arbitrationFee.data?.toString() || "0"}
+        type="gig"
         onSubmit={async (values: DisputeFormData) => {
           setIsSubmittingDispute(true);
           try {

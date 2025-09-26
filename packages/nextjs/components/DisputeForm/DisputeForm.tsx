@@ -34,6 +34,7 @@ export default function DisputeFormModal({
   loading,
   initialValues,
   arbitrationFee,
+  type,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -41,6 +42,7 @@ export default function DisputeFormModal({
   loading?: boolean;
   initialValues?: Partial<DisputeFormData>;
   arbitrationFee?: string;
+  type: "job" | "gig";
 }) {
   const formInitialValues = useMemo(
     () => ({
@@ -56,7 +58,7 @@ export default function DisputeFormModal({
   return (
     <FormModal
       modalProps={{
-        title: "You are Disputing this Job",
+        title: "You are disputing this " + (type === "job" ? "job" : "gig"),
         onClose,
         isOpen,
         loading,

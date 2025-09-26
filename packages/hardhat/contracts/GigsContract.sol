@@ -3,12 +3,41 @@ pragma solidity ^0.8.19;
 
 import "./common/FileInfo.sol";
 
+interface IRealityETH {
+    function askQuestion(
+        uint256 template_id,
+        string calldata question,
+        address arbitrator,
+        uint32 timeout,
+        uint32 opening_ts,
+        uint256 nonce
+    ) external payable returns (bytes32);
+    function resultFor(bytes32 question_id) external view returns (bytes32);
+    function submitAnswerFor(
+        bytes32 question_id,
+        bytes32 answer,
+        uint256 max_previous,
+        address answerer
+    ) external payable;
+}
+
+interface IArbiterContract {
+    function arbitrationFee() external view returns (uint256);
+    function requestArbitration(bytes32 question_id, uint256 lastSeenBond) external payable;
+}
+
 /**
  * @title GigsContract
  * @dev A contract for managing gigs where clients post work requests and freelancers apply with proposals.
  * @author SmArt
  */
 contract GigsContract {
+
+    // Reality.eth contract address
+    IRealityETH public reality;
+
+    IArbiterContract public arbitratorAddress;
+
     // Enums for gig and application states
     enum GigState {
         Open,
@@ -82,6 +111,7 @@ contract GigsContract {
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
         FileInfo[] fileInfo; // Store the file related to the job
+        uint256 disputeQuestionId; // Question ID for dispute resolution
     }
 
     // State variables of the contract
@@ -170,6 +200,12 @@ contract GigsContract {
         uint256 uploadedAt
     );
 
+    event DisputeStarted(
+        uint256 indexed gigId,
+        bytes32 questionId,
+        address indexed requester
+    );
+
     // Modifiers
     modifier onlyClient(uint256 _gigId) {
         require(postedGigs[_gigId].client == msg.sender, "Only client can call this");
@@ -204,7 +240,16 @@ contract GigsContract {
         _;
     }
 
-    constructor(address _owner) {
+    /**
+     * @dev Constructor
+     * @param _owner Address of the contract owner
+     * @param _reality Address of the Reality.eth contract
+     * @param _arbitrator Address of the arbitrator for dispute resolution
+     */
+    constructor(address _owner, address _reality, address _arbitrator) {
+        require(_reality != address(0), "Invalid Reality.eth address");
+        reality = IRealityETH(_reality);
+        arbitratorAddress = IArbiterContract(_arbitrator);
         owner = _owner;
     }
 
@@ -241,6 +286,7 @@ contract GigsContract {
             newGig.rating = 0;
             newGig.acceptedApplicationId = 0;
             newGig.gigBannerImageHash = params.gigBannerImageHash;
+            newGig.disputeQuestionId = 0; // No dispute initially
         }
 
         emit GigCreated(
@@ -624,4 +670,168 @@ contract GigsContract {
             gig.rejectedAt
         );
     }
+
+    // Convert uints to strings properly
+    function uint2str(uint256 _i) internal pure returns (string memory) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
+        while (_i != 0) {
+            k = k-1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
+        }
+        return string(bstr);
+    }
+
+
+    /**
+     * @dev Start a dispute for a gig (either party can start a dispute)
+     * @param _gigId The ID of the gig to dispute
+     * @param _comment Comment explaining the reason for the dispute
+     * @param _bountyAmount Amount to be used as bounty for the dispute
+     * @param _bondAmount Amount to be used as bond for the first answer
+     * @param _escalateToArbitrator Whether to escalate the dispute to an arbitrator immediately
+     */
+    function startDispute(
+        uint256 _gigId,
+        string memory _comment,
+        uint256 _bountyAmount,
+        uint256 _bondAmount,
+        bool _escalateToArbitrator
+    ) external payable onlyGigParties(_gigId) gigExists(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+        require(gig.state == GigState.InProgress, "Gig not in progress");
+        require(bytes(_comment).length > 0, "Comment cannot be empty");
+        require(msg.value > 0, "Payed amount must be greater than 0");
+        require(_bountyAmount > 0, "Bounty amount must be greater than 0");
+        require(_bondAmount > 0, "Bond amount must be greater than 0");
+        // Get arbitration fee from arbitrator contract
+        uint256 arbitrationFee = arbitratorAddress.arbitrationFee();
+        require(arbitrationFee > 0, "Arbitration fee must be greater than 0");
+        if (_escalateToArbitrator) {
+            require(msg.value >= _bondAmount + _bountyAmount + arbitrationFee, "Insufficient funds to cover bounty, bond, and arbitration fee");
+        } else {
+            require(msg.value >= _bondAmount + _bountyAmount, "Insufficient funds to cover bounty and bond");
+        }
+
+        string memory senderRole = msg.sender == gig.client ? "Client" : "Freelancer";
+        string memory comment = string(
+            abi.encodePacked(senderRole, "\u0027s comment\u003A ", _comment)
+        );
+
+        string memory filesString = "";
+        if (gig.fileInfo.length == 0) {
+            filesString = "No files attached";
+        } else {
+            for (uint256 i = 0; i < gig.fileInfo.length; i++) {
+                filesString = string(abi.encodePacked(
+                    filesString,
+                    gig.fileInfo[i].isLink ? "Link\u003A " : "IPFS\u003A ",
+                    gig.fileInfo[i].resource                 
+                ));
+                if (i < gig.fileInfo.length - 1) {
+                    filesString = string(abi.encodePacked(filesString, " \u007C "));
+                }
+            }
+        }
+
+        string memory questionData = string(
+            abi.encodePacked(
+                "Did the freelancer fulfill the gig contract agreement? -> ",
+                comment,
+                " -> Files: \u007C ",
+                filesString,
+                "\u241f",
+                "freelance",
+                "\u241f",
+                "en"
+            )
+        );
+
+        // Forward the bounty to Reality.eth and create the question
+        try reality.askQuestion{value: _bountyAmount}(
+            uint256(0),
+            questionData,
+            address(arbitratorAddress),
+            uint32(300),
+            uint32(block.timestamp),
+            uint256(_gigId * 1000 + block.timestamp)
+        ) returns (bytes32 questionId) {
+            // Store the question ID in the gig
+            gig.state = GigState.Disputed;
+            gig.disputeQuestionId = uint256(questionId);
+
+            // Answer the question depending on who is calling
+            // Client wants to answer "No" (freelancer did not fulfill)
+            // Freelancer wants to answer "Yes" (freelancer did fulfill)
+            uint256 answer = msg.sender == gig.client ? uint256(0) : uint256(1);
+
+            require(address(this).balance >= _bondAmount, "Not enough left for bond");
+
+            // Submit the answer with the provided bond
+            reality.submitAnswerFor{value: _bondAmount}(questionId, bytes32(answer), 0, msg.sender);
+            // If escalateToArbitrator is true, request arbitration
+            if (_escalateToArbitrator) {
+                arbitratorAddress.requestArbitration{value: arbitrationFee}(questionId, _bondAmount);
+            }
+
+            emit DisputeStarted(_gigId, questionId, msg.sender);
+        } catch {
+            revert("Reality.eth failed: low-level error");
+        }
+    }
+
+    function getDisputeResult(uint256 _gigId) external view gigExists(_gigId) returns (bytes32) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.Disputed, "Gig is not disputed");
+        require(gig.disputeQuestionId != 0, "No dispute question ID");
+
+        bytes32 questionId = bytes32(gig.disputeQuestionId);
+        return reality.resultFor(questionId);
+    }
+
+    function resolveDispute(uint256 _gigId) external onlyGigParties(_gigId) gigExists(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.Disputed, "Gig is not disputed");
+        require(gig.disputeQuestionId != 0, "No dispute question ID");
+
+        bytes32 questionId = bytes32(gig.disputeQuestionId);
+        bytes32 result;
+        try reality.resultFor(questionId) returns (bytes32 r) {
+            result = r;
+        } catch (bytes memory revertData) {
+            if (revertData.length == 32 && keccak256(revertData) == keccak256(abi.encodePacked(bytes32("question must be finalized")))) {
+            revert("question must be finalized");
+            } else {
+            revert("Reality.eth failed: low-level error");
+            }
+        }
+
+        // If result is bytes32(0), treat as "No" answer (client wins)
+        if (result == bytes32(uint256(1))) {
+            // Freelancer wins, release payment
+            payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
+        } else {
+            // Client wins, refund payment
+            payable(gig.client).transfer(gig.finalPayment);
+        }
+
+        gig.state = GigState.Completed;
+        gig.finishedAt = block.timestamp;
+        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
+    }
 }
+

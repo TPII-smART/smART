@@ -394,3 +394,17 @@ ponder.on("GigsContract:ApplicationWithdrawn", async ({ event, context }) => {
 		itemId: event.args.applicationId,
 	});
 });
+
+ponder.on("GigsContract:DisputeStarted", async ({ event, context }) => {
+	// Updates the gig to mark it as in dispute
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			state: GigState.Disputed,
+			emitBy: event.transaction.from,
+			disputeQuestionId: event.args.questionId,
+			lastTransactionHash: event.transaction.hash,
+		});
+});

@@ -100,6 +100,9 @@ export class Gig {
   /** (Optional) Application ID if the user has applied to this gig. Null if not applied. */
   userApplication?: string | null;
 
+  /** (Optional) Identifier for the dispute question associated with the gig, if any. */
+  disputeQuestionId?: string;
+
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;

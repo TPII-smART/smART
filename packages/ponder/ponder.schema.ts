@@ -81,6 +81,7 @@ export const gig = onchainTable("gig", (t) => ({
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
+	disputeQuestionId: t.varchar({ length: 256 }), // Question ID from Reality.eth if a dispute was created
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 

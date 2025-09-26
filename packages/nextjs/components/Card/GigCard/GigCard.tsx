@@ -94,7 +94,10 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
           Apply
         </Button>
       ) : (
-        <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}/${gig.userApplication}`)}>
+        <Button
+          variant="outline"
+          onClick={() => (window.location.href = `/gig/${gig?.gigId}?applicationId=${gig.userApplication}`)}
+        >
           My Application
         </Button>
       )

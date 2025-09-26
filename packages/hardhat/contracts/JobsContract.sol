@@ -812,5 +812,5 @@ contract JobsContract {
         job.state = JobState.Finished;
         job.finishedAt = block.timestamp;
         emit JobFinished(_postingId, _jobId, job.freelancer, job.client, job.payment, job.finishedAt);
-        }
     }
+}
