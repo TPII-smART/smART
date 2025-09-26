@@ -7,10 +7,11 @@ import Spinner from "@/components/Spinner/Spinner";
 import { JobState } from "@se-2/common";
 import { fetchJob } from "@services/graphql/fetchers/job";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
@@ -29,12 +30,17 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [showRequestArbitrationModal, setShowRequestArbitrationModal] = useState(false);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const queryClient = useQueryClient();
 
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
+  });
+
+  const { writeContractAsync: writeContractArbiter } = useScaffoldWriteContract({
+    contractName: "ArbiterContract",
   });
 
   const { data, isLoading, error, refetch } = useQuery<Job>({
@@ -65,6 +71,16 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const { data: disputeBeingArbitrated, isLoading: isDisputeArbitrationLoading } = useScaffoldReadContract({
     contractName: "RealityETH",
     functionName: "isPendingArbitration",
+    args:
+      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
+        ? [data.disputeQuestionId as `0x${string}`]
+        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
+    watch: !!data?.disputeQuestionId,
+  });
+
+  const { data: lastSeenBond } = useScaffoldReadContract({
+    contractName: "RealityETH",
+    functionName: "getBond",
     args:
       data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
         ? [data.disputeQuestionId as `0x${string}`]
@@ -110,7 +126,14 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     queryClient.invalidateQueries({ queryKey: ["jobDetail", jobId] });
   };
 
-  const requestArbitration = async () => {};
+  const requestArbitration = async () => {
+    if (!data?.postingId || !data?.jobId || !data?.disputeQuestionId || !lastSeenBond || !arbitrationFee.data) return;
+    await writeContractArbiter({
+      functionName: "requestArbitration",
+      args: [data.disputeQuestionId as `0x${string}`, lastSeenBond],
+      value: arbitrationFee.data,
+    });
+  };
 
   const {
     data: deliverables,
@@ -485,7 +508,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </Button>,
         );
       }
-      if (jobStatus === JobState.Disputed && !disputeLoading) {
+      if (jobStatus === JobState.Disputed) {
         if (disputeFinalized) {
           buttons.push(
             <Button
@@ -500,13 +523,12 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               <span>Release Funds</span>
             </Button>,
           );
-        }
-        if (!disputeBeingArbitrated) {
+        } else if (!disputeBeingArbitrated) {
           buttons.push(
             <Button
               variant="outline"
               key="requestArbitration"
-              onClick={() => requestArbitration()}
+              onClick={() => setShowRequestArbitrationModal(true)}
               disabled={isMining}
               size="sm"
               tooltip="Request arbitration from Kleros"
@@ -586,6 +608,34 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           }
         }}
       />
+      <Modal
+        isOpen={showRequestArbitrationModal}
+        onClose={() => setShowRequestArbitrationModal(false)}
+        title="Request Arbitration"
+      >
+        <div className="mb-4">
+          <p className="mb-2">
+            By requesting arbitration, you will be escalating the dispute to Kleros, a decentralized arbitration
+            service. This will allow for a fair review of the case by a panel of jurors. Requesting arbitration will
+            incur an additional fee of {formatEther(arbitrationFee.data ?? 0n)} ETH.
+          </p>
+          <p className="mb-2">Are you sure you want to proceed with requesting arbitration?</p>
+          <p className="text-sm text-gray-500">
+            Note: Once arbitration is requested, the decision made by the jurors will be final and binding.
+          </p>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              await requestArbitration();
+              setShowRequestArbitrationModal(false);
+            }}
+          >
+            Confirm
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }
