@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDisputeContracts } from "../../../hooks/use-dispute-contracts";
 import UniversalDetail from "../UniversalDetail";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
@@ -13,7 +14,7 @@ import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
 import { ArrowDownTrayIcon, CheckCircleIcon, PaperAirplaneIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { fetchDeliverablesForJob } from "~~/services/graphql/fetchers/job/job.service";
 import { Deliverable } from "~~/types/deliverable";
@@ -48,55 +49,20 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     queryFn: () => fetchJob(postingId, jobId),
   });
 
-  const { data: disputeFinalized, isLoading: isDisputeFinalizedLoading } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "isFinalized",
-    args:
-      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
-        ? [data.disputeQuestionId as `0x${string}`]
-        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
-    watch: !!data?.disputeQuestionId,
-  });
-
-  const { data: disputeResultData, isLoading: isDisputeResultLoading } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "resultFor",
-    args:
-      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
-        ? [data.disputeQuestionId as `0x${string}`]
-        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
-    watch: !!data?.disputeQuestionId,
-  });
-
-  const { data: disputeBeingArbitrated, isLoading: isDisputeArbitrationLoading } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "isPendingArbitration",
-    args:
-      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
-        ? [data.disputeQuestionId as `0x${string}`]
-        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
-    watch: !!data?.disputeQuestionId,
-  });
-
-  const { data: lastSeenBond } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "getBond",
-    args:
-      data?.disputeQuestionId && typeof data.disputeQuestionId === "string" && data.disputeQuestionId.startsWith("0x")
-        ? [data.disputeQuestionId as `0x${string}`]
-        : ["0x0000000000000000000000000000000000000000000000000000000000000000"],
-    watch: !!data?.disputeQuestionId,
-  });
+  const {
+    disputeFinalized,
+    isDisputeFinalizedLoading,
+    disputeResultData,
+    isDisputeResultLoading,
+    disputeBeingArbitrated,
+    isDisputeArbitrationLoading,
+    lastSeenBond,
+    arbitrationFee,
+  } = useDisputeContracts(data?.disputeQuestionId);
 
   const disputeLoading = isDisputeFinalizedLoading || isDisputeResultLoading || isDisputeArbitrationLoading;
-
   const disputeResult =
     disputeResultData && disputeResultData === "0x0000000000000000000000000000000000000000000000000000000000000001";
-
-  const arbitrationFee = useScaffoldReadContract({
-    contractName: "ArbiterContract",
-    functionName: "arbitrationFee",
-  });
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
     console.log("Dispute form values:", values);
@@ -420,14 +386,14 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
           </Button>,
         );
       }
-      if (jobStatus === JobState.Disputed && !disputeLoading) {
+      if (jobStatus === JobState.Disputed) {
         if (disputeFinalized) {
           buttons.push(
             <Button
               variant="primary"
               key="finalizeDispute"
               onClick={() => handleFinalizeDispute()}
-              disabled={isMining}
+              disabled={isMining || disputeLoading}
               size="sm"
               tooltip="Finalize dispute and release funds"
             >
@@ -435,20 +401,21 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
               <span>Finalize Dispute</span>
             </Button>,
           );
+        } else if (!disputeBeingArbitrated) {
+          buttons.push(
+            <Button
+              variant="outline"
+              key="requestArbitration"
+              onClick={() => requestArbitration()}
+              disabled={isMining || disputeLoading}
+              size="sm"
+              tooltip="Request arbitration from Kleros"
+            >
+              <ScaleIcon className="h-5 w-5" />
+              <span>Request Arbitration</span>
+            </Button>,
+          );
         }
-        buttons.push(
-          <Button
-            variant="outline"
-            key="requestArbitration"
-            onClick={() => requestArbitration()}
-            disabled={isMining}
-            size="sm"
-            tooltip="Request arbitration from Kleros"
-          >
-            <ScaleIcon className="h-5 w-5" />
-            <span>Request Arbitration</span>
-          </Button>,
-        );
       }
     }
 
