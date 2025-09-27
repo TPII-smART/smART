@@ -77,6 +77,7 @@ export const gig = onchainTable("gig", (t) => ({
 	freelancerDelivered: t.boolean().notNull(),
 	clientCancelled: t.boolean().notNull(),
 	freelancerCancelled: t.boolean().notNull(),
+	freelancerUploaded: t.boolean().notNull(),
 	clientRejected: t.boolean().notNull(),
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
