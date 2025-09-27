@@ -152,7 +152,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
       }
 
       await writeContract({
-        functionName: "uploadFile",
+        functionName: "uploadDeliverable",
         args: [
           BigInt(job.postingId),
           BigInt(job.jobId),

@@ -133,9 +133,9 @@ ponder.on(
 );
 
 ponder.on(
-	"JobsContract:FileUploaded",
+	"JobsContract:DeliverableUploaded",
 	async ({ event, context }) => {
-		// Updates the job to mark it as file uploaded
+		// Updates the job to mark it as deliverable uploaded
 		await context.db
 			.insert(jobDeliverable)
 			.values({
@@ -160,16 +160,16 @@ ponder.on(
 	}
 );
 
-// This event is triggered when a a client add a comment to the uploaded file.
+// This event is triggered when a a client add a comment to the uploaded deliverable.
 ponder.on(
 	"JobsContract:CommentAdded",
 	async ({ event, context }) => {
-		// Updates the job to mark it as file uploaded
+		// Updates the job to mark it as deliverable uploaded
 		await context.db
 			.update(jobDeliverable, {
 				jobId: event.args.jobId,
 				postingId: event.args.postingId,
-				uploadedAt: BigInt(event.args.fileUploadedAt),
+				uploadedAt: BigInt(event.args.deliverableUploadedAt),
 			})
 			.set({
 				clientResponse: event.args.response,
