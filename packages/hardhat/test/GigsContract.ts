@@ -873,59 +873,5 @@ describe("GigsContract", function () {
         );
       });
     });
-
-    describe("Add Comment to Gig", function () {
-      beforeEach(async function () {
-        const expectedIpfsHash = "QmFileHash123";
-        const expectedComment = "File upload comment";
-        const fileInfo = { resource: expectedIpfsHash, submissionComment: expectedComment, isLink: false };
-
-        await gigsContract.connect(client).createGig(sampleGig);
-        await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
-        await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
-        await gigsContract.connect(freelancer1).uploadDeliverable(0, fileInfo);
-      });
-
-      it("Should allow client to add comment successfully", async function () {
-        const expectedClientComment = "This is a comment";
-        const tx = await gigsContract.connect(client).addCommentToGig(0, expectedClientComment);
-        const receipt = await tx.wait();
-        const events = receipt?.logs
-          .map(log => {
-            try {
-              return gigsContract.interface.parseLog(log);
-            } catch {
-              return null;
-            }
-          })
-          .filter(e => e && e.name === "CommentAdded");
-
-        expect(events).to.not.be.undefined;
-        expect(events?.[0]?.args?.gigId).to.equal(0);
-        expect(events?.[0]?.args?.response).to.equal(expectedClientComment);
-      });
-
-      it("Should revert if the gig is not in progress", async function () {
-        await gigsContract.connect(client).cancelGig(0);
-        await gigsContract.connect(freelancer1).cancelGig(0);
-
-        await expect(gigsContract.connect(client).addCommentToGig(0, "This is a comment")).to.be.revertedWith(
-          "The gig is not in progress.",
-        );
-      });
-
-      it("Should revert if the comment is empty", async function () {
-        await expect(gigsContract.connect(client).addCommentToGig(0, "")).to.be.revertedWith(
-          "Comment cannot be empty.",
-        );
-      });
-
-      it("Should revert if the comment exceeds 256 characters", async function () {
-        const longComment = "a".repeat(257);
-        await expect(gigsContract.connect(client).addCommentToGig(0, longComment)).to.be.revertedWith(
-          "Comment must be up to 256 characters.",
-        );
-      });
-    });
   });
 });

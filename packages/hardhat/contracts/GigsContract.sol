@@ -612,24 +612,6 @@ contract GigsContract {
         );
     }
 
-    /**
-     * @dev Allows the client to add a response to the last uploaded file.
-     * @param _gigId Gig ID.
-     * @param _comment Comment text.
-     */
-    function addCommentToGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
-        Gig storage gig = postedGigs[_gigId];
-        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
-
-        require(gig.state == GigState.InProgress, "The gig is not in progress.");
-        require(bytes(_comment).length > 0, "Comment cannot be empty.");
-        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
-
-        deliverableInfo.clientResponse = _comment;
-
-        emit CommentAdded(_gigId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
-    }
-
     function rejectGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
         DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];

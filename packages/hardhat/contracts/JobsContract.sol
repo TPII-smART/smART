@@ -590,29 +590,6 @@ contract JobsContract {
         );
     }
 
-    /**
-     * @dev Allows the client to add a response to the last uploaded deliverable.
-     * @param _postingId JobPosting ID.
-     * @param _jobId Job ID.
-     * @param _comment Comment text.
-     */
-    function addCommentToJob(
-        uint256 _postingId,
-        uint256 _jobId,
-        string calldata _comment
-    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
-        Job storage job = postedJobs[_postingId].jobs[_jobId];
-        DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
-
-        require(job.state == JobState.Ongoing, "The job is not ongoing.");
-        require(bytes(_comment).length > 0, "Comment cannot be empty.");
-        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
-
-        deliverableInfo.clientResponse = _comment;
-
-        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
-    }
-
     function rejectJob(
         uint256 _postingId,
         uint256 _jobId,
