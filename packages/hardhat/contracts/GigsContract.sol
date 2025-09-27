@@ -429,6 +429,8 @@ contract GigsContract {
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
 
         require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
+        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
+
         gig.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
 
@@ -446,6 +448,7 @@ contract GigsContract {
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
         require(gig.deliverableInfo.length > 0, "No deliverable uploaded yet");
+        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
 
         DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 

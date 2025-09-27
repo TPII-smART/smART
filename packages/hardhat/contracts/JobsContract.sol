@@ -374,6 +374,7 @@ contract JobsContract {
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.deliverableInfo.length > 0, "No deliverable uploaded yet");
+        require(job.freelancerUploaded, "Freelancer has not uploaded deliverables");
 
         DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
 
@@ -412,7 +413,9 @@ contract JobsContract {
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
 
+        require(job.freelancerUploaded, "Freelancer has not uploaded deliverables");
         require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
+
         job.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
 
