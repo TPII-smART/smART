@@ -371,9 +371,12 @@ contract JobsContract {
         string calldata _comment
     ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
-        DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
+        require(job.deliverableInfo.length > 0, "No deliverable uploaded yet");
+
+        DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
+
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
         require(bytes(_comment).length > 0, "Comment cannot be empty.");

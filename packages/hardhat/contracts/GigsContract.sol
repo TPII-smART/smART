@@ -422,22 +422,15 @@ contract GigsContract {
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
      */
-    function confirmFreelancerCompletion(uint256 _gigId) external gigExists(_gigId) onlyGigParties(_gigId) {
+    function confirmFreelancerCompletion(uint256 _gigId) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
 
-        // Set confirmation based on who is calling
-        if (msg.sender == gig.client) {
-            require(!gig.clientReceived, "Client already confirmed reception");
-            gig.clientReceived = true;
-            emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
-        } else {
-            require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
-            gig.freelancerDelivered = true;
-            emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
-        }
+        require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
+        gig.freelancerDelivered = true;
+        emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
 
         // If both parties have confirmed, complete the gig
         if (gig.clientReceived && gig.freelancerDelivered) {
@@ -450,9 +443,12 @@ contract GigsContract {
         string calldata _clientResponse
     ) external gigExists(_gigId) onlyClient(_gigId) {
         Gig storage gig = postedGigs[_gigId];
-        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
+        require(gig.deliverableInfo.length > 0, "No deliverable uploaded yet");
+
+        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
         require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
         require(bytes(_clientResponse).length > 0, "Comment cannot be empty");
