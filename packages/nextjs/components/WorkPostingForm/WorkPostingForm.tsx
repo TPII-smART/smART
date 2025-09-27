@@ -56,7 +56,7 @@ function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
           args: Gig.mapFormDataToContractArgs(form),
         }),
         schema: "gig",
-        typeKeys: Object.keys(new Gig()) as (keyof Gig)[],
+        typeKeys: Object.keys(new Gig()).filter(key => key !== "userApplication") as (keyof Gig)[],
       };
   }
 }

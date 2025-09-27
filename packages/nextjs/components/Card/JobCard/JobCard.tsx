@@ -1,3 +1,4 @@
+import React from "react";
 import type { JobCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
@@ -6,7 +7,7 @@ import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { getJobStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
-export default function JobCard({ job, className, highlight }: JobCardProps) {
+const JobCard = React.memo(({ job, className, highlight }: JobCardProps) => {
   const { address: userAddress } = useAccount();
   const jobStatus = job.state as JobState;
 
@@ -91,4 +92,8 @@ export default function JobCard({ job, className, highlight }: JobCardProps) {
       />
     </>
   );
-}
+});
+
+JobCard.displayName = "JobCard";
+
+export default JobCard;

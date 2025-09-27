@@ -277,6 +277,39 @@ export const getApplicationsForGig = gql`
   }
 `;
 
+export const getApplicationsForGigPaginated = gql`
+  query GetApplicationsForGigPaginated($gigId: BigInt!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    gigApplications(
+      where: { gigId: $gigId }
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      orderDirection: "desc"
+    ) {
+      items {
+        applicationId
+        gigId
+        freelancer
+        proposedPayment
+        proposedDurationInHours
+        state
+        createdAt
+        proposalComment
+        rejectionComment
+        emitBy
+        rejectAt
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
 export const getApplicationsForGigs = gql`
   query GetApplicationsForGigs($gigIds: [BigInt!]!) {
     gigApplications(where: { gigId_in: $gigIds }) {

@@ -23,7 +23,7 @@ export const UserProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   const reload = async () => {
-    queryClient.invalidateQueries({ queryKey: ["jobPostings"] });
+    queryClient.invalidateQueries({ queryKey: ["userProfile"] });
     await new Promise(resolve => setTimeout(resolve, 1000)); // Delay to ensure UI updates
     await refetch();
   };
