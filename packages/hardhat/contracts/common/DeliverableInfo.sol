@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-struct FileInfo {
+struct DeliverableInfo {
     string resource;
     uint256 uploadedAt;
     string submissionComment;
@@ -9,7 +9,7 @@ struct FileInfo {
     bool isLink; // Whether the file is a link or an uploaded file
 }
 
-struct FileParams {
+struct DeliverableParams {
     string resource;
     string submissionComment;
     bool isLink;

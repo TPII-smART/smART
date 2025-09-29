@@ -355,6 +355,7 @@ export const getGigById = gql`
       freelancerDelivered
       clientCancelled
       freelancerCancelled
+      freelancerUploaded
       clientRejected
       rating
       acceptedApplicationId
