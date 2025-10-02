@@ -97,7 +97,7 @@ export default function Profile() {
   }, [fetchUser]);
 
   return (
-    <div className="w-full h-full overflow-auto">
+    <div className="w-full h-full">
       {loading ? (
         <ProfileSkeleton />
       ) : profileAddress === address && editMode ? (
@@ -122,7 +122,7 @@ export default function Profile() {
               </div>
             </div>
 
-            <div className="container">
+            <div className="max-h-[24rem]">
               <Suspense
                 fallback={
                   <div className="flex justify-center items-center h-64">

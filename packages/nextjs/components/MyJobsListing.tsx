@@ -1,110 +1,76 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import InfoHeader from "./InfoHeader";
+import Skeleton from "./Skeleton/Skeleton";
 import Spinner from "@/components//Spinner/Spinner";
 import JobCard from "@/components/Card/JobCard/JobCard";
 import { jobState } from "@/components/Card/JobState/jobState.data";
 import ComboBox from "@/components/ComboBox/ComboBox";
 import { InputBase } from "@/components/scaffold-eth";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchJobPostingWithJobs } from "~~/services/graphql/fetchers/job/job.service";
+import { usePagination } from "~~/hooks/use-pagination";
+import {
+  fetchJobPostingAverageRating,
+  fetchJobPostingById,
+  fetchJobsFromPostingPaginated,
+} from "~~/services/graphql/fetchers/job/job.service";
 import { Job, JobPosting } from "~~/types/job/job.types";
-
-type JobPostingData = {
-  posting: JobPosting;
-  jobs: Job[];
-};
 
 const jobStatesWithAll = [{ id: -1, label: "All" }, ...jobState];
 
 export default function MyJobsListing({ postingId }: { postingId: string }) {
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
-  const { data, isLoading, refetch } = useQuery<JobPostingData>({
-    queryKey: ["jobPostingWithJobs", postingId],
-    queryFn: async () => {
-      const result = await fetchJobPostingWithJobs(postingId);
-      return {
-        posting: result.posting,
-        jobs: result.jobs,
-      };
-    },
-  });
-
-  const reload = async () => {
-    queryClient.invalidateQueries({ queryKey: ["jobPostingWithJobs", postingId] });
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await refetch();
-  };
-
-  const filterJobsByState = useCallback(
-    (state: number) => {
-      if (!data || !data.jobs) return [];
-      if (state === -1) return data.jobs;
-
-      return data.jobs.filter(job => job.state === state);
-    },
-    [data],
+  // Initialize state from URL parameters
+  const initialSearch = useMemo(() => searchParams?.get("search") || "", [searchParams]);
+  const initialItemId = useMemo(() => searchParams?.get("itemId") || "", [searchParams]);
+  const initialState = useMemo(
+    () => (searchParams?.get("state") ? parseInt(searchParams.get("state") as string) : -1),
+    [searchParams],
   );
 
-  // Initialize state from URL parameters
-  const initialSearch = searchParams?.get("search") || "";
-  const initialItemId = searchParams?.get("itemId") || "";
-  const initialState = searchParams?.get("state") ? parseInt(searchParams.get("state") as string) : -1;
-
-  const [form, setForm] = useState({
-    currentSelectedState: initialState,
-    filteredJobs: data?.jobs || [],
+  const [posting, setPosting] = useState<JobPosting | null>(null);
+  const [rating, setRating] = useState<number>(0);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const { handleScroll, fetchPaginatedData } = usePagination({
+    fetchFunction: fetchJobsFromPostingPaginated,
+    loadingFunction: setLoading,
+    setDataFunction: setJobs,
   });
 
   const [search, setSearch] = useState<string>(initialSearch);
+  const [selectedState, setSelectedState] = useState(initialState);
 
   useEffect(() => {
-    setForm(prev => ({
-      ...prev,
-      filteredJobs: filterJobsByState(prev.currentSelectedState),
-    }));
-  }, [filterJobsByState, isLoading]);
-
-  useEffect(() => {
-    if (search === "") {
-      setForm(prev => ({
-        ...prev,
-        filteredJobs: filterJobsByState(prev.currentSelectedState),
-      }));
-    } else {
-      const filtered = (data?.jobs || []).filter(
-        job =>
-          job.title?.toLowerCase().includes(search.toLowerCase()) ||
-          job.description?.toLowerCase().includes(search.toLowerCase()),
-      );
-      setForm(prev => ({
-        ...prev,
-        filteredJobs: filtered,
-      }));
+    if (!postingId) {
+      return;
     }
-  }, [search, data, filterJobsByState]);
 
-  const ratedJobs = data?.jobs ? data.jobs.filter(job => typeof job.rating === "number") : [];
-  const ratingAverage =
-    ratedJobs.length > 0 ? ratedJobs.reduce((acc, job) => acc + (job.rating as number), 0) / ratedJobs.length : 0;
+    fetchPaginatedData(false, `${selectedState}`, postingId, search, selectedState);
+  }, [postingId, search, selectedState, fetchPaginatedData]);
 
-  const postWithRatings = {
-    ...data?.posting,
-    rating: ratingAverage,
-  };
+  useEffect(() => {
+    if (!postingId) {
+      return;
+    }
+
+    fetchJobPostingById(postingId).then(result => setPosting(result));
+    fetchJobPostingAverageRating(postingId).then(avg => setRating(avg));
+    fetchPaginatedData(true, `${selectedState}`, postingId, search, selectedState);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postingId, fetchPaginatedData]);
 
   return (
-    <div className="px-4 md:px-6 lg:px-8">
-      {isLoading ? (
-        <div className="flex items-center justify-center w-full h-64">
-          <Spinner />
-        </div>
-      ) : (
+    <div
+      className="w-full h-full flex flex-col overflow-auto"
+      onScroll={e => handleScroll(e, `${selectedState}`, postingId, search, selectedState)}
+    >
+      <div className="px-4 md:px-6 lg:px-8">
         <div className="mt-8 mb-8">
-          <InfoHeader data={postWithRatings as JobPosting} />
+          <Skeleton active={loading && !posting} variant="rounded" width={"100%"}>
+            <InfoHeader data={{ ...posting, rating: rating } as JobPosting} />
+          </Skeleton>
           <div className="mb-8 mt-8">
             <h1 className="text-xl font-bold text-content-primary mb-4 mt-6">Manage Jobs for this posting</h1>
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-6">
@@ -118,29 +84,28 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
                 id={"Job state"}
                 label={"Filter by Job State"}
                 onChange={(state: number) => {
-                  setForm(prev => ({
-                    ...prev,
-                    currentSelectedState: state,
-                    filteredJobs: filterJobsByState(state),
-                  }));
+                  setSelectedState(state);
                 }}
-                value={form.currentSelectedState}
+                value={selectedState}
                 options={jobStatesWithAll}
+                style={{ marginTop: 8 }}
               />
             </div>
           </div>
-          <div className="w-full">
-            {form.filteredJobs && form.filteredJobs.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {form.filteredJobs.map(job => (
-                  <JobCard
-                    key={`${job.jobId}-${job.postingId}`}
-                    job={job}
-                    reload={reload}
-                    highlight={initialItemId === job.jobId}
-                  />
-                ))}
-              </div>
+          <div className="w-full h-full">
+            {jobs && jobs.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {jobs.map(job => (
+                    <JobCard key={`${job.jobId}-${job.postingId}`} job={job} highlight={initialItemId === job.jobId} />
+                  ))}
+                </div>
+                {loading && (
+                  <div className="flex items-center justify-center w-full h-64">
+                    <Spinner />
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-12">
                 <p className="text-content-secondary text-lg">No jobs found.</p>
@@ -148,8 +113,9 @@ export default function MyJobsListing({ postingId }: { postingId: string }) {
               </div>
             )}
           </div>
+          <div className="h-6" />
         </div>
-      )}
+      </div>
     </div>
   );
 }

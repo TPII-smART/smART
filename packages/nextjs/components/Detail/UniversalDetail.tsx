@@ -15,8 +15,9 @@ import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon 
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import PreviewModal from "~~/components/Modal/PreviewModal/previewModal";
 import RatingDisplay from "~~/components/RatingDisplay";
-import UploadFileForm from "~~/components/UploadFileForm/UploadFileForm";
+import UploadDeliverableForm from "~~/components/UploadFileForm/UploadFileForm";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
@@ -31,18 +32,21 @@ export default function UniversalDetail({
   loading,
   error,
   reload,
-  isUploadModalOpen,
-  onCloseUploadModal,
   isDeliverableModalOpen,
   onCloseDeliverableModal,
   isRatingModalOpen,
   onCloseRatingModal,
   isMining,
   isDeliverableLoading,
-  handleConfirmCompletion,
-  handleRejectJob,
   handleRateJob,
   initiateConflictResolution,
+  handleUploadDeliverable,
+  handleClientConfirmCompletion,
+  handleRejectJob,
+  isUploadModalOpen,
+  onCloseUploadModal,
+  isPreviewModalOpen,
+  onClosePreviewModal,
 }: UniversalDetailProps) {
   const { address: userAddress } = useAccount();
 
@@ -173,6 +177,10 @@ export default function UniversalDetail({
   const isLink = deliverables?.[deliverables?.length - 1]?.isLink;
   const submissionComment = deliverables?.[deliverables?.length - 1]?.submissionComment;
   const clientResponse = deliverables?.[deliverables?.length - 1]?.clientResponse;
+
+  const reviewModalDescription = isClient
+    ? "You are about to review the deliverable submitted by the freelancer. Please ensure it meets the job requirements."
+    : "You are about to review your last deliverable submmitted. Please ensure it meets the job requirements.";
 
   if (error || !data) {
     return (
@@ -459,27 +467,36 @@ export default function UniversalDetail({
       <div className="h-8 mb-8" />
 
       {/* Confirm Modal */}
-      <UploadFileForm
-        onSubmit={handleConfirmCompletion}
+      <UploadDeliverableForm
+        onSubmit={handleUploadDeliverable}
         loading={isMining && isDeliverableLoading}
         isOpen={isUploadModalOpen}
         onClose={onCloseUploadModal}
-        modalTitle="Submit Deliverable"
-        modalDescription={`You are about to submit your deliverable .\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+        modalTitle="Upload Deliverable"
+        modalDescription={`You are about to upload your deliverable.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+      />
+
+      <PreviewModal
+        isOpen={isPreviewModalOpen}
+        onClose={onClosePreviewModal}
+        modalTitle="Preview of deliverable"
+        modalDescription={reviewModalDescription}
+        resource={resource || ""}
+        isLink={isLink || false}
+        comment={isClient ? submissionComment || "" : clientResponse || ""}
+        isClient={isClient}
       />
 
       <DeliverableReviewModal
         isOpen={isDeliverableModalOpen}
-        onApprove={handleConfirmCompletion}
-        onReject={reason => handleRejectJob(reason)}
         onClose={onCloseDeliverableModal}
-        modalTitle="Deliverable Review"
-        modalDescription="Please review the deliverable and provide your feedback."
+        onApprove={handleClientConfirmCompletion}
+        onReject={handleRejectJob}
         resource={resource || ""}
         isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
-        canUploadFile={isFreelancer && data.isRejected}
         loading={isMining && isDeliverableLoading}
+        canUploadFile={isFreelancer && !isClient && data.clientRejected}
       />
 
       {/* Rating modal for client */}

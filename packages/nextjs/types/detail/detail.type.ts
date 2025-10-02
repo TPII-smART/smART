@@ -18,6 +18,7 @@ export interface DetailData {
   rating?: number;
   freelancerDelivered: boolean;
   clientReceived: boolean;
+  clientRejected: boolean;
   isRejected: boolean;
   createdAt?: string;
   acceptedAt?: string;

@@ -96,6 +96,39 @@ export const getMyJobPostings = gql`
   }
 `;
 
+export const getMyJobPostingsPaginated = gql`
+  query GetMyJobPostingsPaginated($userAddress: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    jobPostings(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { freelancer: $userAddress }
+      orderBy: "createdAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        postingId
+        freelancer
+        basePayment
+        title
+        description
+        category
+        bannerImageHash
+        minimumNoticeTime
+        averageWorkDuration
+        createdAt
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
 export const getRatingsByPostingIds = gql`
   query GetRatingsByPostingIds($postingIds: [BigInt!]!) {
     jobs(where: { postingId_in: $postingIds }) {
@@ -148,6 +181,69 @@ export const getJobsFromPosting = gql`
         clientCancelled
         freelancerCancelled
         disputeQuestionId
+      }
+    }
+  }
+`;
+
+export const getJobsFromPostingPaginated = gql`
+  query GetJobsFromPostingPaginated(
+    $postingId: BigInt!
+    $limit: Int!
+    $startCursor: String
+    $endCursor: String
+    $search: String
+    $state: Int
+  ) {
+    jobs(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { postingId: $postingId, state: $state, title_contains: $search }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        rating
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        rejectedAt
+        clientReceived
+        freelancerDelivered
+        clientRejected
+        clientCancelled
+        freelancerCancelled
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
+    }
+  }
+`;
+
+export const getJobPostingRatings = gql`
+  query GetJobPostingRatings($postingId: BigInt!) {
+    jobs(where: { postingId: $postingId, rating_gt: 0 }) {
+      items {
+        rating
       }
     }
   }
@@ -227,6 +323,51 @@ export const getHires = gql`
         freelancerCancelled
         disputeQuestionId
       }
+    }
+  }
+`;
+
+export const getHiresPaginated = gql`
+  query GetHiresPaginated($client: String!, $limit: Int!, $startCursor: String, $endCursor: String) {
+    jobs(
+      limit: $limit
+      after: $endCursor
+      before: $startCursor
+      where: { client: $client }
+      orderBy: "acceptedAt"
+      orderDirection: "desc"
+    ) {
+      items {
+        jobId
+        postingId
+        client
+        freelancer
+        payment
+        title
+        description
+        category
+        bannerImageHash
+        jobDuration
+        deadline
+        state
+        createdAt
+        acceptedAt
+        finishedAt
+        canceledAt
+        deliveredAt
+        emitBy
+        clientReceived
+        freelancerDelivered
+        clientCancelled
+        freelancerCancelled
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        startCursor
+        hasPreviousPage
+      }
+      totalCount
     }
   }
 `;
@@ -347,6 +488,7 @@ export const getJob = gql`
       clientReceived
       freelancerDelivered
       disputeQuestionId
+      freelancerUploaded
       rating
       lastTransactionHash
     }

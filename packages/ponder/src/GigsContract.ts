@@ -31,6 +31,7 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		freelancerDelivered: false,
 		clientCancelled: false,
 		freelancerCancelled: false,
+		freelancerUploaded: false,
 		acceptedApplicationId: null,
 		isLink: false,
 		gigBannerImageHash: event.args.gigBannerImageHash,
@@ -307,7 +308,7 @@ ponder.on("GigsContract:GigCancelled", async ({ event, context }) => {
 	}
 });
 
-ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
+ponder.on("GigsContract:DeliverableUploaded", async ({ event, context }) => {
 	await context.db.insert(gigDeliverable).values({
 		gigId: event.args.gigId,
 		resource: event.args.resource,
@@ -316,15 +317,25 @@ ponder.on("GigsContract:FileUploaded", async ({ event, context }) => {
 		uploadedAt: BigInt(event.block.timestamp),
 		lastTransactionHash: event.transaction.hash,
 	});
+
+	await context.db
+		.update(gig, {
+			gigId: event.args.gigId,
+		})
+		.set({
+			freelancerUploaded: event.args.freelancerUploaded,
+			lastTransactionHash: event.transaction.hash,
+			emitBy: event.transaction.from,
+		});
 });
 
-// This event is triggered when a a client add a comment to the uploaded file.
+// This event is triggered when a a client add a comment to the uploaded deliverable.
 ponder.on("GigsContract:CommentAdded", async ({ event, context }) => {
-	// Updates the gig to mark it as file uploaded
+	// Updates the gig to mark it as deliverable uploaded
 	await context.db
 		.update(gigDeliverable, {
 			gigId: event.args.gigId,
-			uploadedAt: BigInt(event.args.fileUploadedAt),
+			uploadedAt: BigInt(event.args.deliverableUploadedAt),
 		})
 		.set({
 			clientResponse: event.args.response,
@@ -342,6 +353,7 @@ ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 			freelancerDelivered: event.args.freelancerDelivered,
 			clientRejected: event.args.clientRejected,
 			rejectedAt: event.args.timestamp,
+			freelancerUploaded: event.args.freelancerUploaded,
 			emitBy: event.transaction.from,
 			lastTransactionHash: event.transaction.hash,
 		});

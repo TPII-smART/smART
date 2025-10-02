@@ -133,9 +133,9 @@ ponder.on(
 );
 
 ponder.on(
-	"JobsContract:FileUploaded",
+	"JobsContract:DeliverableUploaded",
 	async ({ event, context }) => {
-		// Updates the job to mark it as file uploaded
+		// Updates the job to mark it as deliverable uploaded
 		await context.db
 			.insert(jobDeliverable)
 			.values({
@@ -147,19 +147,29 @@ ponder.on(
 				uploadedAt: BigInt(event.block.timestamp),
 				lastTransactionHash: event.transaction.hash,
 			});
+
+		await context.db
+			.update(job, {
+				jobId: event.args.jobId,
+				postingId: event.args.postingId,
+			})
+			.set({
+				freelancerUploaded: true,
+				lastTransactionHash: event.transaction.hash,
+			});
 	}
 );
 
-// This event is triggered when a a client add a comment to the uploaded file.
+// This event is triggered when a a client add a comment to the uploaded deliverable.
 ponder.on(
 	"JobsContract:CommentAdded",
 	async ({ event, context }) => {
-		// Updates the job to mark it as file uploaded
+		// Updates the job to mark it as deliverable uploaded
 		await context.db
 			.update(jobDeliverable, {
 				jobId: event.args.jobId,
 				postingId: event.args.postingId,
-				uploadedAt: BigInt(event.args.fileUploadedAt),
+				uploadedAt: BigInt(event.args.deliverableUploadedAt),
 			})
 			.set({
 				clientResponse: event.args.response,
@@ -315,8 +325,6 @@ ponder.on("JobsContract:JobCancelled", async ({ event, context }) => {
 ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 	// Updates the job to mark it as cancelled
 
-	console.log("Rejecting job from:", event.transaction.from);
-	console.log("Event args:", event.args);
 
 	await context.db
 		.update(job, {
@@ -329,6 +337,7 @@ ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 			freelancerDelivered: event.args.freelancerDelivered,
 			clientRejected: event.args.clientRejected,
 			emitBy: event.transaction.from,
+			freelancerUploaded: event.args.freelancerUploaded,
 			lastTransactionHash: event.transaction.hash,
 		});
 

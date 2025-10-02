@@ -20,7 +20,7 @@ import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
 
 const validationSchema = Yup.object().shape({
-  reviewComment: Yup.string().max(512, "Comment must be at most 512 characters"),
+  reviewComment: Yup.string().max(512, "Comment must be at most 512 characters").required("Comment is required"),
 });
 
 interface DeliverableReviewModalProps {
@@ -29,7 +29,7 @@ interface DeliverableReviewModalProps {
   modalDescription?: string;
   isOpen?: boolean;
   onClose?: () => void;
-  onApprove?: (data: FileFormData, comment: string) => void;
+  onApprove?: (data: string) => void;
   onReject?: (comment: string) => void;
   comment: string;
   resource: string;
@@ -62,7 +62,7 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
   const handleSubmit = async (values: { reviewComment: string; fileValues: FileFormData }) => {
     try {
       if (submitAction === "approve" && onApprove) {
-        await onApprove(values.fileValues, values.reviewComment);
+        await onApprove(values.reviewComment);
       } else if (submitAction === "reject" && onReject) {
         await onReject(values.reviewComment);
       }
@@ -167,8 +167,6 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                 <FileUploadBox
                   onUploadSuccess={(val: File) => formik.setFieldValue("fileValues.file", val)}
                   acceptedFileType={"Image"}
-                  //onUploadError={Render error message}
-                  //onUploadError={error => formik.setFieldValue("file", undefined)}
                 />
               ) : (
                 <InputBase
@@ -233,7 +231,7 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                   onClick={() => setSubmitAction("approve")}
                 >
                   <PaperAirplaneIcon className="w-4 h-4 inline-block mr-1" />
-                  Submit Deliverable
+                  Upload
                 </Button>
               ) : (
                 <>

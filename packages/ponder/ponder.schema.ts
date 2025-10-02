@@ -45,6 +45,7 @@ export const job = onchainTable(
 		freelancerCancelled: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 		disputeQuestionId: t.varchar({ length: 256 }), // Question ID from Reality.eth if a dispute was created
+		freelancerUploaded: t.boolean().notNull().default(false),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({
@@ -77,6 +78,7 @@ export const gig = onchainTable("gig", (t) => ({
 	freelancerDelivered: t.boolean().notNull(),
 	clientCancelled: t.boolean().notNull(),
 	freelancerCancelled: t.boolean().notNull(),
+	freelancerUploaded: t.boolean().notNull(),
 	clientRejected: t.boolean().notNull(),
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),

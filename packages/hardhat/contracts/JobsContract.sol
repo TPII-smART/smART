@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./common/FileInfo.sol";
+import "./common/DeliverableInfo.sol";
 
 interface IRealityETH {
     function askQuestion(
@@ -71,8 +71,9 @@ contract JobsContract {
         bool clientRejected; // Whether the client has rejected the job results
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
-        FileInfo[] fileInfo; // Store the file related to the job
         uint256 disputeQuestionId; // Question ID for dispute resolution
+        bool freelancerUploaded; // Whether the freelancer has uploaded a deliverable
+        DeliverableInfo[] deliverableInfo; // Store the deliverable related to the job
     }
 
     // Struct that reduces the amount of parameters needed when submitting a Job
@@ -172,13 +173,14 @@ contract JobsContract {
         uint256 timestamp
     );
 
-    event FileUploaded(
+    event DeliverableUploaded(
         uint256 indexed postingId,
         uint256 indexed jobId,
         address indexed freelancer,
         string resource,
         string submissionComment,
         bool isLink,
+        bool freelancerUpload,
         uint256 timestamp
     );
 
@@ -187,7 +189,7 @@ contract JobsContract {
         uint256 indexed jobId,
         address indexed client,
         string response,
-        uint256 fileUploadedAt,
+        uint256 deliverableUploadedAt,
         uint256 timestamp
     );
 
@@ -197,6 +199,7 @@ contract JobsContract {
         bool freelancerDelivered,
         bool clientReceived,
         bool clientRejected,
+        bool freelancerUploaded,
         uint256 timestamp
     );
 
@@ -359,8 +362,9 @@ contract JobsContract {
             clientRejected: false,
             clientCancelled: false,
             freelancerCancelled: false,
-            fileInfo: new FileInfo[](0),
-            disputeQuestionId: 0 // No dispute initially
+            disputeQuestionId: 0, // No dispute initially
+            freelancerUploaded: false,
+            deliverableInfo: new DeliverableInfo[](0)
         });
 
         // Add job to the posting
@@ -402,32 +406,65 @@ contract JobsContract {
     }
 
     /**
-     * @dev Confirm job completion (both parties must confirm in order to complete the job)
+     * @dev Confirm client job completion (both parties must confirm in order to complete the job)
      * This function allows either the client or freelancer to confirm that the job has been completed.
      * If both parties confirm, the job is marked as finished and payment is released.
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
      */
-    function confirmCompletion(
+    function confirmClientCompletion(
+        uint256 _postingId,
+        uint256 _jobId,
+        string calldata _comment
+    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
+        Job storage job = postedJobs[_postingId].jobs[_jobId];
+
+        require(job.state == JobState.Ongoing, "Job is not ongoing");
+        require(job.deliverableInfo.length > 0, "No deliverable uploaded yet");
+        require(job.freelancerUploaded, "Freelancer has not uploaded deliverables");
+
+        DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
+
+        require(job.client != address(0), "Job has no assigned client");
+        require(job.freelancer != address(0), "Job has no assigned freelancer");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+
+        require(!job.clientReceived, "Client already confirmed job reception");
+        job.clientReceived = true;
+        deliverableInfo.clientResponse = _comment;
+
+        emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
+
+        // If both parties have confirmed, complete the job
+        if (job.clientReceived && job.freelancerDelivered) {
+            _completeJob(_postingId, _jobId);
+        }
+    }
+
+    /**
+     * @dev Confirm client job completion (both parties must confirm in order to complete the job)
+     * This function allows either the client or freelancer to confirm that the job has been completed.
+     * If both parties confirm, the job is marked as finished and payment is released.
+     * @param _postingId The ID of the job posting this job belongs to
+     * @param _jobId The job ID to confirm completion
+     */
+    function confirmFreelancerCompletion(
         uint256 _postingId,
         uint256 _jobId
-    ) external onlyJobParties(_postingId, _jobId) jobExists(_postingId, _jobId) {
+    ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
 
-        // Set confirmation based on who is calling
-        if (msg.sender == job.client) {
-            require(!job.clientReceived, "Client already confirmed job reception");
-            job.clientReceived = true;
-            emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
-        } else {
-            require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
-            job.freelancerDelivered = true;
-            emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
-        }
+        require(job.freelancerUploaded, "Freelancer has not uploaded deliverables");
+        require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
+
+        job.freelancerDelivered = true;
+        emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
 
         // If both parties have confirmed, complete the job
         if (job.clientReceived && job.freelancerDelivered) {
@@ -538,22 +575,22 @@ contract JobsContract {
         return postedJobsCounter;
     }
 
-    function isFileUploaded(
+    function isDeliverableUploaded(
         uint256 postingId,
         uint256 jobId,
         string memory comment,
         string memory ipfsHash
     ) external view returns (bool) {
         Job storage job = postedJobs[postingId].jobs[jobId];
-        if (job.fileInfo.length == 0) {
+        if (job.deliverableInfo.length == 0) {
             return false;
         }
-        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
+        DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
 
         return
-            bytes(fileInfo.resource).length > 0 &&
-            keccak256(bytes(fileInfo.submissionComment)) == keccak256(bytes(comment)) &&
-            keccak256(bytes(fileInfo.resource)) == keccak256(bytes(ipfsHash));
+            bytes(deliverableInfo.resource).length > 0 &&
+            keccak256(bytes(deliverableInfo.submissionComment)) == keccak256(bytes(comment)) &&
+            keccak256(bytes(deliverableInfo.resource)) == keccak256(bytes(ipfsHash));
     }
 
     // Function to receive Ether
@@ -562,81 +599,66 @@ contract JobsContract {
     }
 
     /**
-     * @dev Allows the freelancer to upload a file.
+     * @dev Allows the freelancer to upload a deliverable.
      * @param _postingId  JobPosting ID.
      * @param _jobId Job ID.
-     * @param _fileParams The content of the file (IPFS hash and comment).
+     * @param _deliverableParams The content of the deliverable (IPFS hash and comment).
      */
-    function uploadFile(
+    function uploadDeliverable(
         uint256 _postingId,
         uint256 _jobId,
-        FileParams memory _fileParams
+        DeliverableParams memory _deliverableParams
     ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "The job is not ongoing.");
 
-        require(bytes(_fileParams.resource).length > 0, "Resource cannot be empty.");
-        require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
-        require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
+        require(bytes(_deliverableParams.resource).length > 0, "Resource cannot be empty.");
+        require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
+        require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
-        FileInfo memory fileToUpload = FileInfo({
-            resource: _fileParams.resource,
-            submissionComment: _fileParams.submissionComment,
+        DeliverableInfo memory deliverableToUpload = DeliverableInfo({
+            resource: _deliverableParams.resource,
+            submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
             clientResponse: "",
-            isLink: _fileParams.isLink
+            isLink: _deliverableParams.isLink
         });
 
-        job.fileInfo.push(fileToUpload);
+        job.freelancerUploaded = true;
+        job.deliverableInfo.push(deliverableToUpload);
 
-        emit FileUploaded(
+        emit DeliverableUploaded(
             _postingId,
             _jobId,
             msg.sender,
-            fileToUpload.resource,
-            fileToUpload.submissionComment,
-            fileToUpload.isLink,
-            fileToUpload.uploadedAt
+            deliverableToUpload.resource,
+            deliverableToUpload.submissionComment,
+            deliverableToUpload.isLink,
+            job.freelancerUploaded,
+            deliverableToUpload.uploadedAt
         );
     }
 
-    /**
-     * @dev Allows the client to add a response to the last uploaded file.
-     * @param _postingId JobPosting ID.
-     * @param _jobId Job ID.
-     * @param _comment Comment text.
-     */
-    function addCommentToJob(
+    function rejectJob(
         uint256 _postingId,
         uint256 _jobId,
         string calldata _comment
     ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
-        FileInfo memory fileInfo = job.fileInfo[job.fileInfo.length - 1];
-
-        require(job.state == JobState.Ongoing, "The job is not ongoing.");
-        require(bytes(_comment).length > 0, "Comment cannot be empty.");
-        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
-
-        fileInfo.clientResponse = _comment;
-
-        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
-    }
-
-    function rejectJob(
-        uint256 _postingId,
-        uint256 _jobId
-    ) external onlyClient(_postingId, _jobId) jobExists(_postingId, _jobId) {
-        Job storage job = postedJobs[_postingId].jobs[_jobId];
+        DeliverableInfo memory deliverableInfo = job.deliverableInfo[job.deliverableInfo.length - 1];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
 
         job.freelancerDelivered = false;
         job.clientReceived = false;
         job.clientRejected = true;
+        job.freelancerUploaded = false;
+        deliverableInfo.clientResponse = _comment;
         job.rejectedAt = block.timestamp;
 
         emit JobRejected(
@@ -645,8 +667,10 @@ contract JobsContract {
             job.freelancerDelivered,
             job.clientReceived,
             job.clientRejected,
+            job.freelancerUploaded,
             job.rejectedAt
         );
+        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
     }
 
     // Convert uints to strings properly
@@ -711,16 +735,16 @@ contract JobsContract {
         );
 
         string memory filesString = "";
-        if (job.fileInfo.length == 0) {
+        if (job.deliverableInfo.length == 0) {
             filesString = "No files attached";
         } else {
-            for (uint256 i = 0; i < job.fileInfo.length; i++) {
+            for (uint256 i = 0; i < job.deliverableInfo.length; i++) {
                 filesString = string(abi.encodePacked(
                     filesString,
-                    job.fileInfo[i].isLink ? "Link\u003A " : "IPFS\u003A ",
-                    job.fileInfo[i].resource                 
+                    job.deliverableInfo[i].isLink ? "Link\u003A " : "IPFS\u003A ",
+                    job.deliverableInfo[i].resource
                 ));
-                if (i < job.fileInfo.length - 1) {
+                if (i < job.deliverableInfo.length - 1) {
                     filesString = string(abi.encodePacked(filesString, " \u007C "));
                 }
             }
