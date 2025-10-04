@@ -1,6 +1,6 @@
 import { endpoint } from "../config";
 import { fetchMyGigRatings } from "./gig/gig.service";
-import { fetchMyJobRatings } from "./job/job.service";
+import { fetchMyHiredTalentRatings } from "./hiredTalent/hiredTalent.service";
 import request, { gql } from "graphql-request";
 import { UserProfile, newRatingData } from "~~/types/user-profile.type";
 
@@ -30,8 +30,8 @@ export const fetchUserProfile = async (address: string) => {
 };
 
 export const fetchUserRatingData = async (address: string) => {
-  const jobRatings = await fetchMyJobRatings(address);
+  const hiredTalentRatings = await fetchMyHiredTalentRatings(address);
   const gigRatings = await fetchMyGigRatings(address);
 
-  return newRatingData(jobRatings.jobs, gigRatings.gigs);
+  return newRatingData(hiredTalentRatings.hiredTalents, gigRatings.gigs);
 };

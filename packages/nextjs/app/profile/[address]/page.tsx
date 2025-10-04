@@ -12,27 +12,27 @@ import { Tab, TabProps } from "~~/components/Tabs/types";
 import { fetchUserProfile, fetchUserRatingData } from "~~/services/graphql/fetchers/profile.service";
 import { RatingData, UserProfile, newUserProfile } from "~~/types/user-profile.type";
 
-const MyJobPostingsListing = lazy(() => import("@/components/MyJobPostingsListing"));
+const MyTalentsListing = lazy(() => import("@/components/MyTalentsListing"));
 const MyGigsListing = lazy(() => import("@/components/MyGigsListing"));
 const ApplicationsListing = lazy(() => import("@/components/ApplicationsListing"));
 const HiresListing = lazy(() => import("@/components/HiresListing"));
 
 const tabsOwn: TabProps[] = [
-  { id: "job-postings", label: "Job Postings" },
+  { id: "talents", label: "Talents" },
   { id: "hires", label: "Hires" },
   { id: "gigs", label: "Gigs" },
   { id: "applications", label: "Applications" },
 ];
 
 const tabs: TabProps[] = [
-  { id: "job-postings", label: "Job Postings" },
+  { id: "talents", label: "Talents" },
   { id: "gigs", label: "Gigs" },
 ];
 
 const getPage = (tab: Tab, userAddress: string): React.ReactNode => {
   switch (tab.id) {
     case tabs[0].id:
-      return <MyJobPostingsListing userAddress={userAddress} />;
+      return <MyTalentsListing userAddress={userAddress} />;
     case tabs[1].id:
       return <MyGigsListing userAddress={userAddress} />;
   }
@@ -41,7 +41,7 @@ const getPage = (tab: Tab, userAddress: string): React.ReactNode => {
 const getPageOwn = (tab: Tab, userAddress: string): React.ReactNode => {
   switch (tab.id) {
     case tabsOwn[0].id:
-      return <MyJobPostingsListing userAddress={userAddress} />;
+      return <MyTalentsListing userAddress={userAddress} />;
     case tabsOwn[1].id:
       return <HiresListing userAddress={userAddress} />;
     case tabsOwn[2].id:
@@ -52,7 +52,7 @@ const getPageOwn = (tab: Tab, userAddress: string): React.ReactNode => {
 };
 
 const ratingsPlaceholder = {
-  jobRatings: {
+  hiredTalentRatings: {
     1: 5,
     2: 4,
     3: 3,

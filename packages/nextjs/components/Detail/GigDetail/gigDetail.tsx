@@ -16,6 +16,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { Badge } from "~~/components/Badge";
 import Button from "~~/components/Button/Button";
+import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
@@ -495,7 +496,7 @@ export default function GigDetail({
     description: data?.gig.description || "",
     client: data?.gig.client,
     freelancer: data?.gig.acceptedFreelancer,
-    category: data?.gig.category || "",
+    category: hiredTalentCategories.find(category => category.id === data?.gig.category)?.label ?? "Unknown",
     payment: data?.gig.finalPayment || "",
     duration: data?.gig.finalDurationInHours || "",
     deadline: data?.gig.deadline || "",

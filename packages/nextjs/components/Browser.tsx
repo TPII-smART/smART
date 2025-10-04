@@ -9,15 +9,15 @@ import { InputBase } from "@/components/scaffold-eth";
 import { Chip } from "@mui/material";
 import { useAccount } from "wagmi";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
-import { jobCategories } from "~~/components/Card/JobCategory/jobCategory.data";
-import { JobPostingCard } from "~~/components/Card/JobPostingCard/JobPostingCard";
+import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
+import { TalentCard } from "~~/components/Card/TalentCard/TalentCard";
 import { usePagination } from "~~/hooks/use-pagination";
 import { fetchGigsPaginated, fetchMaxGigPayment } from "~~/services/graphql/fetchers/gig/gig.service";
-import { fetchJobPostingsPaginated, fetchMaxJobPayment } from "~~/services/graphql/fetchers/job";
+import { fetchMaxHiredTalentPayment, fetchTalentsPaginated } from "~~/services/graphql/fetchers/hiredTalent";
 import { Gig } from "~~/types/gig/gig.types";
-import { JobPosting } from "~~/types/job";
+import { Talent } from "~~/types/hiredTalent";
 
-const optionsCategories = [{ id: "all", label: "All" }, ...jobCategories];
+const optionsCategories = [{ id: "all", label: "All" }, ...hiredTalentCategories];
 
 const optionsSorts = [
   { id: "recent", label: "Most Recent", key: "createdAt", order: "desc" },
@@ -27,7 +27,7 @@ const optionsSorts = [
 ];
 
 interface BrowsePageProps {
-  type: "job" | "gig";
+  type: "hiredTalent" | "gig";
 }
 
 export default function BrowsePage({ type }: BrowsePageProps) {
@@ -40,11 +40,11 @@ export default function BrowsePage({ type }: BrowsePageProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const [data, setData] = useState<(JobPosting | Gig)[]>([]);
+  const [data, setData] = useState<(Talent | Gig)[]>([]);
 
-  const fetchFunction = useMemo(() => (type === "job" ? fetchJobPostingsPaginated : fetchGigsPaginated), [type]);
+  const fetchFunction = useMemo(() => (type === "hiredTalent" ? fetchTalentsPaginated : fetchGigsPaginated), [type]);
 
-  const { handleScroll, fetchPaginatedData, paginationPushFront } = usePagination<JobPosting | Gig>({
+  const { handleScroll, fetchPaginatedData, paginationPushFront } = usePagination<Talent | Gig>({
     fetchFunction,
     loadingFunction: setLoading,
     setDataFunction: setData,
@@ -85,7 +85,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
     setSearch("");
     setCategories(new Set(["all"]));
     setSortBy("recent");
-    const maxPayment = await (type === "job" ? fetchMaxJobPayment() : fetchMaxGigPayment());
+    const maxPayment = await (type === "hiredTalent" ? fetchMaxHiredTalentPayment() : fetchMaxGigPayment());
     setMaxPaymentETH(maxPayment);
     setPriceRange([0, maxPayment]);
     loadingMax.current = false;
@@ -104,7 +104,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
       <div className="w-64" style={{ position: "fixed" }}>
         <InputBase
           variant="outlined"
-          placeholder={`Search ${type === "job" ? "jobs" : "gigs"}...`}
+          placeholder={`Search ${type === "hiredTalent" ? "talents" : "gigs"}...`}
           value={search}
           onChange={setSearch}
         />
@@ -195,14 +195,14 @@ export default function BrowsePage({ type }: BrowsePageProps) {
         >
           {Filters}
 
-          {/* Jobs Listing */}
+          {/* HiredTalents Listing */}
           <div className="flex-1 flex flex-col space-y-6 pr-4 mb-10 pt-[0.85rem] pb-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {data
-                .filter(item => (type === "job" ? (item as JobPosting).postingId : (item as Gig).gigId))
+                .filter(item => (type === "hiredTalent" ? (item as Talent).talentId : (item as Gig).gigId))
                 .map(item =>
-                  type === "job" ? (
-                    <JobPostingCard jobPosting={item as JobPosting} key={(item as JobPosting).postingId} />
+                  type === "hiredTalent" ? (
+                    <TalentCard talent={item as Talent} key={(item as Talent).talentId} />
                   ) : (
                     <GigCard gig={item as Gig} key={(item as Gig).gigId} />
                   ),
@@ -219,7 +219,7 @@ export default function BrowsePage({ type }: BrowsePageProps) {
       </main>
       <WorkPostingForm
         type={type}
-        refresh={(created: JobPosting | Gig) => {
+        refresh={(created: Talent | Gig) => {
           fetchMaxPaymentETH();
           paginationPushFront(type, created);
         }}

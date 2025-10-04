@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Spinner from "@/components//Spinner/Spinner";
-import JobCard from "@/components/Card/JobCard/JobCard";
+import HiredTalentCard from "@/components/Card/HiredTalentCard/HiredTalentCard";
 import { usePagination } from "~~/hooks/use-pagination";
-import { fetchHiresPaginated } from "~~/services/graphql/fetchers/job/job.service";
-import { Job } from "~~/types/job/job.types";
+import { fetchHiresPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
+import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 
 export default function HiresListing({ userAddress }: { userAddress: string }) {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<Job[]>([]);
+  const [data, setData] = useState<HiredTalent[]>([]);
   const { handleScroll, fetchPaginatedData } = usePagination({
     fetchFunction: fetchHiresPaginated,
     loadingFunction: setLoading,
@@ -33,8 +33,11 @@ export default function HiresListing({ userAddress }: { userAddress: string }) {
         {data && data.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {data.map(job => (
-                <JobCard key={`${job.jobId}-${job.postingId}`} job={job} />
+              {data.map(hiredTalent => (
+                <HiredTalentCard
+                  key={`${hiredTalent.hiredTalentId}-${hiredTalent.talentId}`}
+                  hiredTalent={hiredTalent}
+                />
               ))}
             </div>
             {loading && (

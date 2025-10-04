@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { Badge } from "../Badge";
-import { jobCategories } from "./JobCategory/jobCategory.data";
+import { hiredTalentCategories } from "./HiredTalentCategory/hiredTalentCategory.data";
 import { UniversalCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
@@ -54,7 +54,7 @@ const CategoryDisplay = ({ category, className }: { category?: string; className
 
   return (
     <div className={cn("w-fit", className)}>
-      <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
+      <Badge variant="secondary">{hiredTalentCategories.find(c => c.id === category)?.label ?? category}</Badge>
     </div>
   );
 };

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
 import { castHoursToDurationString, isImageUrl } from "@/lib/utils";
-import { GigState, JobState } from "@se-2/common";
+import { GigState, HiredTalentState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -282,7 +282,7 @@ export default function UniversalDetail({
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardHeader className="p-6">
                 <CardTitle className="text-2xl text-[var(--color-primary-content)]">
-                  {data?.type === "job" ? "Job" : "Gig"} Description
+                  {data?.type === "hiredTalent" ? "Talent" : "Gig"} Description
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
@@ -330,7 +330,7 @@ export default function UniversalDetail({
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Deadline</p>
                     <p className="text-[var(--color-skeleton)] text-base">
-                      {data.state === JobState.WaitingForApproval
+                      {data.state === HiredTalentState.WaitingForApproval
                         ? "Deadline not yet defined"
                         : formatDate(String(data.deadline))}
                     </p>
@@ -384,7 +384,7 @@ export default function UniversalDetail({
 
         {/* Action Section - Split into two boxes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {data.state === GigState.Completed || data.state === JobState.Finished ? (
+          {data.state === GigState.Completed || data.state === HiredTalentState.Finished ? (
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -394,7 +394,7 @@ export default function UniversalDetail({
                         ratingData={{
                           averageRating: data.rating || 0,
                           totalRatings: 1,
-                          jobRatings: {},
+                          hiredTalentRatings: {},
                           gigRatings: {},
                         }}
                         interactive={false}
