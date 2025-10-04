@@ -1,9 +1,9 @@
 import { Gig } from "~~/types/gig";
-import { JobPosting } from "~~/types/job";
+import { Talent } from "~~/types/hiredTalent";
 
 export interface WorkPostingFormProps {
-  type: "job" | "gig";
-  refresh: (created: JobPosting | Gig) => void;
+  type: "hiredTalent" | "gig";
+  refresh: (created: Talent | Gig) => void;
 }
 
 export class WorkPostingFormData {
