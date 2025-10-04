@@ -162,9 +162,10 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
               helperText={
                 touched.proposedDurationInHours && errors.proposedDurationInHours ? errors.proposedDurationInHours : ""
               }
-              disableMultiplyBy1e18
             />
             <InputBase
+              multiline
+              minRows={4}
               placeholder="Proposal"
               value={values.proposalComment}
               onChange={val => setFieldValue("proposalComment", val)}

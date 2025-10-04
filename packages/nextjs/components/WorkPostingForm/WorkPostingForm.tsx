@@ -161,6 +161,8 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               helperText={touched.title && errors.title ? errors.title : undefined}
             />
             <InputBase
+              multiline
+              minRows={4}
               placeholder="Description"
               value={values.description}
               onChange={val => setFieldValue("description", val)}
