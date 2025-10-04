@@ -11,6 +11,7 @@ import { useAccount } from "wagmi";
 import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { castHoursToDurationString } from "~~/lib/utils";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
@@ -33,9 +34,11 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const handleApplyToGig = async (form: FormData) => {
     try {
+      showSpinner();
       const transactionHash = await writeContractAsync({
         functionName: "applyToGig",
         args: [
@@ -53,6 +56,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
       setShowApplyModal(false);
     } catch (err) {
       console.error("Create gig application failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 

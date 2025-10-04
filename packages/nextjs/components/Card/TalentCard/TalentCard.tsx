@@ -9,6 +9,7 @@ import { useAccount } from "wagmi";
 import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
 
@@ -30,9 +31,11 @@ export function TalentCard({ talent, className, reload, ...props }: TalentCardPr
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
     contractName: "HiredTalentsContract",
   });
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const handleCreateHiredTalent = async (form: TalentFormData) => {
     try {
+      showSpinner();
       if (!talent?.basePayment || !talent?.talentId) return;
       const transactionHash = await writeContractAsync({
         functionName: "createHiredTalent",
@@ -53,6 +56,8 @@ export function TalentCard({ talent, className, reload, ...props }: TalentCardPr
       setShowModal(false);
     } catch (err) {
       console.error("Create hiredTalent failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
