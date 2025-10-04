@@ -1,4 +1,4 @@
-export enum JobState {
+export enum HiredTalentState {
 	WaitingForApproval = 0,
 	Ongoing = 1,
 	Finished = 2,
