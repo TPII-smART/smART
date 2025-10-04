@@ -9,6 +9,7 @@ import { DurationInput, EtherInput, InputBase } from "../scaffold-eth";
 import { WorkPostingFormData, WorkPostingFormProps } from "./types";
 import * as yup from "yup";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
@@ -63,6 +64,7 @@ function getVariant(type: "hiredTalent" | "gig"): GigVariant | HiredTalentVarian
 
 const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   const [showModal, setShowModal] = useState(false);
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { contract, formMapper, schema, typeKeys } = useMemo(() => getVariant(type), [type]);
 
@@ -77,6 +79,7 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   };
 
   const handleSubmit = async (form: WorkPostingFormData) => {
+    showSpinner();
     form.bannerImageHash = await handleFileUpload(form.bannerImageFile);
 
     try {
@@ -90,6 +93,8 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
       setShowModal(false);
     } catch (err) {
       console.error("Failed to create hiredTalent:", err);
+    } finally {
+      hideSpinner();
     }
   };
 

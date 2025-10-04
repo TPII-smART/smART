@@ -17,6 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
 import { FileFormData } from "~~/components/UploadFileForm/types";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { fetchDeliverablesForHiredTalent } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
@@ -37,6 +38,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "HiredTalentsContract",
   });
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { data, isLoading, error, refetch } = useQuery<HiredTalent>({
     queryKey: ["hiredTalentDetail", hiredTalentId],
@@ -108,6 +110,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
   const handleAccept = async () => {
     try {
+      showSpinner();
       if (data?.state !== HiredTalentState.WaitingForApproval) return;
       if (!data?.payment || !data?.hiredTalentId) return;
       await writeContract({
@@ -117,11 +120,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       if (reload) await reload();
     } catch (err) {
       console.error("Accept hire failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleCancel = async () => {
     try {
+      showSpinner();
       if (!data?.payment || !data?.hiredTalentId) return;
       await writeContract({
         functionName: "cancelHiredTalent",
@@ -130,6 +136,8 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       if (reload) await reload();
     } catch (err) {
       console.error("Cancel hire failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
@@ -141,6 +149,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
   const handleUploadDeliverable = async (deliverableData: FileFormData) => {
     try {
+      showSpinner();
       let resource = "";
       const isLink = deliverableData.isLink;
 
@@ -164,11 +173,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       if (reload) await reload();
     } catch (err) {
       console.error("Upload file failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleRateHiredTalent = async (rating: number) => {
     try {
+      showSpinner();
       if (!hiredTalent.hiredTalentId) return;
       await writeContract({
         functionName: "rateHiredTalent",
@@ -178,11 +190,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       if (reload) await reload();
     } catch (err) {
       console.error("Rate hire failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleClientConfirmCompletion = async (clientResponse: string) => {
     try {
+      showSpinner();
       await writeContract({
         functionName: "confirmClientCompletion",
         args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), clientResponse],
@@ -192,11 +207,13 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       console.error("Confirm client hire completion failed:", err);
     } finally {
       setShowUploadModal(false);
+      hideSpinner();
     }
   };
 
   const handleFreelancerConfirmCompletion = async () => {
     try {
+      showSpinner();
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId)],
@@ -206,11 +223,13 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       console.error("Confirm freelancer hire completion failed:", err);
     } finally {
       setShowUploadModal(false);
+      hideSpinner();
     }
   };
 
   const handleRejectHiredTalent = async (clientResponse: string) => {
     try {
+      showSpinner();
       if (!hiredTalent.hiredTalentId) return;
       await writeContract({
         functionName: "rejectHiredTalent",
@@ -221,6 +240,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       console.error("Reject deliverable failed:", err);
     } finally {
       setShowDeliverableModal(false);
+      hideSpinner();
     }
   };
 
