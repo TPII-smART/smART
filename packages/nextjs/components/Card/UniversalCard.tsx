@@ -7,7 +7,7 @@ import { jobCategories } from "./JobCategory/jobCategory.data";
 import { UniversalCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
-import { cn } from "@/lib/utils";
+import { castHoursToDurationString, cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
 import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
@@ -24,12 +24,13 @@ const TimeDisplay = ({
 }) => {
   if (!time) return null;
 
+  const _time = castHoursToDurationString(+time);
   return (
     <div
       className={cn("flex items-center gap-1.5 text-sm text-muted-foreground relative cursor-help", className)}
-      title={timeLabel ? `${timeLabel}: ${time} hrs` : undefined}
+      title={timeLabel ? `${timeLabel}: ${_time}` : undefined}
     >
-      <span className="select-none pointer-events-none">{time} hrs</span>
+      <span className="select-none pointer-events-none">{_time}</span>
       <ClockIcon className="h-4 w-4" />
     </div>
   );
