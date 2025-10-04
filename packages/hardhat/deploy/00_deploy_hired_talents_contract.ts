@@ -2,10 +2,10 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
 import { Contract } from "ethers";
 
-const CONTRACT_NAME = "JobsContract";
+const CONTRACT_NAME = "HiredTalentsContract";
 
 /**
- * Deploys a contract named "JobsContract" using the deployer account and
+ * Deploys a contract named "HiredTalentsContract" using the deployer account and
  * constructor arguments set to the deployer address
  *
  * @param hre HardhatRuntimeEnvironment object.
@@ -40,7 +40,7 @@ const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvi
 };
 
 // Tags are useful if you have multiple deploy files and only want to run one of them.
-// e.g. yarn deploy --tags JobsContract
+// e.g. yarn deploy --tags HiredTalentsContract
 deployedContract.tags = [CONTRACT_NAME];
 
 export default deployedContract;
