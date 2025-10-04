@@ -29,6 +29,22 @@ export const fetchUserProfile = async (address: string) => {
   return res.userProfile;
 };
 
+export const getUserAddressByUsernameOrEmail = async (search: string): Promise<string[]> => {
+  const query = gql`
+    query GetUserAddressByUsernameOrEmail($search: String!) {
+      userProfiles(where: { OR: [{ username_contains: $search }, { email_contains: $search }] }) {
+        items {
+          address
+        }
+      }
+    }
+  `;
+
+  const variables = { search };
+  const res = await request<{ userProfiles: { items: { address: string }[] } }>(endpoint, query, variables);
+  return res.userProfiles.items.map(profile => profile.address);
+};
+
 export const fetchUserRatingData = async (address: string) => {
   const hiredTalentRatings = await fetchMyHiredTalentRatings(address);
   const gigRatings = await fetchMyGigRatings(address);

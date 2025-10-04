@@ -1,4 +1,5 @@
 import { endpoint } from "../../config";
+import { getUserAddressByUsernameOrEmail } from "../profile.service";
 import * as HiredTalentQueries from "./hiredTalent.queries";
 import request from "graphql-request";
 import { Deliverable } from "~~/types/deliverable";
@@ -29,6 +30,13 @@ export const fetchTalentsPaginated = async (
   maxPrice?: number,
   categories?: string[],
 ): Promise<Paginated<Talent>> => {
+  let userAddresses: string[] = [];
+  if (search && !search.startsWith("0x")) {
+    userAddresses = await getUserAddressByUsernameOrEmail(search);
+  } else if (search && search.startsWith("0x")) {
+    userAddresses = [search];
+  }
+
   const res = await request<{ talents: PaginationQueryResponse<Talent> }>(
     endpoint,
     HiredTalentQueries.getTalentsPaginated,
@@ -42,6 +50,7 @@ export const fetchTalentsPaginated = async (
       minPrice: minPrice ? minPrice * 1e18 : undefined, // Convert ether to wei
       maxPrice: maxPrice ? maxPrice * 1e18 : undefined, // Convert ether to wei
       categories,
+      userAddresses: userAddresses.length > 0 ? userAddresses : undefined,
     },
   );
 
