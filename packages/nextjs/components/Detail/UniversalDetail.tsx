@@ -6,7 +6,7 @@ import Button from "@/components/Button/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
-import { isImageUrl } from "@/lib/utils";
+import { castHoursToDurationString, isImageUrl } from "@/lib/utils";
 import { GigState, JobState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -119,24 +119,6 @@ export default function UniversalDetail({
       </div>
     );
   }
-
-  // Formats the amount of hours proposed for the duration of the job to a human-readable string
-  const formatDurationHours = (hours: string | undefined) => {
-    if (!hours || hours === "0") return "Not specified";
-
-    let totalHours = Number(BigInt(hours));
-    let days = Math.floor(totalHours / 24);
-    const weeks = Math.floor(days / 7);
-
-    if (weeks > 0) days -= weeks * 7;
-    if (days > 0) totalHours -= days * 24;
-
-    return `${
-      weeks > 0 ? `${weeks} week${weeks > 1 ? "s" : ""} ` : ""
-    }${days > 0 ? `${days} day${days > 1 ? "s" : ""} ` : ""}${
-      totalHours > 0 ? `${totalHours} hour${totalHours > 1 ? "s" : ""}` : ""
-    }`.trim();
-  };
 
   if (error || !data) {
     return (
@@ -336,7 +318,9 @@ export default function UniversalDetail({
                   </div>
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Duration</p>
-                    <p className="text-[var(--color-skeleton)] text-base">{formatDurationHours(data.duration)}</p>
+                    <p className="text-[var(--color-skeleton)] text-base">
+                      {castHoursToDurationString(+(data.duration ?? "0"))}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">

@@ -3,7 +3,7 @@
 import * as React from "react";
 import { JobPostingCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
-import { InputBase } from "@/components/scaffold-eth";
+import { DurationInput, InputBase } from "@/components/scaffold-eth";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -155,8 +155,8 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
               error={touched.description && !!errors.description}
               helperText={touched.description && errors.description ? errors.description : ""}
             />
-            <InputBase
-              placeholder="Job Duration (hours)"
+            <DurationInput
+              placeholder="Job Duration"
               value={values.jobHours}
               onChange={val => setFieldValue("jobHours", val)}
               error={touched.jobHours && !!errors.jobHours}

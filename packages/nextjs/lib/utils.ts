@@ -23,6 +23,26 @@ export function addPrefixToUrl(url: string, prefix: string): string {
   return url;
 }
 
+export function castHoursToDurationString(totalHours: number): string {
+  if (totalHours < 1) {
+    return "Less than an hour";
+  }
+  const years = Math.floor(totalHours / 8760);
+  const months = Math.floor((totalHours % 8760) / 730);
+  const weeks = Math.floor((totalHours % 730) / 168);
+  const days = Math.floor((totalHours % 168) / 24);
+  const hours = Math.floor(totalHours % 24);
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} ${years > 1 ? "Years" : "Year"}`);
+  if (months > 0) parts.push(`${months} ${months > 1 ? "Months" : "Month"}`);
+  if (weeks > 0) parts.push(`${weeks} ${weeks > 1 ? "Weeks" : "Week"}`);
+  if (days > 0) parts.push(`${days} ${days > 1 ? "Days" : "Day"}`);
+  if (hours > 0) parts.push(`${hours} ${hours > 1 ? "Hours" : "Hour"}`);
+
+  return parts.join(" ");
+}
+
 export function castDateToTimestamp(date: string | undefined): string {
   if (!date) return "N/A";
   const timestamp = Number(date) * 1000;

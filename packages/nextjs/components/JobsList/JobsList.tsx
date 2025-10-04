@@ -19,6 +19,7 @@ import {
   MagnifyingGlassIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import { castHoursToDurationString } from "~~/lib/utils";
 // Adjust the import to match the actual export from the module
 import { fetchMyJobs } from "~~/services/graphql/fetchers/job/job.service";
 import { Job, JobsData } from "~~/types/job/job.types";
@@ -34,9 +35,9 @@ const getInfoIcons = (item: Partial<Job> & ListItemProps, currentState: JobState
 
   if (currentState === JobState.WaitingForApproval) {
     infoIcons.push({
-      title: `Job Duration: ${item.jobDuration} hours`,
+      title: `Job Duration: ${castHoursToDurationString(+(item.jobDuration ?? "0"))}`,
       icon: <ClockIcon className="w-4 h-4" />,
-      info: item.jobDuration + " hours",
+      info: castHoursToDurationString(+(item.jobDuration ?? "0")),
     });
   } else if (currentState === JobState.Ongoing) {
     infoIcons.push({

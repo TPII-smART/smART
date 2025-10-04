@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Badge } from "./Badge";
-import { cn } from "@/lib/utils";
+import { castHoursToDurationString, cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { CalendarIcon, ClockIcon, StarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Gig } from "~~/types/gig/gig.types";
@@ -52,7 +52,7 @@ const TimeDisplay = ({ hours, label }: { hours?: string | number; label: string 
     <div className="flex items-center gap-2 text-[var(--color-secondary-content)]">
       <ClockIcon className="h-4 w-4" />
       <span className="text-sm">
-        {label}: {hours} hrs
+        {label}: {castHoursToDurationString(+hours)}
       </span>
     </div>
   );
@@ -140,7 +140,7 @@ const InfoHeader: React.FC<InfoHeaderProps> = ({ data, className }) => {
             <TimeDisplay hours={data.maxDurationInHours} label="Estimated Duration" />
           )}
           {isJobPosting(data) && data.averageWorkDuration && (
-            <TimeDisplay hours={Math.round(data.averageWorkDuration / 3600)} label="Avg Duration" />
+            <TimeDisplay hours={data.averageWorkDuration} label="Avg Duration" />
           )}
 
           {/* Date information */}
