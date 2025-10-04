@@ -34,14 +34,14 @@ export function getHiredTalentStatus(
         label: "Cancellation Pending",
         color: "bg-red-500",
         icon: XCircleIcon,
-        description: isFreelancer ? "You cancelled the hiredTalent" : "HiredTalent was cancelled by freelancer",
+        description: isFreelancer ? "You cancelled the hire" : "Hire was cancelled by freelancer",
       };
     } else if (hiredTalent.clientCancelled) {
       return {
-        label: isClient ? "You cancelled the hiredTalent" : "Cancelled by Client",
+        label: isClient ? "You cancelled the hire" : "Cancelled by Client",
         color: "bg-red-500",
         icon: XCircleIcon,
-        description: isClient ? "You cancelled the hiredTalent" : "HiredTalent was cancelled by client",
+        description: isClient ? "You cancelled the hire" : "Hire was cancelled by client",
       };
     }
 
@@ -81,7 +81,7 @@ export function getHiredTalentStatus(
       label: "Completed",
       color: "bg-emerald-500",
       icon: CheckCircleIcon,
-      description: "HiredTalent successfully completed",
+      description: "Hire successfully completed",
     };
   }
 
@@ -90,7 +90,7 @@ export function getHiredTalentStatus(
       label: "Cancelled",
       color: "bg-red-500",
       icon: XCircleIcon,
-      description: "HiredTalent was cancelled",
+      description: "Hire was cancelled",
     };
   }
 
