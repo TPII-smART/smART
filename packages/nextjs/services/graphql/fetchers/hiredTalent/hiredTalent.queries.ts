@@ -40,6 +40,7 @@ export const getTalentsPaginated = gql`
     $minPrice: BigInt
     $maxPrice: BigInt
     $categories: [String]
+    $userAddresses: [String]
   ) {
     talents(
       limit: $limit
@@ -49,7 +50,7 @@ export const getTalentsPaginated = gql`
       orderDirection: $orderDirection
       where: {
         AND: [
-          { OR: [{ title_contains: $search }, { description_contains: $search }] }
+          { OR: [{ title_contains: $search }, { description_contains: $search }, { freelancer_in: $userAddresses }] }
           { basePayment_gte: $minPrice, basePayment_lte: $maxPrice, category_in: $categories }
         ]
       }
