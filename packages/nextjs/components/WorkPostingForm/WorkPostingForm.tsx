@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { jobCategories } from "../Card/JobCategory/jobCategory.data";
 import ComboBox from "../ComboBox/ComboBox";
 import FileUploadBox from "../FileUploadBox";
 import FormModal from "../Modal/FormModal/FormModal";
-import { EtherInput, InputBase, IntegerInput } from "../scaffold-eth";
+import { DurationInput, EtherInput, InputBase } from "../scaffold-eth";
 import { WorkPostingFormData, WorkPostingFormProps } from "./types";
 import * as yup from "yup";
 import { PlusIcon } from "@heroicons/react/24/outline";
@@ -179,11 +179,10 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               error={touched.paymentInEth && !!errors.paymentInEth}
               helperText={touched.paymentInEth && errors.paymentInEth ? errors.paymentInEth : undefined}
             />
-            <IntegerInput
-              placeholder="Estimated Duration (hours)"
+            <DurationInput
+              placeholder="Estimated Duration"
               value={values.estimatedDurationHours}
               onChange={val => setFieldValue("estimatedDurationHours", val)}
-              disableMultiplyBy1e18
               error={touched.estimatedDurationHours && !!errors.estimatedDurationHours}
               helperText={
                 touched.estimatedDurationHours && errors.estimatedDurationHours
@@ -208,4 +207,4 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   );
 };
 
-export default WorkPostingForm;
+export default memo(WorkPostingForm);
