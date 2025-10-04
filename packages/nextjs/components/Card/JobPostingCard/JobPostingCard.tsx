@@ -149,6 +149,8 @@ export function JobPostingCard({ jobPosting, className, reload, ...props }: JobP
               helperText={touched.title && errors.title ? errors.title : ""}
             />
             <InputBase
+              multiline
+              minRows={4}
               placeholder="Description"
               value={values.description}
               onChange={val => setFieldValue("description", val)}
