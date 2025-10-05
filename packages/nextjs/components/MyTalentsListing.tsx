@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { RefObject, useEffect, useState } from "react";
 import Spinner from "@/components//Spinner/Spinner";
 import { TalentCard } from "@/components/Card/TalentCard/TalentCard";
 import { useAccount } from "wagmi";
@@ -8,7 +8,13 @@ import { usePagination } from "~~/hooks/use-pagination";
 import { fetchMyTalentsPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
 import { Talent } from "~~/types/hiredTalent/hiredTalent.types";
 
-export default function MyTalentListing({ userAddress }: { userAddress: string }) {
+export default function MyTalentListing({
+  userAddress,
+  scrollRef,
+}: {
+  userAddress: string;
+  scrollRef?: RefObject<HTMLDivElement | null>;
+}) {
   const { address } = useAccount();
   const [loading, setLoading] = useState(true);
   const [talents, setTalents] = useState<Talent[]>([]);
@@ -27,11 +33,18 @@ export default function MyTalentListing({ userAddress }: { userAddress: string }
     fetchPaginatedData(true, "talents", userAddress);
   }, [userAddress, fetchPaginatedData]);
 
+  useEffect(() => {
+    if (!scrollRef) return;
+
+    if (scrollRef.current) {
+      scrollRef.current.onscroll = (e: any) => {
+        handleScroll(e, "talents", userAddress);
+      };
+    }
+  }, [scrollRef, userAddress, handleScroll]);
+
   return (
-    <div
-      className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6 overflow-auto max-h-[inherit]"
-      onScroll={e => handleScroll(e, "talents", userAddress)}
-    >
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       <div className="w-full">
         {talents && talents.length > 0 ? (
           <>
