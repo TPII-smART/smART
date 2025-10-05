@@ -6,8 +6,8 @@ import Button from "@/components/Button/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
-import { isImageUrl } from "@/lib/utils";
-import { GigState, JobState } from "@se-2/common";
+import { castHoursToDurationString, isImageUrl } from "@/lib/utils";
+import { GigState, HiredTalentState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -120,24 +120,6 @@ export default function UniversalDetail({
       </div>
     );
   }
-
-  // Formats the amount of hours proposed for the duration of the job to a human-readable string
-  const formatDurationHours = (hours: string | undefined) => {
-    if (!hours || hours === "0") return "Not specified";
-
-    let totalHours = Number(BigInt(hours));
-    let days = Math.floor(totalHours / 24);
-    const weeks = Math.floor(days / 7);
-
-    if (weeks > 0) days -= weeks * 7;
-    if (days > 0) totalHours -= days * 24;
-
-    return `${
-      weeks > 0 ? `${weeks} week${weeks > 1 ? "s" : ""} ` : ""
-    }${days > 0 ? `${days} day${days > 1 ? "s" : ""} ` : ""}${
-      totalHours > 0 ? `${totalHours} hour${totalHours > 1 ? "s" : ""}` : ""
-    }`.trim();
-  };
 
   if (error || !data) {
     return (
@@ -301,7 +283,7 @@ export default function UniversalDetail({
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardHeader className="p-6">
                 <CardTitle className="text-2xl text-[var(--color-primary-content)]">
-                  {data?.type === "job" ? "Job" : "Gig"} Description
+                  {data?.type === "hiredTalent" ? "Talent" : "Gig"} Description
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0">
@@ -337,7 +319,9 @@ export default function UniversalDetail({
                   </div>
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Duration</p>
-                    <p className="text-[var(--color-skeleton)] text-base">{formatDurationHours(data.duration)}</p>
+                    <p className="text-[var(--color-skeleton)] text-base">
+                      {castHoursToDurationString(+(data.duration ?? "0"))}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-[var(--color-primary)]/20 rounded-lg">
@@ -347,7 +331,7 @@ export default function UniversalDetail({
                   <div>
                     <p className="font-semibold text-lg text-[var(--color-primary-content)]">Deadline</p>
                     <p className="text-[var(--color-skeleton)] text-base">
-                      {data.state === JobState.WaitingForApproval
+                      {data.state === HiredTalentState.WaitingForApproval
                         ? "Deadline not yet defined"
                         : formatDate(String(data.deadline))}
                     </p>
@@ -401,7 +385,7 @@ export default function UniversalDetail({
 
         {/* Action Section - Split into two boxes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {data.state === GigState.Completed || data.state === JobState.Finished ? (
+          {data.state === GigState.Completed || data.state === HiredTalentState.Finished ? (
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardContent className="p-6">
                 <div className="space-y-4">
@@ -411,7 +395,7 @@ export default function UniversalDetail({
                         ratingData={{
                           averageRating: data.rating || 0,
                           totalRatings: 1,
-                          jobRatings: {},
+                          hiredTalentRatings: {},
                           gigRatings: {},
                         }}
                         interactive={false}
@@ -431,7 +415,7 @@ export default function UniversalDetail({
                         <p className="text-[var(--color-primary-content)] text-base leading-relaxed m-0">
                           {statusMessage}
                         </p>
-                        {data?.state === JobState.Ongoing && (
+                        {data?.state === HiredTalentState.Ongoing && (
                           <div className="flex items-center space-x-2">
                             <Button
                               variant="primary"

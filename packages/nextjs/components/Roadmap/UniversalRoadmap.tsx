@@ -1,90 +1,93 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { GigState, JobState } from "@se-2/common";
+import { GigState, HiredTalentState } from "@se-2/common";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 
 interface UniversalRoadmapProps {
   data: any;
-  type: "job" | "gig";
+  type: "hiredTalent" | "gig";
 }
 
 const formatDate = (dateString: string | undefined) => {
   return dateString ? new Date(Number(dateString) * 1000).toLocaleDateString() : "N/A";
 };
 
-function getAllRoadmapSteps(data: any, type: "job" | "gig") {
-  if (type === "job") {
-    const job = data;
+function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
+  if (type === "hiredTalent") {
+    const hiredTalent = data;
     const baseSteps = [
       {
-        title: "Job Created",
-        date: formatDate(job.createdAt),
+        title: "Hired Talent Created",
+        date: formatDate(hiredTalent.createdAt),
         completed: true,
         current: false,
         state: "created",
       },
       {
         title: "Waiting for Approval",
-        date: job.state >= JobState.WaitingForApproval ? formatDate(job.createdAt) : null,
-        completed: job.state > JobState.WaitingForApproval,
-        current: job.state === JobState.WaitingForApproval,
+        date: hiredTalent.state >= HiredTalentState.WaitingForApproval ? formatDate(hiredTalent.createdAt) : null,
+        completed: hiredTalent.state > HiredTalentState.WaitingForApproval,
+        current: hiredTalent.state === HiredTalentState.WaitingForApproval,
         state: "waiting",
       },
       {
-        title: "Job Accepted",
-        date: job.acceptedAt ? formatDate(job.acceptedAt) : null,
-        completed: job.state > JobState.Ongoing || !!job.acceptedAt,
-        current: job.state === JobState.Ongoing,
+        title: "Hired Talent Accepted",
+        date: hiredTalent.acceptedAt ? formatDate(hiredTalent.acceptedAt) : null,
+        completed: hiredTalent.state > HiredTalentState.Ongoing || !!hiredTalent.acceptedAt,
+        current: hiredTalent.state === HiredTalentState.Ongoing,
         state: "accepted",
       },
       {
         title: "Freelancer Delivered",
-        date: job.freelancerDelivered ? "Delivered" : null,
-        completed: job.freelancerDelivered || false,
-        current: job.state === JobState.Ongoing && !job.freelancerDelivered,
+        date: hiredTalent.freelancerDelivered ? "Delivered" : null,
+        completed: hiredTalent.freelancerDelivered || false,
+        current: hiredTalent.state === HiredTalentState.Ongoing && !hiredTalent.freelancerDelivered,
         state: "delivered",
       },
       {
         title: "Client Received",
-        date: job.clientReceived ? "Received" : null,
-        completed: job.clientReceived || false,
-        current: job.state === JobState.Ongoing && job.freelancerDelivered && !job.clientReceived,
+        date: hiredTalent.clientReceived ? "Received" : null,
+        completed: hiredTalent.clientReceived || false,
+        current:
+          hiredTalent.state === HiredTalentState.Ongoing &&
+          hiredTalent.freelancerDelivered &&
+          !hiredTalent.clientReceived,
         state: "received",
       },
     ];
-    if (job.wasDisputed) {
+    if (hiredTalent.wasDisputed) {
       baseSteps.push({
-        title: "Job Disputed",
-        date: `In Dispute${job.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
+        title: "Hired Talent Disputed",
+        date: `In Dispute${hiredTalent.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
         completed: true,
-        current: job.state === JobState.Disputed,
+        current: hiredTalent.state === HiredTalentState.Disputed,
         state: "disputed",
       });
       baseSteps.push({
-        title: job.disputeFinalized
-          ? job.disputeResult
+        title: hiredTalent.disputeFinalized
+          ? hiredTalent.disputeResult
             ? "Dispute Resolved: Freelancer Wins"
             : "Dispute Resolved: Client Wins"
           : "Dispute Resolution",
-        date: job.finishedAt ? formatDate(job.finishedAt) : null,
-        completed: job.disputeFinalized || false,
+        date: hiredTalent.finishedAt ? formatDate(hiredTalent.finishedAt) : null,
+        completed: hiredTalent.disputeFinalized || false,
         current: false,
         state: "disputed",
       });
     }
 
-    if (job.state === JobState.Cancelled) {
+    if (hiredTalent.state === HiredTalentState.Cancelled) {
       baseSteps.push({
-        title: "Job Cancelled",
-        date: job.canceledAt ? formatDate(job.canceledAt) : null,
+        title: "Hired Talent Cancelled",
+        date: hiredTalent.canceledAt ? formatDate(hiredTalent.canceledAt) : null,
         completed: true,
         current: false,
         state: "cancelled",
       });
     } else {
       baseSteps.push({
-        title: job.wasDisputed ? "Job Finalized After Dispute" : "Job Completed",
-        date: job.finishedAt ? formatDate(job.finishedAt) : null,
-        completed: job.state === JobState.Finished,
+        title: hiredTalent.wasDisputed ? "Hired Talent Finalized After Dispute" : "Hired Talent Completed",
+        date: hiredTalent.finishedAt ? formatDate(hiredTalent.finishedAt) : null,
+        completed: hiredTalent.state === HiredTalentState.Finished,
         current: false,
         state: "finished",
       });
@@ -182,7 +185,7 @@ export function UniversalRoadmap({ data, type }: UniversalRoadmapProps) {
     <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
       <CardHeader className="p-6">
         <CardTitle className="text-2xl text-[var(--color-primary-content)]">
-          {type === "job" ? "Job Progress" : "Gig Progress"}
+          {type === "hiredTalent" ? "HiredTalent Progress" : "Gig Progress"}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 pt-0">

@@ -3713,6 +3713,1120 @@ const deployedContracts = {
         byzantium: true,
       },
     },
+    HiredTalentsContract: {
+      address: "0x1568E32D8080828d406fB6AE1D0254f11b9b4E9B",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_owner",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_reality",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_arbitrator",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ClientMarkedAsReceived",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "response",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deliverableUploadedAt",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "CommentAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "resource",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "submissionComment",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "isLink",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerUpload",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "DeliverableUploaded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bytes32",
+              name: "questionId",
+              type: "bytes32",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "requester",
+              type: "address",
+            },
+          ],
+          name: "DisputeStarted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "FreelancerMarkedAsDelivered",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deadline",
+              type: "uint256",
+            },
+          ],
+          name: "HiredTalentAccepted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "enum HiredTalentsContract.HiredTalentState",
+              name: "state",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientCancelled",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerCancelled",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "HiredTalentCancelled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "bannerImageHash",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentDuration",
+              type: "uint256",
+            },
+          ],
+          name: "HiredTalentCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "HiredTalentFinished",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "rating",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "HiredTalentRated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerDelivered",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientReceived",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientRejected",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerUploaded",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "HiredTalentRejected",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "basePayment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "bannerImageHash",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "minimumNoticeTime",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "averageWorkDuration",
+              type: "uint256",
+            },
+          ],
+          name: "TalentCreated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "acceptHiredTalent",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "arbitratorAddress",
+          outputs: [
+            {
+              internalType: "contract IArbiterContract",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "cancelHiredTalent",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_comment",
+              type: "string",
+            },
+          ],
+          name: "confirmClientCompletion",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "confirmFreelancerCompletion",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "title",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "description",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "payment",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "durationInHours",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct HiredTalentsContract.HiredTalentParams",
+              name: "params",
+              type: "tuple",
+            },
+          ],
+          name: "createHiredTalent",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "title",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "description",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "category",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "bannerImageHash",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "basePayment",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "minimumNoticeTime",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "averageWorkDuration",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct HiredTalentsContract.TalentParams",
+              name: "params",
+              type: "tuple",
+            },
+          ],
+          name: "createTalent",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "emergencyCancel",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "getDisputeResult",
+          outputs: [
+            {
+              internalType: "bytes32",
+              name: "",
+              type: "bytes32",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+          ],
+          name: "getHiredTalentCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getTotalHiredTalentsPosted",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "comment",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "ipfsHash",
+              type: "string",
+            },
+          ],
+          name: "isDeliverableUploaded",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "postedHiredTalents",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "basePayment",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "bannerImageHash",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "minimumNoticeTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "averageWorkDuration",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "postedHiredTalentsCounter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint8",
+              name: "_rating",
+              type: "uint8",
+            },
+          ],
+          name: "rateHiredTalent",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "reality",
+          outputs: [
+            {
+              internalType: "contract IRealityETH",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_comment",
+              type: "string",
+            },
+          ],
+          name: "rejectHiredTalent",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "resolveDispute",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_comment",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "_bountyAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_bondAmount",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "_escalateToArbitrator",
+              type: "bool",
+            },
+          ],
+          name: "startDispute",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "resource",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "submissionComment",
+                  type: "string",
+                },
+                {
+                  internalType: "bool",
+                  name: "isLink",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct DeliverableParams",
+              name: "_deliverableParams",
+              type: "tuple",
+            },
+          ],
+          name: "uploadDeliverable",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+      ],
+      inheritedFunctions: {},
+      receipt: {
+        to: null,
+        from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
+        contractAddress: "0x1568E32D8080828d406fB6AE1D0254f11b9b4E9B",
+        transactionIndex: 54,
+        gasUsed: "4032104",
+        logsBloom:
+          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        blockHash: "0xa8c750198eefcd029d54c8bde3452b57db57483a3d1a3e26a401d103c39f97d8",
+        transactionHash: "0x4743baacf27c9687f87c683b184a9166311cce2c7f5404366a977f54c8e10ce3",
+        logs: [],
+        blockNumber: 9349264,
+        cumulativeGasUsed: "12875059",
+        status: 1,
+        byzantium: true,
+      },
+    },
     JobsContract: {
       address: "0x97899a77a686e1c6E61cE14d929298cECb18CFc7",
       abi: [

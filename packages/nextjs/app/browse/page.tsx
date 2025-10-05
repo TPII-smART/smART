@@ -6,14 +6,14 @@ import BrowsePage from "~~/components/Browser";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab } from "~~/components/Tabs/types";
 
-type BrowserTab = "job" | "gig";
+type BrowserTab = "hiredTalent" | "gig";
 
 const tabs: Tab[] = [
-  { id: "job", label: "Jobs" },
+  { id: "hiredTalent", label: "Talents" },
   { id: "gig", label: "Gigs" },
 ];
 
-export default function BrowseJobsPage() {
+export default function BrowseHiredTalentsPage() {
   const searchParams = useSearchParams();
   const initialTab = (searchParams.get("tab") as BrowserTab) || tabs[0].id;
   const [selectedTab, setSelectedTab] = useState<BrowserTab>(initialTab);

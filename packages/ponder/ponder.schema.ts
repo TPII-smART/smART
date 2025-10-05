@@ -1,8 +1,8 @@
 import { onchainTable, primaryKey } from "ponder";
 
-// JobPosting table
-export const jobPosting = onchainTable("jobPosting", (t) => ({
-	postingId: t.bigint().primaryKey(),
+// Talent table
+export const talent = onchainTable("talent", (t) => ({
+	talentId: t.bigint().primaryKey(),
 	freelancer: t.varchar({ length: 128 }).notNull(),
 	basePayment: t.bigint().notNull(),
 	title: t.varchar({ length: 64 }).notNull(),
@@ -15,12 +15,12 @@ export const jobPosting = onchainTable("jobPosting", (t) => ({
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 
-// Job table
-export const job = onchainTable(
-	"job",
+// HiredTalent table
+export const hiredTalent = onchainTable(
+	"hiredTalent",
 	(t) => ({
-		jobId: t.bigint().notNull(),
-		postingId: t.bigint().notNull(),
+		hiredTalentId: t.bigint().notNull(),
+		talentId: t.bigint().notNull(),
 		client: t.varchar({ length: 128 }).notNull(),
 		freelancer: t.varchar({ length: 128 }).notNull(),
 		payment: t.bigint().notNull(),
@@ -28,15 +28,15 @@ export const job = onchainTable(
 		description: t.varchar({ length: 512 }).notNull(),
 		category: t.varchar({ length: 64 }).notNull(),
 		bannerImageHash: t.varchar({ length: 128 }).notNull(),
-		jobDuration: t.bigint().notNull(),
+		hiredTalentDuration: t.bigint().notNull(),
 		deadline: t.bigint(),
 		state: t.integer().notNull(),
 		createdAt: t.bigint().notNull(),
 		acceptedAt: t.bigint(),
-		finishedAt: t.bigint(), // When the job was finished
-		canceledAt: t.bigint(), // When the job was canceled
-		deliveredAt: t.bigint(), // When the job was delivered
-		rejectedAt: t.bigint(), // When the job was rejected by the client
+		finishedAt: t.bigint(), // When the hiredTalent was finished
+		canceledAt: t.bigint(), // When the hiredTalent was canceled
+		deliveredAt: t.bigint(), // When the hiredTalent was delivered
+		rejectedAt: t.bigint(), // When the hiredTalent was rejected by the client
 		emitBy: t.varchar({ length: 128 }),
 		rating: t.integer(), // Rating given by the client to the freelancer
 		clientReceived: t.boolean().notNull(),
@@ -49,7 +49,7 @@ export const job = onchainTable(
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({
-		pk: primaryKey({ columns: [table.jobId, table.postingId] }),
+		pk: primaryKey({ columns: [table.hiredTalentId, table.talentId] }),
 	})
 );
 
@@ -71,8 +71,8 @@ export const gig = onchainTable("gig", (t) => ({
 	acceptedAt: t.bigint(),
 	finishedAt: t.bigint(),
 	canceledAt: t.bigint(),
-	deliveredAt: t.bigint(), // When the job was delivered
-	rejectedAt: t.bigint(), // When the job was rejected by the client
+	deliveredAt: t.bigint(), // When the hiredTalent was delivered
+	rejectedAt: t.bigint(), // When the hiredTalent was rejected by the client
 	emitBy: t.varchar({ length: 128 }),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),
@@ -149,37 +149,37 @@ export const notification = onchainTable(
 	})
 );
 
-
-export const jobDeliverable = onchainTable(
-  "jobDeliverable",
-  t => ({
-    jobId: t.bigint().notNull(),
-    postingId: t.bigint().notNull(),
-    resource: t.varchar({ length: 256 }).notNull(),
-    uploadedAt: t.bigint().notNull(),
-    submissionComment: t.varchar({ length: 512 }),
-    clientResponse: t.varchar({ length: 512 }),
-    isLink: t.boolean().notNull(),
-    lastTransactionHash: t.varchar({ length: 256 }).notNull(),
-  }),
-  table => ({
-    pk: primaryKey({ columns: [table.jobId, table.postingId, table.uploadedAt] }),
-  })
+export const hiredTalentDeliverable = onchainTable(
+	"hiredTalentDeliverable",
+	(t) => ({
+		hiredTalentId: t.bigint().notNull(),
+		talentId: t.bigint().notNull(),
+		resource: t.varchar({ length: 256 }).notNull(),
+		uploadedAt: t.bigint().notNull(),
+		submissionComment: t.varchar({ length: 512 }),
+		clientResponse: t.varchar({ length: 512 }),
+		isLink: t.boolean().notNull(),
+		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
+	}),
+	(table) => ({
+		pk: primaryKey({
+			columns: [table.hiredTalentId, table.talentId, table.uploadedAt],
+		}),
+	})
 );
 
 export const gigDeliverable = onchainTable(
-  "gigDeliverables",
-  t => ({
-    gigId: t.bigint().notNull(),
-    resource: t.varchar({ length: 256 }).notNull(),
-    uploadedAt: t.bigint().notNull(),
-    submissionComment: t.varchar({ length: 512 }),
-    clientResponse: t.varchar({ length: 512 }),
-    isLink: t.boolean().notNull(),
-    lastTransactionHash: t.varchar({ length: 256 }).notNull(),
-  }),
-  table => ({
-    pk: primaryKey({ columns: [table.gigId, table.uploadedAt] }),
-  })
+	"gigDeliverables",
+	(t) => ({
+		gigId: t.bigint().notNull(),
+		resource: t.varchar({ length: 256 }).notNull(),
+		uploadedAt: t.bigint().notNull(),
+		submissionComment: t.varchar({ length: 512 }),
+		clientResponse: t.varchar({ length: 512 }),
+		isLink: t.boolean().notNull(),
+		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
+	}),
+	(table) => ({
+		pk: primaryKey({ columns: [table.gigId, table.uploadedAt] }),
+	})
 );
-

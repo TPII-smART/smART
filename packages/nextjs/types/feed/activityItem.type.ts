@@ -20,7 +20,7 @@ export enum ActivityItemStatus {
 }
 
 export enum InteractionType {
-  job = "job",
+  hiredTalent = "hiredTalent",
   gig = "gig",
   unknown = "",
 }

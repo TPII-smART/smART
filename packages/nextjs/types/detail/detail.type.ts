@@ -4,7 +4,7 @@ export enum GigDetailType {
 }
 
 export interface DetailData {
-  type: "job" | "gig";
+  type: "hiredTalent" | "gig";
   title: string;
   description?: string;
   proposalComment?: string;

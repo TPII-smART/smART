@@ -1,4 +1,5 @@
 import { endpoint } from "../../config";
+import { getUserAddressByUsernameOrEmail } from "../profile.service";
 import * as GigQueries from "./gig.queries";
 import request from "graphql-request";
 import { Deliverable } from "~~/types/deliverable";
@@ -30,6 +31,13 @@ export const fetchGigsPaginated = async (
   categories?: string[],
   userAddress?: string,
 ): Promise<Paginated<Gig>> => {
+  let userAddresses: string[] = [];
+  if (search && !search.startsWith("0x")) {
+    userAddresses = await getUserAddressByUsernameOrEmail(search);
+  } else if (search && search.startsWith("0x")) {
+    userAddresses = [search];
+  }
+
   const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getGigsPaginated, {
     limit: meta.limit,
     startCursor: meta.startCursor,
@@ -40,6 +48,7 @@ export const fetchGigsPaginated = async (
     minPayment: minPayment ? minPayment * 1e18 : undefined, // Convert ether to wei
     maxPayment: maxPayment ? maxPayment * 1e18 : undefined, // Convert ether to wei
     categories,
+    userAddresses: userAddresses.length > 0 ? userAddresses : undefined,
   });
   const applications = await fetchApplications(userAddress ?? "");
   const applicationsMap = new Map(applications.applications.map(app => [app.gigId, app.applicationId]));

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, lazy, useCallback, useEffect, useState } from "react";
+import { RefObject, Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import ProfileSkeleton from "./ProfileSkeleton";
 import OthersProfile from "./othersProfile";
@@ -12,47 +12,47 @@ import { Tab, TabProps } from "~~/components/Tabs/types";
 import { fetchUserProfile, fetchUserRatingData } from "~~/services/graphql/fetchers/profile.service";
 import { RatingData, UserProfile, newUserProfile } from "~~/types/user-profile.type";
 
-const MyJobPostingsListing = lazy(() => import("@/components/MyJobPostingsListing"));
+const MyTalentsListing = lazy(() => import("@/components/MyTalentsListing"));
 const MyGigsListing = lazy(() => import("@/components/MyGigsListing"));
 const ApplicationsListing = lazy(() => import("@/components/ApplicationsListing"));
 const HiresListing = lazy(() => import("@/components/HiresListing"));
 
 const tabsOwn: TabProps[] = [
-  { id: "job-postings", label: "Job Postings" },
+  { id: "talents", label: "Talents" },
   { id: "hires", label: "Hires" },
   { id: "gigs", label: "Gigs" },
   { id: "applications", label: "Applications" },
 ];
 
 const tabs: TabProps[] = [
-  { id: "job-postings", label: "Job Postings" },
+  { id: "talents", label: "Talents" },
   { id: "gigs", label: "Gigs" },
 ];
 
-const getPage = (tab: Tab, userAddress: string): React.ReactNode => {
+const getPage = (tab: Tab, userAddress: string, scrollRef: RefObject<HTMLDivElement | null>): React.ReactNode => {
   switch (tab.id) {
     case tabs[0].id:
-      return <MyJobPostingsListing userAddress={userAddress} />;
+      return <MyTalentsListing userAddress={userAddress} scrollRef={scrollRef} />;
     case tabs[1].id:
-      return <MyGigsListing userAddress={userAddress} />;
+      return <MyGigsListing userAddress={userAddress} scrollRef={scrollRef} />;
   }
 };
 
-const getPageOwn = (tab: Tab, userAddress: string): React.ReactNode => {
+const getPageOwn = (tab: Tab, userAddress: string, scrollRef: RefObject<HTMLDivElement | null>): React.ReactNode => {
   switch (tab.id) {
     case tabsOwn[0].id:
-      return <MyJobPostingsListing userAddress={userAddress} />;
+      return <MyTalentsListing userAddress={userAddress} scrollRef={scrollRef} />;
     case tabsOwn[1].id:
-      return <HiresListing userAddress={userAddress} />;
+      return <HiresListing userAddress={userAddress} scrollRef={scrollRef} />;
     case tabsOwn[2].id:
-      return <MyGigsListing userAddress={userAddress} />;
+      return <MyGigsListing userAddress={userAddress} scrollRef={scrollRef} />;
     case tabsOwn[3].id:
-      return <ApplicationsListing userAddress={userAddress} />;
+      return <ApplicationsListing userAddress={userAddress} scrollRef={scrollRef} />;
   }
 };
 
 const ratingsPlaceholder = {
-  jobRatings: {
+  hiredTalentRatings: {
     1: 5,
     2: 4,
     3: 3,
@@ -92,12 +92,14 @@ export default function Profile() {
     setSelectedTab({ id, label: label ?? "" });
   };
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-full overflow-auto" ref={scrollRef}>
       {loading ? (
         <ProfileSkeleton />
       ) : profileAddress === address && editMode ? (
@@ -116,13 +118,13 @@ export default function Profile() {
           <div>
             <div className="sticky top-0 bg-base-100 z-10">
               <div className="flex justify-center">
-                <div className="w-full">
+                <div className="w-full z-[9999]">
                   <Tabs tabs={profileAddress === address ? tabsOwn : tabs} onChange={handleTabChange} />
                 </div>
               </div>
             </div>
 
-            <div className="max-h-[24rem]">
+            <div>
               <Suspense
                 fallback={
                   <div className="flex justify-center items-center h-64">
@@ -131,8 +133,8 @@ export default function Profile() {
                 }
               >
                 {profileAddress === address
-                  ? getPageOwn(selectedTab, profileAddress)
-                  : getPage(selectedTab, profileAddress)}
+                  ? getPageOwn(selectedTab, profileAddress, scrollRef)
+                  : getPage(selectedTab, profileAddress, scrollRef)}
               </Suspense>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { RefObject, useEffect } from "react";
 import Spinner from "@/components//Spinner/Spinner";
 import { useAccount } from "wagmi";
 import { GigCard } from "~~/components/Card/GigCard/GigCard";
@@ -8,7 +8,13 @@ import { usePagination } from "~~/hooks/use-pagination";
 import { fetchMyGigsPaginated } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Gig } from "~~/types/gig/gig.types";
 
-export default function MyGigsListing({ userAddress }: { userAddress: string }) {
+export default function MyGigsListing({
+  userAddress,
+  scrollRef,
+}: {
+  userAddress: string;
+  scrollRef?: RefObject<HTMLDivElement | null>;
+}) {
   const { address } = useAccount();
   const [gigs, setGigs] = React.useState<Gig[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
@@ -26,11 +32,18 @@ export default function MyGigsListing({ userAddress }: { userAddress: string }) 
     fetchPaginatedData(true, "gigs", userAddress);
   }, [userAddress, fetchPaginatedData]);
 
+  useEffect(() => {
+    if (!scrollRef) return;
+
+    if (scrollRef.current) {
+      scrollRef.current.onscroll = (e: any) => {
+        handleScroll(e, "gigs", userAddress);
+      };
+    }
+  }, [scrollRef, userAddress, handleScroll]);
+
   return (
-    <div
-      className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6 overflow-auto max-h-[inherit]"
-      onScroll={e => handleScroll(e, "gigs", userAddress)}
-    >
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       <div className="w-full">
         {gigs && gigs.length > 0 ? (
           <>
