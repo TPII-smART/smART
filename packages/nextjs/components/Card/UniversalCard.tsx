@@ -249,7 +249,7 @@ export function UniversalCard({
 
       <CardHeader className="relative overflow-visible pb-4">
         {avatarAddress && (
-          <div className="absolute -top-18 right-6 z-20 group/avatar">
+          <div className="absolute -top-18 right-6 group/avatar">
             <div
               className={`${avatarClasses} rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer`}
               onClick={handleNavigateToProfile}
