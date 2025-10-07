@@ -6,12 +6,10 @@ import { DeliverableHistoryProps, GigHistoryData, HistoryData, JobHistoryData } 
 import Button from "@/components/Button/Button";
 import { useQuery } from "@tanstack/react-query";
 import { FunnelIcon } from "@heroicons/react/24/outline";
-import { useUserProfile } from "~~/hooks/use-user-profile";
 import { castDateToTimestamp, isImageUrl } from "~~/lib/utils";
 import { fetchDeliverablesForGig, fetchGigById } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchDeliverablesForJob, fetchJob } from "~~/services/graphql/fetchers/job/job.service";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
-import { Deliverable } from "~~/types/deliverable";
 import { UserProfile } from "~~/types/user-profile.type";
 
 // Mock data - replace with actual data fetching

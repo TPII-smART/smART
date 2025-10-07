@@ -3,9 +3,10 @@
 import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
-import { CheckCircleIcon, ClockIcon, DocumentTextIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, DocumentTextIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverablePreview from "~~/components/DeliverablePreview/DeliverablePreview";
+import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
 import { Deliverable } from "~~/types/deliverable";
 
 // interface DeliverableCard {
@@ -68,6 +69,8 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
     }
   };
 
+  const resolvedResource = deliverable.resource && !deliverable.isLink ? resolveIPFSHash(deliverable.resource) : "";
+
   return (
     <Card className="overflow-hidden">
       <div className="grid md:grid-cols-[300px_1fr] gap-20 py-20 px-10">
@@ -82,7 +85,14 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm font-medium"></div>
             {!deliverable.isLink && deliverable.resource && (
-              <p className="text-xs text-muted-foreground font-mono truncate">{deliverable.resource}</p>
+              <a
+                href={resolvedResource}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-muted-foreground text-accent font-mono truncate overflow-hidden whitespace-nowrap max-w-xs block"
+              >
+                {resolvedResource}
+              </a>
             )}
           </div>
         </div>
