@@ -121,7 +121,14 @@ contract JobsContract {
         uint256 timestamp
     );
 
-    event ClientMarkedAsReceived(uint256 indexed postingId, uint256 indexed jobId, address client, uint256 timestamp);
+    event ClientMarkedAsReceived(
+        uint256 indexed postingId,
+        uint256 indexed jobId,
+        address client,
+        string comment,
+        uint256 deliverableUploadedAt,
+        uint256 timestamp
+    );
 
     event JobFinished(
         uint256 indexed postingId,
@@ -154,15 +161,6 @@ contract JobsContract {
         uint256 timestamp
     );
 
-    event CommentAdded(
-        uint256 indexed postingId,
-        uint256 indexed jobId,
-        address indexed client,
-        string response,
-        uint256 deliverableUploadedAt,
-        uint256 timestamp
-    );
-
     event JobRejected(
         uint256 indexed postingId,
         uint256 indexed jobId,
@@ -170,6 +168,8 @@ contract JobsContract {
         bool clientReceived,
         bool clientRejected,
         bool freelancerUploaded,
+        string comment,
+        uint256 deliverableUploadedAt,
         uint256 timestamp
     );
 
@@ -386,9 +386,16 @@ contract JobsContract {
         require(!job.clientReceived, "Client already confirmed job reception");
         job.clientReceived = true;
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.responseTimestamp = block.timestamp;
 
-        emit ClientMarkedAsReceived(_postingId, _jobId, msg.sender, block.timestamp);
-        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
+        emit ClientMarkedAsReceived(
+            _postingId,
+            _jobId,
+            msg.sender,
+            _comment,
+            deliverableInfo.uploadedAt,
+            block.timestamp
+        );
 
         // If both parties have confirmed, complete the job
         if (job.clientReceived && job.freelancerDelivered) {
@@ -575,6 +582,7 @@ contract JobsContract {
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
             clientResponse: "",
+            responseTimestamp: 0,
             isLink: _deliverableParams.isLink
         });
 
@@ -612,6 +620,7 @@ contract JobsContract {
         job.clientRejected = true;
         job.freelancerUploaded = false;
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.responseTimestamp = block.timestamp;
         job.rejectedAt = block.timestamp;
 
         emit JobRejected(
@@ -621,8 +630,9 @@ contract JobsContract {
             job.clientReceived,
             job.clientRejected,
             job.freelancerUploaded,
+            deliverableInfo.clientResponse,
+            deliverableInfo.uploadedAt,
             job.rejectedAt
         );
-        emit CommentAdded(_postingId, _jobId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
     }
 }

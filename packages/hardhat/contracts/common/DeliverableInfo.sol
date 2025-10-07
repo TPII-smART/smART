@@ -6,6 +6,7 @@ struct DeliverableInfo {
     uint256 uploadedAt;
     string submissionComment;
     string clientResponse;
+    uint256 responseTimestamp;
     bool isLink; // Whether the file is a link or an uploaded file
 }
 

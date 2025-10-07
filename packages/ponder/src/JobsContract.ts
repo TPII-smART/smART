@@ -141,7 +141,7 @@ ponder.on(
 			.values({
 				jobId: event.args.jobId,
 				postingId: event.args.postingId,
-				resource: event.args.resource,
+				resource: event.args.resource,	
 				submissionComment: event.args.submissionComment,
 				isLink: event.args.isLink,
 				uploadedAt: BigInt(event.block.timestamp),
@@ -160,23 +160,6 @@ ponder.on(
 	}
 );
 
-// This event is triggered when a a client add a comment to the uploaded deliverable.
-ponder.on(
-	"JobsContract:CommentAdded",
-	async ({ event, context }) => {
-		// Updates the job to mark it as deliverable uploaded
-		await context.db
-			.update(jobDeliverable, {
-				jobId: event.args.jobId,
-				postingId: event.args.postingId,
-				uploadedAt: BigInt(event.args.deliverableUploadedAt),
-			})
-			.set({
-				clientResponse: event.args.response,
-				lastTransactionHash: event.transaction.hash,
-			});
-	}
-);
 
 // This event is triggered when a job is marked as received by the client.
 ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
@@ -195,6 +178,16 @@ ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 	const _job = await context.db.find(job, {
 		jobId: event.args.jobId,
 		postingId: event.args.postingId,
+	});
+
+	await context.db.update(jobDeliverable, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+		uploadedAt: event.args.deliverableUploadedAt,
+	}).set({
+		clientResponse: event.args.comment,
+		responseTimestamp: BigInt(event.args.timestamp),
+		lastTransactionHash: event.transaction.hash,
 	});
 
 	await context.db.insert(notification).values({
@@ -346,6 +339,16 @@ ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 		postingId: event.args.postingId,
 	});
 
+	await context.db.update(jobDeliverable, {
+		jobId: event.args.jobId,
+		postingId: event.args.postingId,
+		uploadedAt: event.args.deliverableUploadedAt,
+	}).set({
+		clientResponse: event.args.comment,
+		responseTimestamp: BigInt(event.args.timestamp),
+		lastTransactionHash: event.transaction.hash,
+	});
+	
 	await context.db.insert(notification).values({
 		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
 		user: _job?.freelancer as unknown as string,

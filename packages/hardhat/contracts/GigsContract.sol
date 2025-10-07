@@ -136,7 +136,13 @@ contract GigsContract {
 
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
-    event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
+    event ClientMarkedAsReceived(
+        uint256 indexed gigId,
+        address client,
+        string comment,
+        uint256 deliverableUploadedAt,
+        uint256 timestamp
+    );
 
     event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
 
@@ -149,13 +155,7 @@ contract GigsContract {
         bool clientReceived,
         bool clientRejected,
         bool freelancerUploaded,
-        uint256 timestamp
-    );
-
-    event CommentAdded(
-        uint256 indexed gigId,
-        address indexed client,
-        string response,
+        string comment,
         uint256 deliverableUploadedAt,
         uint256 timestamp
     );
@@ -459,10 +459,10 @@ contract GigsContract {
         require(!gig.clientReceived, "Client already confirmed reception");
 
         gig.clientReceived = true;
-        emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
-
         deliverableInfo.clientResponse = _clientResponse;
-        emit CommentAdded(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
+        deliverableInfo.responseTimestamp = block.timestamp;
+
+        emit ClientMarkedAsReceived(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
 
         if (gig.clientReceived && gig.freelancerDelivered) {
             _completeGig(_gigId);
@@ -597,6 +597,7 @@ contract GigsContract {
             resource: _deliverableParams.resource,
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
+            responseTimestamp: 0,
             clientResponse: "",
             isLink: _deliverableParams.isLink
         });
@@ -631,6 +632,9 @@ contract GigsContract {
         gig.rejectedAt = block.timestamp;
         gig.freelancerUploaded = false;
 
+        deliverableInfo.clientResponse = _comment;
+        deliverableInfo.responseTimestamp = block.timestamp;
+
         emit GigRejected(
             _gigId,
             gig.client,
@@ -638,8 +642,9 @@ contract GigsContract {
             gig.clientReceived,
             gig.clientRejected,
             gig.freelancerUploaded,
+            _comment,
+            deliverableInfo.uploadedAt,
             gig.rejectedAt
         );
-        emit CommentAdded(_gigId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
     }
 }

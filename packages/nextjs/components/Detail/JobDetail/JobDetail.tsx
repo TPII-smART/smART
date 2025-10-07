@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import UniversalDetail from "../UniversalDetail";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
@@ -32,6 +33,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "JobsContract",
@@ -242,10 +244,29 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
     return "";
   };
 
+  const handleViewDeliverable = () => {
+    router.push(`/job-posting/${postingId}/${jobId}/deliverables`);
+  };
+
   // Action buttons based on user role and job state
   const getActionButtons = () => {
     const buttons = [];
 
+    if (deliverables && deliverables.length > 0 && (isClient || isFreelancer)) {
+      buttons.push(
+        <Button
+          variant="outline"
+          key="viewDeliverables"
+          onClick={handleViewDeliverable}
+          disabled={isMining}
+          size="sm"
+          tooltip="View Deliverables"
+        >
+          <ClipboardDocumentListIcon className="h-5 w-5" />
+          <span>View Deliverables</span>
+        </Button>,
+      );
+    }
     // Freelancer actions
     if (isFreelancer) {
       if (jobStatus === JobState.WaitingForApproval) {

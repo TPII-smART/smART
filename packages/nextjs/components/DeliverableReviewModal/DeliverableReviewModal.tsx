@@ -109,7 +109,7 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                 borderColor: "var(--color-inside-border)",
               }}
             >
-              <DeliverablePreview resource={resolveResource(resource, isLink)} isLink={isLink} />
+              <DeliverablePreview resource={resource} isLink={isLink} />
             </div>
           </div>
           <Separator />

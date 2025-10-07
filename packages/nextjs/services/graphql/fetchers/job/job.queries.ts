@@ -453,6 +453,7 @@ export const getDeliverablesForJob = gql`
         uploadedAt
         submissionComment
         clientResponse
+        responseTimestamp
         isLink
         lastTransactionHash
       }
