@@ -5,2231 +5,6 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
-  31337: {
-    GigsContract: {
-      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-      abi: [
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_owner",
-              type: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "constructor",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "applicationId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "finalPayment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "finalDurationInHours",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "deadline",
-              type: "uint256",
-            },
-          ],
-          name: "ApplicationAccepted",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "applicationId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "rejectionComment",
-              type: "string",
-            },
-          ],
-          name: "ApplicationRejected",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "applicationId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "proposedPayment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "proposedDurationInHours",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "proposalComment",
-              type: "string",
-            },
-          ],
-          name: "ApplicationSubmitted",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "applicationId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "rejectionComment",
-              type: "string",
-            },
-          ],
-          name: "ApplicationWithdrawn",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "ClientMarkedAsReceived",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "response",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "fileUploadedAt",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "CommentAdded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "resource",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "submissionComment",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "isLink",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "uploadedAt",
-              type: "uint256",
-            },
-          ],
-          name: "FileUploaded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "FreelancerMarkedAsDelivered",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "enum GigsContract.GigState",
-              name: "state",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientCancelled",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerCancelled",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "GigCancelled",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "payment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "GigCompleted",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "basePayment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "maxDurationInHours",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "gigBannerImageHash",
-              type: "string",
-            },
-          ],
-          name: "GigCreated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint8",
-              name: "rating",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "GigRated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerDelivered",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientReceived",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientRejected",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "GigRejected",
-          type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_applicationId",
-              type: "uint256",
-            },
-          ],
-          name: "acceptApplication",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-          ],
-          name: "addCommentToGig",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "uint256",
-                  name: "proposedPayment",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "proposedDurationInHours",
-                  type: "uint256",
-                },
-                {
-                  internalType: "string",
-                  name: "proposal",
-                  type: "string",
-                },
-              ],
-              internalType: "struct GigsContract.ApplicationParams",
-              name: "params",
-              type: "tuple",
-            },
-          ],
-          name: "applyToGig",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-          ],
-          name: "cancelGig",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-          ],
-          name: "confirmCompletion",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "title",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "description",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "category",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "maxDurationInHours",
-                  type: "uint256",
-                },
-                {
-                  internalType: "string",
-                  name: "gigBannerImageHash",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "basePayment",
-                  type: "uint256",
-                },
-              ],
-              internalType: "struct GigsContract.GigParams",
-              name: "params",
-              type: "tuple",
-            },
-          ],
-          name: "createGig",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-          ],
-          name: "emergencyCancel",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getTotalGigsPosted",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "owner",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          name: "postedGigs",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "acceptedFreelancer",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "basePayment",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "finalPayment",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "maxDurationInHours",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "finalDurationInHours",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "deadline",
-              type: "uint256",
-            },
-            {
-              internalType: "enum GigsContract.GigState",
-              name: "state",
-              type: "uint8",
-            },
-            {
-              internalType: "uint256",
-              name: "createdAt",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "acceptedAt",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "canceledAt",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "rejectedAt",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "finishedAt",
-              type: "uint256",
-            },
-            {
-              internalType: "bool",
-              name: "clientReceived",
-              type: "bool",
-            },
-            {
-              internalType: "bool",
-              name: "freelancerDelivered",
-              type: "bool",
-            },
-            {
-              internalType: "uint8",
-              name: "rating",
-              type: "uint8",
-            },
-            {
-              internalType: "uint256",
-              name: "acceptedApplicationId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "gigBannerImageHash",
-              type: "string",
-            },
-            {
-              internalType: "bool",
-              name: "clientRejected",
-              type: "bool",
-            },
-            {
-              internalType: "bool",
-              name: "clientCancelled",
-              type: "bool",
-            },
-            {
-              internalType: "bool",
-              name: "freelancerCancelled",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "postedGigsCounter",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint8",
-              name: "_rating",
-              type: "uint8",
-            },
-          ],
-          name: "rateGig",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_applicationId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_rejectionComment",
-              type: "string",
-            },
-          ],
-          name: "rejectApplication",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-          ],
-          name: "rejectGig",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "resource",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "submissionComment",
-                  type: "string",
-                },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
-                },
-              ],
-              internalType: "struct FileParams",
-              name: "_fileParams",
-              type: "tuple",
-            },
-          ],
-          name: "uploadFile",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_applicationId",
-              type: "uint256",
-            },
-          ],
-          name: "withdrawApplication",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          stateMutability: "payable",
-          type: "receive",
-        },
-      ],
-      inheritedFunctions: {},
-      receipt: {
-        to: null,
-        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-        contractAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
-        transactionIndex: 0,
-        gasUsed: "2832343",
-        logsBloom:
-          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x35c59442e68a301881ac7dcc64acb41bfd156e8d85809af03c16803d82ae62fe",
-        transactionHash: "0xfe028266db5ace3ab479b54e87a485ab21e3e5d9e64b982145d746a55ddcd438",
-        logs: [],
-        blockNumber: 3,
-        cumulativeGasUsed: "2832343",
-        status: 1,
-        byzantium: true,
-      },
-    },
-    JobsContract: {
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-      abi: [
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_owner",
-              type: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "constructor",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "ClientMarkedAsReceived",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "response",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "fileUploadedAt",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "CommentAdded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "resource",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "submissionComment",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "isLink",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "FileUploaded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "FreelancerMarkedAsDelivered",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "deadline",
-              type: "uint256",
-            },
-          ],
-          name: "JobAccepted",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "enum JobsContract.JobState",
-              name: "state",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientCancelled",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerCancelled",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobCancelled",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "payment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "bannerImageHash",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "jobDuration",
-              type: "uint256",
-            },
-          ],
-          name: "JobCreated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "payment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobFinished",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "basePayment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "bannerImageHash",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "minimumNoticeTime",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "averageWorkDuration",
-              type: "uint256",
-            },
-          ],
-          name: "JobPostingCreated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint8",
-              name: "rating",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobRated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerDelivered",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientReceived",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientRejected",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobRejected",
-          type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "acceptJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-          ],
-          name: "addCommentToJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "cancelJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "confirmCompletion",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "title",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "description",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "payment",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "durationInHours",
-                  type: "uint256",
-                },
-              ],
-              internalType: "struct JobsContract.JobParams",
-              name: "params",
-              type: "tuple",
-            },
-          ],
-          name: "createJob",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "title",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "description",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "category",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "bannerImageHash",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "basePayment",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "minimumNoticeTime",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "averageWorkDuration",
-                  type: "uint256",
-                },
-              ],
-              internalType: "struct JobsContract.JobPostingParams",
-              name: "params",
-              type: "tuple",
-            },
-          ],
-          name: "createJobPosting",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "emergencyCancel",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-          ],
-          name: "getJobCount",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getTotalJobsPosted",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "comment",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "ipfsHash",
-              type: "string",
-            },
-          ],
-          name: "isFileUploaded",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "owner",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          name: "postedJobs",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "basePayment",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "bannerImageHash",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "minimumNoticeTime",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "averageWorkDuration",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "createdAt",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "postedJobsCounter",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint8",
-              name: "_rating",
-              type: "uint8",
-            },
-          ],
-          name: "rateJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "rejectJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "resource",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "submissionComment",
-                  type: "string",
-                },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
-                },
-              ],
-              internalType: "struct FileParams",
-              name: "_fileParams",
-              type: "tuple",
-            },
-          ],
-          name: "uploadFile",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          stateMutability: "payable",
-          type: "receive",
-        },
-      ],
-      inheritedFunctions: {},
-      receipt: {
-        to: null,
-        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-        contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-        transactionIndex: 0,
-        gasUsed: "2880014",
-        logsBloom:
-          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xc99f474d1b22a8e66e6adcbc027449da5083879c1dfd6fb48d764578f18790f4",
-        transactionHash: "0x3b3035803c0977bd38f92ae6e0a8872b4be08cb10d199a02f1155b6f62fc1738",
-        logs: [],
-        blockNumber: 1,
-        cumulativeGasUsed: "2880014",
-        status: 1,
-        byzantium: true,
-      },
-    },
-    NotificationsContract: {
-      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-      abi: [
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: false,
-              internalType: "string[]",
-              name: "ids",
-              type: "string[]",
-            },
-            {
-              indexed: false,
-              internalType: "enum NotificationStatus",
-              name: "status",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "user",
-              type: "address",
-            },
-          ],
-          name: "ChangeNotificationsStatus",
-          type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "string[]",
-              name: "ids",
-              type: "string[]",
-            },
-            {
-              internalType: "enum NotificationStatus",
-              name: "status",
-              type: "uint8",
-            },
-          ],
-          name: "changeNotificationsStatus",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-      ],
-      inheritedFunctions: {},
-      receipt: {
-        to: null,
-        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-        contractAddress: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
-        transactionIndex: 0,
-        gasUsed: "144627",
-        logsBloom:
-          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xd6414af50c4dcd2bb978959443e2ce5a1c106449eaefe7c24e4410e14e5a3957",
-        transactionHash: "0x09dc716a7f3ac330750b13ff360ba419a03007e824dcc286a1a12b13f608b501",
-        logs: [],
-        blockNumber: 6,
-        cumulativeGasUsed: "144627",
-        status: 1,
-        byzantium: true,
-      },
-    },
-    ProfileConfigContract: {
-      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-      abi: [
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "address",
-              name: "user",
-              type: "address",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "username",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "profilePicture",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "bannerPicture",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "biography",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "email",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "xUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "instagramUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "linkedinUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "artstationUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "sketchfabUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "customUrl",
-                  type: "string",
-                },
-              ],
-              indexed: false,
-              internalType: "struct ProfileConfigContract.Profile",
-              name: "profile",
-              type: "tuple",
-            },
-          ],
-          name: "ProfileUpdated",
-          type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "user",
-              type: "address",
-            },
-          ],
-          name: "getProfile",
-          outputs: [
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "username",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "profilePicture",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "bannerPicture",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "biography",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "email",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "xUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "instagramUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "linkedinUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "artstationUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "sketchfabUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "customUrl",
-                  type: "string",
-                },
-              ],
-              internalType: "struct ProfileConfigContract.Profile",
-              name: "profileData",
-              type: "tuple",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "username",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "profilePicture",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "bannerPicture",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "biography",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "email",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "xUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "instagramUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "linkedinUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "artstationUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "sketchfabUrl",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "customUrl",
-                  type: "string",
-                },
-              ],
-              internalType: "struct ProfileConfigContract.Profile",
-              name: "profileData",
-              type: "tuple",
-            },
-          ],
-          name: "setProfile",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-      ],
-      inheritedFunctions: {},
-      receipt: {
-        to: null,
-        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-        contractAddress: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
-        transactionIndex: 0,
-        gasUsed: "1931107",
-        logsBloom:
-          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x459014e0a77c81f1e822f76775b21c1ee90c837c60153bba40b7561f916b623b",
-        transactionHash: "0xdc1e536d9a034252d92a90b75e0d3c595245e6768877ab6924eb13a224e219dc",
-        logs: [],
-        blockNumber: 5,
-        cumulativeGasUsed: "1931107",
-        status: 1,
-        byzantium: true,
-      },
-    },
-  },
   11155111: {
     ArbiterContract: {
       address: "0xd32821572710444a37f26FBAC1b216d9C0857C3C",
@@ -2592,6 +367,1051 @@ const deployedContracts = {
         logs: [],
         blockNumber: 9277769,
         cumulativeGasUsed: "9716973",
+        status: 1,
+        byzantium: true,
+      },
+    },
+    ArbiterProxy: {
+      address: "0xD380baD3ac6f3e991E36e49c0163716fCD171201",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_KlerosArbitrator",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "side",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "contributor",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "AppealContribution",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "klerosDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+          ],
+          name: "AppealCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amountPaid",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalAmountPaid",
+              type: "uint256",
+            },
+          ],
+          name: "ClientPayedGigArbitrationFee",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amountPaid",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalAmountPaid",
+              type: "uint256",
+            },
+          ],
+          name: "ClientPayedTalentArbitrationFee",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "contract IArbitrator",
+              name: "_arbitrator",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "_disputeID",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "_metaEvidenceID",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "_evidenceGroupID",
+              type: "uint256",
+            },
+          ],
+          name: "Dispute",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "DisputeTimeoutByInaction",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "contract IArbitrator",
+              name: "_arbitrator",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "_evidenceGroupID",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "_party",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "_evidence",
+              type: "string",
+            },
+          ],
+          name: "Evidence",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "beneficiary",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "reward",
+              type: "uint256",
+            },
+          ],
+          name: "FeesAndRewardsWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amountPaid",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalAmountPaid",
+              type: "uint256",
+            },
+          ],
+          name: "FreelancerPayedGigArbitrationFee",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amountPaid",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalAmountPaid",
+              type: "uint256",
+            },
+          ],
+          name: "FreelancerPayedTalentArbitrationFee",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+          ],
+          name: "GigDisputeCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "klerosDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+          ],
+          name: "GigDisputeRaised",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "_metaEvidenceID",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "_evidence",
+              type: "string",
+            },
+          ],
+          name: "MetaEvidence",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "contract IArbitrator",
+              name: "_arbitrator",
+              type: "address",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "_disputeID",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "_ruling",
+              type: "uint256",
+            },
+          ],
+          name: "Ruling",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+          ],
+          name: "TalentDisputeCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "klerosDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "TalentDisputeRaised",
+          type: "event",
+        },
+        {
+          inputs: [],
+          name: "AMOUNT_OF_CHOICES",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "FEE_DEPOSIT_TIMEOUT",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "LOSER_APPEAL_PERIOD_MULTIPLIER",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "LOSER_STAKE_MULTIPLIER",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "MULTIPLIER_DIVISOR",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "WINNER_STAKE_MULTIPLIER",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "_disputes",
+          outputs: [
+            {
+              internalType: "enum IArbitrableProxy.DisputeType",
+              name: "disputeType",
+              type: "uint8",
+            },
+            {
+              internalType: "enum IArbitrableProxy.DisputeStatus",
+              name: "status",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "klerosDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "freelancerDisputeFee",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "clientDisputeFee",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "feeDepositDeadline",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "externalId1",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "externalId2",
+              type: "uint256",
+            },
+            {
+              internalType: "bytes",
+              name: "arbitratorExtraData",
+              type: "bytes",
+            },
+            {
+              internalType: "bool",
+              name: "isRuled",
+              type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "currentRound",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "arbitrator",
+          outputs: [
+            {
+              internalType: "contract IArbitrator",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_freelancer",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+          ],
+          name: "createAndPayGigDisputeByClient",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_client",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+          ],
+          name: "createAndPayGigDisputeByFreelancer",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_externalId1",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_externalId2",
+              type: "uint256",
+            },
+            {
+              internalType: "enum IArbitrableProxy.DisputeType",
+              name: "_disputeType",
+              type: "uint8",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+            {
+              internalType: "address",
+              name: "_freelancer",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "_client",
+              type: "address",
+            },
+          ],
+          name: "createDispute",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "disputeCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint8",
+              name: "_side",
+              type: "uint8",
+            },
+          ],
+          name: "fundAppeal",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "klerosDisputeIdToLocalId",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+          ],
+          name: "payArbitrationFeeByClient",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+          ],
+          name: "payArbitrationFeeByFreelancer",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_disputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_ruling",
+              type: "uint256",
+            },
+          ],
+          name: "rule",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_freelancer",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+          ],
+          name: "startAndPayTalentDisputeByClient",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_client",
+              type: "address",
+            },
+            {
+              internalType: "bytes",
+              name: "_arbitratorExtraData",
+              type: "bytes",
+            },
+          ],
+          name: "startAndPayTalentDisputeByFreelancer",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+          ],
+          name: "timeoutByInaction",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "address payable",
+              name: "_beneficiary",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_round",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawFeesAndRewards",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {
+        arbitrator: "contracts/common/IArbitrableProxy.sol",
+        createAndPayGigDisputeByClient: "contracts/common/IArbitrableProxy.sol",
+        createAndPayGigDisputeByFreelancer: "contracts/common/IArbitrableProxy.sol",
+        createDispute: "contracts/common/IArbitrableProxy.sol",
+        disputeCount: "contracts/common/IArbitrableProxy.sol",
+        fundAppeal: "contracts/common/IArbitrableProxy.sol",
+        payArbitrationFeeByClient: "contracts/common/IArbitrableProxy.sol",
+        payArbitrationFeeByFreelancer: "contracts/common/IArbitrableProxy.sol",
+        startAndPayTalentDisputeByClient: "contracts/common/IArbitrableProxy.sol",
+        startAndPayTalentDisputeByFreelancer: "contracts/common/IArbitrableProxy.sol",
+        timeoutByInaction: "contracts/common/IArbitrableProxy.sol",
+        withdrawFeesAndRewards: "contracts/common/IArbitrableProxy.sol",
+        rule: "contracts/common/IArbitrable.sol",
+      },
+      receipt: {
+        to: null,
+        from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
+        contractAddress: "0xD380baD3ac6f3e991E36e49c0163716fCD171201",
+        transactionIndex: 47,
+        gasUsed: "2193963",
+        logsBloom:
+          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        blockHash: "0xdfca00e2ba7a4a94cbd0f1355aa15c0e36da39b0b51379ee1974fe8566d10675",
+        transactionHash: "0x3ce027478e81fb6af1ffd5eb4df68b555b8028f3187c762c17dec061aa119781",
+        logs: [],
+        blockNumber: 9371221,
+        cumulativeGasUsed: "15243594",
         status: 1,
         byzantium: true,
       },

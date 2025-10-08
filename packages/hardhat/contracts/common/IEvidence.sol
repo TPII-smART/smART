@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../IArbitrator.sol";
+import "./IArbitrator.sol";
 
 /** @title IEvidence
  *  ERC-1497: Evidence Standard

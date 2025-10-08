@@ -3,14 +3,13 @@ pragma solidity ^0.8.19;
 
 import "./common/DeliverableInfo.sol";
 import "./common/IArbitrableProxy.sol";
-import "./common/IArbitrable.sol";
 
 /**
  * @title HiredTalentsContract
  * @dev A simplified escrow contract for managing freelance talents.
  * @author SmArt
  */
-contract HiredTalentsContract is IArbitrable {
+contract HiredTalentsContract {
 
     IArbitrableProxy public arbiterProxy;
 
@@ -241,7 +240,6 @@ contract HiredTalentsContract is IArbitrable {
      * @dev Constructor
      * @param _owner Address of the contract owner
      * @param _KlerosArbitrator Address of the Kleros arbitrator for dispute resolution
-     * @param _arbitrator Address of the arbitrator for dispute resolution
      */
     constructor(address _owner, address _KlerosArbitrator) {
         require(_KlerosArbitrator != address(0), "Invalid Kleros.io arbiter address");
@@ -346,7 +344,6 @@ contract HiredTalentsContract is IArbitrable {
             clientCancelled: false,
             freelancerCancelled: false,
             freelancerUploaded: false,
-            disputeQuestionId: 0, // No dispute initially
             deliverableInfo: new DeliverableInfo[](0)
         });
 
@@ -678,5 +675,5 @@ contract HiredTalentsContract is IArbitrable {
         }
         return string(bstr);
     }
-
+    
 }
