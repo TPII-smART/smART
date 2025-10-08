@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
-import { ClockIcon, DocumentTextIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, ClockIcon, DocumentTextIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverablePreview from "~~/components/DeliverablePreview/DeliverablePreview";
 import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
@@ -72,8 +72,8 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
   const resolvedResource = deliverable.resource && !deliverable.isLink ? resolveIPFSHash(deliverable.resource) : "";
 
   return (
-    <Card className="overflow-hidden">
-      <div className="grid md:grid-cols-[300px_1fr] gap-20 py-20 px-10">
+    <Card className="overflow-hidden ">
+      <div className="grid md:grid-cols-[300px_1fr] gap-10 py-20 px-10 w-full">
         {/* File Preview */}
         <div className="space-y-3 w-full max-h-[200px] ">
           <div className="relative aspect-[16/9] w-full h-full rounded-lg overflow-hidden bg-muted border border-border">
@@ -115,7 +115,7 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
               <div className=" min-w-0">
                 <div className="flex flex-col gap-y-1">
                   <div className="flex items-center gap-2 ">
-                    <span className="font-bold  text-xl">{freelancer.name}</span>
+                    <span className="font-bold text-xl">{freelancer.name}</span>
                     <span className="text-xl text-muted-foreground">•</span>
                     <span className="text-base text-muted-foreground text-gray-400">{freelancer.role}</span>
                   </div>
@@ -135,7 +135,7 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
 
           {/* Receiver Response */}
           {client && deliverable.clientResponse ? (
-            <div className="space-y-3 pl-4 border-l-2 border-accent/20">
+            <div className="space-y-3 pl-4 border-l-2 border-accent/20 ">
               <div className="flex items-start gap-3">
                 <div className={`relative rounded-full overflow-hidden`}>
                   <AvatarImage
@@ -153,6 +153,7 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
                     <span className="font-bold  text-xl">{client.name}</span>
                     <span className="text-xl text-muted-foreground">•</span>
                     <span className="text-base text-muted-foreground text-gray-400">{client.role}</span>
+                    <CheckCircleIcon className="h-4 w-4 text-accent ml-auto" />
                   </div>
                   <div className="text-sm text-muted-foreground flex items-center gap-1 text-gray-400 ">
                     <ClockIcon className="h-3 w-3" />
@@ -160,8 +161,8 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
                   </div>
                 </div>
               </div>
-              <div className="ml-[52px]">
-                <p className="text-sm leading-relaxed text-foreground bg-accent/10 rounded-lg p-4 border border-accent/20">
+              <div className="ml-[52px] ">
+                <p className="text-sm leading-relaxed text-foreground bg-accent/10 rounded-lg p-4 border border-accent/20 break-words whitespace-pre-line ">
                   {deliverable.clientResponse}
                 </p>
               </div>
