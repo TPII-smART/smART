@@ -2,41 +2,19 @@
 pragma solidity ^0.8.19;
 
 import "./common/DeliverableInfo.sol";
-
-interface IRealityETH {
-    function askQuestion(
-        uint256 template_id,
-        string calldata question,
-        address arbitrator,
-        uint32 timeout,
-        uint32 opening_ts,
-        uint256 nonce
-    ) external payable returns (bytes32);
-    function resultFor(bytes32 question_id) external view returns (bytes32);
-    function submitAnswerFor(
-        bytes32 question_id,
-        bytes32 answer,
-        uint256 max_previous,
-        address answerer
-    ) external payable;
-}
-
-interface IArbiterContract {
-    function arbitrationFee() external view returns (uint256);
-    function requestArbitration(bytes32 question_id, uint256 lastSeenBond) external payable;
-}
+import "./common/IArbitrableProxy.sol";
+import "./common/IArbitrable.sol";
 
 /**
  * @title HiredTalentsContract
  * @dev A simplified escrow contract for managing freelance talents.
  * @author SmArt
  */
-contract HiredTalentsContract {
+contract HiredTalentsContract is IArbitrable {
 
-    // Reality.eth contract address
-    IRealityETH public reality;
+    IArbitrableProxy public arbiterProxy;
 
-    IArbiterContract public arbitratorAddress;
+    bytes public constant arbitratorExtraData = hex"0000000000000000000000000000000000000000000000000000000000000003"; // Court + Jurors quantity for Kleros
 
     // Enums for hiredTalent states
     enum HiredTalentState {
@@ -59,20 +37,26 @@ contract HiredTalentsContract {
         string category;
         uint256 durationInHours; // Estimated time to complete hiredTalent in hours
         uint256 deadline; // Actual deadline set when hiredTalent is accepted
+
         HiredTalentState state;
+
         uint256 createdAt;
         uint256 acceptedAt; // When the hiredTalent was accepted
         uint256 finishedAt; // When the hiredTalent was finished
         uint256 canceledAt; // When the hiredTalent was canceled
         uint256 rejectedAt; // When the hiredTalent was rejected by the client
+
         uint8 rating; // Rating given by the client, should be between 1 and 5
+
         bool clientReceived; // Whether the client has received the hiredTalent results
         bool freelancerDelivered; // Whether the freelancer has delivered the hiredTalent results
+
         bool clientRejected; // Whether the client has rejected the hiredTalent results
         bool clientCancelled; // Whether the client cancelled the hiredTalent
         bool freelancerCancelled; // Whether the freelancer cancelled the hiredTalent
+
         bool freelancerUploaded; // Whether the freelancer has uploaded a deliverable
-        uint256 disputeQuestionId; // Question ID for dispute resolution
+
         DeliverableInfo[] deliverableInfo; // Store the deliverable related to the hiredTalent
     }
 
@@ -256,13 +240,12 @@ contract HiredTalentsContract {
     /**
      * @dev Constructor
      * @param _owner Address of the contract owner
-     * @param _reality Address of the Reality.eth contract
+     * @param _KlerosArbitrator Address of the Kleros arbitrator for dispute resolution
      * @param _arbitrator Address of the arbitrator for dispute resolution
      */
-    constructor(address _owner, address _reality, address _arbitrator) {
-        require(_reality != address(0), "Invalid Reality.eth address");
-        reality = IRealityETH(_reality);
-        arbitratorAddress = IArbiterContract(_arbitrator);
+    constructor(address _owner, address _KlerosArbitrator) {
+        require(_KlerosArbitrator != address(0), "Invalid Kleros.io arbiter address");
+        arbiterProxy = IArbitrableProxy(_KlerosArbitrator);
         owner = _owner;
     }
 
@@ -696,145 +679,4 @@ contract HiredTalentsContract {
         return string(bstr);
     }
 
-
-    /**
-     * @dev Start a dispute for a hiredTalent (either party can start a dispute)
-     * @param _talentId The ID of the talent posting this hiredTalent belongs to
-     * @param _hiredTalentId The hiredTalent ID to dispute
-     * @param _comment Comment explaining the reason for the dispute
-     * @param _bountyAmount Amount to be used as bounty for the dispute
-     * @param _bondAmount Amount to be used as bond for the first answer
-     * @param _escalateToArbitrator Whether to escalate the dispute to an arbitrator immediately
-     */
-    function startDispute(
-        uint256 _talentId,
-        uint256 _hiredTalentId,
-        string memory _comment,
-        uint256 _bountyAmount,
-        uint256 _bondAmount,
-        bool _escalateToArbitrator
-    ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
-        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-        require(hiredTalent.state == HiredTalentState.Ongoing, "HiredTalent not ongoing");
-        require(bytes(_comment).length > 0, "Comment cannot be empty");
-        require(msg.value > 0, "Payed amount must be greater than 0");
-        require(_bountyAmount > 0, "Bounty amount must be greater than 0");
-        require(_bondAmount > 0, "Bond amount must be greater than 0");
-        // Get arbitration fee from arbitrator contract
-        uint256 arbitrationFee = arbitratorAddress.arbitrationFee();
-        require(arbitrationFee > 0, "Arbitration fee must be greater than 0");
-        if (_escalateToArbitrator) {
-            require(msg.value >= _bondAmount + _bountyAmount + arbitrationFee, "Insufficient funds to cover bounty, bond, and arbitration fee");
-        } else {
-            require(msg.value >= _bondAmount + _bountyAmount, "Insufficient funds to cover bounty and bond");
-        }
-
-        string memory senderRole = msg.sender == hiredTalent.client ? "Client" : "Freelancer";
-        string memory comment = string(
-            abi.encodePacked(senderRole, "\u0027s comment\u003A ", _comment)
-        );
-
-        string memory filesString = "";
-        if (hiredTalent.deliverableInfo.length == 0) {
-            filesString = "No files attached";
-        } else {
-            for (uint256 i = 0; i < hiredTalent.deliverableInfo.length; i++) {
-                filesString = string(abi.encodePacked(
-                    filesString,
-                    hiredTalent.deliverableInfo[i].isLink ? "Link\u003A " : "IPFS\u003A ",
-                    hiredTalent.deliverableInfo[i].resource
-                ));
-                if (i < hiredTalent.deliverableInfo.length - 1) {
-                    filesString = string(abi.encodePacked(filesString, " \u007C "));
-                }
-            }
-        }
-
-        string memory questionData = string(
-            abi.encodePacked(
-                "Did the freelancer fulfill the hired talent contract agreement? -> ",
-                comment,
-                " -> Files: \u007C ",
-                filesString,
-                "\u241f",
-                "freelance",
-                "\u241f",
-                "en"
-            )
-        );
-
-        // Forward the bounty to Reality.eth and create the question
-        try reality.askQuestion{value: _bountyAmount}(
-            uint256(0),
-            questionData,
-            address(arbitratorAddress),
-            uint32(300),
-            uint32(block.timestamp),
-            uint256(_talentId * 1e6 + _hiredTalentId)
-        ) returns (bytes32 questionId) {
-            // Store the question ID in the hired talent
-            hiredTalent.state = HiredTalentState.Disputed;
-            hiredTalent.disputeQuestionId = uint256(questionId);
-
-            // Answer the question depending on who is calling
-            // Client wants to answer "No" (freelancer did not fulfill)
-            // Freelancer wants to answer "Yes" (freelancer did fulfill)
-            uint256 answer = msg.sender == hiredTalent.client ? uint256(0) : uint256(1);
-
-            require(address(this).balance >= _bondAmount, "Not enough left for bond");
-
-            // Submit the answer with the provided bond
-            reality.submitAnswerFor{value: _bondAmount}(questionId, bytes32(answer), 0, msg.sender);
-            // If escalateToArbitrator is true, request arbitration
-            if (_escalateToArbitrator) {
-                arbitratorAddress.requestArbitration{value: arbitrationFee}(questionId, _bondAmount);
-            }
-
-            emit DisputeStarted(_talentId, _hiredTalentId, questionId, msg.sender);
-        } catch {
-            revert("Reality.eth failed: low-level error");
-        }
-    }
-
-    function getDisputeResult(uint256 _talentId, uint256 _hiredTalentId) external view hiredTalentExists(_talentId, _hiredTalentId) returns (bytes32) {
-        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-
-        require(hiredTalent.state == HiredTalentState.Disputed, "Hired talent is not disputed");
-        require(hiredTalent.disputeQuestionId != 0, "No dispute question ID");
-
-        bytes32 questionId = bytes32(hiredTalent.disputeQuestionId);
-        return reality.resultFor(questionId);
-    }
-
-    function resolveDispute(uint256 _talentId, uint256 _hiredTalentId) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
-        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-
-        require(hiredTalent.state == HiredTalentState.Disputed, "Hired talent is not disputed");
-        require(hiredTalent.disputeQuestionId != 0, "No dispute question ID");
-
-        bytes32 questionId = bytes32(hiredTalent.disputeQuestionId);
-        bytes32 result;
-        try reality.resultFor(questionId) returns (bytes32 r) {
-            result = r;
-        } catch (bytes memory revertData) {
-            if (revertData.length == 32 && keccak256(revertData) == keccak256(abi.encodePacked(bytes32("question must be finalized")))) {
-            revert("question must be finalized");
-            } else {
-            revert("Reality.eth failed: low-level error");
-            }
-        }
-
-        // If result is bytes32(0), treat as "No" answer (client wins)
-        if (result == bytes32(uint256(1))) {
-            // Freelancer wins, release payment
-            payable(hiredTalent.freelancer).transfer(hiredTalent.payment);
-        } else {
-            // Client wins, refund payment
-            payable(hiredTalent.client).transfer(hiredTalent.payment);
-        }
-
-        hiredTalent.state = HiredTalentState.Finished;
-        hiredTalent.finishedAt = block.timestamp;
-        emit HiredTalentFinished(_talentId, _hiredTalentId, hiredTalent.freelancer, hiredTalent.client, hiredTalent.payment, hiredTalent.finishedAt);
-    }
 }
