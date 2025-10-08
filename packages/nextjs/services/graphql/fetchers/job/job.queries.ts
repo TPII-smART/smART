@@ -447,7 +447,7 @@ export const getJobAndHiresPaginated = gql`
 
 export const getDeliverablesForJob = gql`
   query GetDeliverablesForJob($jobId: BigInt!, $postingId: BigInt!) {
-    jobDeliverables(where: { jobId: $jobId, postingId: $postingId }) {
+    jobDeliverables(where: { jobId: $jobId, postingId: $postingId }, orderBy: "uploadedAt", orderDirection: "desc") {
       items {
         resource
         uploadedAt
