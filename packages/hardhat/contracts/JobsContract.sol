@@ -409,20 +409,21 @@ contract JobsContract {
      * If both parties confirm, the job is marked as finished and payment is released.
      * @param _postingId The ID of the job posting this job belongs to
      * @param _jobId The job ID to confirm completion
+     * @param _deliverableParams The content of the deliverable (IPFS hash and comment).
      */
     function confirmFreelancerCompletion(
         uint256 _postingId,
-        uint256 _jobId
+        uint256 _jobId,
+        DeliverableParams calldata _deliverableParams
     ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "Job is not ongoing");
         require(job.client != address(0), "Job has no assigned client");
         require(job.freelancer != address(0), "Job has no assigned freelancer");
-
-        require(job.freelancerUploaded, "Freelancer has not uploaded deliverables");
         require(!job.freelancerDelivered, "Freelancer already marked the job as delivered");
 
+        _uploadDeliverable(_postingId, _jobId, _deliverableParams);
         job.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_postingId, _jobId, msg.sender, job.client, block.timestamp);
 
@@ -564,11 +565,11 @@ contract JobsContract {
      * @param _jobId Job ID.
      * @param _deliverableParams The content of the deliverable (IPFS hash and comment).
      */
-    function uploadDeliverable(
+    function _uploadDeliverable(
         uint256 _postingId,
         uint256 _jobId,
         DeliverableParams memory _deliverableParams
-    ) external onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
+    ) internal onlyFreelancer(_postingId, _jobId) jobExists(_postingId, _jobId) {
         Job storage job = postedJobs[_postingId].jobs[_jobId];
 
         require(job.state == JobState.Ongoing, "The job is not ongoing.");

@@ -39,7 +39,7 @@ export default function UniversalDetail({
   isMining,
   isDeliverableLoading,
   handleRateJob,
-  handleUploadDeliverable,
+  handleFreelancerConfirmCompletion: handleUploadDeliverable,
   handleClientConfirmCompletion,
   handleRejectJob,
   isUploadModalOpen,

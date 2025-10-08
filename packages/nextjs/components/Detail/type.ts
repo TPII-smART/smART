@@ -23,5 +23,5 @@ export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElemen
   handleClientConfirmCompletion: (clientResponse: string) => Promise<void>;
   handleRejectJob: (reason: string) => void;
   handleRateJob: (rating: number) => void;
-  handleUploadDeliverable: (deliverableData: FileFormData) => Promise<void>;
+  handleFreelancerConfirmCompletion: (deliverableData: FileFormData) => Promise<void>;
 }

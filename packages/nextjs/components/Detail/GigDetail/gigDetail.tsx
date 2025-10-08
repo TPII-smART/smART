@@ -535,7 +535,7 @@ export default function GigDetail({
         handleClientConfirmCompletion={handleClientConfirmCompletion}
         handleRejectJob={handleRejectGig}
         handleRateJob={handleRateGig}
-        handleUploadDeliverable={handleUploadDeliverable}
+        handleFreelancerConfirmCompletion={handleUploadDeliverable}
       />
     </>
   );
