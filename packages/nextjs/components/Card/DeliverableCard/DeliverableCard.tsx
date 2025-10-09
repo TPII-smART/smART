@@ -30,7 +30,13 @@ const getStatusBadge = (status: number) => {
   const badgeClass = "min-w-[110px] text-center ";
   switch (status) {
     case DeliverableState.Pending:
-      return <Badge className={`bg-purple-600 text-white font-medium ${badgeClass}`}>Pending Review</Badge>;
+      return (
+        <Badge
+          className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass} hover:bg-amber-300 transition-colors`}
+        >
+          Pending Review
+        </Badge>
+      );
     case DeliverableState.Approved:
       return (
         <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
