@@ -1,9 +1,10 @@
 import { FileFormData } from "../UploadFileForm/types";
+import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 
 export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElement> {
   data?: DetailData;
-  deliverables?: any[];
+  deliverables?: Deliverable[];
   statusBadge?: React.ReactNode;
   actionButtons: React.ReactNode[];
   statusMessage: string;
