@@ -386,6 +386,7 @@ contract JobsContract {
         require(!job.clientReceived, "Client already confirmed job reception");
         job.clientReceived = true;
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Approved;
         deliverableInfo.responseTimestamp = block.timestamp;
 
         emit ClientMarkedAsReceived(
@@ -584,7 +585,8 @@ contract JobsContract {
             uploadedAt: block.timestamp,
             clientResponse: "",
             responseTimestamp: 0,
-            isLink: _deliverableParams.isLink
+            isLink: _deliverableParams.isLink,
+            state: DeliverableState.Pending
         });
 
         job.freelancerUploaded = true;
@@ -621,6 +623,7 @@ contract JobsContract {
         job.clientRejected = true;
         job.freelancerUploaded = false;
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Rejected;
         deliverableInfo.responseTimestamp = block.timestamp;
         job.rejectedAt = block.timestamp;
 

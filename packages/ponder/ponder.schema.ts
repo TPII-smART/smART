@@ -159,6 +159,7 @@ export const jobDeliverable = onchainTable(
     clientResponse: t.varchar({ length: 512 }),
 	responseTimestamp: t.bigint(),
     isLink: t.boolean().notNull(),
+	state: t.integer().notNull(),
     lastTransactionHash: t.varchar({ length: 256 }).notNull(),
   }),
   table => ({
@@ -176,6 +177,7 @@ export const gigDeliverable = onchainTable(
     clientResponse: t.varchar({ length: 512 }),
 	responseTimestamp: t.bigint(),
     isLink: t.boolean().notNull(),
+	state: t.integer().notNull(),
     lastTransactionHash: t.varchar({ length: 256 }).notNull(),
   }),
   table => ({

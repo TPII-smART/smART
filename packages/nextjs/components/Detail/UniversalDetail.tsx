@@ -45,7 +45,7 @@ export default function UniversalDetail({
   isUploadModalOpen,
   onCloseUploadModal,
   isPreviewModalOpen,
-  onClosePreviewModal,
+  onCloseReviewModal: onClosePreviewModal,
 }: UniversalDetailProps) {
   const { address: userAddress } = useAccount();
 
@@ -154,10 +154,10 @@ export default function UniversalDetail({
       .max(5, "Rating must be between 1 and 5"),
   });
 
-  const resource = deliverables?.[deliverables?.length - 1]?.resource;
-  const isLink = deliverables?.[deliverables?.length - 1]?.isLink;
-  const submissionComment = deliverables?.[deliverables?.length - 1]?.submissionComment;
-  const clientResponse = deliverables?.[deliverables?.length - 1]?.clientResponse;
+  const resource = deliverables?.[0]?.resource;
+  const isLink = deliverables?.[0]?.isLink;
+  const submissionComment = deliverables?.[0]?.submissionComment;
+  const clientResponse = deliverables?.[0]?.clientResponse;
 
   const reviewModalDescription = isClient
     ? "You are about to review the deliverable submitted by the freelancer. Please ensure it meets the job requirements."
@@ -460,7 +460,7 @@ export default function UniversalDetail({
         isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
         loading={isMining && isDeliverableLoading}
-        canUploadFile={isFreelancer && !isClient && data.clientRejected}
+        showFullInfo={true}
       />
 
       {/* Rating modal for client */}

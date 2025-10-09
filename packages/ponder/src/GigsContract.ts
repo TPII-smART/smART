@@ -5,7 +5,7 @@ import {
 	notification,
 	gigDeliverable,
 } from "ponder:schema";
-import { GigState, ApplicationState } from "@se-2/common";
+import { GigState, ApplicationState, DeliverableState } from "@se-2/common";
 
 // Listen for Gig creation
 ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
@@ -204,6 +204,8 @@ ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		})
 		.set({
 			clientResponse: event.args.comment,
+			state: DeliverableState.Approved,
+			responseTimestamp: BigInt(event.args.timestamp),
 			lastTransactionHash: event.transaction.hash,
 		});
 
@@ -326,6 +328,7 @@ ponder.on("GigsContract:DeliverableUploaded", async ({ event, context }) => {
 		submissionComment: event.args.submissionComment,
 		isLink: event.args.isLink,
 		uploadedAt: BigInt(event.block.timestamp),
+		state: DeliverableState.Pending,
 		lastTransactionHash: event.transaction.hash,
 	});
 
@@ -368,6 +371,8 @@ ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 	})
 	.set({
 		clientResponse: event.args.comment,
+		state: DeliverableState.Rejected,
+		responseTimestamp: BigInt(event.args.timestamp),
 		lastTransactionHash: event.transaction.hash,
 	});
 

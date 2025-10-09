@@ -19,7 +19,7 @@ export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElemen
   isRatingModalOpen: boolean;
   onCloseRatingModal: () => void;
   isPreviewModalOpen: boolean;
-  onClosePreviewModal: () => void;
+  onCloseReviewModal: () => void;
   handleClientConfirmCompletion: (clientResponse: string) => Promise<void>;
   handleRejectJob: (reason: string) => void;
   handleRateJob: (rating: number) => void;

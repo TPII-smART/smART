@@ -460,6 +460,7 @@ contract GigsContract {
 
         gig.clientReceived = true;
         deliverableInfo.clientResponse = _clientResponse;
+        deliverableInfo.state = DeliverableState.Approved;
         deliverableInfo.responseTimestamp = block.timestamp;
 
         emit ClientMarkedAsReceived(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
@@ -599,7 +600,8 @@ contract GigsContract {
             uploadedAt: block.timestamp,
             responseTimestamp: 0,
             clientResponse: "",
-            isLink: _deliverableParams.isLink
+            isLink: _deliverableParams.isLink,
+            state: DeliverableState.Pending
         });
 
         gig.freelancerUploaded = true;
@@ -633,6 +635,7 @@ contract GigsContract {
         gig.freelancerUploaded = false;
 
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Rejected;
         deliverableInfo.responseTimestamp = block.timestamp;
 
         emit GigRejected(

@@ -1,36 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import { Badge } from "@/components/Badge";
 import { Card } from "@/components/Card";
-import { CheckCircleIcon, ClockIcon, DocumentTextIcon, PhotoIcon } from "@heroicons/react/24/outline";
+import { DeliverableState } from "@se-2/common";
+import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverablePreview from "~~/components/DeliverablePreview/DeliverablePreview";
 import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
 import { Deliverable } from "~~/types/deliverable";
-
-// interface DeliverableCard {
-//   fileName: string;
-//   fileType: string;
-//   isLink: boolean;
-//   resource: string | null;
-//   sender: {
-//     name: string;
-//     address?: string;
-//     avatar?: string;
-//     role: string;
-//   };
-//   senderComment: string;
-//   timestamp: string;
-//   receiver: {
-//     name: string;
-//     address?: string;
-//     avatar?: string;
-//     role: string;
-//   } | null;
-//   receiverResponse: string | null;
-//   responseTimestamp: string | null;
-// }
 
 interface participantDeliverable {
   name: string;
@@ -44,35 +21,45 @@ interface DeliverableCardProps {
   deliverable: Deliverable;
   freelancer: participantDeliverable;
   client: participantDeliverable | null;
+  actionButtons: React.ReactNode[];
+  isPreviewModalOpen: boolean;
+  onCloseReviewModal: () => void;
 }
 
-export function DeliverableCard({ deliverable, client, freelancer }: DeliverableCardProps) {
-  // Determine avatar size based on card variant
+const getStatusBadge = (status: number) => {
+  const badgeClass = "min-w-[110px] text-center ";
+  switch (status) {
+    case DeliverableState.Pending:
+      return <Badge className={`bg-purple-600 text-white font-medium ${badgeClass}`}>Pending Review</Badge>;
+    case DeliverableState.Approved:
+      return (
+        <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
+          Approved
+        </Badge>
+      );
+    case DeliverableState.Rejected:
+      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
 
-  const getFileIcon = (fileType: string) => {
-    switch (fileType) {
-      case "pdf":
-      case "doc":
-      case "docx":
-        return <DocumentTextIcon className="h-5 w-5" />;
-      case "jpg":
-      case "png":
-      case "gif":
-      case "figma":
-        return <PhotoIcon className="h-5 w-5" />;
-      case "excel":
-      case "xlsx":
-      case "csv":
-        return <PhotoIcon className="h-5 w-5" />;
-      default:
-        return <DocumentTextIcon className="h-5 w-5" />;
-    }
-  };
+    case DeliverableState.Disputed:
+      return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
+    default:
+      return null;
+  }
+};
 
+export function DeliverableCard({
+  deliverable,
+  client,
+  freelancer,
+  actionButtons,
+  isPreviewModalOpen,
+  onCloseReviewModal,
+}: DeliverableCardProps) {
   const resolvedResource = deliverable.resource && !deliverable.isLink ? resolveIPFSHash(deliverable.resource) : "";
 
   return (
-    <Card className="overflow-hidden ">
+    <Card className="overflow-hidden relative ">
+      <div className="absolute top-4 right-4 z-10">{getStatusBadge(deliverable.state)}</div>
       <div className="grid md:grid-cols-[300px_1fr] gap-10 py-20 px-10 w-full">
         {/* File Preview */}
         <div className="space-y-3 w-full max-h-[200px] ">
@@ -112,17 +99,18 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
                   onClickProfileNavigation={true}
                 />
               </div>
-              <div className=" min-w-0">
-                <div className="flex flex-col gap-y-1">
-                  <div className="flex items-center gap-2 ">
+              <div className="flex flex-col gap-y-1 justify-between w-full">
+                <div className="flex gap-2 w-full items-center">
+                  <div className="flex gap-2 items-center">
                     <span className="font-bold text-xl">{freelancer.name}</span>
                     <span className="text-xl text-muted-foreground">•</span>
                     <span className="text-base text-muted-foreground text-gray-400">{freelancer.role}</span>
                   </div>
-                  <div className="text-sm text-muted-foreground flex items-center gap-1 text-gray-400 ">
-                    <ClockIcon className="h-3 w-3" />
-                    {deliverable.uploadedAt}
-                  </div>
+                </div>
+
+                <div className="text-sm text-muted-foreground flex items-center gap-1 text-gray-400 ">
+                  <ClockIcon className="h-3 w-3" />
+                  {deliverable.uploadedAt}
                 </div>
               </div>
             </div>
@@ -155,6 +143,7 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
                     <span className="text-base text-muted-foreground text-gray-400">{client.role}</span>
                     <CheckCircleIcon className="h-4 w-4 text-accent ml-auto" />
                   </div>
+
                   <div className="text-sm text-muted-foreground flex items-center gap-1 text-gray-400 ">
                     <ClockIcon className="h-3 w-3" />
                     {deliverable.responseTimestamp}
@@ -169,9 +158,12 @@ export function DeliverableCard({ deliverable, client, freelancer }: Deliverable
             </div>
           ) : (
             <div className="pl-4 border-l-2 border-dashed border-border">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
-                <ClockIcon className="h-4 w-4" />
-                <span>Awaiting response...</span>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+                  <ClockIcon className="h-4 w-4" />
+                  <span>Awaiting response...</span>
+                </div>
+                {actionButtons && actionButtons.length > 0 && <div className="flex justify-end ">{actionButtons}</div>}
               </div>
             </div>
           )}

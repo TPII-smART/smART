@@ -451,6 +451,7 @@ export const getDeliverablesForJob = gql`
       items {
         resource
         uploadedAt
+        state
         submissionComment
         clientResponse
         responseTimestamp

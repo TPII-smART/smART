@@ -1,6 +1,6 @@
 import { ponder } from "ponder:registry";
 import { job, jobPosting, notification, jobDeliverable } from "ponder:schema";
-import { JobState } from "@se-2/common";
+import { JobState, DeliverableState } from "@se-2/common";
 
 // Event handlers for the JobsContract
 
@@ -145,6 +145,7 @@ ponder.on(
 				submissionComment: event.args.submissionComment,
 				isLink: event.args.isLink,
 				uploadedAt: BigInt(event.block.timestamp),
+				state: DeliverableState.Pending,
 				lastTransactionHash: event.transaction.hash,
 			});
 
@@ -186,6 +187,7 @@ ponder.on("JobsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 		uploadedAt: event.args.deliverableUploadedAt,
 	}).set({
 		clientResponse: event.args.comment,
+		state: DeliverableState.Approved,
 		responseTimestamp: BigInt(event.args.timestamp),
 		lastTransactionHash: event.transaction.hash,
 	});
@@ -345,6 +347,7 @@ ponder.on("JobsContract:JobRejected", async ({ event, context }) => {
 		uploadedAt: event.args.deliverableUploadedAt,
 	}).set({
 		clientResponse: event.args.comment,
+		state: DeliverableState.Rejected,
 		responseTimestamp: BigInt(event.args.timestamp),
 		lastTransactionHash: event.transaction.hash,
 	});

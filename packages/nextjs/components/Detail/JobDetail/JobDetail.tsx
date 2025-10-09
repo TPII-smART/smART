@@ -235,7 +235,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
   const getActionButtons = () => {
     const buttons = [];
 
-    if (deliverables && deliverables.length > 0 && (isClient || isFreelancer) && job.freelancerDelivered) {
+    if (deliverables && deliverables.length > 0 && (isClient || isFreelancer || jobStatus === JobState.Disputed)) {
       buttons.push(
         <Button
           variant="outline"
@@ -402,7 +402,7 @@ export default function JobDetail({ postingId, jobId }: { postingId: string; job
         onCloseUploadModal={() => {
           setShowUploadModal(false);
         }}
-        onClosePreviewModal={() => setShowReviewModal(false)}
+        onCloseReviewModal={() => setShowReviewModal(false)}
         onCloseRatingModal={() => setIsRatingModalOpen(false)}
         onCloseDeliverableModal={() => setShowDeliverableModal(false)}
         handleRateJob={handleRateJob}

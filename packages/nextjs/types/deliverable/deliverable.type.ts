@@ -1,3 +1,6 @@
+// Update the import path to the correct relative location, for example:
+import { DeliverableState } from "@se-2/common";
+
 export class Deliverable {
   resource: string;
   uploadedAt: string;
@@ -5,10 +8,12 @@ export class Deliverable {
   clientResponse?: string;
   responseTimestamp?: string;
   isLink: boolean;
+  state: DeliverableState = DeliverableState.Pending;
 
   constructor(
     resource: string,
     uploadedAt: string,
+    state: DeliverableState,
     isLink: boolean,
     submissionComment?: string,
     clientResponse?: string,
@@ -20,6 +25,7 @@ export class Deliverable {
     this.clientResponse = clientResponse;
     this.responseTimestamp = responseTimestamp;
     this.isLink = isLink;
+    this.state = state;
   }
 }
 
