@@ -8,8 +8,8 @@ export function DeliverablesHistory(deliverableProps: DeliverableHistoryProps) {
   if (deliverableProps.type === "job") {
     return <DeliverableJobHistory {...deliverableProps} />;
   }
-  // if (deliverableProps.type === "gig") {
-  //   return <DeliverableGigHistory {...deliverableProps} />;
-  // }
+  if (deliverableProps.type === "gig") {
+    return <DeliverableGigHistory {...deliverableProps} />;
+  }
   return null;
 }

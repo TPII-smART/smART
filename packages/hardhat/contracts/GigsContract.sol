@@ -421,15 +421,20 @@ contract GigsContract {
     /**
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
+     * @param _deliverableParams The deliverable information submitted by the freelancer
      */
-    function confirmFreelancerCompletion(uint256 _gigId) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
+    function confirmFreelancerCompletion(
+        uint256 _gigId,
+        DeliverableParams memory _deliverableParams
+    ) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
 
         require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
-        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
+
+        _uploadDeliverable(_gigId, _deliverableParams);
 
         gig.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
@@ -582,10 +587,10 @@ contract GigsContract {
      * @param _gigId Gig ID.
      * @param _deliverableParams The content of the file (IPFS hash and comment).
      */
-    function uploadDeliverable(
+    function _uploadDeliverable(
         uint256 _gigId,
         DeliverableParams memory _deliverableParams
-    ) external onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
+    ) internal onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");

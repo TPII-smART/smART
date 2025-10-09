@@ -377,10 +377,11 @@ export const getMyGigRatings = gql`
 
 export const getDeliverablesForGig = gql`
   query GetDeliverablesForGig($gigId: BigInt!) {
-    gigDeliverables(where: { gigId: $gigId }) {
+    gigDeliverables(where: { gigId: $gigId }, orderBy: "uploadedAt", orderDirection: "desc") {
       items {
         gigId
         resource
+        state
         submissionComment
         clientResponse
         responseTimestamp
