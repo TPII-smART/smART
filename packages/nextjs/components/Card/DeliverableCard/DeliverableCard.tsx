@@ -72,14 +72,9 @@ export function DeliverableCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm font-medium"></div>
             {!deliverable.isLink && deliverable.resource && (
-              <a
-                href={resolvedResource}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-muted-foreground text-accent font-mono truncate overflow-hidden whitespace-nowrap max-w-xs block"
-              >
+              <div className="text-xs text-muted-foreground text-accent font-mono truncate overflow-hidden whitespace-nowrap max-w-xs block">
                 {resolvedResource}
-              </a>
+              </div>
             )}
           </div>
         </div>

@@ -50,18 +50,23 @@ const DeliverablePreview = ({ resource, isLink }: DeliverablePreviewProps) => {
     );
   } else if (!isLink && resource) {
     return (
-      <div className="relative aspect-[16/9] w-full h-full rounded-lg ">
-        <Image
-          src={resolvedResource}
-          width={400}
-          height={300}
-          alt="Preview"
-          className="w-full h-full object-cover "
-          style={{
-            borderColor: "var(--color-border)",
-            background: "var(--color-surface)",
-          }}
-        />
+      <div className="relative aspect-[16/9] w-full h-full rounded-lg group">
+        <a href={resolvedResource} target="_blank" rel="noopener noreferrer" className="block w-full h-full">
+          <Image
+            src={resolvedResource}
+            width={400}
+            height={300}
+            alt="Preview"
+            className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+            style={{
+              borderColor: "var(--color-border)",
+              background: "var(--color-surface)",
+            }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <ArrowTopRightOnSquareIcon className="h-10 w-10 text-white" />
+          </div>
+        </a>
       </div>
     );
   }
