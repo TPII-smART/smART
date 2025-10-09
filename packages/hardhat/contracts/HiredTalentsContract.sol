@@ -111,7 +111,12 @@ contract HiredTalentsContract {
         uint256 hiredTalentDuration
     );
 
-    event HiredTalentAccepted(uint256 indexed talentId, uint256 indexed hiredTalentId, address indexed client, uint256 deadline);
+    event HiredTalentAccepted(
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        address indexed client,
+        uint256 deadline
+    );
 
     event FreelancerMarkedAsDelivered(
         uint256 indexed talentId,
@@ -121,7 +126,14 @@ contract HiredTalentsContract {
         uint256 timestamp
     );
 
-    event ClientMarkedAsReceived(uint256 indexed talentId, uint256 indexed hiredTalentId, address client, uint256 timestamp);
+    event ClientMarkedAsReceived(
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        address client,
+        string comment,
+        uint256 deliverableUploadedAt,
+        uint256 timestamp
+    );
 
     event HiredTalentFinished(
         uint256 indexed talentId,
@@ -132,7 +144,13 @@ contract HiredTalentsContract {
         uint256 timestamp
     );
 
-    event HiredTalentRated(uint256 indexed talentId, uint256 indexed hiredTalentId, address client, uint8 rating, uint256 timestamp);
+    event HiredTalentRated(
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        address client,
+        uint8 rating,
+        uint256 timestamp
+    );
 
     event HiredTalentCancelled(
         uint256 indexed talentId,
@@ -154,15 +172,6 @@ contract HiredTalentsContract {
         uint256 timestamp
     );
 
-    event CommentAdded(
-        uint256 indexed talentId,
-        uint256 indexed hiredTalentId,
-        address indexed client,
-        string response,
-        uint256 deliverableUploadedAt,
-        uint256 timestamp
-    );
-
     event HiredTalentRejected(
         uint256 indexed talentId,
         uint256 indexed hiredTalentId,
@@ -170,12 +179,17 @@ contract HiredTalentsContract {
         bool clientReceived,
         bool clientRejected,
         bool freelancerUploaded,
+        string comment,
+        uint256 deliverableUploadedAt,
         uint256 timestamp
     );
 
     // Modifiers
     modifier onlyFreelancer(uint256 _talentId, uint256 _hiredTalentId) {
-        require(postedHiredTalents[_talentId].hiredTalents[_hiredTalentId].freelancer == msg.sender, "Only freelancer can call this");
+        require(
+            postedHiredTalents[_talentId].hiredTalents[_hiredTalentId].freelancer == msg.sender,
+            "Only freelancer can call this"
+        );
         _;
     }
 
@@ -188,7 +202,10 @@ contract HiredTalentsContract {
     }
 
     modifier onlyClient(uint256 _talentId, uint256 _hiredTalentId) {
-        require(postedHiredTalents[_talentId].hiredTalents[_hiredTalentId].client == msg.sender, "Only client can call this");
+        require(
+            postedHiredTalents[_talentId].hiredTalents[_hiredTalentId].client == msg.sender,
+            "Only client can call this"
+        );
         _;
     }
 
@@ -342,10 +359,16 @@ contract HiredTalentsContract {
      * @param _talentId The ID of the talent this hiredTalent belongs to
      * @param _hiredTalentId The hiredTalent ID to accept
      */
-    function acceptHiredTalent(uint256 _talentId, uint256 _hiredTalentId) external hiredTalentExists(_talentId, _hiredTalentId) {
+    function acceptHiredTalent(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
-        require(hiredTalent.state == HiredTalentState.WaitingForApproval, "HiredTalent is not available for acceptance");
+        require(
+            hiredTalent.state == HiredTalentState.WaitingForApproval,
+            "HiredTalent is not available for acceptance"
+        );
         require(msg.sender == hiredTalent.freelancer, "Only freelancer can accept this hiredTalent");
         require(hiredTalent.client != address(0), "HiredTalent has no assigned client");
         require(hiredTalent.durationInHours > 0, "HiredTalent duration must be greater than 0");
@@ -386,9 +409,17 @@ contract HiredTalentsContract {
         require(!hiredTalent.clientReceived, "Client already confirmed hiredTalent reception");
         hiredTalent.clientReceived = true;
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Approved;
+        deliverableInfo.responseTimestamp = block.timestamp;
 
-        emit ClientMarkedAsReceived(_talentId, _hiredTalentId, msg.sender, block.timestamp);
-        emit CommentAdded(_talentId, _hiredTalentId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
+        emit ClientMarkedAsReceived(
+            _talentId,
+            _hiredTalentId,
+            msg.sender,
+            _comment,
+            deliverableInfo.uploadedAt,
+            block.timestamp
+        );
 
         // If both parties have confirmed, complete the hiredTalent
         if (hiredTalent.clientReceived && hiredTalent.freelancerDelivered) {
@@ -402,19 +433,21 @@ contract HiredTalentsContract {
      * If both parties confirm, the hiredTalent is marked as finished and payment is released.
      * @param _talentId The ID of the talent this hiredTalent belongs to
      * @param _hiredTalentId The hiredTalent ID to confirm completion
+     * @param _deliverableParams The content of the deliverable (IPFS hash and comment).
      */
     function confirmFreelancerCompletion(
         uint256 _talentId,
-        uint256 _hiredTalentId
+        uint256 _hiredTalentId,
+        DeliverableParams memory _deliverableParams
     ) external onlyFreelancer(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
         require(hiredTalent.state == HiredTalentState.Ongoing, "HiredTalent is not ongoing");
         require(hiredTalent.client != address(0), "HiredTalent has no assigned client");
         require(hiredTalent.freelancer != address(0), "HiredTalent has no assigned freelancer");
-
-        require(hiredTalent.freelancerUploaded, "Freelancer has not uploaded deliverables");
         require(!hiredTalent.freelancerDelivered, "Freelancer already marked the hiredTalent as delivered");
+
+        _uploadDeliverable(_talentId, _hiredTalentId, _deliverableParams);
 
         hiredTalent.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_talentId, _hiredTalentId, msg.sender, hiredTalent.client, block.timestamp);
@@ -438,7 +471,14 @@ contract HiredTalentsContract {
         // Sends payment to freelancer
         payable(hiredTalent.freelancer).transfer(hiredTalent.payment);
 
-        emit HiredTalentFinished(_talentId, _hiredTalentId, hiredTalent.freelancer, hiredTalent.client, hiredTalent.payment, hiredTalent.finishedAt);
+        emit HiredTalentFinished(
+            _talentId,
+            _hiredTalentId,
+            hiredTalent.freelancer,
+            hiredTalent.client,
+            hiredTalent.payment,
+            hiredTalent.finishedAt
+        );
     }
 
     /**
@@ -447,7 +487,11 @@ contract HiredTalentsContract {
      * @param _hiredTalentId The hiredTalent ID to rate
      * @param _rating The rating given by the client (1-5)
      */
-    function rateHiredTalent(uint256 _talentId, uint256 _hiredTalentId, uint8 _rating) external onlyClient(_talentId, _hiredTalentId) {
+    function rateHiredTalent(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        uint8 _rating
+    ) external onlyClient(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
         require(hiredTalent.state == HiredTalentState.Finished, "HiredTalent is not finished");
         require(hiredTalent.rating == 0, "HiredTalent already rated");
@@ -488,14 +532,24 @@ contract HiredTalentsContract {
             revert("HiredTalent cannot be cancelled in its current state");
         }
 
-        emit HiredTalentCancelled(_talentId, _hiredTalentId, hiredTalent.state, hiredTalent.clientCancelled, hiredTalent.freelancerCancelled, hiredTalent.canceledAt);
+        emit HiredTalentCancelled(
+            _talentId,
+            _hiredTalentId,
+            hiredTalent.state,
+            hiredTalent.clientCancelled,
+            hiredTalent.freelancerCancelled,
+            hiredTalent.canceledAt
+        );
     }
 
     /**
      * @dev Emergency cancel by owner (with refund)
      * @param _hiredTalentId The hiredTalent ID to emergency cancel
      */
-    function emergencyCancel(uint256 _talentId, uint256 _hiredTalentId) external onlyOwner hiredTalentExists(_talentId, _hiredTalentId) {
+    function emergencyCancel(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external onlyOwner hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
         hiredTalent.state = HiredTalentState.Cancelled;
@@ -557,11 +611,11 @@ contract HiredTalentsContract {
      * @param _hiredTalentId HiredTalent ID.
      * @param _deliverableParams The content of the deliverable (IPFS hash and comment).
      */
-    function uploadDeliverable(
+    function _uploadDeliverable(
         uint256 _talentId,
         uint256 _hiredTalentId,
         DeliverableParams memory _deliverableParams
-    ) external onlyFreelancer(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+    ) internal onlyFreelancer(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
         require(hiredTalent.state == HiredTalentState.Ongoing, "The hiredTalent is not ongoing.");
@@ -575,7 +629,9 @@ contract HiredTalentsContract {
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
             clientResponse: "",
-            isLink: _deliverableParams.isLink
+            responseTimestamp: 0,
+            isLink: _deliverableParams.isLink,
+            state: DeliverableState.Pending
         });
 
         hiredTalent.freelancerUploaded = true;
@@ -612,6 +668,8 @@ contract HiredTalentsContract {
         hiredTalent.clientRejected = true;
         hiredTalent.freelancerUploaded = false;
         deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Rejected;
+        deliverableInfo.responseTimestamp = block.timestamp;
         hiredTalent.rejectedAt = block.timestamp;
 
         emit HiredTalentRejected(
@@ -621,8 +679,9 @@ contract HiredTalentsContract {
             hiredTalent.clientReceived,
             hiredTalent.clientRejected,
             hiredTalent.freelancerUploaded,
+            deliverableInfo.clientResponse,
+            deliverableInfo.uploadedAt,
             hiredTalent.rejectedAt
         );
-        emit CommentAdded(_talentId, _hiredTalentId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
     }
 }

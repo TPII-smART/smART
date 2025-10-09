@@ -365,22 +365,24 @@ describe("GigsContract", function () {
       await gigsContract.connect(client).acceptApplication(0, 0, {
         value: sampleApplication.proposedPayment,
       });
-      await gigsContract.connect(freelancer1).uploadDeliverable(0, deliverableToUpload);
     });
 
     it("Should allow freelancer to mark gig as delivered", async function () {
-      const tx = await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0);
+      const tx = await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
       await expect(tx).to.emit(gigsContract, "FreelancerMarkedAsDelivered").withArgs(0, freelancer1.address, anyValue);
     });
 
     it("Should allow client to mark gig as received", async function () {
+      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
       const tx = await gigsContract.connect(client).confirmClientCompletion(0, "ok");
-      await expect(tx).to.emit(gigsContract, "ClientMarkedAsReceived").withArgs(0, client.address, anyValue);
+      await expect(tx)
+        .to.emit(gigsContract, "ClientMarkedAsReceived")
+        .withArgs(0, client.address, anyValue, anyValue, anyValue);
     });
 
     it("Should complete gig when both parties confirm", async function () {
       // First confirmation
-      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0);
+      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
 
       // Second confirmation should complete the gig
       const freelancerBalanceBefore = await ethers.provider.getBalance(freelancer1.address);
@@ -396,11 +398,11 @@ describe("GigsContract", function () {
     });
 
     it("Should revert if same party tries to confirm twice", async function () {
-      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0);
+      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
 
-      await expect(gigsContract.connect(freelancer1).confirmFreelancerCompletion(0)).to.be.revertedWith(
-        "Freelancer already marked as delivered",
-      );
+      await expect(
+        gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload),
+      ).to.be.revertedWith("Freelancer already marked as delivered");
     });
 
     it("Should revert if gig is not in progress", async function () {
@@ -419,7 +421,7 @@ describe("GigsContract", function () {
       await expect(gigsContract.connect(other).confirmClientCompletion(0, "test")).to.be.revertedWith(
         "Only client can call this",
       );
-      await expect(gigsContract.connect(other).confirmFreelancerCompletion(0)).to.be.revertedWith(
+      await expect(gigsContract.connect(other).confirmFreelancerCompletion(0, deliverableToUpload)).to.be.revertedWith(
         "Only accepted freelancer can call this",
       );
     });
@@ -433,8 +435,7 @@ describe("GigsContract", function () {
       await gigsContract.connect(client).acceptApplication(0, 0, {
         value: sampleApplication.proposedPayment,
       });
-      await gigsContract.connect(freelancer1).uploadDeliverable(0, deliverableToUpload);
-      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0);
+      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
       await gigsContract.connect(client).confirmClientCompletion(0, "test");
     });
 
@@ -452,8 +453,8 @@ describe("GigsContract", function () {
         await gigsContract.connect(client).acceptApplication(i + 1, 0, {
           value: sampleApplication.proposedPayment,
         });
-        await gigsContract.connect(freelancer1).uploadDeliverable(i + 1, deliverableToUpload);
-        await gigsContract.connect(freelancer1).confirmFreelancerCompletion(i + 1);
+
+        await gigsContract.connect(freelancer1).confirmFreelancerCompletion(i + 1, deliverableToUpload);
         await gigsContract.connect(client).confirmClientCompletion(i + 1, "test");
 
         const tx = await gigsContract.connect(client).rateGig(i + 1, validRatings[i]);
@@ -502,8 +503,8 @@ describe("GigsContract", function () {
         await gigsContract.connect(client).acceptApplication(i + 1, 0, {
           value: sampleApplication.proposedPayment,
         });
-        await gigsContract.connect(freelancer1).uploadDeliverable(i + 1, deliverableToUpload);
-        await gigsContract.connect(freelancer1).confirmFreelancerCompletion(i + 1);
+
+        await gigsContract.connect(freelancer1).confirmFreelancerCompletion(i + 1, deliverableToUpload);
         await gigsContract.connect(client).confirmClientCompletion(i + 1, "test");
 
         const tx = await gigsContract.connect(client).rateGig(i + 1, testRatings[i]);
@@ -625,8 +626,7 @@ describe("GigsContract", function () {
       // Apply, accept and complete the gig
       await gigsContract.connect(freelancer1).applyToGig(0, sampleApplication);
       await gigsContract.connect(client).acceptApplication(0, 0, { value: sampleApplication.proposedPayment });
-      await gigsContract.connect(freelancer1).uploadDeliverable(0, deliverableToUpload);
-      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0);
+      await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
       await gigsContract.connect(client).confirmClientCompletion(0, "test");
 
       await expect(gigsContract.connect(client).cancelGig(0)).to.be.revertedWith(
@@ -720,7 +720,7 @@ describe("GigsContract", function () {
         expect(gig.state).to.equal(1);
 
         // Complete it to move to Completed (2)
-        await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0);
+        await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, deliverableToUpload);
         await gigsContract.connect(client).confirmClientCompletion(0, "ok");
 
         gig = await gigsContract.postedGigs(0);
@@ -812,7 +812,7 @@ describe("GigsContract", function () {
       });
 
       it("Should allow freelancer to upload file successfully and update gig deliverableInfo", async function () {
-        const tx = await gigsContract.connect(freelancer1).uploadDeliverable(0, fileInfo);
+        const tx = await gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, fileInfo);
         const receipt = await tx.wait();
 
         await expect(tx)
@@ -839,36 +839,36 @@ describe("GigsContract", function () {
       it("Should revert if the gig is not in progress", async function () {
         await gigsContract.connect(client).cancelGig(0);
         await gigsContract.connect(freelancer1).cancelGig(0);
-        await expect(gigsContract.connect(freelancer1).uploadDeliverable(0, fileInfo)).to.be.revertedWith(
-          "The gig is not in progress.",
+        await expect(gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, fileInfo)).to.be.revertedWith(
+          "Gig is not in progress",
         );
       });
 
       it("Should revert if the IPFS hash is empty", async function () {
         const emptyFileInfo = { resource: "", submissionComment: "Valid comment", isLink: false };
-        await expect(gigsContract.connect(freelancer1).uploadDeliverable(0, emptyFileInfo)).to.be.revertedWith(
-          "Resource cannot be empty.",
-        );
+        await expect(
+          gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, emptyFileInfo),
+        ).to.be.revertedWith("Resource cannot be empty.");
       });
 
       it("Should revert if the resource exceeds 256 characters", async function () {
         const longHash = "a".repeat(257);
         const invalidFileInfo = { resource: longHash, submissionComment: "Valid comment", isLink: false };
-        await expect(gigsContract.connect(freelancer1).uploadDeliverable(0, invalidFileInfo)).to.be.revertedWith(
-          "Resource must be up to 256 characters.",
-        );
+        await expect(
+          gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, invalidFileInfo),
+        ).to.be.revertedWith("Resource must be up to 256 characters.");
       });
 
       it("Should revert if the comment exceeds 256 characters", async function () {
         const longComment = "a".repeat(257);
         const invalidFileInfo = { resource: "QmFileHash123", submissionComment: longComment, isLink: false };
-        await expect(gigsContract.connect(freelancer1).uploadDeliverable(0, invalidFileInfo)).to.be.revertedWith(
-          "Comment must be up to 256 characters.",
-        );
+        await expect(
+          gigsContract.connect(freelancer1).confirmFreelancerCompletion(0, invalidFileInfo),
+        ).to.be.revertedWith("Comment must be up to 256 characters.");
       });
 
       it("Should revert if called by someone who is not the freelancer", async function () {
-        await expect(gigsContract.connect(client).uploadDeliverable(0, fileInfo)).to.be.revertedWith(
+        await expect(gigsContract.connect(client).confirmFreelancerCompletion(0, fileInfo)).to.be.revertedWith(
           "Only accepted freelancer can call this",
         );
       });

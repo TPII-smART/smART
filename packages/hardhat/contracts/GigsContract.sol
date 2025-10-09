@@ -136,7 +136,13 @@ contract GigsContract {
 
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
-    event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
+    event ClientMarkedAsReceived(
+        uint256 indexed gigId,
+        address client,
+        string comment,
+        uint256 deliverableUploadedAt,
+        uint256 timestamp
+    );
 
     event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
 
@@ -149,13 +155,7 @@ contract GigsContract {
         bool clientReceived,
         bool clientRejected,
         bool freelancerUploaded,
-        uint256 timestamp
-    );
-
-    event CommentAdded(
-        uint256 indexed gigId,
-        address indexed client,
-        string response,
+        string comment,
         uint256 deliverableUploadedAt,
         uint256 timestamp
     );
@@ -421,15 +421,20 @@ contract GigsContract {
     /**
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
+     * @param _deliverableParams The deliverable information submitted by the freelancer
      */
-    function confirmFreelancerCompletion(uint256 _gigId) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
+    function confirmFreelancerCompletion(
+        uint256 _gigId,
+        DeliverableParams memory _deliverableParams
+    ) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
 
         require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
-        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
+
+        _uploadDeliverable(_gigId, _deliverableParams);
 
         gig.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
@@ -459,10 +464,11 @@ contract GigsContract {
         require(!gig.clientReceived, "Client already confirmed reception");
 
         gig.clientReceived = true;
-        emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
-
         deliverableInfo.clientResponse = _clientResponse;
-        emit CommentAdded(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
+        deliverableInfo.state = DeliverableState.Approved;
+        deliverableInfo.responseTimestamp = block.timestamp;
+
+        emit ClientMarkedAsReceived(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
 
         if (gig.clientReceived && gig.freelancerDelivered) {
             _completeGig(_gigId);
@@ -581,10 +587,10 @@ contract GigsContract {
      * @param _gigId Gig ID.
      * @param _deliverableParams The content of the file (IPFS hash and comment).
      */
-    function uploadDeliverable(
+    function _uploadDeliverable(
         uint256 _gigId,
         DeliverableParams memory _deliverableParams
-    ) external onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
+    ) internal onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
@@ -597,8 +603,10 @@ contract GigsContract {
             resource: _deliverableParams.resource,
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
+            responseTimestamp: 0,
             clientResponse: "",
-            isLink: _deliverableParams.isLink
+            isLink: _deliverableParams.isLink,
+            state: DeliverableState.Pending
         });
 
         gig.freelancerUploaded = true;
@@ -631,6 +639,10 @@ contract GigsContract {
         gig.rejectedAt = block.timestamp;
         gig.freelancerUploaded = false;
 
+        deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Rejected;
+        deliverableInfo.responseTimestamp = block.timestamp;
+
         emit GigRejected(
             _gigId,
             gig.client,
@@ -638,8 +650,9 @@ contract GigsContract {
             gig.clientReceived,
             gig.clientRejected,
             gig.freelancerUploaded,
+            _comment,
+            deliverableInfo.uploadedAt,
             gig.rejectedAt
         );
-        emit CommentAdded(_gigId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
     }
 }
