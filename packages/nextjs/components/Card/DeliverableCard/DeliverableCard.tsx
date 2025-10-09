@@ -22,8 +22,6 @@ interface DeliverableCardProps {
   freelancer: participantDeliverable;
   client: participantDeliverable | null;
   actionButtons: React.ReactNode[];
-  isPreviewModalOpen: boolean;
-  onCloseReviewModal: () => void;
 }
 
 const getStatusBadge = (status: number) => {
@@ -53,14 +51,7 @@ const getStatusBadge = (status: number) => {
   }
 };
 
-export function DeliverableCard({
-  deliverable,
-  client,
-  freelancer,
-  actionButtons,
-  isPreviewModalOpen,
-  onCloseReviewModal,
-}: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, client, freelancer, actionButtons }: DeliverableCardProps) {
   const resolvedResource = deliverable.resource && !deliverable.isLink ? resolveIPFSHash(deliverable.resource) : "";
 
   return (
@@ -164,7 +155,9 @@ export function DeliverableCard({
                   <ClockIcon className="h-4 w-4" />
                   <span>Awaiting response...</span>
                 </div>
-                {actionButtons && actionButtons.length > 0 && <div className="flex justify-end ">{actionButtons}</div>}
+                {actionButtons && actionButtons.length > 0 && (
+                  <div className="flex text-base justify-end ">{actionButtons}</div>
+                )}
               </div>
             </div>
           )}

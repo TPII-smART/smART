@@ -148,8 +148,6 @@ export function DeliverableJobHistory(deliverableProps: DeliverableHistoryProps)
               client={client}
               freelancer={freelancer}
               actionButtons={getActionButtons()}
-              isPreviewModalOpen={showDeliverableModal && currentDeliverableIndex === idx}
-              onCloseReviewModal={() => setShowDeliverableModal(false)}
             />
           ))}
         </div>
