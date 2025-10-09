@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useState } from "react";
-import { jobCategories } from "../Card/JobCategory/jobCategory.data";
+import { hiredTalentCategories } from "../Card/HiredTalentCategory/hiredTalentCategory.data";
 import ComboBox from "../ComboBox/ComboBox";
 import FileUploadBox from "../FileUploadBox";
 import FormModal from "../Modal/FormModal/FormModal";
@@ -9,21 +9,22 @@ import { DurationInput, EtherInput, InputBase } from "../scaffold-eth";
 import { WorkPostingFormData, WorkPostingFormProps } from "./types";
 import * as yup from "yup";
 import { PlusIcon } from "@heroicons/react/24/outline";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { Gig } from "~~/types/gig/gig.types";
-import { JobPosting } from "~~/types/job";
+import { Talent } from "~~/types/hiredTalent";
 import { ScaffoldWriteContractVariables } from "~~/utils/scaffold-eth/contract";
 
-interface JobVariant {
-  contract: "JobsContract";
+interface HiredTalentVariant {
+  contract: "HiredTalentsContract";
   formMapper: (formData: WorkPostingFormData) => {
-    functionName: "createJobPosting";
-    args: ScaffoldWriteContractVariables<"JobsContract", "createJobPosting">["args"];
+    functionName: "createTalent";
+    args: ScaffoldWriteContractVariables<"HiredTalentsContract", "createTalent">["args"];
   };
-  schema: "jobPosting";
-  typeKeys: (keyof JobPosting)[];
+  schema: "talent";
+  typeKeys: (keyof Talent)[];
 }
 
 interface GigVariant {
@@ -36,17 +37,17 @@ interface GigVariant {
   typeKeys: (keyof Gig)[];
 }
 
-function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
+function getVariant(type: "hiredTalent" | "gig"): GigVariant | HiredTalentVariant {
   switch (type) {
-    case "job":
+    case "hiredTalent":
       return {
-        contract: "JobsContract",
+        contract: "HiredTalentsContract",
         formMapper: (form: WorkPostingFormData) => ({
-          functionName: "createJobPosting",
-          args: JobPosting.mapFormDataToContractArgs(form),
+          functionName: "createTalent",
+          args: Talent.mapFormDataToContractArgs(form),
         }),
-        schema: "jobPosting",
-        typeKeys: Object.keys(new JobPosting()) as (keyof JobPosting)[],
+        schema: "talent",
+        typeKeys: Object.keys(new Talent()) as (keyof Talent)[],
       };
     case "gig":
       return {
@@ -63,6 +64,7 @@ function getVariant(type: "job" | "gig"): GigVariant | JobVariant {
 
 const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   const [showModal, setShowModal] = useState(false);
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { contract, formMapper, schema, typeKeys } = useMemo(() => getVariant(type), [type]);
 
@@ -77,11 +79,12 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
   };
 
   const handleSubmit = async (form: WorkPostingFormData) => {
+    showSpinner();
     form.bannerImageHash = await handleFileUpload(form.bannerImageFile);
 
     try {
       const transactionHash = await createPosting(formMapper(form));
-      const created = await waitTransaction<JobPosting & Gig>(schema, transactionHash, typeKeys);
+      const created = await waitTransaction<Talent & Gig>(schema, transactionHash, typeKeys);
 
       if (created) {
         refresh(created);
@@ -89,7 +92,9 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
 
       setShowModal(false);
     } catch (err) {
-      console.error("Failed to create job:", err);
+      console.error("Failed to create hiredTalent:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
@@ -117,8 +122,8 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
       .string()
       .required("Category is required")
       .oneOf(
-        jobCategories.map(cat => cat.id),
-        `Category must be one of [${jobCategories.map(cat => cat.label).join(", ")}]`,
+        hiredTalentCategories.map(cat => cat.id),
+        `Category must be one of [${hiredTalentCategories.map(cat => cat.label).join(", ")}]`,
       )
       .max(64, "Category must be at most 64 characters"),
   });
@@ -129,20 +134,20 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
         onClick={() => setShowModal(true)}
         className="fixed bottom-10 right-15 w-14 h-14 rounded-full text-white text-3xl shadow-lg hover:brightness-90 transition-all z-50 flex items-center justify-center"
         style={{ backgroundColor: "var(--color-accent)" }}
-        aria-label={`Create ${type === "job" ? "Job Posting" : "Gig Posting"}`}
+        aria-label={`Create ${type === "hiredTalent" ? "Talent" : "Gig Posting"}`}
       >
         <PlusIcon className="h-5 w-5" />
       </button>
 
       <FormModal
         modalProps={{
-          title: `Create ${type === "job" ? "Job Posting" : "Gig Posting"}`,
+          title: `Create ${type === "hiredTalent" ? "Talent posting" : "Gig Posting"}`,
           onClose: () => setShowModal(false),
           isOpen: showModal,
           loading: isMining,
           description:
-            type === "job"
-              ? "Offer your services to the community by creating a job posting."
+            type === "hiredTalent"
+              ? "Offer your services to the community by creating a talent posting."
               : "Create a gig and look for freelancers to work on your project.",
         }}
         formikProps={{
@@ -197,7 +202,7 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
               label="Category"
               value={values.category}
               onChange={val => setFieldValue("category", val)}
-              options={jobCategories}
+              options={hiredTalentCategories}
               variant="standard"
               error={touched.category && !!errors.category}
               helperText={touched.category && errors.category ? errors.category : undefined}

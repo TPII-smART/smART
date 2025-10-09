@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { RefObject, useEffect, useState } from "react";
 import Spinner from "@/components//Spinner/Spinner";
-import JobCard from "@/components/Card/JobCard/JobCard";
+import HiredTalentCard from "@/components/Card/HiredTalentCard/HiredTalentCard";
 import { usePagination } from "~~/hooks/use-pagination";
-import { fetchHiresPaginated } from "~~/services/graphql/fetchers/job/job.service";
-import { Job } from "~~/types/job/job.types";
+import { fetchHiresPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
+import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 
-export default function HiresListing({ userAddress }: { userAddress: string }) {
+export default function HiresListing({
+  userAddress,
+  scrollRef,
+}: {
+  userAddress: string;
+  scrollRef?: RefObject<HTMLDivElement | null>;
+}) {
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<Job[]>([]);
+  const [data, setData] = useState<HiredTalent[]>([]);
   const { handleScroll, fetchPaginatedData } = usePagination({
     fetchFunction: fetchHiresPaginated,
     loadingFunction: setLoading,
@@ -24,17 +30,27 @@ export default function HiresListing({ userAddress }: { userAddress: string }) {
     fetchPaginatedData(true, "hires", userAddress);
   }, [userAddress, fetchPaginatedData]);
 
+  useEffect(() => {
+    if (!scrollRef) return;
+
+    if (scrollRef.current) {
+      scrollRef.current.onscroll = (e: any) => {
+        handleScroll(e, "hires", userAddress);
+      };
+    }
+  }, [scrollRef, userAddress, handleScroll]);
+
   return (
-    <div
-      className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6 overflow-auto max-h-[inherit]"
-      onScroll={e => handleScroll(e, "hires", userAddress)}
-    >
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       <div className="w-full">
         {data && data.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {data.map(job => (
-                <JobCard key={`${job.jobId}-${job.postingId}`} job={job} />
+              {data.map(hiredTalent => (
+                <HiredTalentCard
+                  key={`${hiredTalent.hiredTalentId}-${hiredTalent.talentId}`}
+                  hiredTalent={hiredTalent}
+                />
               ))}
             </div>
             {loading && (

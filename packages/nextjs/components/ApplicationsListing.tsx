@@ -1,13 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { RefObject, useEffect } from "react";
 import Spinner from "@/components//Spinner/Spinner";
 import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
 import { usePagination } from "~~/hooks/use-pagination";
 import { fetchApplicationsWithGigDetailsPaginated } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Application } from "~~/types/gig/gig.types";
 
-export default function ApplicationsListing({ userAddress }: { userAddress: string }) {
+export default function ApplicationsListing({
+  userAddress,
+  scrollRef,
+}: {
+  userAddress: string;
+  scrollRef?: RefObject<HTMLDivElement | null>;
+}) {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [applications, setApplications] = React.useState<Application[]>([]);
   const { handleScroll, fetchPaginatedData } = usePagination({
@@ -22,11 +28,18 @@ export default function ApplicationsListing({ userAddress }: { userAddress: stri
     fetchPaginatedData(true, "applications", userAddress);
   }, [userAddress, fetchPaginatedData]);
 
+  useEffect(() => {
+    if (!scrollRef) return;
+
+    if (scrollRef.current) {
+      scrollRef.current.onscroll = (e: any) => {
+        handleScroll(e, "applications", userAddress);
+      };
+    }
+  }, [scrollRef, userAddress, handleScroll]);
+
   return (
-    <div
-      className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6 overflow-auto max-h-[inherit]"
-      onScroll={e => handleScroll(e, "applications", userAddress)}
-    >
+    <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
       <div className="w-full">
         {applications && applications.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">

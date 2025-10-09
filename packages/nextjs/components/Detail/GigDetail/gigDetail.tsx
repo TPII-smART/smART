@@ -16,7 +16,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { Badge } from "~~/components/Badge";
 import Button from "~~/components/Button/Button";
+import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
 import { FileFormData } from "~~/components/UploadFileForm/types";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { fetchGigWithApplicationAndDeliverables } from "~~/services/graphql/fetchers/gig/gig.service";
@@ -52,6 +54,7 @@ export default function GigDetail({
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { data, isLoading, error, refetch } = useQuery<GigData>({
     queryKey: ["gigWithApplicationAndDeliverables", gigId],
@@ -87,8 +90,7 @@ export default function GigDetail({
 
   const handleFreelancerConfirmCompletion = async (fileData: FileFormData) => {
     try {
-      if (!data?.gig.gigId) return;
-
+      showSpinner();
       let resource = "";
       const isLink = fileData.isLink;
 
@@ -107,11 +109,14 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm gig completion failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleClientConfirmCompletion = async (clientResponse?: string) => {
     try {
+      showSpinner();
       if (!data?.gig.gigId) return;
       await writeContract({
         functionName: "confirmClientCompletion",
@@ -120,11 +125,14 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm gig completion failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleCancel = async () => {
     try {
+      showSpinner();
       if (!data?.gig.gigId) return;
       await writeContract({
         functionName: "cancelGig",
@@ -133,11 +141,14 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Cancel gig failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleRateGig = async (rating: number) => {
     try {
+      showSpinner();
       if (!data?.gig.gigId) return;
       await writeContract({
         functionName: "rateGig",
@@ -147,11 +158,14 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Rate gig failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleRejectGig = async (reason: string) => {
     try {
+      showSpinner();
       if (!data?.gig.gigId) return;
 
       await writeContract({
@@ -164,11 +178,13 @@ export default function GigDetail({
       console.error("Reject gig failed:", err);
     } finally {
       setShowDeliverableModal(false);
+      hideSpinner();
     }
   };
 
   const handleAcceptApplication = async () => {
     try {
+      showSpinner();
       if (application?.state !== ApplicationState.Pending) return;
       await writeContract({
         functionName: "acceptApplication",
@@ -178,11 +194,14 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Accept application failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleRejectApplication = async () => {
     try {
+      showSpinner();
       if (application?.state !== ApplicationState.Pending) return;
       await writeContract({
         functionName: "rejectApplication",
@@ -191,11 +210,14 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Reject application failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
   const handleApplicationWithdraw = async () => {
     try {
+      showSpinner();
       if (application?.state !== ApplicationState.Pending) return;
       await writeContract({
         functionName: "withdrawApplication",
@@ -204,6 +226,8 @@ export default function GigDetail({
       if (reload) await reload();
     } catch (err) {
       console.error("Withdraw application failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
@@ -477,7 +501,7 @@ export default function GigDetail({
     description: data?.gig.description || "",
     client: data?.gig.client,
     freelancer: data?.gig.acceptedFreelancer,
-    category: data?.gig.category || "",
+    category: hiredTalentCategories.find(category => category.id === data?.gig.category)?.label ?? "Unknown",
     payment: data?.gig.finalPayment || "",
     duration: data?.gig.finalDurationInHours || "",
     deadline: data?.gig.deadline || "",

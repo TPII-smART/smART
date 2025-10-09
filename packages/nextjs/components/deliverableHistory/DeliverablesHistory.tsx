@@ -1,12 +1,12 @@
 "use client";
 
 import { DeliverableGigHistory } from "./DeliverableGigHistory";
-import { DeliverableJobHistory } from "./DeliverableJobHistory";
+import { DeliverableTalentHistory } from "./DeliverableTalentHistory";
 import { DeliverableHistoryProps } from "./types";
 
 export function DeliverablesHistory(deliverableProps: DeliverableHistoryProps) {
-  if (deliverableProps.type === "job") {
-    return <DeliverableJobHistory {...deliverableProps} />;
+  if (deliverableProps.type === "talent") {
+    return <DeliverableTalentHistory {...deliverableProps} />;
   }
   if (deliverableProps.type === "gig") {
     return <DeliverableGigHistory {...deliverableProps} />;

@@ -2,25 +2,26 @@
 
 import * as React from "react";
 import { Badge } from "./Badge";
+import { hiredTalentCategories } from "./Card/HiredTalentCategory/hiredTalentCategory.data";
 import { castHoursToDurationString, cn } from "@/lib/utils";
 import { formatEther } from "viem";
 import { CalendarIcon, ClockIcon, StarIcon, UserIcon } from "@heroicons/react/24/outline";
 import { Gig } from "~~/types/gig/gig.types";
-import { JobPosting } from "~~/types/job/job-posting.types";
+import { Talent } from "~~/types/hiredTalent/talent.types";
 
 interface InfoHeaderProps {
-  data: JobPosting | Gig | undefined;
+  data: Talent | Gig | undefined;
   className?: string;
 }
 
 // Type guard to determine if data is a Gig
-const isGig = (data: JobPosting | Gig): data is Gig => {
+const isGig = (data: Talent | Gig): data is Gig => {
   return "gigId" in data && "client" in data;
 };
 
-// Type guard to determine if data is a JobPosting
-const isJobPosting = (data: JobPosting | Gig): data is JobPosting => {
-  return "postingId" in data && "freelancer" in data;
+// Type guard to determine if data is a Talent
+const isTalent = (data: Talent | Gig): data is Talent => {
+  return "talentId" in data && "freelancer" in data;
 };
 
 // Component for displaying ETH payment
@@ -112,7 +113,7 @@ const InfoHeader: React.FC<InfoHeaderProps> = ({ data, className }) => {
             {isGig(data) ? (
               <span className="text-xs font-semibold text-accent">GIG</span>
             ) : (
-              <span className="text-xs font-semibold text-accent">JOB POSTING</span>
+              <span className="text-xs font-semibold text-accent">TALENT</span>
             )}
             {data.rating && <RatingDisplay rating={data.rating} />}
           </div>
@@ -139,7 +140,7 @@ const InfoHeader: React.FC<InfoHeaderProps> = ({ data, className }) => {
           {isGig(data) && data.maxDurationInHours && (
             <TimeDisplay hours={data.maxDurationInHours} label="Estimated Duration" />
           )}
-          {isJobPosting(data) && data.averageWorkDuration && (
+          {isTalent(data) && data.averageWorkDuration && (
             <TimeDisplay hours={data.averageWorkDuration} label="Avg Duration" />
           )}
 
@@ -148,7 +149,9 @@ const InfoHeader: React.FC<InfoHeaderProps> = ({ data, className }) => {
           {data.createdAt && <DateDisplay date={data.createdAt} label="Created" />}
 
           {/* Category badge */}
-          {data.category && <Badge>{data.category}</Badge>}
+          {data.category && (
+            <Badge>{hiredTalentCategories.find(category => category.id === data.category)?.label ?? "Unknown"}</Badge>
+          )}
 
           {/* Creator info */}
           <div className="flex items-center gap-2 text-[var(--color-secondary-content)]">

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { Badge } from "../Badge";
-import { jobCategories } from "./JobCategory/jobCategory.data";
+import { hiredTalentCategories } from "./HiredTalentCategory/hiredTalentCategory.data";
 import { UniversalCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
@@ -54,7 +54,7 @@ const CategoryDisplay = ({ category, className }: { category?: string; className
 
   return (
     <div className={cn("w-fit", className)}>
-      <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
+      <Badge variant="secondary">{hiredTalentCategories.find(c => c.id === category)?.label ?? category}</Badge>
     </div>
   );
 };
@@ -249,7 +249,7 @@ export function UniversalCard({
 
       <CardHeader className="relative overflow-visible pb-4">
         {avatarAddress && (
-          <div className="absolute -top-18 right-6 z-20 group/avatar">
+          <div className="absolute -top-18 right-6 group/avatar">
             <div
               className={`${avatarClasses} rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer`}
               onClick={handleNavigateToProfile}

@@ -6,7 +6,7 @@ import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/
 
 export const fetchUnreadNotificationsAmountByUser = async (userAddress: string) => {
   const query = gql`
-    query GetJobsPaginated($address: String!) {
+    query GetHiredTalentsPaginated($address: String!) {
       notifications(where: { user: $address, status: 0 }) {
         totalCount
       }

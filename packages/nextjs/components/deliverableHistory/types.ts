@@ -1,7 +1,7 @@
 type DeliverableHistoryProps = {
   mainId: string;
   secondaryId: string;
-  type: "job" | "gig";
+  type: "talent" | "gig";
 };
 
 export type { DeliverableHistoryProps };
