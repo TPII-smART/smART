@@ -4,8 +4,6 @@ import Button from "@/components/Button/Button";
 import { DeliverableState, GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
-import { writeContract } from "wagmi/actions";
-import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { castDateToTimestamp, isImageUrl } from "~~/lib/utils";
@@ -25,7 +23,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
 
   const queryClient = useQueryClient();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["gig", deliverableProps.mainId],
     queryFn: async () => {
       const gig = await fetchGigById(deliverableProps.mainId);
@@ -46,13 +44,17 @@ export function DeliverableGigHistory(deliverableProps: any) {
         try {
           const profile = await fetchUserProfile(client);
           setClientProfile(profile);
-        } catch (error) {}
+        } catch (error) {
+          console.error("Error fetching client profile:", error);
+        }
       }
       if (freelancer) {
         try {
           const profile = await fetchUserProfile(freelancer);
           setFreelancerProfile(profile);
-        } catch (error) {}
+        } catch (error) {
+          console.error("Error fetching freelancer profile:", error);
+        }
       }
     };
     if (data) {
@@ -78,7 +80,6 @@ export function DeliverableGigHistory(deliverableProps: any) {
   };
   const isClient = userAddress?.toLowerCase() === client?.address?.toLowerCase();
   const gigState = data?.gig.state as GigState;
-  const gig = data?.gig ?? {};
 
   const handleClientConfirmCompletion = async (clientResponse?: string) => {
     try {
@@ -146,7 +147,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
       </div>
       <div className="overflow-y-auto h-full space-y-20 py-4 px-20 ">
         <div className="space-y-4">
-          {data?.deliverables?.map((deliverable, idx) => (
+          {data?.deliverables?.map(deliverable => (
             <DeliverableCard
               key={`${deliverable.resource}-${deliverable.uploadedAt}`}
               deliverable={{

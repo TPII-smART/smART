@@ -24,7 +24,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
   const { address: userAddress } = useAccount();
   const { writeContractAsync: writeJobContract } = useScaffoldWriteContract({ contractName: "HiredTalentsContract" });
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["HiredTalent", deliverableProps.mainId, deliverableProps.secondaryId],
     queryFn: async () => {
       const hiredTalent = await fetchHiredTalent(deliverableProps.mainId, deliverableProps.secondaryId);
@@ -49,13 +49,17 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
         try {
           const profile = await fetchUserProfile(client);
           setClientProfile(profile);
-        } catch (error) {}
+        } catch (error) {
+          console.error("Error fetching client profile:", error);
+        }
       }
       if (freelancer) {
         try {
           const profile = await fetchUserProfile(freelancer);
           setFreelancerProfile(profile);
-        } catch (error) {}
+        } catch (error) {
+          console.error("Error fetching freelancer profile:", error);
+        }
       }
     };
     if (data) {
@@ -92,6 +96,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
       });
       if (reload) await reload();
     } catch (err) {
+      console.error("Reject job failed:", err);
     } finally {
       setShowDeliverableModal(false);
     }
@@ -105,6 +110,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
       });
       if (reload) await reload();
     } catch (err) {
+      console.error("Confirm job completion failed:", err);
     } finally {
       setShowDeliverableModal(false);
     }
@@ -149,7 +155,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
       </div>
       <div className="overflow-y-auto h-full space-y-20 py-4 px-20 ">
         <div className="space-y-4">
-          {data?.deliverables.map((deliverable, idx) => (
+          {data?.deliverables.map(deliverable => (
             <DeliverableCard
               key={`${deliverable.resource}-${deliverable.uploadedAt}`}
               deliverable={{

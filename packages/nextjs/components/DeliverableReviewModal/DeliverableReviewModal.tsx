@@ -3,7 +3,7 @@
 import { useState } from "react";
 import DeliverablePreview from "../DeliverablePreview/DeliverablePreview";
 import FormModal from "../Modal/FormModal/FormModal";
-import { FileFormData, UploadTab, tabs } from "../UploadFileForm/types";
+import { FileFormData } from "../UploadFileForm/types";
 import Separator from "../ui/Separator";
 import * as Yup from "yup";
 import { ChatBubbleLeftRightIcon, CheckCircleIcon, PaperClipIcon, XCircleIcon } from "@heroicons/react/24/outline";

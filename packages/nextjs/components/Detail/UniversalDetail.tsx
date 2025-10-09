@@ -59,7 +59,6 @@ export default function UniversalDetail({
   const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: false });
 
   const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
-  const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
 
   // Add this useEffect to fetch user profiles
   useEffect(() => {
