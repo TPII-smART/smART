@@ -220,7 +220,6 @@ export default function UniversalDetail({
             </div>
           </CardHeader>
         </Card>
-
         {/* Participants Section - Full Width */}
         <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
           <CardHeader className="p-6">
@@ -273,7 +272,6 @@ export default function UniversalDetail({
             </div>
           </CardContent>
         </Card>
-
         {/* Main Content - Two Column Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Left Column - Job Details */}
@@ -377,10 +375,11 @@ export default function UniversalDetail({
 
           {/* Right Column - Job Roadmap */}
           <div className="space-y-8">
-            <UniversalRoadmap data={data} type={data.type} />
+            <div className="flex flex-col h-full">
+              <UniversalRoadmap data={data} type={data.type} />
+            </div>{" "}
           </div>
         </div>
-
         {/* Action Section - Split into two boxes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {data.state === GigState.Completed || data.state === HiredTalentState.Finished ? (
