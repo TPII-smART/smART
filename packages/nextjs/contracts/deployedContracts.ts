@@ -372,7 +372,7 @@ const deployedContracts = {
       },
     },
     ArbiterProxy: {
-      address: "0x0104af86fdeB37f322bc5337A656854828A9f2ed",
+      address: "0x69eFF6cc11fBbBd24e6eAfE11A348896353222E0",
       abi: [
         {
           inputs: [
@@ -384,68 +384,6 @@ const deployedContracts = {
           ],
           stateMutability: "nonpayable",
           type: "constructor",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "localDisputeId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "round",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint8",
-              name: "side",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "contributor",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "amount",
-              type: "uint256",
-            },
-          ],
-          name: "AppealContribution",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "localDisputeId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "klerosDisputeId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "round",
-              type: "uint256",
-            },
-          ],
-          name: "AppealCreated",
-          type: "event",
         },
         {
           anonymous: false,
@@ -563,31 +501,6 @@ const deployedContracts = {
           inputs: [
             {
               indexed: true,
-              internalType: "uint256",
-              name: "localDisputeId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "ruling",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "winner",
-              type: "address",
-            },
-          ],
-          name: "DisputeTimeoutByInaction",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
               internalType: "contract IArbitrator",
               name: "_arbitrator",
               type: "address",
@@ -612,37 +525,6 @@ const deployedContracts = {
             },
           ],
           name: "Evidence",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "localDisputeId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "round",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "beneficiary",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "reward",
-              type: "uint256",
-            },
-          ],
-          name: "FeesAndRewardsWithdrawn",
           type: "event",
         },
         {
@@ -737,6 +619,117 @@ const deployedContracts = {
             {
               indexed: true,
               internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "side",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "contributor",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalPaid",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requiredAmount",
+              type: "uint256",
+            },
+          ],
+          name: "GigAppealContribution",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "klerosDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+          ],
+          name: "GigAppealCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+          ],
+          name: "GigAppealExternallyFunded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
               name: "gigId",
               type: "uint256",
             },
@@ -751,6 +744,12 @@ const deployedContracts = {
               internalType: "address",
               name: "client",
               type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "feeDepositDeadline",
+              type: "uint256",
             },
           ],
           name: "GigDisputeCreated",
@@ -787,17 +786,29 @@ const deployedContracts = {
             {
               indexed: true,
               internalType: "uint256",
-              name: "_metaEvidenceID",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
               type: "uint256",
             },
             {
               indexed: false,
-              internalType: "string",
-              name: "_evidence",
-              type: "string",
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
             },
           ],
-          name: "MetaEvidence",
+          name: "GigDisputeTimeoutByInaction",
           type: "event",
         },
         {
@@ -818,11 +829,110 @@ const deployedContracts = {
             {
               indexed: false,
               internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "beneficiary",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "reward",
+              type: "uint256",
+            },
+          ],
+          name: "GigFeesAndRewardsWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
               name: "ruling",
               type: "uint256",
             },
           ],
-          name: "RoundRuling",
+          name: "GigRoundRuling",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "GigRoundTimeoutByInaction",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "_metaEvidenceID",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "_evidence",
+              type: "string",
+            },
+          ],
+          name: "MetaEvidence",
           type: "event",
         },
         {
@@ -862,6 +972,135 @@ const deployedContracts = {
             {
               indexed: true,
               internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "side",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "contributor",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "totalPaid",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requiredAmount",
+              type: "uint256",
+            },
+          ],
+          name: "TalentAppealContribution",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "klerosDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "TalentAppealCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+          ],
+          name: "TalentAppealExternallyFunded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
               name: "talentId",
               type: "uint256",
             },
@@ -882,6 +1121,12 @@ const deployedContracts = {
               internalType: "address",
               name: "client",
               type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "feeDepositDeadline",
+              type: "uint256",
             },
           ],
           name: "TalentDisputeCreated",
@@ -916,6 +1161,166 @@ const deployedContracts = {
             },
           ],
           name: "TalentDisputeRaised",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "TalentDisputeTimeoutByInaction",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "beneficiary",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "reward",
+              type: "uint256",
+            },
+          ],
+          name: "TalentFeesAndRewardsWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+          ],
+          name: "TalentRoundRuling",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "TalentRoundTimeoutByInaction",
           type: "event",
         },
         {
@@ -973,6 +1378,19 @@ const deployedContracts = {
         {
           inputs: [],
           name: "MULTIPLIER_DIVISOR",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "OVERFLOW",
           outputs: [
             {
               internalType: "uint256",
@@ -1393,6 +1811,24 @@ const deployedContracts = {
               type: "uint256",
             },
             {
+              internalType: "uint256",
+              name: "_round",
+              type: "uint256",
+            },
+          ],
+          name: "timeoutRoundByInaction",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+            {
               internalType: "address payable",
               name: "_beneficiary",
               type: "address",
@@ -1427,16 +1863,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x0104af86fdeB37f322bc5337A656854828A9f2ed",
-        transactionIndex: 74,
-        gasUsed: "2206508",
+        contractAddress: "0x69eFF6cc11fBbBd24e6eAfE11A348896353222E0",
+        transactionIndex: 10,
+        gasUsed: "2672944",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x4e90f7e8b77076bc1f4c9f827a3bfa964c17a4787a9a15a55d3342a70dc45d37",
-        transactionHash: "0x8d0d19a7365fa38a8a9f08ebafba772824d8984cb94cc8fd292a25457d494c06",
+        blockHash: "0x19bc03a1953fad437353eb50786e8aec00b5e7f4454b2fc42970fbab347cdc6c",
+        transactionHash: "0xb2dd9050d38ad0a13029e229464f773840d3afafb2f04cb29ba80d111ed63f9f",
         logs: [],
-        blockNumber: 9384492,
-        cumulativeGasUsed: "5733496",
+        blockNumber: 9385559,
+        cumulativeGasUsed: "3168620",
         status: 1,
         byzantium: true,
       },
