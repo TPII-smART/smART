@@ -4,7 +4,6 @@ import BaseModal from "../../Modal/Modal";
 import DeliverablePreview from "@/components/DeliverablePreview/DeliverablePreview";
 import Separator from "@/components/ui/Separator";
 import { ChatBubbleLeftRightIcon, PaperClipIcon } from "@heroicons/react/24/outline";
-import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
 
 interface PreviewModalProps {
   loading?: boolean;
@@ -20,11 +19,6 @@ interface PreviewModalProps {
 
 const PreviewModal = (props: PreviewModalProps) => {
   const { loading, modalTitle, modalDescription, isOpen, onClose, resource, isLink, comment, isClient } = props;
-
-  const resolveResource = (res: string, link: boolean) => {
-    if (link) return res;
-    return resolveIPFSHash(res);
-  };
 
   return (
     <>
@@ -50,7 +44,7 @@ const PreviewModal = (props: PreviewModalProps) => {
                 borderColor: "var(--color-inside-border)",
               }}
             >
-              <DeliverablePreview resource={resolveResource(resource, isLink)} isLink={isLink} />
+              <DeliverablePreview resource={resource} isLink={isLink} />
             </div>
           </div>
           <Separator />

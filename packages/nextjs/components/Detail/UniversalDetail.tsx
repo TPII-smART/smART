@@ -40,13 +40,13 @@ export default function UniversalDetail({
   isDeliverableLoading,
   handleRateJob,
   initiateConflictResolution,
-  handleUploadDeliverable,
+  handleFreelancerConfirmCompletion: handleUploadDeliverable,
   handleClientConfirmCompletion,
   handleRejectJob,
   isUploadModalOpen,
   onCloseUploadModal,
   isPreviewModalOpen,
-  onClosePreviewModal,
+  onCloseReviewModal: onClosePreviewModal,
 }: UniversalDetailProps) {
   const { address: userAddress } = useAccount();
 
@@ -60,7 +60,6 @@ export default function UniversalDetail({
   const { displayUsdMode, toggleDisplayUsdMode } = useDisplayUsdMode({ defaultUsdMode: false });
 
   const isClient = data?.client?.toLowerCase() === userAddress?.toLowerCase();
-  const isFreelancer = data?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
 
   // Add this useEffect to fetch user profiles
   useEffect(() => {
@@ -155,10 +154,10 @@ export default function UniversalDetail({
       .max(5, "Rating must be between 1 and 5"),
   });
 
-  const resource = deliverables?.[deliverables?.length - 1]?.resource;
-  const isLink = deliverables?.[deliverables?.length - 1]?.isLink;
-  const submissionComment = deliverables?.[deliverables?.length - 1]?.submissionComment;
-  const clientResponse = deliverables?.[deliverables?.length - 1]?.clientResponse;
+  const resource = deliverables?.[0]?.resource;
+  const isLink = deliverables?.[0]?.isLink;
+  const submissionComment = deliverables?.[0]?.submissionComment;
+  const clientResponse = deliverables?.[0]?.clientResponse;
 
   const reviewModalDescription = isClient
     ? "You are about to review the deliverable submitted by the freelancer. Please ensure it meets the job requirements."
@@ -222,7 +221,6 @@ export default function UniversalDetail({
             </div>
           </CardHeader>
         </Card>
-
         {/* Participants Section - Full Width */}
         <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
           <CardHeader className="p-6">
@@ -275,7 +273,6 @@ export default function UniversalDetail({
             </div>
           </CardContent>
         </Card>
-
         {/* Main Content - Two Column Layout */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
           {/* Left Column - Job Details */}
@@ -379,10 +376,11 @@ export default function UniversalDetail({
 
           {/* Right Column - Job Roadmap */}
           <div className="space-y-8">
-            <UniversalRoadmap data={data} type={data.type} />
+            <div className="flex flex-col h-full">
+              <UniversalRoadmap data={data} type={data.type} />
+            </div>{" "}
           </div>
         </div>
-
         {/* Action Section - Split into two boxes */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {data.state === GigState.Completed || data.state === HiredTalentState.Finished ? (
@@ -480,7 +478,7 @@ export default function UniversalDetail({
         isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
         loading={isMining && isDeliverableLoading}
-        canUploadFile={isFreelancer && !isClient && data.clientRejected}
+        showFullInfo={true}
       />
 
       {/* Rating modal for client */}

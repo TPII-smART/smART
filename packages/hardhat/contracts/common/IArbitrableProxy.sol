@@ -91,7 +91,8 @@ interface IArbitrableProxy {
         uint256 indexed talentId,
         uint256 indexed hiredTalentId,
         address freelancer,
-        address client
+        address client,
+        uint256 feeDepositDeadline
     );
 
     event FreelancerPayedTalentArbitrationFee(
@@ -123,7 +124,8 @@ interface IArbitrableProxy {
         uint256 indexed localDisputeId,
         uint256 indexed gigId,
         address freelancer,
-        address client
+        address client,
+        uint256 feeDepositDeadline
     );
 
     event FreelancerPayedGigArbitrationFee(
@@ -148,30 +150,119 @@ interface IArbitrableProxy {
         uint256 indexed gigId
     );
 
-    event DisputeTimeoutByInaction(
+    event GigDisputeTimeoutByInaction(
         uint256 indexed localDisputeId,
+        uint256 indexed gigId,
         uint256 ruling,
         address winner
     );
 
-    event AppealContribution(
+    event TalentDisputeTimeoutByInaction(
+        uint256 indexed localDisputeId,
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        uint256 ruling,
+        address winner
+    );
+
+    event GigAppealContribution(
         uint256 indexed localDisputeId,
         uint256 indexed round,
+        uint256 gigId,
         uint8 side,
         address contributor,
-        uint256 amount
+        uint256 amount,
+        uint256 totalPaid,
+        uint256 requiredAmount
     );
 
-    event AppealCreated(
-        uint256 indexed localDisputeId,
-        uint256 indexed klerosDisputeId,
-        uint256 indexed round
-    );
-
-    event FeesAndRewardsWithdrawn(
+    event TalentAppealContribution(
         uint256 indexed localDisputeId,
         uint256 indexed round,
-        address indexed beneficiary,
+        uint256 talentId,
+        uint256 hiredTalentId,
+        uint8 side,
+        address contributor,
+        uint256 amount,
+        uint256 totalPaid,
+        uint256 requiredAmount
+    );
+
+    event GigAppealCreated(
+        uint256 indexed localDisputeId,
+        uint256 indexed klerosDisputeId,
+        uint256 indexed round,
+        uint256 gigId
+    );
+
+    event TalentAppealCreated(
+        uint256 indexed localDisputeId,
+        uint256 indexed klerosDisputeId,
+        uint256 indexed round,
+        uint256 talentId,
+        uint256 hiredTalentId
+    );
+
+    event GigFeesAndRewardsWithdrawn(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 gigId,
+        address beneficiary,
         uint256 reward
     );
+
+    event TalentFeesAndRewardsWithdrawn(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 talentId,
+        uint256 hiredTalentId,
+        address beneficiary,
+        uint256 reward
+    );
+
+    event TalentRoundRuling(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 talentId,
+        uint256 hiredTalentId,
+        uint256 ruling
+    );
+
+    event GigRoundRuling(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 gigId,
+        uint256 ruling
+    );
+
+    event TalentRoundTimeoutByInaction(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 talentId,
+        uint256 hiredTalentId,
+        uint256 ruling,
+        address winner
+    );
+
+    event GigRoundTimeoutByInaction(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 gigId,
+        uint256 ruling,
+        address winner
+    );
+
+    event TalentAppealExternallyFunded(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 indexed talentId,
+        uint256 hiredTalentId
+    );
+
+    event GigAppealExternallyFunded(
+        uint256 indexed localDisputeId,
+        uint256 indexed round,
+        uint256 indexed gigId
+    );
+
 }

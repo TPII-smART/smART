@@ -372,7 +372,7 @@ const deployedContracts = {
       },
     },
     ArbiterProxy: {
-      address: "0xD380baD3ac6f3e991E36e49c0163716fCD171201",
+      address: "0x0104af86fdeB37f322bc5337A656854828A9f2ed",
       abi: [
         {
           inputs: [
@@ -798,6 +798,31 @@ const deployedContracts = {
             },
           ],
           name: "MetaEvidence",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "round",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+          ],
+          name: "RoundRuling",
           type: "event",
         },
         {
@@ -1402,22 +1427,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xD380baD3ac6f3e991E36e49c0163716fCD171201",
-        transactionIndex: 47,
-        gasUsed: "2193963",
+        contractAddress: "0x0104af86fdeB37f322bc5337A656854828A9f2ed",
+        transactionIndex: 74,
+        gasUsed: "2206508",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xdfca00e2ba7a4a94cbd0f1355aa15c0e36da39b0b51379ee1974fe8566d10675",
-        transactionHash: "0x3ce027478e81fb6af1ffd5eb4df68b555b8028f3187c762c17dec061aa119781",
+        blockHash: "0x4e90f7e8b77076bc1f4c9f827a3bfa964c17a4787a9a15a55d3342a70dc45d37",
+        transactionHash: "0x8d0d19a7365fa38a8a9f08ebafba772824d8984cb94cc8fd292a25457d494c06",
         logs: [],
-        blockNumber: 9371221,
-        cumulativeGasUsed: "15243594",
+        blockNumber: 9384492,
+        cumulativeGasUsed: "5733496",
         status: 1,
         byzantium: true,
       },
     },
     GigsContract: {
-      address: "0x33b680D4A45A518C12Ca12536fd891E3c043E9Ad",
+      address: "0xD497c63e3d17283715d265084dE9AD35A7960fe9",
       abi: [
         {
           inputs: [
@@ -1428,12 +1453,7 @@ const deployedContracts = {
             },
             {
               internalType: "address",
-              name: "_reality",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_arbitrator",
+              name: "_KlerosArbitrator",
               type: "address",
             },
           ],
@@ -1605,33 +1625,8 @@ const deployedContracts = {
             },
             {
               indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "ClientMarkedAsReceived",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
               internalType: "string",
-              name: "response",
+              name: "comment",
               type: "string",
             },
             {
@@ -1647,7 +1642,7 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
-          name: "CommentAdded",
+          name: "ClientMarkedAsReceived",
           type: "event",
         },
         {
@@ -1697,31 +1692,6 @@ const deployedContracts = {
             },
           ],
           name: "DeliverableUploaded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "gigId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "bytes32",
-              name: "questionId",
-              type: "bytes32",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "requester",
-              type: "address",
-            },
-          ],
-          name: "DisputeStarted",
           type: "event",
         },
         {
@@ -1950,6 +1920,18 @@ const deployedContracts = {
             },
             {
               indexed: false,
+              internalType: "string",
+              name: "comment",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deliverableUploadedAt",
+              type: "uint256",
+            },
+            {
+              indexed: false,
               internalType: "uint256",
               name: "timestamp",
               type: "uint256",
@@ -2013,10 +1995,10 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "arbitratorAddress",
+          name: "arbiterProxy",
           outputs: [
             {
-              internalType: "contract IArbiterContract",
+              internalType: "contract IArbitrableProxy",
               name: "",
               type: "address",
             },
@@ -2061,6 +2043,28 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_gigId",
               type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "resource",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "submissionComment",
+                  type: "string",
+                },
+                {
+                  internalType: "bool",
+                  name: "isLink",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct DeliverableParams",
+              name: "_deliverableParams",
+              type: "tuple",
             },
           ],
           name: "confirmFreelancerCompletion",
@@ -2130,25 +2134,6 @@ const deployedContracts = {
           name: "emergencyCancel",
           outputs: [],
           stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-          ],
-          name: "getDisputeResult",
-          outputs: [
-            {
-              internalType: "bytes32",
-              name: "",
-              type: "bytes32",
-            },
-          ],
-          stateMutability: "view",
           type: "function",
         },
         {
@@ -2313,14 +2298,14 @@ const deployedContracts = {
               type: "bool",
             },
             {
-              internalType: "uint256",
-              name: "disputeQuestionId",
-              type: "uint256",
-            },
-            {
               internalType: "bool",
               name: "freelancerUploaded",
               type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "disputeId",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -2355,19 +2340,6 @@ const deployedContracts = {
           name: "rateGig",
           outputs: [],
           stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "reality",
-          outputs: [
-            {
-              internalType: "contract IRealityETH",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
           type: "function",
         },
         {
@@ -2418,87 +2390,6 @@ const deployedContracts = {
               name: "_gigId",
               type: "uint256",
             },
-          ],
-          name: "resolveDispute",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "_bountyAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_bondAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "bool",
-              name: "_escalateToArbitrator",
-              type: "bool",
-            },
-          ],
-          name: "startDispute",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "resource",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "submissionComment",
-                  type: "string",
-                },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
-                },
-              ],
-              internalType: "struct DeliverableParams",
-              name: "_deliverableParams",
-              type: "tuple",
-            },
-          ],
-          name: "uploadDeliverable",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
             {
               internalType: "uint256",
               name: "_applicationId",
@@ -2519,22 +2410,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x33b680D4A45A518C12Ca12536fd891E3c043E9Ad",
-        transactionIndex: 149,
-        gasUsed: "3948305",
+        contractAddress: "0xD497c63e3d17283715d265084dE9AD35A7960fe9",
+        transactionIndex: 114,
+        gasUsed: "3027721",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xd0200286ca7f163331d7ad85b5194aca0076eaf1e1db66677adf0a02ba84444c",
-        transactionHash: "0x5ade2827a4f3123b1068dfeb9a654dab3808b9a1e9b6497fd5fbde330a32becb",
+        blockHash: "0x49e6933aea17218faf3038bfd1cfb409aa07257dbc990f02f8f13dea6a1ab146",
+        transactionHash: "0x36efd8925e76a114c6e2ff5806a0886c1b97a45df98e95ee0e205bbe9eac6164",
         logs: [],
-        blockNumber: 9324661,
-        cumulativeGasUsed: "44563156",
+        blockNumber: 9384505,
+        cumulativeGasUsed: "13150901",
         status: 1,
         byzantium: true,
       },
     },
     HiredTalentsContract: {
-      address: "0x1568E32D8080828d406fB6AE1D0254f11b9b4E9B",
+      address: "0xf1126A6a40BAa9aAaCA198549D45Cbe0cA6bB903",
       abi: [
         {
           inputs: [
@@ -2545,12 +2436,7 @@ const deployedContracts = {
             },
             {
               internalType: "address",
-              name: "_reality",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_arbitrator",
+              name: "_KlerosArbitrator",
               type: "address",
             },
           ],
@@ -2580,39 +2466,8 @@ const deployedContracts = {
             },
             {
               indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "ClientMarkedAsReceived",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "talentId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "hiredTalentId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
               internalType: "string",
-              name: "response",
+              name: "comment",
               type: "string",
             },
             {
@@ -2628,7 +2483,7 @@ const deployedContracts = {
               type: "uint256",
             },
           ],
-          name: "CommentAdded",
+          name: "ClientMarkedAsReceived",
           type: "event",
         },
         {
@@ -3016,6 +2871,18 @@ const deployedContracts = {
             },
             {
               indexed: false,
+              internalType: "string",
+              name: "comment",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deliverableUploadedAt",
+              type: "uint256",
+            },
+            {
+              indexed: false,
               internalType: "uint256",
               name: "timestamp",
               type: "uint256",
@@ -3105,12 +2972,25 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "arbitratorAddress",
+          name: "arbiterProxy",
           outputs: [
             {
-              internalType: "contract IArbiterContract",
+              internalType: "contract IArbitrableProxy",
               name: "",
               type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "arbitratorExtraData",
+          outputs: [
+            {
+              internalType: "bytes",
+              name: "",
+              type: "bytes",
             },
           ],
           stateMutability: "view",
@@ -3168,6 +3048,28 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_hiredTalentId",
               type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "resource",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "submissionComment",
+                  type: "string",
+                },
+                {
+                  internalType: "bool",
+                  name: "isLink",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct DeliverableParams",
+              name: "_deliverableParams",
+              type: "tuple",
             },
           ],
           name: "confirmFreelancerCompletion",
@@ -3287,30 +3189,6 @@ const deployedContracts = {
           name: "emergencyCancel",
           outputs: [],
           stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_talentId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_hiredTalentId",
-              type: "uint256",
-            },
-          ],
-          name: "getDisputeResult",
-          outputs: [
-            {
-              internalType: "bytes32",
-              name: "",
-              type: "bytes32",
-            },
-          ],
-          stateMutability: "view",
           type: "function",
         },
         {
@@ -3493,19 +3371,6 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "reality",
-          outputs: [
-            {
-              internalType: "contract IRealityETH",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
           inputs: [
             {
               internalType: "uint256",
@@ -3529,102 +3394,6 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_talentId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_hiredTalentId",
-              type: "uint256",
-            },
-          ],
-          name: "resolveDispute",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_talentId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_hiredTalentId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "_bountyAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_bondAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "bool",
-              name: "_escalateToArbitrator",
-              type: "bool",
-            },
-          ],
-          name: "startDispute",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_talentId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_hiredTalentId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "resource",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "submissionComment",
-                  type: "string",
-                },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
-                },
-              ],
-              internalType: "struct DeliverableParams",
-              name: "_deliverableParams",
-              type: "tuple",
-            },
-          ],
-          name: "uploadDeliverable",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
           stateMutability: "payable",
           type: "receive",
         },
@@ -3633,16 +3402,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x1568E32D8080828d406fB6AE1D0254f11b9b4E9B",
-        transactionIndex: 54,
-        gasUsed: "4032104",
+        contractAddress: "0xf1126A6a40BAa9aAaCA198549D45Cbe0cA6bB903",
+        transactionIndex: 62,
+        gasUsed: "3048162",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xa8c750198eefcd029d54c8bde3452b57db57483a3d1a3e26a401d103c39f97d8",
-        transactionHash: "0x4743baacf27c9687f87c683b184a9166311cce2c7f5404366a977f54c8e10ce3",
+        blockHash: "0xc0838f84606fe98cd49f77c9ba28b152905aec60f91fd1e0e8ed3f9e82b5361f",
+        transactionHash: "0x8283298aee8ce095d785cc40beae3cdfa69198eb44f65a46b9c21c0cbb2e9132",
         logs: [],
-        blockNumber: 9349264,
-        cumulativeGasUsed: "12875059",
+        blockNumber: 9384501,
+        cumulativeGasUsed: "9750779",
         status: 1,
         byzantium: true,
       },

@@ -5,7 +5,7 @@ import {
 	notification,
 	gigDeliverable,
 } from "ponder:schema";
-import { GigState, ApplicationState } from "@se-2/common";
+import { GigState, ApplicationState, DeliverableState } from "@se-2/common";
 
 // Listen for Gig creation
 ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
@@ -196,6 +196,19 @@ ponder.on("GigsContract:ClientMarkedAsReceived", async ({ event, context }) => {
 
 	const _gig = await context.db.find(gig, { gigId: event.args.gigId });
 
+
+	await context.db
+		.update(gigDeliverable, {
+			gigId: event.args.gigId,
+			uploadedAt: BigInt(event.args.deliverableUploadedAt),
+		})
+		.set({
+			clientResponse: event.args.comment,
+			state: DeliverableState.Approved,
+			responseTimestamp: BigInt(event.args.timestamp),
+			lastTransactionHash: event.transaction.hash,
+		});
+
 	await context.db.insert(notification).values({
 		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
 		user: _gig?.acceptedFreelancer as unknown as string,
@@ -315,6 +328,7 @@ ponder.on("GigsContract:DeliverableUploaded", async ({ event, context }) => {
 		submissionComment: event.args.submissionComment,
 		isLink: event.args.isLink,
 		uploadedAt: BigInt(event.block.timestamp),
+		state: DeliverableState.Pending,
 		lastTransactionHash: event.transaction.hash,
 	});
 
@@ -329,19 +343,6 @@ ponder.on("GigsContract:DeliverableUploaded", async ({ event, context }) => {
 		});
 });
 
-// This event is triggered when a a client add a comment to the uploaded deliverable.
-ponder.on("GigsContract:CommentAdded", async ({ event, context }) => {
-	// Updates the gig to mark it as deliverable uploaded
-	await context.db
-		.update(gigDeliverable, {
-			gigId: event.args.gigId,
-			uploadedAt: BigInt(event.args.deliverableUploadedAt),
-		})
-		.set({
-			clientResponse: event.args.response,
-			lastTransactionHash: event.transaction.hash,
-		});
-});
 
 ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 	await context.db
@@ -358,7 +359,22 @@ ponder.on("GigsContract:GigRejected", async ({ event, context }) => {
 			lastTransactionHash: event.transaction.hash,
 		});
 
+
+	
+
 	const _gig = await context.db.find(gig, { gigId: event.args.gigId });
+
+	await context.db
+	.update(gigDeliverable, {
+		gigId: event.args.gigId,
+		uploadedAt: BigInt(event.args.deliverableUploadedAt),
+	})
+	.set({
+		clientResponse: event.args.comment,
+		state: DeliverableState.Rejected,
+		responseTimestamp: BigInt(event.args.timestamp),
+		lastTransactionHash: event.transaction.hash,
+	});
 
 	await context.db.insert(notification).values({
 		id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
@@ -405,18 +421,4 @@ ponder.on("GigsContract:ApplicationWithdrawn", async ({ event, context }) => {
 		createdAt: BigInt(event.block.timestamp),
 		itemId: event.args.applicationId,
 	});
-});
-
-ponder.on("GigsContract:DisputeStarted", async ({ event, context }) => {
-	// Updates the gig to mark it as in dispute
-	await context.db
-		.update(gig, {
-			gigId: event.args.gigId,
-		})
-		.set({
-			state: GigState.Disputed,
-			emitBy: event.transaction.from,
-			disputeQuestionId: event.args.questionId,
-			lastTransactionHash: event.transaction.hash,
-		});
 });

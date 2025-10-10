@@ -5,7 +5,7 @@ import {
 	notification,
 	hiredTalentDeliverable,
 } from "ponder:schema";
-import { HiredTalentState } from "@se-2/common";
+import { HiredTalentState, DeliverableState } from "@se-2/common";
 
 // Event handlers for the HiredTalentsContract
 
@@ -153,6 +153,7 @@ ponder.on(
 			resource: event.args.resource,
 			submissionComment: event.args.submissionComment,
 			isLink: event.args.isLink,
+			state: DeliverableState.Pending,
 			uploadedAt: BigInt(event.block.timestamp),
 			lastTransactionHash: event.transaction.hash,
 		});
@@ -169,20 +170,6 @@ ponder.on(
 	}
 );
 
-// This event is triggered when a a client add a comment to the uploaded deliverable.
-ponder.on("HiredTalentsContract:CommentAdded", async ({ event, context }) => {
-	// Updates the hiredTalent to mark it as deliverable uploaded
-	await context.db
-		.update(hiredTalentDeliverable, {
-			hiredTalentId: event.args.hiredTalentId,
-			talentId: event.args.talentId,
-			uploadedAt: BigInt(event.args.deliverableUploadedAt),
-		})
-		.set({
-			clientResponse: event.args.response,
-			lastTransactionHash: event.transaction.hash,
-		});
-});
 
 // This event is triggered when a hiredTalent is marked as received by the client.
 ponder.on(
@@ -203,6 +190,17 @@ ponder.on(
 		const _hiredTalent = await context.db.find(hiredTalent, {
 			hiredTalentId: event.args.hiredTalentId,
 			talentId: event.args.talentId,
+		});
+
+		await context.db.update(hiredTalentDeliverable, {
+			hiredTalentId: event.args.hiredTalentId,
+			talentId: event.args.talentId,	
+			uploadedAt: event.args.deliverableUploadedAt,
+		}).set({
+			clientResponse: event.args.comment,
+			state: DeliverableState.Approved,
+			responseTimestamp: BigInt(event.args.timestamp),
+			lastTransactionHash: event.transaction.hash,
 		});
 
 		await context.db.insert(notification).values({
@@ -365,6 +363,17 @@ ponder.on(
 			talentId: event.args.talentId,
 		});
 
+		await context.db.update(hiredTalentDeliverable, {
+			hiredTalentId: event.args.hiredTalentId,
+			talentId: event.args.talentId,
+			uploadedAt: event.args.deliverableUploadedAt,
+		}).set({
+			clientResponse: event.args.comment,
+			state: DeliverableState.Rejected,
+			responseTimestamp: BigInt(event.args.timestamp),
+			lastTransactionHash: event.transaction.hash,
+		});
+
 		await context.db.insert(notification).values({
 			id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
 			user: _hiredTalent?.freelancer as unknown as string,
@@ -376,18 +385,3 @@ ponder.on(
 		});
 	}
 );
-
-ponder.on("HiredTalentsContract:DisputeStarted", async ({ event, context }) => {
-	// Updates the hiredTalent to mark it as in dispute
-	await context.db
-		.update(hiredTalent, {
-			hiredTalentId: event.args.hiredTalentId,
-			talentId: event.args.talentId,
-		})
-		.set({
-			state: HiredTalentState.Disputed,
-			emitBy: event.transaction.from,
-			disputeQuestionId: event.args.questionId,
-			lastTransactionHash: event.transaction.hash,
-		});
-});

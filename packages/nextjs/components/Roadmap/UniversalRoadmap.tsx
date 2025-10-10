@@ -182,16 +182,16 @@ export function UniversalRoadmap({ data, type }: UniversalRoadmapProps) {
   const allSteps = getAllRoadmapSteps(data, type);
 
   return (
-    <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
+    <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg flex-1">
       <CardHeader className="p-6">
         <CardTitle className="text-2xl text-[var(--color-primary-content)]">
           {type === "hiredTalent" ? "HiredTalent Progress" : "Gig Progress"}
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6 pt-0">
-        <div className="relative pl-2">
+      <CardContent className="p-6 pt-0 h-full">
+        <div className="relative pl-2 flex flex-col h-full">
           {allSteps.map((step, index) => (
-            <div key={index} className="relative flex items-start gap-4 pb-8 last:pb-0">
+            <div key={index} className="relative flex items-start gap-4 pb-8  flex-1">
               {index < allSteps.length - 1 && (
                 <div
                   className="absolute left-4 top-8 w-0.5 bg-[var(--color-border)]"

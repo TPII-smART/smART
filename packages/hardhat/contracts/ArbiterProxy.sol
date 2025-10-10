@@ -36,6 +36,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     uint256 public constant LOSER_STAKE_MULTIPLIER = 20000;  // Basis points (200%)
     uint256 public constant LOSER_APPEAL_PERIOD_MULTIPLIER = 5000; // 50% of total period
     uint256 public constant MULTIPLIER_DIVISOR = 10000;
+    uint256 public constant OVERFLOW = type(uint256).max;
 
     // ============ Structs ============
 
@@ -154,7 +155,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             _externalId1,
             _externalId2,
             _freelancer,
-            _client
+            _client,
+            dispute.feeDepositDeadline
         );
 
         return localDisputeId;
@@ -308,9 +310,87 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             payable(winner).transfer(reimbursement);
         }
 
-        emit DisputeTimeoutByInaction(_localDisputeId, ruling, winner);
+        if (dispute.disputeType == DisputeType.Talent) {
+            emit TalentDisputeTimeoutByInaction(
+                _localDisputeId,
+                dispute.externalId1,  // talentId
+                dispute.externalId2,  // hiredTalentId
+                ruling,
+                winner
+            );
+        } else if (dispute.disputeType == DisputeType.Gig) {
+            emit GigDisputeTimeoutByInaction(
+                _localDisputeId,
+                dispute.externalId1,  // gigId
+                ruling,
+                winner
+            );
+        }
     }
 
+    /**
+    * @dev Timeout round if one party fails to be fully funded within deadline
+    * Winner is the party who paid (or tried to pay)
+    */
+    function timeoutRoundByInaction(uint256 _localDisputeId, uint256 _round) external {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+        require(dispute.status == DisputeStatus.DisputeCreated, "Dispute not in arbitration");
+        require(!dispute.isRuled, "Dispute already ruled");
+        require(_round <= dispute.currentRound, "Invalid round");
+
+        Round storage round = dispute.rounds[_round];
+
+        require(
+            block.timestamp > round.appealDeadline,
+            "Appeal period has not passed yet"
+        );
+
+        // Determine winner based on who paid
+        uint256 ruling;
+        address winner;
+
+        bool freelancerFullyFunded = round.freelancerFullyFunded;
+        bool clientFullyFunded = round.clientFullyFunded;
+
+        if (freelancerFullyFunded && !clientFullyFunded) {
+            // Freelancer fully funded, client didn't -> Freelancer wins
+            ruling = FREELANCER_WINS;
+            winner = dispute.freelancer;
+        } else if (clientFullyFunded && !freelancerFullyFunded) {
+            // Client fully funded, freelancer didn't -> Client wins
+            ruling = CLIENT_WINS;
+            winner = dispute.client;
+        } else {
+            // Both fully funded or neither fully funded -> revert
+            revert("Both parties fully funded or neither fully funded, cannot timeout");
+        }
+
+        // Update dispute state
+        dispute.status = DisputeStatus.Resolved;
+        dispute.isRuled = true;
+        dispute.ruling = ruling;
+
+        if (dispute.disputeType == DisputeType.Talent) {
+            emit TalentRoundTimeoutByInaction(
+                _localDisputeId,
+                _round,
+                dispute.externalId1,  // talentId
+                dispute.externalId2,  // hiredTalentId
+                ruling,
+                winner
+            );
+        } else if (dispute.disputeType == DisputeType.Gig) {
+            emit GigRoundTimeoutByInaction(
+                _localDisputeId,
+                _round,
+                dispute.externalId1,  // gigId
+                ruling,
+                winner
+            );
+        }
+    }
 
     // ============ Convenience Wrapper Functions ============
 
@@ -415,7 +495,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 _externalId1,
         uint256 _externalId2,
         address _freelancer,
-        address _client
+        address _client,
+        uint256 _feeDepositDeadline
     ) internal {
         if (_disputeType == DisputeType.Talent) {
             emit TalentDisputeCreated(
@@ -423,14 +504,16 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 _externalId1,  // talentId
                 _externalId2,  // hiredTalentId
                 _freelancer,
-                _client
+                _client,
+                _feeDepositDeadline
             );
         } else if (_disputeType == DisputeType.Gig) {
             emit GigDisputeCreated(
                 _localDisputeId,
                 _externalId1,  // gigId
                 _freelancer,
-                _client
+                _client,
+                _feeDepositDeadline
             );
         }
     }
@@ -550,7 +633,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         dispute.klerosDisputeId = klerosDisputeId;
         dispute.status = DisputeStatus.DisputeCreated;
-        dispute.currentRound = 0;
         klerosDisputeIdToLocalId[klerosDisputeId] = _localDisputeId;
 
         // Initialize round 0 with initial fees paid
@@ -562,6 +644,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         round.freelancerFullyFunded = true;
         round.clientFullyFunded = true;
         round.feeRewards = dispute.freelancerDisputeFee + dispute.clientDisputeFee - _arbitrationCost;
+        
+        dispute.currentRound = 1;
 
         // Emit ERC-1497 Dispute event
         // ToDO: metaEvidenceID and evidenceGroupID are both 0 for now
@@ -591,6 +675,23 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         dispute.status = DisputeStatus.Resolved;
         dispute.isRuled = true;
         dispute.ruling = _ruling;
+
+        if (dispute.disputeType == DisputeType.Talent) {
+            emit TalentRoundRuling(
+                _localDisputeId,
+                dispute.externalId1,  // talentId
+                dispute.externalId2,  // hiredTalentId
+                _ruling,
+                dispute.currentRound
+            );
+        } else if (dispute.disputeType == DisputeType.Gig) {
+            emit GigRoundRuling(
+                _localDisputeId,
+                dispute.externalId1,  // gigId
+                _ruling,
+                dispute.currentRound
+            );
+        }
     }
 
     // ============ ERC-792 Implementation ============
@@ -607,6 +708,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         _executeRuling(localDisputeId, _ruling);
 
         emit Ruling(arbitrator, _disputeId, _ruling);
+        
     }
 
     // ============ Appealing logic ============
@@ -648,12 +750,22 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         }
 
         Round storage round = dispute.rounds[dispute.currentRound];
+        
+        uint256 baseAppealCost = arbitrator.appealCost(dispute.klerosDisputeId, dispute.arbitratorExtraData);
 
         // Calculate appeal cost if not yet set for this round
         if (round.appealCost == 0) {
-            uint256 baseAppealCost = arbitrator.appealCost(dispute.klerosDisputeId, dispute.arbitratorExtraData);
             round.appealCost = baseAppealCost;
             round.appealDeadline = appealEnd;
+        }
+
+        if (baseAppealCost == OVERFLOW) {
+            // Someone already paid full appeal cost
+            _createAppeal(_localDisputeId, true);
+            if (dispute.disputeType == DisputeType.Talent)
+                emit TalentAppealExternallyFunded(_localDisputeId, dispute.currentRound, dispute.externalId1, dispute.externalId2);
+            else if (dispute.disputeType == DisputeType.Gig)
+                emit GigAppealExternallyFunded(_localDisputeId, dispute.currentRound, dispute.externalId1);
         }
 
         uint256 requiredAmount = (round.appealCost * multiplier) / MULTIPLIER_DIVISOR;
@@ -675,22 +787,42 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         require(contribution > 0, "No contribution needed");
 
+        uint256 tot;
+
         // Update round data with contributions to the appeal
         if (_side == FREELANCER_WINS) {
             round.freelancerContributions[msg.sender] += contribution;
             round.freelancerPayedRoundFee += contribution;
+            tot = round.freelancerPayedRoundFee;
         } else {
             round.clientContributions[msg.sender] += contribution;
             round.clientPayedRoundFee += contribution;
+            tot = round.clientPayedRoundFee;
         }
 
-        emit AppealContribution(
-            _localDisputeId,
-            dispute.currentRound,
-            _side,
-            msg.sender,
-            contribution
-        );
+        if (dispute.disputeType == DisputeType.Talent)
+            emit TalentAppealContribution(
+                _localDisputeId,
+                dispute.currentRound,
+                dispute.externalId1,  // talentId
+                dispute.externalId2,  // hiredTalentId
+                _side,
+                msg.sender,
+                contribution,
+                tot,
+                requiredAmount
+            );
+        else if (dispute.disputeType == DisputeType.Gig)
+            emit GigAppealContribution(
+                _localDisputeId,
+                dispute.currentRound,
+                dispute.externalId1,  // talentId or gigId
+                _side,
+                msg.sender,
+                contribution,
+                tot,
+                requiredAmount
+            );
 
         // Check if side has fully funded
         if (_side == FREELANCER_WINS && round.freelancerPayedRoundFee >= requiredAmount) {
@@ -702,7 +834,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         // Check if both sides have paid -> create new appeal
         if (round.freelancerFullyFunded && round.clientFullyFunded) {
             // Start a new round
-            _createAppeal(_localDisputeId);
+            _createAppeal(_localDisputeId, false);
         }
     }
 
@@ -710,28 +842,40 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     * @dev Create an appeal in Kleros after both sides have funded
     * @param _localDisputeId The internal dispute ID
     */
-    function _createAppeal(uint256 _localDisputeId) internal {
+    function _createAppeal(uint256 _localDisputeId, bool already_funded) internal {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         Round storage round = dispute.rounds[dispute.currentRound];
 
-        // Appeal in Kleros
-        arbitrator.appeal{value: round.appealCost}(
-            dispute.klerosDisputeId,
-            dispute.arbitratorExtraData
-        );
+        if (!already_funded) {
+            // Appeal in Kleros
+            arbitrator.appeal{value: round.appealCost}(
+                dispute.klerosDisputeId,
+                dispute.arbitratorExtraData
+            );
+        } else {
+            round.appealCost = 0;
+        }
 
-        // Calculate fee rewards for this round
-        // Total paid minus the appeal cost
         round.feeRewards = round.freelancerPayedRoundFee + round.clientPayedRoundFee - round.appealCost;
 
+        if (dispute.disputeType == DisputeType.Talent)
+            emit TalentAppealCreated(
+                _localDisputeId,
+                dispute.klerosDisputeId,
+                dispute.currentRound,
+                dispute.externalId1,  // talentId
+                dispute.externalId2   // hiredTalentId
+            );
+        else if (dispute.disputeType == DisputeType.Gig)
+            emit GigAppealCreated(
+                _localDisputeId,
+                dispute.klerosDisputeId,
+                dispute.currentRound,
+                dispute.externalId1   // gigId
+            );
+            
         // Move to next round
         dispute.currentRound++;
-
-        emit AppealCreated(
-            _localDisputeId,
-            dispute.klerosDisputeId,
-            dispute.currentRound - 1
-        );
     }
 
     /**
@@ -804,11 +948,22 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         _beneficiary.transfer(reward);
 
-        emit FeesAndRewardsWithdrawn(
-            _localDisputeId,
-            _round,
-            _beneficiary,
-            reward
-        );
+        if (dispute.disputeType == DisputeType.Talent)
+            emit TalentFeesAndRewardsWithdrawn(
+                _localDisputeId,
+                _round,
+                dispute.externalId1,  // talentId
+                dispute.externalId2,  // hiredTalentId
+                _beneficiary,
+                reward
+            );
+        else if (dispute.disputeType == DisputeType.Gig)
+            emit GigFeesAndRewardsWithdrawn(
+                _localDisputeId,
+                _round,
+                dispute.externalId1,  // gigId
+                _beneficiary,
+                reward
+            );
     }
 }

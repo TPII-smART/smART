@@ -453,12 +453,18 @@ export const getHiredTalentAndHiresPaginated = gql`
 
 export const getDeliverablesForHiredTalent = gql`
   query GetDeliverablesForHiredTalent($hiredTalentId: BigInt!, $talentId: BigInt!) {
-    hiredTalentDeliverables(where: { hiredTalentId: $hiredTalentId, talentId: $talentId }) {
+    hiredTalentDeliverables(
+      where: { hiredTalentId: $hiredTalentId, talentId: $talentId }
+      orderBy: "uploadedAt"
+      orderDirection: "desc"
+    ) {
       items {
         resource
         uploadedAt
+        state
         submissionComment
         clientResponse
+        responseTimestamp
         isLink
         lastTransactionHash
       }

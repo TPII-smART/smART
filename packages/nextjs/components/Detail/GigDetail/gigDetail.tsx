@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import UniversalDetail from "../UniversalDetail";
 import { ApplicationState, GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatEther, parseEther } from "viem";
+import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
 import {
@@ -12,13 +13,12 @@ import {
   BookOpenIcon,
   CheckCircleIcon,
   ClipboardDocumentListIcon,
-  PaperAirplaneIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Badge } from "~~/components/Badge";
 import Button from "~~/components/Button/Button";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
-import DisputeFormModal, { DisputeFormData } from "~~/components/DisputeForm/DisputeForm";
+import DisputeFormModal from "~~/components/DisputeForm/DisputeForm";
 import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
@@ -46,6 +46,7 @@ export default function GigDetail({
   type: string;
 }) {
   const { address: userAddress } = useAccount();
+  const router = useRouter();
 
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
@@ -84,7 +85,6 @@ export default function GigDetail({
   const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
   const freelancer = data?.gig.acceptedFreelancer ? data?.gig.acceptedFreelancer : application?.freelancer;
   const isFreelancer = freelancer?.toLowerCase() === userAddress?.toLowerCase();
-  const isRejected = data?.gig.clientRejected;
 
   const reload = async () => {
     queryClient.invalidateQueries({ queryKey: ["gigWithApplication", gigId] });
@@ -107,26 +107,9 @@ export default function GigDetail({
   const disputeResult =
     disputeResultData && disputeResultData === "0x0000000000000000000000000000000000000000000000000000000000000001";
 
-  const initiateConflictResolution = async (values: DisputeFormData) => {
-    console.log("Dispute form values:", values);
-    await writeContract({
-      functionName: "startDispute",
-      args: [BigInt(gigId), values.comment, parseEther(values.bounty), parseEther(values.bond), values.arbitration],
-      value:
-        parseEther(values.bounty) +
-        parseEther(values.bond) +
-        (values.arbitration ? BigInt(arbitrationFee.data ?? 0) : BigInt(0)),
-    });
-  };
+  const initiateConflictResolution = async () => {};
 
-  const handleFinalizeDispute = async () => {
-    if (!data?.gig.gigId) return;
-    await writeContract({
-      functionName: "resolveDispute",
-      args: [BigInt(data.gig.gigId)],
-    });
-    queryClient.invalidateQueries({ queryKey: ["gigWithApplication", gigId] });
-  };
+  const handleFinalizeDispute = async () => {};
 
   const requestArbitration = async () => {
     if (!data?.gig.gigId || !data?.gig.disputeQuestionId || !lastSeenBond || !arbitrationFee.data) return;
@@ -143,7 +126,7 @@ export default function GigDetail({
     return await uploadToIPFS(file);
   };
 
-  const handleUploadDeliverable = async (fileData: FileFormData) => {
+  const handleFreelancerConfirmCompletion = async (fileData: FileFormData) => {
     try {
       showSpinner();
       let resource = "";
@@ -158,24 +141,8 @@ export default function GigDetail({
       }
 
       await writeContract({
-        functionName: "uploadDeliverable",
-        args: [BigInt(data?.gig.gigId), { resource, submissionComment: fileData.submissionComment, isLink }],
-      });
-      if (reload) await reload();
-    } catch (err) {
-      console.error("Upload file failed:", err);
-    } finally {
-      hideSpinner();
-    }
-  };
-
-  const handleFreelancerConfirmCompletion = async () => {
-    try {
-      showSpinner();
-      if (!data?.gig.gigId) return;
-      await writeContract({
         functionName: "confirmFreelancerCompletion",
-        args: [BigInt(data.gig.gigId)],
+        args: [BigInt(data?.gig.gigId), { resource, submissionComment: fileData.submissionComment, isLink }],
       });
       if (reload) await reload();
     } catch (err) {
@@ -302,8 +269,32 @@ export default function GigDetail({
     }
   };
 
+  const handleViewDeliverable = () => {
+    router.push(`/gig/${gigId}/deliverables`);
+  };
+
   const getActionButtons = () => {
     const buttons = [];
+
+    if (
+      data?.deliverables &&
+      data?.deliverables.length > 0 &&
+      (isClient || isFreelancer || gigState === GigState.Disputed)
+    ) {
+      buttons.push(
+        <Button
+          variant="outline"
+          key="viewDeliverables"
+          onClick={handleViewDeliverable}
+          disabled={isMining}
+          size="sm"
+          tooltip="View Deliverables"
+        >
+          <ClipboardDocumentListIcon className="h-5 w-5" />
+          <span>View Deliverables</span>
+        </Button>,
+      );
+    }
 
     // Freelancer applied actions
     if (isFreelancer && !isFreelancer) {
@@ -332,50 +323,19 @@ export default function GigDetail({
         !data?.gig.clientCancelled &&
         !data?.gig.freelancerDelivered
       ) {
-        if (isRejected && !data.gig.freelancerUploaded) {
-          buttons.push(
-            <Button
-              variant="primary"
-              key="deliver"
-              onClick={() => setShowReviewModal(true)}
-              disabled={isMining}
-              size="sm"
-              tooltip="deliver"
-            >
-              <ClipboardDocumentListIcon className="h-5 w-5" />
-              <span>Review</span>
-            </Button>,
-          );
-        }
-        if (data?.gig.freelancerUploaded) {
-          buttons.push(
-            <Button
-              variant="primary"
-              key="deliver"
-              onClick={() => handleFreelancerConfirmCompletion()}
-              disabled={isMining}
-              size="sm"
-              tooltip="Deliver"
-            >
-              <PaperAirplaneIcon className="h-5 w-5" />
-              <span>Mark as Delivered</span>
-            </Button>,
-          );
-        } else {
-          buttons.push(
-            <Button
-              variant="primary"
-              key="upload"
-              onClick={() => setShowUploadModal(true)}
-              disabled={isMining}
-              size="sm"
-              tooltip="Upload"
-            >
-              <ArrowUpTrayIcon className="h-5 w-5" />
-              <span>Upload</span>
-            </Button>,
-          );
-        }
+        buttons.push(
+          <Button
+            variant="primary"
+            key="upload"
+            onClick={() => setShowUploadModal(true)}
+            disabled={isMining}
+            size="sm"
+            tooltip="Upload"
+          >
+            <ArrowUpTrayIcon className="h-5 w-5" />
+            <span>Upload</span>
+          </Button>,
+        );
       }
       if (gigState !== GigState.Completed && gigState !== GigState.Cancelled && !data?.gig.freelancerCancelled) {
         buttons.push(
@@ -391,23 +351,6 @@ export default function GigDetail({
             Cancel
           </Button>,
         );
-      }
-      if (gigState === GigState.InProgress && !data?.gig.freelancerCancelled && !data?.gig.clientCancelled) {
-        if (!data?.gig.freelancerDelivered) {
-          buttons.push(
-            <Button
-              variant="primary"
-              key="deliver"
-              onClick={() => (isRejected ? setShowDeliverableModal(true) : setShowUploadModal(true))}
-              disabled={isMining}
-              size="sm"
-              tooltip="Mark as Delivered"
-            >
-              <PaperAirplaneIcon className="h-5 w-5" />
-              Mark as Delivered
-            </Button>,
-          );
-        }
       }
       if (gigState === GigState.Disputed) {
         if (disputeFinalized) {
@@ -719,12 +662,12 @@ export default function GigDetail({
         onCloseRatingModal={() => setIsRatingModalOpen(false)}
         isDeliverableLoading={isLoading}
         isPreviewModalOpen={showReviewModal}
-        onClosePreviewModal={() => setShowReviewModal(false)}
+        onCloseReviewModal={() => setShowReviewModal(false)}
         handleClientConfirmCompletion={handleClientConfirmCompletion}
         handleRejectJob={handleRejectGig}
         handleRateJob={handleRateGig}
         initiateConflictResolution={() => setShowDisputeModal(true)}
-        handleUploadDeliverable={handleUploadDeliverable}
+        handleFreelancerConfirmCompletion={handleFreelancerConfirmCompletion}
       />
       <DisputeFormModal
         isOpen={showDisputeModal}
@@ -732,10 +675,10 @@ export default function GigDetail({
         loading={isSubmittingDispute}
         arbitrationFee={arbitrationFee.data?.toString() || "0"}
         type="gig"
-        onSubmit={async (values: DisputeFormData) => {
+        onSubmit={async () => {
           setIsSubmittingDispute(true);
           try {
-            await initiateConflictResolution(values);
+            await initiateConflictResolution();
             setShowDisputeModal(false);
           } finally {
             setIsSubmittingDispute(false);

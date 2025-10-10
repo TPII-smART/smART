@@ -1,9 +1,10 @@
 import { FileFormData } from "../UploadFileForm/types";
+import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 
 export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElement> {
   data?: DetailData;
-  deliverables?: any[];
+  deliverables?: Deliverable[];
   statusBadge?: React.ReactNode;
   actionButtons: React.ReactNode[];
   statusMessage: React.ReactNode;
@@ -19,10 +20,10 @@ export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElemen
   isRatingModalOpen: boolean;
   onCloseRatingModal: () => void;
   isPreviewModalOpen: boolean;
-  onClosePreviewModal: () => void;
+  onCloseReviewModal: () => void;
   handleClientConfirmCompletion: (clientResponse: string) => Promise<void>;
   handleRejectJob: (reason: string) => void;
   handleRateJob: (rating: number) => void;
   initiateConflictResolution: () => void;
-  handleUploadDeliverable: (deliverableData: FileFormData) => Promise<void>;
+  handleFreelancerConfirmCompletion: (deliverableData: FileFormData) => Promise<void>;
 }

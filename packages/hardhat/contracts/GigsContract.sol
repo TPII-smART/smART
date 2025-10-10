@@ -2,29 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./common/DeliverableInfo.sol";
-
-interface IRealityETH {
-    function askQuestion(
-        uint256 template_id,
-        string calldata question,
-        address arbitrator,
-        uint32 timeout,
-        uint32 opening_ts,
-        uint256 nonce
-    ) external payable returns (bytes32);
-    function resultFor(bytes32 question_id) external view returns (bytes32);
-    function submitAnswerFor(
-        bytes32 question_id,
-        bytes32 answer,
-        uint256 max_previous,
-        address answerer
-    ) external payable;
-}
-
-interface IArbiterContract {
-    function arbitrationFee() external view returns (uint256);
-    function requestArbitration(bytes32 question_id, uint256 lastSeenBond) external payable;
-}
+import "./common/IArbitrableProxy.sol";
 
 /**
  * @title GigsContract
@@ -33,10 +11,7 @@ interface IArbiterContract {
  */
 contract GigsContract {
 
-    // Reality.eth contract address
-    IRealityETH public reality;
-
-    IArbiterContract public arbitratorAddress;
+    IArbitrableProxy public arbiterProxy;
 
     // Enums for gig and application states
     enum GigState {
@@ -110,8 +85,8 @@ contract GigsContract {
         bool clientRejected; // Whether the client has rejected the job results
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
-        uint256 disputeQuestionId; // Question ID for dispute resolution
         bool freelancerUploaded; // Whether the freelancer has uploaded deliverables for the gig
+        uint256 disputeId; // ID of the dispute in the arbitrator contract, if any
         DeliverableInfo[] deliverableInfo; // Store the deliverable related to the job
     }
 
@@ -166,7 +141,13 @@ contract GigsContract {
 
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
-    event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
+    event ClientMarkedAsReceived(
+        uint256 indexed gigId,
+        address client,
+        string comment,
+        uint256 deliverableUploadedAt,
+        uint256 timestamp
+    );
 
     event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
 
@@ -179,13 +160,7 @@ contract GigsContract {
         bool clientReceived,
         bool clientRejected,
         bool freelancerUploaded,
-        uint256 timestamp
-    );
-
-    event CommentAdded(
-        uint256 indexed gigId,
-        address indexed client,
-        string response,
+        string comment,
         uint256 deliverableUploadedAt,
         uint256 timestamp
     );
@@ -206,12 +181,6 @@ contract GigsContract {
         bool isLink,
         bool freelancerUploaded,
         uint256 uploadedAt
-    );
-
-    event DisputeStarted(
-        uint256 indexed gigId,
-        bytes32 questionId,
-        address indexed requester
     );
 
     // Modifiers
@@ -251,13 +220,11 @@ contract GigsContract {
     /**
      * @dev Constructor
      * @param _owner Address of the contract owner
-     * @param _reality Address of the Reality.eth contract
-     * @param _arbitrator Address of the arbitrator for dispute resolution
+     * @param _KlerosArbitrator Address of the Kleros arbitrator for dispute resolution
      */
-    constructor(address _owner, address _reality, address _arbitrator) {
-        require(_reality != address(0), "Invalid Reality.eth address");
-        reality = IRealityETH(_reality);
-        arbitratorAddress = IArbiterContract(_arbitrator);
+    constructor(address _owner, address _KlerosArbitrator) {
+        require(_KlerosArbitrator != address(0), "Invalid Kleros arbitrator address");
+        arbiterProxy = IArbitrableProxy(_KlerosArbitrator);
         owner = _owner;
     }
 
@@ -294,8 +261,8 @@ contract GigsContract {
             newGig.freelancerUploaded = false;
             newGig.rating = 0;
             newGig.acceptedApplicationId = 0;
+            newGig.disputeId = 0; // No dispute initially
             newGig.gigBannerImageHash = params.gigBannerImageHash;
-            newGig.disputeQuestionId = 0; // No dispute initially
         }
 
         emit GigCreated(
@@ -467,15 +434,20 @@ contract GigsContract {
     /**
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
+     * @param _deliverableParams The deliverable information submitted by the freelancer
      */
-    function confirmFreelancerCompletion(uint256 _gigId) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
+    function confirmFreelancerCompletion(
+        uint256 _gigId,
+        DeliverableParams memory _deliverableParams
+    ) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
 
         require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
-        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
+
+        _uploadDeliverable(_gigId, _deliverableParams);
 
         gig.freelancerDelivered = true;
         emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
@@ -505,10 +477,11 @@ contract GigsContract {
         require(!gig.clientReceived, "Client already confirmed reception");
 
         gig.clientReceived = true;
-        emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
-
         deliverableInfo.clientResponse = _clientResponse;
-        emit CommentAdded(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
+        deliverableInfo.state = DeliverableState.Approved;
+        deliverableInfo.responseTimestamp = block.timestamp;
+
+        emit ClientMarkedAsReceived(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
 
         if (gig.clientReceived && gig.freelancerDelivered) {
             _completeGig(_gigId);
@@ -627,10 +600,10 @@ contract GigsContract {
      * @param _gigId Gig ID.
      * @param _deliverableParams The content of the file (IPFS hash and comment).
      */
-    function uploadDeliverable(
+    function _uploadDeliverable(
         uint256 _gigId,
         DeliverableParams memory _deliverableParams
-    ) external onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
+    ) internal onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
@@ -643,8 +616,10 @@ contract GigsContract {
             resource: _deliverableParams.resource,
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
+            responseTimestamp: 0,
             clientResponse: "",
-            isLink: _deliverableParams.isLink
+            isLink: _deliverableParams.isLink,
+            state: DeliverableState.Pending
         });
 
         gig.freelancerUploaded = true;
@@ -677,6 +652,10 @@ contract GigsContract {
         gig.rejectedAt = block.timestamp;
         gig.freelancerUploaded = false;
 
+        deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Rejected;
+        deliverableInfo.responseTimestamp = block.timestamp;
+
         emit GigRejected(
             _gigId,
             gig.client,
@@ -684,9 +663,10 @@ contract GigsContract {
             gig.clientReceived,
             gig.clientRejected,
             gig.freelancerUploaded,
+            _comment,
+            deliverableInfo.uploadedAt,
             gig.rejectedAt
         );
-        emit CommentAdded(_gigId, msg.sender, _comment, deliverableInfo.uploadedAt, block.timestamp);
     }
 
     // Convert uints to strings properly
@@ -710,146 +690,6 @@ contract GigsContract {
             _i /= 10;
         }
         return string(bstr);
-    }
-
-
-    /**
-     * @dev Start a dispute for a gig (either party can start a dispute)
-     * @param _gigId The ID of the gig to dispute
-     * @param _comment Comment explaining the reason for the dispute
-     * @param _bountyAmount Amount to be used as bounty for the dispute
-     * @param _bondAmount Amount to be used as bond for the first answer
-     * @param _escalateToArbitrator Whether to escalate the dispute to an arbitrator immediately
-     */
-    function startDispute(
-        uint256 _gigId,
-        string memory _comment,
-        uint256 _bountyAmount,
-        uint256 _bondAmount,
-        bool _escalateToArbitrator
-    ) external payable onlyGigParties(_gigId) gigExists(_gigId) {
-        Gig storage gig = postedGigs[_gigId];
-        require(gig.state == GigState.InProgress, "Gig not in progress");
-        require(bytes(_comment).length > 0, "Comment cannot be empty");
-        require(msg.value > 0, "Payed amount must be greater than 0");
-        require(_bountyAmount > 0, "Bounty amount must be greater than 0");
-        require(_bondAmount > 0, "Bond amount must be greater than 0");
-        // Get arbitration fee from arbitrator contract
-        uint256 arbitrationFee = arbitratorAddress.arbitrationFee();
-        require(arbitrationFee > 0, "Arbitration fee must be greater than 0");
-        if (_escalateToArbitrator) {
-            require(msg.value >= _bondAmount + _bountyAmount + arbitrationFee, "Insufficient funds to cover bounty, bond, and arbitration fee");
-        } else {
-            require(msg.value >= _bondAmount + _bountyAmount, "Insufficient funds to cover bounty and bond");
-        }
-
-        string memory senderRole = msg.sender == gig.client ? "Client" : "Freelancer";
-        string memory comment = string(
-            abi.encodePacked(senderRole, "\u0027s comment\u003A ", _comment)
-        );
-
-        string memory filesString = "";
-        if (gig.deliverableInfo.length == 0) {
-            filesString = "No files attached";
-        } else {
-            for (uint256 i = 0; i < gig.deliverableInfo.length; i++) {
-                filesString = string(abi.encodePacked(
-                    filesString,
-                    gig.deliverableInfo[i].isLink ? "Link\u003A " : "IPFS\u003A ",
-                    gig.deliverableInfo[i].resource
-                ));
-                if (i < gig.deliverableInfo.length - 1) {
-                    filesString = string(abi.encodePacked(filesString, " \u007C "));
-                }
-            }
-        }
-
-        string memory questionData = string(
-            abi.encodePacked(
-                "Did the freelancer fulfill the gig contract agreement? -> ",
-                comment,
-                " -> Files: \u007C ",
-                filesString,
-                "\u241f",
-                "freelance",
-                "\u241f",
-                "en"
-            )
-        );
-
-        // Forward the bounty to Reality.eth and create the question
-        try reality.askQuestion{value: _bountyAmount}(
-            uint256(0),
-            questionData,
-            address(arbitratorAddress),
-            uint32(300),
-            uint32(block.timestamp),
-            uint256(_gigId * 1000 + block.timestamp)
-        ) returns (bytes32 questionId) {
-            // Store the question ID in the gig
-            gig.state = GigState.Disputed;
-            gig.disputeQuestionId = uint256(questionId);
-
-            // Answer the question depending on who is calling
-            // Client wants to answer "No" (freelancer did not fulfill)
-            // Freelancer wants to answer "Yes" (freelancer did fulfill)
-            uint256 answer = msg.sender == gig.client ? uint256(0) : uint256(1);
-
-            require(address(this).balance >= _bondAmount, "Not enough left for bond");
-
-            // Submit the answer with the provided bond
-            reality.submitAnswerFor{value: _bondAmount}(questionId, bytes32(answer), 0, msg.sender);
-            // If escalateToArbitrator is true, request arbitration
-            if (_escalateToArbitrator) {
-                arbitratorAddress.requestArbitration{value: arbitrationFee}(questionId, _bondAmount);
-            }
-
-            emit DisputeStarted(_gigId, questionId, msg.sender);
-        } catch {
-            revert("Reality.eth failed: low-level error");
-        }
-    }
-
-    function getDisputeResult(uint256 _gigId) external view gigExists(_gigId) returns (bytes32) {
-        Gig storage gig = postedGigs[_gigId];
-
-        require(gig.state == GigState.Disputed, "Gig is not disputed");
-        require(gig.disputeQuestionId != 0, "No dispute question ID");
-
-        bytes32 questionId = bytes32(gig.disputeQuestionId);
-        return reality.resultFor(questionId);
-    }
-
-    function resolveDispute(uint256 _gigId) external onlyGigParties(_gigId) gigExists(_gigId) {
-        Gig storage gig = postedGigs[_gigId];
-
-        require(gig.state == GigState.Disputed, "Gig is not disputed");
-        require(gig.disputeQuestionId != 0, "No dispute question ID");
-
-        bytes32 questionId = bytes32(gig.disputeQuestionId);
-        bytes32 result;
-        try reality.resultFor(questionId) returns (bytes32 r) {
-            result = r;
-        } catch (bytes memory revertData) {
-            if (revertData.length == 32 && keccak256(revertData) == keccak256(abi.encodePacked(bytes32("question must be finalized")))) {
-            revert("question must be finalized");
-            } else {
-            revert("Reality.eth failed: low-level error");
-            }
-        }
-
-        // If result is bytes32(0), treat as "No" answer (client wins)
-        if (result == bytes32(uint256(1))) {
-            // Freelancer wins, release payment
-            payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
-        } else {
-            // Client wins, refund payment
-            payable(gig.client).transfer(gig.finalPayment);
-        }
-
-        gig.state = GigState.Completed;
-        gig.finishedAt = block.timestamp;
-        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
     }
 }
 
