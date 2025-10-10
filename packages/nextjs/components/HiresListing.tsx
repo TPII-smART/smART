@@ -1,50 +1,71 @@
 "use client";
 
+import { RefObject, useEffect, useState } from "react";
 import Spinner from "@/components//Spinner/Spinner";
-import JobCard from "@/components/Card/JobCard/JobCard";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { fetchHires } from "~~/services/graphql/fetchers/job/job.service";
-import { Job } from "~~/types/job/job.types";
+import HiredTalentCard from "@/components/Card/HiredTalentCard/HiredTalentCard";
+import { usePagination } from "~~/hooks/use-pagination";
+import { fetchHiresPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
+import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 
-type HiresData = {
-  jobs: Job[];
-};
-
-export default function HiresListing({ userAddress }: { userAddress: string }) {
-  const queryClient = useQueryClient();
-  const { data, isLoading, refetch } = useQuery<HiresData>({
-    queryKey: ["hiredFromUser", userAddress],
-    queryFn: () => fetchHires(userAddress),
+export default function HiresListing({
+  userAddress,
+  scrollRef,
+}: {
+  userAddress: string;
+  scrollRef?: RefObject<HTMLDivElement | null>;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<HiredTalent[]>([]);
+  const { handleScroll, fetchPaginatedData } = usePagination({
+    fetchFunction: fetchHiresPaginated,
+    loadingFunction: setLoading,
+    setDataFunction: setData,
   });
 
-  console.log("HiresListing data", data);
+  useEffect(() => {
+    if (!userAddress) {
+      return;
+    }
 
-  const reload = async () => {
-    queryClient.invalidateQueries({ queryKey: ["hiredFromUser", userAddress] });
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Delay to ensure UI updates
-    await refetch();
-  };
+    fetchPaginatedData(true, "hires", userAddress);
+  }, [userAddress, fetchPaginatedData]);
+
+  useEffect(() => {
+    if (!scrollRef) return;
+
+    if (scrollRef.current) {
+      scrollRef.current.onscroll = (e: any) => {
+        handleScroll(e, "hires", userAddress);
+      };
+    }
+  }, [scrollRef, userAddress, handleScroll]);
 
   return (
     <div className="w-full px-4 md:px-6 lg:px-8 mt-6 mb-6">
-      {isLoading ? (
-        <div className="flex items-center justify-center w-full h-64">
-          <Spinner />
-        </div>
-      ) : (
-        <div className="w-full">
-          {data?.jobs && data.jobs.length > 0 ? (
+      <div className="w-full">
+        {data && data.length > 0 ? (
+          <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {data?.jobs.map(job => <JobCard key={`${job.jobId}-${job.postingId}`} job={job} reload={reload} />)}
+              {data.map(hiredTalent => (
+                <HiredTalentCard
+                  key={`${hiredTalent.hiredTalentId}-${hiredTalent.talentId}`}
+                  hiredTalent={hiredTalent}
+                />
+              ))}
             </div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-content-secondary text-lg">No hires found.</p>
-              <p className="text-content-tertiary mt-2">Start by hiring freelancers for your projects.</p>
-            </div>
-          )}
-        </div>
-      )}
+            {loading && (
+              <div className="flex items-center justify-center w-full h-64">
+                <Spinner />
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-content-secondary text-lg">No hires found.</p>
+            <p className="text-content-tertiary mt-2">Start by hiring freelancers for your projects.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

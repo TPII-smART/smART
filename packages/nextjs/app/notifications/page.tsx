@@ -38,63 +38,6 @@ const SideBarButton = styled("button")<{ isActive: boolean }>(({ isActive }) => 
   cursor: "pointer",
 }));
 
-const NotificationCard = ({
-  notification,
-  checked,
-  onChange,
-  onNavigate,
-}: {
-  notification: Notification;
-  checked: boolean;
-  onChange: (id: string) => void;
-  onNavigate: (status: NotificationStatus, ids: string[]) => Promise<void>;
-}) => {
-  const [createdAt, setCreatedAt] = useState<string>("");
-
-  useEffect(() => {
-    setCreatedAt(castDateToTimestamp(notification.createdAt));
-  }, [notification.createdAt]);
-
-  return (
-    <Link
-      key={notification.id}
-      className={`
-        flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
-        ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
-      `}
-      href={{ pathname: notification.href ?? "#", query: notification.href ? { itemId: notification.itemId } : {} }}
-      onClick={
-        notification.status === NotificationStatus.UNREAD
-          ? () => onNavigate(NotificationStatus.READ, [notification.id])
-          : undefined
-      }
-    >
-      {notification.status === NotificationStatus.UNREAD ? (
-        <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-accent`} />
-      ) : notification.status === NotificationStatus.DONE ? (
-        <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-success`} />
-      ) : (
-        <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] transparent`} />
-      )}
-      <div onClick={e => e.stopPropagation()} className="place-self-start">
-        <Checkbox
-          checkStyle={{ width: 20, height: 20 }}
-          checked={checked}
-          onChange={(_, event) => {
-            event.stopPropagation();
-            onChange(notification.id);
-          }}
-        />
-      </div>
-      <div className="flex-1 ml-2">
-        <h4 className="font-semibold mt-[2px]">{notification.title}</h4>
-        <p className="text-sm opacity-80">{notification.message}</p>
-        <span className="text-xs mt-1 text-gray-400">{createdAt}</span>
-      </div>
-    </Link>
-  );
-};
-
 const getActiveViewStatusList = (activeView: string): NotificationStatus[] => {
   switch (activeView) {
     case "inbox":
@@ -129,6 +72,67 @@ const NotificationsDashboard = () => {
     setDataFunction: setLocalNotifications,
     loadingFunction: setLoading,
   });
+
+  const NotificationCard = ({
+    notification,
+    checked,
+    onChange,
+    onNavigate,
+  }: {
+    notification: Notification;
+    checked: boolean;
+    onChange: (id: string) => void;
+    onNavigate: (status: NotificationStatus, ids: string[]) => Promise<void>;
+  }) => {
+    const [createdAt, setCreatedAt] = useState<string>("");
+
+    useEffect(() => {
+      setCreatedAt(castDateToTimestamp(notification.createdAt));
+    }, [notification.createdAt]);
+
+    return (
+      <Link
+        key={notification.id}
+        className={`
+        flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
+        ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
+      `}
+        href={{ pathname: notification.href ?? "#", query: notification.href ? { itemId: notification.itemId } : {} }}
+        onClick={
+          notification.status === NotificationStatus.UNREAD
+            ? () => {
+                showSpinner();
+                onNavigate(NotificationStatus.READ, [notification.id]);
+                hideSpinner();
+              }
+            : undefined
+        }
+      >
+        {notification.status === NotificationStatus.UNREAD ? (
+          <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-accent`} />
+        ) : notification.status === NotificationStatus.DONE ? (
+          <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-success`} />
+        ) : (
+          <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] transparent`} />
+        )}
+        <div onClick={e => e.stopPropagation()} className="place-self-start">
+          <Checkbox
+            checkStyle={{ width: 20, height: 20 }}
+            checked={checked}
+            onChange={(_, event) => {
+              event.stopPropagation();
+              onChange(notification.id);
+            }}
+          />
+        </div>
+        <div className="flex-1 ml-2">
+          <h4 className="font-semibold mt-[2px]">{notification.title}</h4>
+          <p className="text-sm opacity-80">{notification.message}</p>
+          <span className="text-xs mt-1 text-gray-400">{createdAt}</span>
+        </div>
+      </Link>
+    );
+  };
 
   useEffect(() => {
     if (!userAddress) {

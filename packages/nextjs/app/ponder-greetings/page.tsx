@@ -18,8 +18,8 @@ type Greeting = {
 };
 */
 
-type Job = {
-  jobId: string;
+type HiredTalent = {
+  hiredTalentId: string;
   freelancer?: `0x${string}`;
   client?: `0x${string}`;
   payment?: string;
@@ -36,14 +36,14 @@ type Job = {
 
 type Confirmation = {
   id: string;
-  jobId: string;
+  hiredTalentId: string;
   confirmer: `0x${string}`;
   isClient: boolean;
   timestamp: string;
 };
 
 //type GreetingsData = { greetings: { items: Greeting[] } };
-type JobsData = { jobs: { items: Job[] } };
+type HiredTalentsData = { hiredTalents: { items: HiredTalent[] } };
 type ConfirmationsData = { confirmations: { items: Confirmation[] } };
 /*
 const fetchGreetings = async () => {
@@ -68,12 +68,12 @@ const fetchGreetings = async () => {
   return data;
 };
 */
-const fetchJobsAndConfirmations = async () => {
+const fetchHiredTalentsAndConfirmations = async () => {
   const query = gql`
-    query JobsAndConfirmations {
-      jobs(orderBy: "createdAt", orderDirection: "desc") {
+    query HiredTalentsAndConfirmations {
+      hiredTalents(orderBy: "createdAt", orderDirection: "desc") {
         items {
-          jobId
+          hiredTalentId
           freelancer
           client
           payment
@@ -91,7 +91,7 @@ const fetchJobsAndConfirmations = async () => {
       confirmations(orderBy: "timestamp", orderDirection: "desc") {
         items {
           id
-          jobId
+          hiredTalentId
           confirmer
           isClient
           timestamp
@@ -100,7 +100,10 @@ const fetchJobsAndConfirmations = async () => {
     }
   `;
   const endpoint = process.env.NEXT_PUBLIC_PONDER_URL || "http://localhost:42069";
-  return request<{ jobs: JobsData["jobs"]; confirmations: ConfirmationsData["confirmations"] }>(endpoint, query);
+  return request<{ hiredTalents: HiredTalentsData["hiredTalents"]; confirmations: ConfirmationsData["confirmations"] }>(
+    endpoint,
+    query,
+  );
 };
 
 /*
@@ -236,15 +239,15 @@ const PonderGreetings: NextPage = () => {
 
 export default PonderGreetings;
 */
-const PonderJobs = () => {
+const PonderHiredTalents = () => {
   const { data, isLoading } = useQuery({
-    queryKey: ["jobsAndConfirmations"],
-    queryFn: fetchJobsAndConfirmations,
+    queryKey: ["hiredTalentsAndConfirmations"],
+    queryFn: fetchHiredTalentsAndConfirmations,
   });
 
   return (
     <div className="flex items-center flex-col flex-grow pt-10">
-      <h2 className="text-4xl font-bold">Jobs and Confirmations</h2>
+      <h2 className="text-4xl font-bold">HiredTalents and Confirmations</h2>
 
       {/* Loading state */}
       {isLoading && (
@@ -253,50 +256,53 @@ const PonderJobs = () => {
         </div>
       )}
 
-      {/* Jobs display */}
-      {data?.jobs.items.length === 0 && <p>No jobs found.</p>}
-      {data?.jobs.items && data.jobs.items.length > 0 && (
+      {/* HiredTalents display */}
+      {data?.hiredTalents.items.length === 0 && <p>No hiredTalents found.</p>}
+      {data?.hiredTalents.items && data.hiredTalents.items.length > 0 && (
         <div className="mt-8 w-full max-w-3xl">
-          <h3 className="text-2xl font-bold">Jobs</h3>
-          {data.jobs.items.map(job => (
-            <div key={job.jobId} className="my-4 p-4 border rounded-lg">
+          <h3 className="text-2xl font-bold">HiredTalents</h3>
+          {data.hiredTalents.items.map(hiredTalent => (
+            <div key={hiredTalent.hiredTalentId} className="my-4 p-4 border rounded-lg">
               <div>
-                <strong>Job ID:</strong> {job.jobId ? job.jobId.toString() : "N/A"}
+                <strong>HiredTalent ID:</strong>{" "}
+                {hiredTalent.hiredTalentId ? hiredTalent.hiredTalentId.toString() : "N/A"}
               </div>
               <div>
-                <strong>Title:</strong> {job.title || "N/A"}
+                <strong>Title:</strong> {hiredTalent.title || "N/A"}
               </div>
               <div>
-                <strong>Description:</strong> {job.description || "N/A"}
+                <strong>Description:</strong> {hiredTalent.description || "N/A"}
               </div>
               <div>
-                <strong>Freelancer:</strong> {job.freelancer ? <Address address={job.freelancer} /> : "N/A"}
+                <strong>Freelancer:</strong>{" "}
+                {hiredTalent.freelancer ? <Address address={hiredTalent.freelancer} /> : "N/A"}
               </div>
               <div>
-                <strong>Client:</strong> {job.client ? <Address address={job.client} /> : "N/A"}
+                <strong>Client:</strong> {hiredTalent.client ? <Address address={hiredTalent.client} /> : "N/A"}
               </div>
               <div>
-                <strong>Payment:</strong> {job.payment ? `${formatEther(BigInt(job.payment))} ETH` : "N/A"}
+                <strong>Payment:</strong>{" "}
+                {hiredTalent.payment ? `${formatEther(BigInt(hiredTalent.payment))} ETH` : "N/A"}
               </div>
               <div>
                 <strong>Created At:</strong>{" "}
-                {job.createdAt ? new Date(Number(job.createdAt) * 1000).toLocaleString() : "N/A"}
+                {hiredTalent.createdAt ? new Date(Number(hiredTalent.createdAt) * 1000).toLocaleString() : "N/A"}
               </div>
               <div>
                 <strong>Accepted At:</strong>{" "}
-                {job.acceptedAt ? new Date(Number(job.acceptedAt) * 1000).toLocaleString() : "N/A"}
+                {hiredTalent.acceptedAt ? new Date(Number(hiredTalent.acceptedAt) * 1000).toLocaleString() : "N/A"}
               </div>
               <div>
                 <strong>Deadline:</strong>{" "}
-                {job.deadline ? new Date(Number(job.deadline) * 1000).toLocaleString() : "N/A"}
+                {hiredTalent.deadline ? new Date(Number(hiredTalent.deadline) * 1000).toLocaleString() : "N/A"}
               </div>
               <div>
                 <strong>Completed At:</strong>{" "}
-                {job.completedAt ? new Date(Number(job.completedAt) * 1000).toLocaleString() : "N/A"}
+                {hiredTalent.completedAt ? new Date(Number(hiredTalent.completedAt) * 1000).toLocaleString() : "N/A"}
               </div>
               <div>
                 <strong>Cancelled At:</strong>{" "}
-                {job.cancelledAt ? new Date(Number(job.cancelledAt) * 1000).toLocaleString() : "N/A"}
+                {hiredTalent.cancelledAt ? new Date(Number(hiredTalent.cancelledAt) * 1000).toLocaleString() : "N/A"}
               </div>
             </div>
           ))}
@@ -311,7 +317,7 @@ const PonderJobs = () => {
           {data.confirmations.items.map(conf => (
             <div key={conf.id} className="my-4 p-4 border rounded-lg">
               <div>
-                <strong>Job ID:</strong> {conf.jobId}
+                <strong>HiredTalent ID:</strong> {conf.hiredTalentId}
               </div>
               <div>
                 <strong>Confirmer:</strong> <Address address={conf.confirmer} />
@@ -330,4 +336,4 @@ const PonderJobs = () => {
   );
 };
 
-export default PonderJobs;
+export default PonderHiredTalents;

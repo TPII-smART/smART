@@ -11,7 +11,7 @@ export interface ComboBoxProps {
   /*
    * Label for the ComboBox, displayed above the input field.
    */
-  label: string;
+  label?: string;
   /*
    * Callback function triggered when the selected value changes.
    * Receives the new value as an argument.
@@ -39,7 +39,7 @@ export interface ComboBoxProps {
    * Optional prop to specify the variant of the ComboBox.
    * Can be "standard", "filled", or "outlined".
    */
-  variant?: "standard" | "filled" | "outlined";
+  variant?: "standard" | "filled" | "outlined" | "text";
   /*
    * Optional inline styles for the ComboBox.
    */

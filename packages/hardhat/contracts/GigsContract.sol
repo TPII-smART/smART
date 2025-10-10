@@ -1,7 +1,8 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "./common/FileInfo.sol";
+import "./common/DeliverableInfo.sol";
+import "./common/IArbitrableProxy.sol";
 
 /**
  * @title GigsContract
@@ -9,6 +10,9 @@ import "./common/FileInfo.sol";
  * @author SmArt
  */
 contract GigsContract {
+
+    IArbitrableProxy public arbiterProxy;
+
     // Enums for gig and application states
     enum GigState {
         Open,
@@ -81,7 +85,9 @@ contract GigsContract {
         bool clientRejected; // Whether the client has rejected the job results
         bool clientCancelled; // Whether the client cancelled the job
         bool freelancerCancelled; // Whether the freelancer cancelled the job
-        FileInfo[] fileInfo; // Store the file related to the job
+        bool freelancerUploaded; // Whether the freelancer has uploaded deliverables for the gig
+        uint256 disputeId; // ID of the dispute in the arbitrator contract, if any
+        DeliverableInfo[] deliverableInfo; // Store the deliverable related to the job
     }
 
     // State variables of the contract
@@ -126,11 +132,22 @@ contract GigsContract {
         string rejectionComment
     );
 
-    event ApplicationWithdrawn(uint256 indexed gigId, uint256 indexed applicationId, address indexed freelancer, string rejectionComment);
+    event ApplicationWithdrawn(
+        uint256 indexed gigId,
+        uint256 indexed applicationId,
+        address indexed freelancer,
+        string rejectionComment
+    );
 
     event FreelancerMarkedAsDelivered(uint256 indexed gigId, address freelancer, uint256 timestamp);
 
-    event ClientMarkedAsReceived(uint256 indexed gigId, address client, uint256 timestamp);
+    event ClientMarkedAsReceived(
+        uint256 indexed gigId,
+        address client,
+        string comment,
+        uint256 deliverableUploadedAt,
+        uint256 timestamp
+    );
 
     event GigRated(uint256 indexed gigId, address client, uint8 rating, uint256 timestamp);
 
@@ -142,14 +159,9 @@ contract GigsContract {
         bool freelancerDelivered,
         bool clientReceived,
         bool clientRejected,
-        uint256 timestamp
-    );
-
-    event CommentAdded(
-        uint256 indexed gigId,
-        address indexed client,
-        string response,
-        uint256 fileUploadedAt,
+        bool freelancerUploaded,
+        string comment,
+        uint256 deliverableUploadedAt,
         uint256 timestamp
     );
 
@@ -161,12 +173,13 @@ contract GigsContract {
         uint256 timestamp
     );
 
-    event FileUploaded(
+    event DeliverableUploaded(
         uint256 indexed gigId,
         address indexed freelancer,
         string resource,
         string submissionComment,
         bool isLink,
+        bool freelancerUploaded,
         uint256 uploadedAt
     );
 
@@ -204,7 +217,14 @@ contract GigsContract {
         _;
     }
 
-    constructor(address _owner) {
+    /**
+     * @dev Constructor
+     * @param _owner Address of the contract owner
+     * @param _KlerosArbitrator Address of the Kleros arbitrator for dispute resolution
+     */
+    constructor(address _owner, address _KlerosArbitrator) {
+        require(_KlerosArbitrator != address(0), "Invalid Kleros arbitrator address");
+        arbiterProxy = IArbitrableProxy(_KlerosArbitrator);
         owner = _owner;
     }
 
@@ -238,8 +258,10 @@ contract GigsContract {
             newGig.acceptedAt = 0;
             newGig.clientReceived = false;
             newGig.freelancerDelivered = false;
+            newGig.freelancerUploaded = false;
             newGig.rating = 0;
             newGig.acceptedApplicationId = 0;
+            newGig.disputeId = 0; // No dispute initially
             newGig.gigBannerImageHash = params.gigBannerImageHash;
         }
 
@@ -412,25 +434,55 @@ contract GigsContract {
     /**
      * @dev Confirm gig completion (both parties must confirm to complete the gig)
      * @param _gigId The gig ID to confirm completion
+     * @param _deliverableParams The deliverable information submitted by the freelancer
      */
-    function confirmCompletion(uint256 _gigId) external gigExists(_gigId) onlyGigParties(_gigId) {
+    function confirmFreelancerCompletion(
+        uint256 _gigId,
+        DeliverableParams memory _deliverableParams
+    ) external gigExists(_gigId) onlyAcceptedFreelancer(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Gig is not in progress");
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
 
-        // Set confirmation based on who is calling
-        if (msg.sender == gig.client) {
-            require(!gig.clientReceived, "Client already confirmed reception");
-            gig.clientReceived = true;
-            emit ClientMarkedAsReceived(_gigId, msg.sender, block.timestamp);
-        } else {
-            require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
-            gig.freelancerDelivered = true;
-            emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
-        }
+        require(!gig.freelancerDelivered, "Freelancer already marked as delivered");
+
+        _uploadDeliverable(_gigId, _deliverableParams);
+
+        gig.freelancerDelivered = true;
+        emit FreelancerMarkedAsDelivered(_gigId, msg.sender, block.timestamp);
 
         // If both parties have confirmed, complete the gig
+        if (gig.clientReceived && gig.freelancerDelivered) {
+            _completeGig(_gigId);
+        }
+    }
+
+    function confirmClientCompletion(
+        uint256 _gigId,
+        string calldata _clientResponse
+    ) external gigExists(_gigId) onlyClient(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.InProgress, "Gig is not in progress");
+        require(gig.deliverableInfo.length > 0, "No deliverable uploaded yet");
+        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
+
+        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+
+        require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
+        require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
+        require(bytes(_clientResponse).length > 0, "Comment cannot be empty");
+        require(bytes(_clientResponse).length <= 256, "Comment must be up to 256 characters");
+        require(!gig.clientReceived, "Client already confirmed reception");
+
+        gig.clientReceived = true;
+        deliverableInfo.clientResponse = _clientResponse;
+        deliverableInfo.state = DeliverableState.Approved;
+        deliverableInfo.responseTimestamp = block.timestamp;
+
+        emit ClientMarkedAsReceived(_gigId, msg.sender, _clientResponse, deliverableInfo.uploadedAt, block.timestamp);
+
         if (gig.clientReceived && gig.freelancerDelivered) {
             _completeGig(_gigId);
         }
@@ -499,7 +551,10 @@ contract GigsContract {
         emit GigCancelled(_gigId, gig.state, gig.clientCancelled, gig.freelancerCancelled, gig.canceledAt);
     }
 
-    function withdrawApplication(uint256 _gigId, uint256 _applicationId) external gigExists(_gigId) applicationExists(_gigId, _applicationId) {
+    function withdrawApplication(
+        uint256 _gigId,
+        uint256 _applicationId
+    ) external gigExists(_gigId) applicationExists(_gigId, _applicationId) {
         Gig storage gig = postedGigs[_gigId];
         Application storage application = gig.applications[_applicationId];
 
@@ -543,77 +598,63 @@ contract GigsContract {
     /**
      * @dev Allows the freelancer to upload a file.
      * @param _gigId Gig ID.
-     * @param _fileParams The content of the file (IPFS hash and comment).
+     * @param _deliverableParams The content of the file (IPFS hash and comment).
      */
-    function uploadFile(
+    function _uploadDeliverable(
         uint256 _gigId,
-        FileParams memory _fileParams
-    ) external onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
+        DeliverableParams memory _deliverableParams
+    ) internal onlyAcceptedFreelancer(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
 
-        require(bytes(_fileParams.resource).length > 0, "Resource cannot be empty.");
-        require(bytes(_fileParams.resource).length <= 256, "Resource must be up to 256 characters.");
-        require(bytes(_fileParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
+        require(bytes(_deliverableParams.resource).length > 0, "Resource cannot be empty.");
+        require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
+        require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
-        FileInfo memory fileInfo = FileInfo({
-            resource: _fileParams.resource,
-            submissionComment: _fileParams.submissionComment,
+        DeliverableInfo memory deliverableToUpload = DeliverableInfo({
+            resource: _deliverableParams.resource,
+            submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
+            responseTimestamp: 0,
             clientResponse: "",
-            isLink: _fileParams.isLink
+            isLink: _deliverableParams.isLink,
+            state: DeliverableState.Pending
         });
 
-        gig.fileInfo.push(
-            FileInfo({
-                resource: _fileParams.resource,
-                submissionComment: _fileParams.submissionComment,
-                uploadedAt: block.timestamp,
-                clientResponse: "",
-                isLink: _fileParams.isLink
-            })
-        );
+        gig.freelancerUploaded = true;
+        gig.deliverableInfo.push(deliverableToUpload);
 
-        emit FileUploaded(
+        emit DeliverableUploaded(
             _gigId,
             msg.sender,
-            fileInfo.resource,
-            fileInfo.submissionComment,
-            fileInfo.isLink,
-            fileInfo.uploadedAt
+            deliverableToUpload.resource,
+            deliverableToUpload.submissionComment,
+            deliverableToUpload.isLink,
+            gig.freelancerUploaded,
+            deliverableToUpload.uploadedAt
         );
     }
 
-    /**
-     * @dev Allows the client to add a response to the last uploaded file.
-     * @param _gigId Gig ID.
-     * @param _comment Comment text.
-     */
-    function addCommentToGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
+    function rejectGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
-        FileInfo storage fileInfo = gig.fileInfo[gig.fileInfo.length - 1];
-
-        require(gig.state == GigState.InProgress, "The gig is not in progress.");
-        require(bytes(_comment).length > 0, "Comment cannot be empty.");
-        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
-
-        fileInfo.clientResponse = _comment;
-
-        emit CommentAdded(_gigId, msg.sender, _comment, fileInfo.uploadedAt, block.timestamp);
-    }
-
-    function rejectGig(uint256 _gigId) external onlyClient(_gigId) gigExists(_gigId) {
-        Gig storage gig = postedGigs[_gigId];
+        DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
         require(gig.client != address(0), "The gig has no assigned client.");
         require(gig.acceptedFreelancer != address(0), "The gig has no assigned freelancer.");
+        require(bytes(_comment).length > 0, "Comment cannot be empty.");
+        require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
 
         gig.freelancerDelivered = false;
         gig.clientReceived = false;
         gig.clientRejected = true;
         gig.rejectedAt = block.timestamp;
+        gig.freelancerUploaded = false;
+
+        deliverableInfo.clientResponse = _comment;
+        deliverableInfo.state = DeliverableState.Rejected;
+        deliverableInfo.responseTimestamp = block.timestamp;
 
         emit GigRejected(
             _gigId,
@@ -621,7 +662,34 @@ contract GigsContract {
             gig.freelancerDelivered,
             gig.clientReceived,
             gig.clientRejected,
+            gig.freelancerUploaded,
+            _comment,
+            deliverableInfo.uploadedAt,
             gig.rejectedAt
         );
     }
+
+    // Convert uints to strings properly
+    function uint2str(uint256 _i) internal pure returns (string memory) {
+        if (_i == 0) {
+            return "0";
+        }
+        uint256 j = _i;
+        uint256 len;
+        while (j != 0) {
+            len++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(len);
+        uint256 k = len;
+        while (_i != 0) {
+            k = k-1;
+            uint8 temp = (48 + uint8(_i - _i / 10 * 10));
+            bytes1 b1 = bytes1(temp);
+            bstr[k] = b1;
+            _i /= 10;
+        }
+        return string(bstr);
+    }
 }
+

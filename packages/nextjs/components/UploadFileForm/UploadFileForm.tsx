@@ -8,8 +8,8 @@ import FormModal from "~~/components/Modal/FormModal/FormModal";
 import Tabs from "~~/components/Tabs/Tabs";
 import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 
-interface UploadFileFormProps {
-  onSubmit: (data: FileFormData) => Promise<void>;
+interface UploadDeliverableFormProps {
+  onSubmit: (deliverableData: FileFormData) => Promise<void>;
   loading?: boolean;
   modalTitle?: string;
   modalDescription?: string;
@@ -17,14 +17,14 @@ interface UploadFileFormProps {
   onClose?: () => void;
 }
 
-const UploadFileForm = ({
+const UploadDeliverableForm = ({
   onSubmit,
   loading,
-  modalTitle = "Submit Deliverable",
+  modalTitle = "Upload Deliverable",
   modalDescription = "Please upload the required file or paste a link, and optionally add a comment for the client.",
   isOpen,
   onClose,
-}: UploadFileFormProps) => {
+}: UploadDeliverableFormProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const modalOpen = typeof isOpen === "boolean" ? isOpen : internalOpen;
   const handleClose = () => {
@@ -81,12 +81,7 @@ const UploadFileForm = ({
               />
             </div>
             {selectedTab === "file" ? (
-              <FileUploadBox
-                onUploadSuccess={(val: File) => setFieldValue("file", val)}
-                acceptedFileType={"Image"}
-                //onUploadError={Render error message}
-                //onUploadError={error => setFieldValue("file", undefined)}
-              />
+              <FileUploadBox onUploadSuccess={(val: File) => setFieldValue("file", val)} acceptedFileType={"Image"} />
             ) : (
               <InputBase
                 placeholder="Paste your link here"
@@ -115,4 +110,4 @@ const UploadFileForm = ({
   );
 };
 
-export default UploadFileForm;
+export default UploadDeliverableForm;

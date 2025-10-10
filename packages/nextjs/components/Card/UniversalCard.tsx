@@ -3,11 +3,11 @@
 import * as React from "react";
 import Image from "next/image";
 import { Badge } from "../Badge";
-import { jobCategories } from "./JobCategory/jobCategory.data";
+import { hiredTalentCategories } from "./HiredTalentCategory/hiredTalentCategory.data";
 import { UniversalCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
-import { cn } from "@/lib/utils";
+import { castHoursToDurationString, cn } from "@/lib/utils";
 import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
 import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
@@ -24,12 +24,13 @@ const TimeDisplay = ({
 }) => {
   if (!time) return null;
 
+  const _time = castHoursToDurationString(+time);
   return (
     <div
       className={cn("flex items-center gap-1.5 text-sm text-muted-foreground relative cursor-help", className)}
-      title={timeLabel ? `${timeLabel}: ${time} hrs` : undefined}
+      title={timeLabel ? `${timeLabel}: ${_time}` : undefined}
     >
-      <span className="select-none pointer-events-none">{time} hrs</span>
+      <span className="select-none pointer-events-none">{_time}</span>
       <ClockIcon className="h-4 w-4" />
     </div>
   );
@@ -53,7 +54,7 @@ const CategoryDisplay = ({ category, className }: { category?: string; className
 
   return (
     <div className={cn("w-fit", className)}>
-      <Badge variant="secondary">{jobCategories.find(c => c.id === category)?.label ?? category}</Badge>
+      <Badge variant="secondary">{hiredTalentCategories.find(c => c.id === category)?.label ?? category}</Badge>
     </div>
   );
 };
@@ -111,10 +112,11 @@ export function UniversalCard({
   const { profilePicture, isLoading } = useUserProfile(avatarAddress);
 
   // Determine avatar size based on card variant
-  const avatarSize = cardVariant === "Reduced" ? 64 : 96;
-  const avatarClasses = cardVariant === "Reduced" ? "h-16 w-16" : "h-24 w-24";
+  const avatarSize = cardVariant === "Reduced" || cardVariant === "Partial" ? 64 : 96;
+  const avatarClasses = cardVariant === "Reduced" || cardVariant === "Partial" ? "h-16 w-16" : "h-24 w-24";
 
-  const handleNavigateToProfile = async () => {
+  const handleNavigateToProfile = async (e: React.MouseEvent) => {
+    e?.stopPropagation();
     if (avatarAddress) {
       // Navigate to the user profile page
       window.location.href = `/profile/${avatarAddress}`;
@@ -153,12 +155,13 @@ export function UniversalCard({
     return <BlockieAvatar address={avatarAddress ? avatarAddress : ""} size={avatarSize} />;
   };
 
-  return cardVariant == "Reduced" ? (
+  return cardVariant == "Reduced" || cardVariant == "Partial" ? (
     <Card
       className={cn(
         "group relative overflow-hidden transition-all duration-300 ease-in-out",
         // Only shadow and translate on hover, not scale or blur
         "hover:shadow-xl hover:-translate-y-1 hover:scale-[1.02] h-full flex flex-col",
+        (cardVariant === "Reduced" || cardVariant === "Partial") && "cursor-pointer",
         className,
       )}
       highlight={highlight}
@@ -176,7 +179,7 @@ export function UniversalCard({
 
         <div className="flex flex-col flex-1 min-w-0">
           {/* Title Section */}
-          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2 mb-2" style={{ minHeight: "2.5rem" }}>
+          <CardTitle className="text-lg font-semibold leading-tight line-clamp-2" style={{ minHeight: "2.5rem" }}>
             {title}
           </CardTitle>
 
@@ -190,7 +193,11 @@ export function UniversalCard({
           />
         </div>
       </CardContent>
-
+      {extraInfo && cardVariant === "Partial" && (
+        <CardContent>
+          <div>{extraInfo}</div>
+        </CardContent>
+      )}
       <CardFooter className="flex justify-between items-center px-6 py-4 mt-auto">
         <div className="flex items-center">{footerLeft ?? paymentDisplay}</div>
         <div className="flex items-center">{footerRight}</div>
@@ -242,7 +249,7 @@ export function UniversalCard({
 
       <CardHeader className="relative overflow-visible pb-4">
         {avatarAddress && (
-          <div className="absolute -top-18 right-6 z-20 group/avatar">
+          <div className="absolute -top-18 right-6 group/avatar">
             <div
               className={`${avatarClasses} rounded-full transition-all duration-300 group-hover:scale-105 relative cursor-pointer`}
               onClick={handleNavigateToProfile}

@@ -1,19 +1,25 @@
-import { ApplicationState, GigState, JobState } from "@se-2/common";
+import { ApplicationState, GigState, HiredTalentState } from "@se-2/common";
 import {
   CheckCircleIcon,
   ClockIcon,
   ExclamationTriangleIcon,
   PaperAirplaneIcon,
   PlayIcon,
+  ScaleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { castDateToTimestampNum } from "~~/lib/utils";
 import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
 import { Application, Gig } from "~~/types/gig/gig.types";
-import { Job } from "~~/types/job/job.types";
+import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 
-export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolean, isClient: boolean) {
-  if (jobStatus === JobState.WaitingForApproval) {
+export function getHiredTalentStatus(
+  hiredTalentState: HiredTalentState,
+  hiredTalent: HiredTalent,
+  isFreelancer: boolean,
+  isClient: boolean,
+) {
+  if (hiredTalentState === HiredTalentState.WaitingForApproval) {
     return {
       label: "Waiting for Approval",
       color: "bg-amber-500",
@@ -22,39 +28,39 @@ export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolea
     };
   }
 
-  if (jobStatus === JobState.Ongoing) {
-    // Check delivery status for ongoing jobs
-    if (job.freelancerCancelled) {
+  if (hiredTalentState === HiredTalentState.Ongoing) {
+    // Check delivery status for ongoing hiredTalents
+    if (hiredTalent.freelancerCancelled) {
       return {
         label: "Cancellation Pending",
         color: "bg-red-500",
         icon: XCircleIcon,
-        description: isFreelancer ? "You cancelled the job" : "Job was cancelled by freelancer",
+        description: isFreelancer ? "You cancelled the hire" : "Hire was cancelled by freelancer",
       };
-    } else if (job.clientCancelled) {
+    } else if (hiredTalent.clientCancelled) {
       return {
-        label: isClient ? "You cancelled the job" : "Cancelled by Client",
+        label: isClient ? "You cancelled the hire" : "Cancelled by Client",
         color: "bg-red-500",
         icon: XCircleIcon,
-        description: isClient ? "You cancelled the job" : "Job was cancelled by client",
+        description: isClient ? "You cancelled the hire" : "Hire was cancelled by client",
       };
     }
 
-    if (job.freelancerDelivered && job.clientReceived) {
+    if (hiredTalent.freelancerDelivered && hiredTalent.clientReceived) {
       return {
         label: "Completed - Awaiting Payment",
         color: "bg-blue-500",
         icon: CheckCircleIcon,
         description: "Work delivered and received",
       };
-    } else if (job.freelancerDelivered && !job.clientReceived) {
+    } else if (hiredTalent.freelancerDelivered && !hiredTalent.clientReceived) {
       return {
         label: "Delivered - Awaiting Review",
         color: "bg-purple-500",
         icon: PaperAirplaneIcon,
         description: "Work delivered, awaiting client review",
       };
-    } else if (!job.freelancerDelivered && job.clientReceived) {
+    } else if (!hiredTalent.freelancerDelivered && hiredTalent.clientReceived) {
       return {
         label: "In Progress - Client Ready",
         color: "bg-green-500",
@@ -71,21 +77,30 @@ export function getJobStatus(jobStatus: JobState, job: Job, isFreelancer: boolea
     }
   }
 
-  if (jobStatus === JobState.Finished) {
+  if (hiredTalentState === HiredTalentState.Finished) {
     return {
       label: "Completed",
       color: "bg-emerald-500",
       icon: CheckCircleIcon,
-      description: "Job successfully completed",
+      description: "Hire successfully completed",
     };
   }
 
-  if (jobStatus === JobState.Cancelled) {
+  if (hiredTalentState === HiredTalentState.Cancelled) {
     return {
       label: "Cancelled",
       color: "bg-red-500",
       icon: XCircleIcon,
-      description: "Job was cancelled",
+      description: "Hire was cancelled",
+    };
+  }
+
+  if (hiredTalentState === HiredTalentState.Disputed) {
+    return {
+      label: "In Dispute",
+      color: "bg-yellow-500",
+      icon: ScaleIcon,
+      description: "Hired Talent is currently in dispute",
     };
   }
 
@@ -165,6 +180,15 @@ export function getGigStatus(gigState: GigState, gig: Gig, isFreelancer: boolean
     };
   }
 
+  if (gigState === GigState.Disputed) {
+    return {
+      label: "In Dispute",
+      color: "bg-yellow-500",
+      icon: ScaleIcon,
+      description: "Gig is currently in dispute",
+    };
+  }
+
   return {
     label: "Unknown",
     color: "bg-gray-500",
@@ -173,151 +197,153 @@ export function getGigStatus(gigState: GigState, gig: Gig, isFreelancer: boolean
   };
 }
 
-export function getFeedJobStatus(job: Job, userAddress: string) {
-  const isClient = job.client === userAddress;
+export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: string) {
+  const isClient = hiredTalent.client === userAddress;
 
-  switch (job.state) {
-    case JobState.WaitingForApproval:
+  switch (hiredTalent.state) {
+    case HiredTalentState.WaitingForApproval:
       return {
         title: isClient ? "Service Requested" : "New Service Request Received",
         description: isClient
-          ? `You requested the service "${job.title}". Waiting for freelancer approval.`
-          : `New service request for "${job.title}".`,
+          ? `You requested the service "${hiredTalent.title}". Waiting for freelancer approval.`
+          : `New service request for "${hiredTalent.title}".`,
         type: ActivityItemType.application,
-        timestamp: castDateToTimestampNum(job.createdAt),
+        timestamp: castDateToTimestampNum(hiredTalent.createdAt),
         status: ActivityItemStatus.pending,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
 
-    case JobState.Cancelled: {
-      const cancelledBy = job.emitBy;
-      const client = job.client;
-      const freelancer = job.freelancer;
+    case HiredTalentState.Cancelled: {
+      const cancelledBy = hiredTalent.emitBy;
+      const client = hiredTalent.client;
+      const freelancer = hiredTalent.freelancer;
 
       const cancelledActivity = {
         type: ActivityItemType.status,
-        timestamp: castDateToTimestampNum(job.canceledAt),
+        timestamp: castDateToTimestampNum(hiredTalent.canceledAt),
         status: ActivityItemStatus.cancelled,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
 
       if (cancelledBy === client) {
         if (client === userAddress) {
           return {
-            title: "You Cancelled the Job Request",
-            description: `You cancelled your request for "${job.title}".`,
+            title: "You Cancelled the hire Request",
+            description: `You cancelled your request for "${hiredTalent.title}".`,
             ...cancelledActivity,
           };
         } else if (freelancer === userAddress) {
           return {
-            title: "User Cancelled the Job",
-            description: `User cancelled the job "${job.title}".`,
+            title: "User Cancelled the hire",
+            description: `User cancelled the hire "${hiredTalent.title}".`,
             ...cancelledActivity,
           };
         }
       } else if (cancelledBy === freelancer) {
         if (client == userAddress) {
           return {
-            title: "Freelancer Cancelled the Job",
-            description: `The freelancer cancelled the job "${job.title}".`,
+            title: "Freelancer Cancelled the hire",
+            description: `The freelancer cancelled the hire "${hiredTalent.title}".`,
             ...cancelledActivity,
           };
         } else if (freelancer == userAddress) {
           return {
-            title: "You Cancelled the Job Request",
-            description: `You cancelled your request for "${job.title}".`,
+            title: "You Cancelled the Hire Request",
+            description: `You cancelled your request for "${hiredTalent.title}".`,
             ...cancelledActivity,
           };
         }
       } else {
         return {
-          title: "Job Cancelled",
-          description: `The job "${job.title}" was cancelled.`,
+          title: "Hire Cancelled",
+          description: `The hire "${hiredTalent.title}" was cancelled.`,
           ...cancelledActivity,
         };
       }
     }
 
-    case JobState.Ongoing:
+    case HiredTalentState.Ongoing:
       // Freelancer
 
       const acceptedActivity = {
         type: ActivityItemType.status,
-        timestamp: castDateToTimestampNum(job.acceptedAt),
+        timestamp: castDateToTimestampNum(hiredTalent.acceptedAt),
         status: ActivityItemStatus.accepted,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
 
       const deliveredActivity = {
         type: ActivityItemType.status,
-        timestamp: castDateToTimestampNum(job.deliveredAt),
+        timestamp: castDateToTimestampNum(hiredTalent.deliveredAt),
         status: ActivityItemStatus.waitingForReview,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
 
       if (!isClient) {
-        if (!job.freelancerDelivered && !job.clientReceived) {
+        if (!hiredTalent.freelancerDelivered && !hiredTalent.clientReceived) {
           return {
-            title: "You Accepted a New Job",
-            description: `You accepted the job "${job.title}". Service is ongoing.`,
+            title: "You Accepted a New Hire",
+            description: `You accepted the hire "${hiredTalent.title}". Service is ongoing.`,
             ...acceptedActivity,
           };
         }
-        if (job.freelancerDelivered && !job.clientReceived) {
+        if (hiredTalent.freelancerDelivered && !hiredTalent.clientReceived) {
           return {
             title: "Waiting for Client Approval",
-            description: `You delivered the job "${job.title}". Waiting for client review.`,
+            description: `You delivered the hire "${hiredTalent.title}". Waiting for client review.`,
             ...deliveredActivity,
           };
         }
       }
       // Client
       if (isClient) {
-        if (!job.freelancerDelivered && !job.clientReceived) {
+        if (!hiredTalent.freelancerDelivered && !hiredTalent.clientReceived) {
           return {
             title: "Freelancer Accepted Your Proposal",
-            description: `Your request for "${job.title}" was accepted. Service is ongoing.`,
+            description: `Your request for "${hiredTalent.title}" was accepted. Service is ongoing.`,
             ...acceptedActivity,
           };
         }
-        if (job.freelancerDelivered && !job.clientReceived) {
+        if (hiredTalent.freelancerDelivered && !hiredTalent.clientReceived) {
           return {
             title: "Work Delivered - Awaiting Your Approval",
-            description: `The freelancer delivered the job "${job.title}". Please review and approve.`,
+            description: `The freelancer delivered the hiredTalent "${hiredTalent.title}". Please review and approve.`,
             ...deliveredActivity,
           };
         }
       }
       break;
 
-    case JobState.Finished:
+    case HiredTalentState.Finished:
       return {
-        title: isClient ? "Job Completed" : "You Completed a Job",
-        description: isClient ? `The job "${job.title}" has been completed.` : `You completed the job "${job.title}".`,
+        title: isClient ? "Hire Completed" : "You Completed a Hire",
+        description: isClient
+          ? `The hiredTalent "${hiredTalent.title}" has been completed.`
+          : `You completed the hiredTalent "${hiredTalent.title}".`,
         type: ActivityItemType.status,
-        timestamp: castDateToTimestampNum(job.finishedAt),
+        timestamp: castDateToTimestampNum(hiredTalent.finishedAt),
         status: ActivityItemStatus.completed,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
 
-    case JobState.Disputed:
+    case HiredTalentState.Disputed:
       return {
-        title: "Job in Dispute",
-        description: `The job "${job.title}" is in dispute.`,
+        title: "Hire in Dispute",
+        description: `The hire "${hiredTalent.title}" is in dispute.`,
         type: ActivityItemType.status,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
 
     default:
       return {
-        title: "Unknown Job State",
-        description: "Unknown job state",
+        title: "Unknown Hire State",
+        description: "Unknown hire state",
         type: ActivityItemType.unknown,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
-        interactionType: InteractionType.job,
+        interactionType: InteractionType.hiredTalent,
       };
   }
 }

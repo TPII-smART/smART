@@ -17,6 +17,7 @@ import {
   FlagIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import { castHoursToDurationString } from "~~/lib/utils";
 // Adjust the import to match the actual export from the module
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Application, ApplicationsData, Gig } from "~~/types/gig/gig.types";
@@ -34,12 +35,14 @@ const getInfoIcons = (item: Partial<Application> & ListItemProps, currentState: 
     infoIcons.push({
       title:
         "Gig duration, original: " +
-        item.gig?.maxDurationInHours +
-        " hours / proposed: " +
-        item.proposedDurationInHours +
-        " hours",
+        castHoursToDurationString(+(item.gig?.maxDurationInHours ?? "0")) +
+        " / proposed: " +
+        castHoursToDurationString(+(item.proposedDurationInHours ?? "0")),
       icon: <ClockIcon className="w-4 h-4" />,
-      info: item.gig?.maxDurationInHours + " hours / " + item.proposedDurationInHours + " hours",
+      info:
+        castHoursToDurationString(+(item.gig?.maxDurationInHours ?? "0")) +
+        " / " +
+        castHoursToDurationString(+(item.proposedDurationInHours ?? "0")),
     });
   } else if (currentState === GigState.InProgress) {
     infoIcons.push({

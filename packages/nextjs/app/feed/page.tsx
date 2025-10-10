@@ -11,21 +11,21 @@ import {
   fetchApplicationsForMyGigsPaginated,
   fetchApplicationsWithGigDetailsPaginated,
 } from "~~/services/graphql/fetchers/gig/gig.service";
-import { fetchJobsAndHiresPaginated } from "~~/services/graphql/fetchers/job/job.service";
+import { fetchHiredTalentsAndHiresPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
 import { ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
 import { Application } from "~~/types/gig/gig-application.types";
-import { Job } from "~~/types/job/job.types";
+import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 import { Paginated, PaginationMetaArg } from "~~/types/paginated.types";
-import { getFeedApplicationStatus, getFeedJobStatus } from "~~/utils/scaffold-eth/Status/getStatus";
+import { getFeedApplicationStatus, getFeedHiredTalentStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
 interface Data {
-  jobs: Job[];
+  hiredTalents: HiredTalent[];
   applications: Application[];
   gigApplications: Application[];
 }
 
 interface Loading {
-  jobs: boolean;
+  hiredTalents: boolean;
   applications: boolean;
   gigApplications: boolean;
 }
@@ -34,24 +34,24 @@ export default function ActivityFeed() {
   const { address: userAddress } = useAccount();
   console.log(userAddress);
   const [loading, setLoading] = useState<Loading>({
-    jobs: true,
+    hiredTalents: true,
     applications: true,
     gigApplications: true,
   });
   const [data, setData] = useState<Data>({
-    jobs: [],
+    hiredTalents: [],
     applications: [],
     gigApplications: [],
   });
   const oldLengths = useRef<{ [key: string]: number }>({
-    jobs: 0,
+    hiredTalents: 0,
     applications: 0,
     gigApplications: 0,
   });
   const [orderedData, setOrderedData] = useState<any[]>([]);
 
   const fetchFunction = useCallback(
-    async (meta: PaginationMetaArg): Promise<Paginated<Job | Application>> => {
+    async (meta: PaginationMetaArg): Promise<Paginated<HiredTalent | Application>> => {
       console.log("Fetching data for key:", meta?.key);
       if (!userAddress)
         return {
@@ -65,8 +65,8 @@ export default function ActivityFeed() {
         };
 
       switch (meta?.key) {
-        case "jobs":
-          return await fetchJobsAndHiresPaginated(meta, userAddress);
+        case "hiredTalents":
+          return await fetchHiredTalentsAndHiresPaginated(meta, userAddress);
         case "applications":
           return await fetchApplicationsWithGigDetailsPaginated(meta, userAddress);
         case "gigApplications":
@@ -86,7 +86,7 @@ export default function ActivityFeed() {
     [userAddress],
   );
 
-  const setDataFunction = (data: (Job | Application)[], key?: string) => {
+  const setDataFunction = (data: (HiredTalent | Application)[], key?: string) => {
     if (!key) return;
 
     setData(prevData => ({
@@ -104,7 +104,7 @@ export default function ActivityFeed() {
     }));
   };
 
-  const { fetchPaginatedData, handleScroll } = usePagination<Job | Application>({
+  const { fetchPaginatedData, handleScroll } = usePagination<HiredTalent | Application>({
     fetchFunction,
     loadingFunction,
     setDataFunction,
@@ -112,13 +112,13 @@ export default function ActivityFeed() {
   });
 
   const fetch = () => {
-    fetchPaginatedData(true, "jobs");
+    fetchPaginatedData(true, "hiredTalents");
     fetchPaginatedData(true, "applications");
     fetchPaginatedData(true, "gigApplications");
   };
 
   const fetchScroll = (event: PaginationScrollEvent) => {
-    handleScroll(event, "jobs");
+    handleScroll(event, "hiredTalents");
     handleScroll(event, "applications");
     handleScroll(event, "gigApplications");
   };
@@ -135,27 +135,27 @@ export default function ActivityFeed() {
     });
   };
 
-  const filteredJobsData = useCallback(() => {
-    if (!data?.jobs) return [];
+  const filteredHiredTalentsData = useCallback(() => {
+    if (!data?.hiredTalents) return [];
 
-    const ret = data.jobs.slice(oldLengths.current.jobs).map(job => {
-      const feedInfo = getFeedJobStatus(job, userAddress ?? "");
+    const ret = data.hiredTalents.slice(oldLengths.current.hiredTalents).map(hiredTalent => {
+      const feedInfo = getFeedHiredTalentStatus(hiredTalent, userAddress ?? "");
       return {
-        id: "job-" + job.postingId + "-" + job.jobId,
+        id: "hiredTalent-" + hiredTalent.talentId + "-" + hiredTalent.hiredTalentId,
         ...feedInfo,
-        client: job.client,
-        freelancer: job.freelancer,
-        emitBy: job.emitBy,
+        client: hiredTalent.client,
+        freelancer: hiredTalent.freelancer,
+        emitBy: hiredTalent.emitBy,
       };
     });
 
     oldLengths.current = {
       ...oldLengths.current,
-      jobs: data.jobs.length > 0 ? data.jobs.length : 0,
+      hiredTalents: data.hiredTalents.length > 0 ? data.hiredTalents.length : 0,
     };
 
     return sortByTimestamp(ret);
-  }, [data.jobs, userAddress]);
+  }, [data.hiredTalents, userAddress]);
 
   const filteredApplicationData = useCallback(() => {
     if (!data?.applications) return [];
@@ -201,9 +201,9 @@ export default function ActivityFeed() {
   }, [data.gigApplications, userAddress]);
 
   const newData: any[] = useMemo(() => {
-    const combined = [...filteredApplicationData(), ...filteredGigApplicationData(), ...filteredJobsData()];
+    const combined = [...filteredApplicationData(), ...filteredGigApplicationData(), ...filteredHiredTalentsData()];
     return combined.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
-  }, [filteredApplicationData, filteredGigApplicationData, filteredJobsData]);
+  }, [filteredApplicationData, filteredGigApplicationData, filteredHiredTalentsData]);
 
   useEffect(() => {
     if (newData.length > 0) {
@@ -223,7 +223,7 @@ export default function ActivityFeed() {
         className="overflow-y-auto h-full"
         onScroll={event => fetchScroll(event as unknown as PaginationScrollEvent)}
       >
-        <div className="mx-30 space-y-4 py-4 px-5 ">
+        <div className="mx-5 space-y-4 py-4 px-5 ">
           {orderedData.map(activity => (
             <FeedActivityCard
               key={activity.id}
@@ -237,7 +237,7 @@ export default function ActivityFeed() {
           ))}
         </div>
         <div className="h-6" />
-        {loading.jobs || loading.applications || loading.gigApplications ? (
+        {loading.hiredTalents || loading.applications || loading.gigApplications ? (
           <div className="flex-1 flex items-center justify-center mb-6">
             <Spinner />
           </div>

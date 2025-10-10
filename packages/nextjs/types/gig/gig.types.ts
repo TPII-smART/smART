@@ -63,12 +63,12 @@ export class Gig {
   canceledAt?: string;
 
   /**
-   * (Optional) ISO date string representing when the job was delivered.
+   * (Optional) ISO date string representing when the hiredTalent was delivered.
    */
   deliveredAt?: string;
 
   /**
-   * (Optional) ISO date string representing when the job was
+   * (Optional) ISO date string representing when the hiredTalent was
    * rejected by the client.
    */
   rejectedAt?: string;
@@ -88,14 +88,23 @@ export class Gig {
   /** (Optional) Unique identifier for the accepted application, if applicable. */
   acceptedApplicationId?: string;
 
-  /** (Optional) Boolean indicating if the client has rejected the job. */
+  /** (Optional) Boolean indicating if the client has rejected the hiredTalent. */
   clientRejected?: boolean;
 
-  /** (Optional) Boolean indicating if the client has canceled the job. */
+  /** (Optional) Boolean indicating if the client has canceled the hiredTalent. */
   clientCancelled?: boolean;
 
-  /** (Optional) Boolean indicating if the freelancer has canceled the job. */
+  /** (Optional) Boolean indicating if the freelancer has canceled the hiredTalent. */
   freelancerCancelled?: boolean;
+
+  /** (Optional) Boolean indicating if the freelancer has uploaded deliverables for the gig. */
+  freelancerUploaded?: boolean;
+
+  /** (Optional) Application ID if the user has applied to this gig. Null if not applied. */
+  userApplication?: string | null;
+
+  /** (Optional) Identifier for the dispute question associated with the gig, if any. */
+  disputeQuestionId?: string;
 
   constructor() {
     this.gigId = "";
@@ -125,6 +134,7 @@ export class Gig {
     this.clientReceived = false;
     this.freelancerDelivered = false;
     this.acceptedApplicationId = "";
+    this.userApplication = null;
   }
 
   static mapFormDataToContractArgs(

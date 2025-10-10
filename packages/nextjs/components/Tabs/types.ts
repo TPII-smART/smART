@@ -32,6 +32,10 @@ export interface TabsProps {
    */
   tabs: TabProps[];
   /**
+   * Initial selected tab
+   */
+  initialSelectedTab?: string | number;
+  /**
    * Callback function called when the tab is changed
    */
   onChange: (id: string | number, label?: string) => void;

@@ -48,12 +48,12 @@ const _sx = (variant: ComboBoxProps["variant"], error?: boolean): SxProps<Theme>
   },
   ".MuiSelect-filled": {
     backgroundColor: "var(--color-surface)",
-    borderRadius: "4px",
+    borderRadius: variant === "text" ? "0px" : "4px",
   },
   ".MuiFilledInput-underline": {
     // Default (unfocused) line color
     "&:before": {
-      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired unfocused line color
+      borderColor: error ? "var(--color-error)" : "var(--color-primary-content)", // Your desired unfocused line color
     },
     // Focused line color
     "&:after": {
@@ -61,21 +61,34 @@ const _sx = (variant: ComboBoxProps["variant"], error?: boolean): SxProps<Theme>
     },
     // Hover line color
     "&:hover:not(.Mui-disabled):before": {
-      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired hover line color
+      borderColor: error ? "var(--color-error)" : "var(--color-primary-content)", // Your desired hover line color
     },
   },
+  ...(variant === "text" && {
+    "& .MuiInputBase-root": {
+      "&:before": {
+        borderBottom: "var(--color-primary-content)",
+      },
+      "&:after": {
+        borderBottom: "var(--color-accent)",
+      },
+      "&:hover:not(.Mui-disabled):before": {
+        borderBottom: "var(--color-primary-content)",
+      },
+    },
+  }),
   ".MuiInput-underline": {
     // Default (unfocused) line color
     "&:before": {
-      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired unfocused line color
+      borderColor: variant === "text" ? "transparent" : error ? "var(--color-error)" : "var(--color-primary-content)", // Your desired unfocused line color
     },
     // Focused line color
     "&:after": {
-      borderColor: error ? "var(--color-error)" : "var(--color-accent)", // Your desired focused line color
+      borderColor: variant === "text" ? "transparent" : error ? "var(--color-error)" : "var(--color-accent)", // Your desired focused line color
     },
     // Hover line color
     "&:hover:not(.Mui-disabled):before": {
-      borderColor: error ? "var(--color-error)" : "var(--color-border)", // Your desired hover line color
+      borderColor: variant === "text" ? "transparent" : error ? "var(--color-error)" : "var(--color-primary-content)", // Your desired hover line color
     },
   },
   "& .Mui-focused .MuiSelect-icon": {
@@ -136,8 +149,14 @@ export default function ComboBox({
 
   return (
     <div>
-      <FormControl variant={variant} style={__style} sx={__sx} error={error} disabled={disabled}>
-        <InputLabel id={id + "_label"}>{label}</InputLabel>
+      <FormControl
+        variant={variant === "text" ? "standard" : variant}
+        style={__style}
+        sx={__sx}
+        error={error}
+        disabled={disabled}
+      >
+        {label && <InputLabel id={id + "_label"}>{label}</InputLabel>}
         {multiple ? (
           // Multiple selection
           <Select

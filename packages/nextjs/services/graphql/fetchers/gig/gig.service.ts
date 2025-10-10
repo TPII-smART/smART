@@ -1,4 +1,5 @@
 import { endpoint } from "../../config";
+import { getUserAddressByUsernameOrEmail } from "../profile.service";
 import * as GigQueries from "./gig.queries";
 import request from "graphql-request";
 import { Deliverable } from "~~/types/deliverable";
@@ -28,7 +29,15 @@ export const fetchGigsPaginated = async (
   minPayment?: number,
   maxPayment?: number,
   categories?: string[],
+  userAddress?: string,
 ): Promise<Paginated<Gig>> => {
+  let userAddresses: string[] = [];
+  if (search && !search.startsWith("0x")) {
+    userAddresses = await getUserAddressByUsernameOrEmail(search);
+  } else if (search && search.startsWith("0x")) {
+    userAddresses = [search];
+  }
+
   const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getGigsPaginated, {
     limit: meta.limit,
     startCursor: meta.startCursor,
@@ -39,10 +48,17 @@ export const fetchGigsPaginated = async (
     minPayment: minPayment ? minPayment * 1e18 : undefined, // Convert ether to wei
     maxPayment: maxPayment ? maxPayment * 1e18 : undefined, // Convert ether to wei
     categories,
+    userAddresses: userAddresses.length > 0 ? userAddresses : undefined,
   });
+  const applications = await fetchApplications(userAddress ?? "");
+  const applicationsMap = new Map(applications.applications.map(app => [app.gigId, app.applicationId]));
+  const gigs = res.gigs.items.map(gig => ({
+    ...gig,
+    userApplication: applicationsMap.get(gig.gigId) || null,
+  }));
 
   return {
-    data: res.gigs.items,
+    data: gigs,
     meta: {
       endCursor: res.gigs.pageInfo.endCursor,
       hasNextPage: res.gigs.pageInfo.hasNextPage,
@@ -59,11 +75,45 @@ export const fetchMyGigRatings = async (userAddress: string) => {
   return { gigs: res.gigs.items };
 };
 
-export const fetchMyGigs = async (userAddress: string) => {
+export const fetchMyGigs = async (userAddress: string, appAddress: string) => {
   const res = await request<{ gigs: { items: Gig[] } }>(endpoint, GigQueries.getMyGigs, {
     userAddress: userAddress,
   });
-  return { gigs: res.gigs.items };
+  const applications = await fetchApplications(appAddress ?? "");
+  const applicationsMap = new Map(applications.applications.map(app => [app.gigId, app.applicationId]));
+  const gigs = res.gigs.items.map(gig => ({
+    ...gig,
+    userApplication: applicationsMap.get(gig.gigId) || null,
+  }));
+  return { gigs };
+};
+
+export const fetchMyGigsPaginated = async (
+  meta: PaginationMetaArg,
+  userAddress: string,
+  appAddress: string,
+): Promise<Paginated<Gig>> => {
+  const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getMyGigsPaginated, {
+    userAddress: userAddress,
+    limit: meta.limit,
+    startCursor: meta.startCursor,
+    endCursor: meta.endCursor,
+  });
+  const applications = await fetchApplications(appAddress ?? "");
+  const applicationsMap = new Map(applications.applications.map(app => [app.gigId, app.applicationId]));
+  const gigs = res.gigs.items.map(gig => ({
+    ...gig,
+    userApplication: applicationsMap.get(gig.gigId) || null,
+  }));
+  return {
+    data: gigs,
+    meta: {
+      endCursor: res.gigs.pageInfo.endCursor,
+      hasNextPage: res.gigs.pageInfo.hasNextPage,
+      totalCount: res.gigs.totalCount,
+      startCursor: res.gigs.pageInfo.startCursor,
+    },
+  };
 };
 
 export const fetchApplications = async (userAddress: string) => {
@@ -234,6 +284,33 @@ export const fetchDeliverablesForGig = async (gigId: string) => {
 export const fetchGigWithApplication = async (gigId: string) => {
   const [gig, applications] = await Promise.all([fetchGigById(gigId), fetchApplicationsForGig(gigId)]);
   return { gig, applications };
+};
+
+export const getApplicationsForGigPaginated = async (
+  meta: PaginationMetaArg,
+  gig: Gig,
+): Promise<Paginated<Application>> => {
+  const res = await request<{ gigApplications: PaginationQueryResponse<Application> }>(
+    endpoint,
+    GigQueries.getApplicationsForGigPaginated,
+    {
+      gigId: gig.gigId,
+      limit: meta.limit,
+      startCursor: meta.startCursor,
+      endCursor: meta.endCursor,
+    },
+  );
+
+  return {
+    data: res.gigApplications.items.map(app => ({ ...app, gig })),
+    meta: {
+      endCursor: res.gigApplications.pageInfo.endCursor,
+      hasNextPage: res.gigApplications.pageInfo.hasNextPage,
+      totalCount: res.gigApplications.totalCount,
+      startCursor: res.gigApplications.pageInfo.startCursor,
+      // hasPreviousPage: res.gigApplications.pageInfo.hasPreviousPage,
+    },
+  };
 };
 
 export const fetchGigWithApplicationAndDeliverables = async (gigId: string) => {

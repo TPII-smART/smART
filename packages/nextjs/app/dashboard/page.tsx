@@ -4,18 +4,18 @@ import { Suspense, lazy, useState } from "react";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab, TabProps } from "~~/components/Tabs/types";
 
-const JobsListing = lazy(() => import("@/components/JobsList/JobsList"));
+const HiredTalentsListing = lazy(() => import("@/components/HiredTalentsList/HiredTalentsList"));
 const GigApplicationsListing = lazy(() => import("~~/components/GigApplicationsList/GigApplicationsList"));
 
 const tabs: TabProps[] = [
-  { id: "my-jobs-list", label: "My Jobs" },
+  { id: "my-hiredTalents-list", label: "My Talent Hires" },
   { id: "my-gigs-list", label: "My Gig Applications" },
 ];
 
 const getPage = (tab: Tab): React.ReactNode => {
   switch (tab.id) {
     case tabs[0].id:
-      return <JobsListing />;
+      return <HiredTalentsListing />;
     case tabs[1].id:
       return <GigApplicationsListing />;
   }

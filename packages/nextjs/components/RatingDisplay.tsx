@@ -6,6 +6,7 @@ import { RatingData } from "~~/types/user-profile.type";
 interface RatingDisplayProps {
   ratingData: RatingData;
   tooltipPosition?: "left" | "right";
+  interactive?: boolean;
 }
 
 // Custom star component that can be partially filled
@@ -38,7 +39,11 @@ const PartialStar = ({ fillPercentage, className }: { fillPercentage: number; cl
   );
 };
 
-export default function RatingDisplay({ ratingData, tooltipPosition = "right" }: RatingDisplayProps) {
+export default function RatingDisplay({
+  ratingData,
+  tooltipPosition = "right",
+  interactive = true,
+}: RatingDisplayProps) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   // Don't render if no ratings
@@ -61,13 +66,13 @@ export default function RatingDisplay({ ratingData, tooltipPosition = "right" }:
   const calculateRatingBreakdown = () => {
     const breakdown = [];
     for (let rating = 5; rating >= 1; rating--) {
-      const jobCount = ratingData.jobRatings[rating] || 0;
+      const hiredTalentCount = ratingData.hiredTalentRatings[rating] || 0;
       const gigCount = ratingData.gigRatings[rating] || 0;
-      const totalForRating = jobCount + gigCount;
+      const totalForRating = hiredTalentCount + gigCount;
 
       breakdown.push({
         rating,
-        jobCount,
+        hiredTalentCount,
         gigCount,
         totalForRating,
         percentage: (totalForRating / ratingData.totalRatings) * 100,
@@ -80,44 +85,56 @@ export default function RatingDisplay({ ratingData, tooltipPosition = "right" }:
 
   return (
     <div className="relative inline-block">
-      <div
-        className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-border)]"
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-      >
-        <div className="flex items-center gap-1">{renderStars(ratingData.averageRating)}</div>
-        <span
-          className="text-lg font-semibold text-[var(--color-white)]"
-          style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+      {interactive ? (
+        <div
+          className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-lg transition-all duration-200 hover:shadow-md hover:scale-105 hover:bg-[var(--color-surface)] border border-transparent hover:border-[var(--color-border)]"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
         >
-          {ratingData.averageRating.toFixed(1)}
-        </span>
-        <span
-          className="text-sm text-[var(--color-white)]"
-          style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
-        >
-          ({ratingData.totalRatings.toLocaleString()})
-        </span>
-      </div>
+          <div className="flex items-center gap-1">{renderStars(ratingData.averageRating)}</div>
+          <span
+            className="text-lg font-semibold text-[var(--color-white)]"
+            style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+          >
+            {ratingData.averageRating.toFixed(1)}
+          </span>
+          <span
+            className="text-sm text-[var(--color-white)]"
+            style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+          >
+            ({ratingData.totalRatings.toLocaleString()})
+          </span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-transparent cursor-default">
+          <div className="flex items-center gap-1">{renderStars(ratingData.averageRating)}</div>
+          <span
+            className="text-lg font-semibold text-[var(--color-white)]"
+            style={{ textShadow: "0 0 4px var(--color-black), 0 0 2px var(--color-black)" }}
+          >
+            {ratingData.averageRating.toFixed(1)}
+          </span>
+        </div>
+      )}
 
       {/* Tooltip */}
-      {showTooltip && (
+      {showTooltip && interactive && (
         <div
           className={`absolute mt-2 mb-2 z-50 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-lg shadow-lg p-4 min-w-[300px] ${tooltipPosition === "left" ? "right-0" : "left-0"}`}
         >
           <div className="space-y-2">
-            {breakdown.map(({ rating, jobCount, gigCount, totalForRating }) => (
+            {breakdown.map(({ rating, hiredTalentCount, gigCount, totalForRating }) => (
               <div key={rating} className="flex items-center gap-3 text-sm">
                 <span className="w-4 text-right font-medium text-[var(--color-primary-content)]">{rating}</span>
                 <div className="flex-1 flex items-center gap-1">
                   <div className="flex-1 rounded-full h-3 overflow-hidden border border-[var(--color-input)]">
                     <div className="h-full flex">
-                      {/* Jobs bar */}
-                      {jobCount > 0 && (
+                      {/* HiredTalents bar */}
+                      {hiredTalentCount > 0 && (
                         <div
                           className="bg-[var(--color-warning)]"
                           style={{
-                            width: `${(jobCount / ratingData.totalRatings) * 100}%`,
+                            width: `${(hiredTalentCount / ratingData.totalRatings) * 100}%`,
                           }}
                         />
                       )}
@@ -142,7 +159,7 @@ export default function RatingDisplay({ ratingData, tooltipPosition = "right" }:
           <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-[var(--color-warning)] rounded"></div>
-              <span className="text-[var(--color-primary-content)]">Jobs</span>
+              <span className="text-[var(--color-primary-content)]">HiredTalents</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-[var(--color-accent)] rounded"></div>

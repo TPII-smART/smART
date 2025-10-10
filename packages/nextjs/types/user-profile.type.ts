@@ -1,5 +1,5 @@
 import { Gig } from "./gig/gig.types";
-import { Job } from "./job/job.types";
+import { HiredTalent } from "./hiredTalent/hiredTalent.types";
 import { Address } from "viem";
 
 export interface UserProfile {
@@ -35,7 +35,7 @@ export function newUserProfile(): UserProfile {
 }
 
 export interface RatingData {
-  jobRatings: {
+  hiredTalentRatings: {
     [rank: number]: number;
   };
   gigRatings: {
@@ -45,18 +45,18 @@ export interface RatingData {
   totalRatings: number;
 }
 
-export function newRatingData(jobs: Job[], gigs: Gig[]): RatingData {
-  const jobRatings: { [rank: number]: number } = {};
+export function newRatingData(hiredTalents: HiredTalent[], gigs: Gig[]): RatingData {
+  const hiredTalentRatings: { [rank: number]: number } = {};
   const gigRatings: { [rank: number]: number } = {};
-  let totalJobRatings = 0;
+  let totalHiredTalentRatings = 0;
   let totalGigRatings = 0;
   let totalRatings = 0;
 
-  jobs.forEach(job => {
-    if (job.rating === null || job.rating === undefined) return;
-    const rank = job.rating;
-    jobRatings[rank] = (jobRatings[rank] || 0) + 1;
-    totalJobRatings += rank;
+  hiredTalents.forEach(hiredTalent => {
+    if (hiredTalent.rating === null || hiredTalent.rating === undefined) return;
+    const rank = hiredTalent.rating;
+    hiredTalentRatings[rank] = (hiredTalentRatings[rank] || 0) + 1;
+    totalHiredTalentRatings += rank;
     totalRatings += 1;
   });
 
@@ -69,9 +69,9 @@ export function newRatingData(jobs: Job[], gigs: Gig[]): RatingData {
   });
 
   return {
-    jobRatings,
+    hiredTalentRatings,
     gigRatings,
-    averageRating: totalRatings > 0 ? (totalJobRatings + totalGigRatings) / totalRatings : 0,
+    averageRating: totalRatings > 0 ? (totalHiredTalentRatings + totalGigRatings) / totalRatings : 0,
     totalRatings,
   };
 }

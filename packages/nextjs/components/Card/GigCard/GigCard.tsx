@@ -3,7 +3,7 @@
 import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
-import { EtherInput, InputBase, IntegerInput } from "@/components/scaffold-eth";
+import { DurationInput, EtherInput, InputBase } from "@/components/scaffold-eth";
 import { GigState } from "@se-2/common";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
@@ -11,7 +11,9 @@ import { useAccount } from "wagmi";
 import * as Yup from "yup";
 import Button from "~~/components/Button/Button";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { castHoursToDurationString } from "~~/lib/utils";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
 
 class FormData {
@@ -32,9 +34,11 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
   const { writeContractAsync, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const handleApplyToGig = async (form: FormData) => {
     try {
+      showSpinner();
       const transactionHash = await writeContractAsync({
         functionName: "applyToGig",
         args: [
@@ -52,6 +56,8 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
       setShowApplyModal(false);
     } catch (err) {
       console.error("Create gig application failed:", err);
+    } finally {
+      hideSpinner();
     }
   };
 
@@ -78,14 +84,28 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
     </span>
   );
 
+  const navigateToGigDetails = () => {
+    if (gig?.acceptedApplicationId && gigState == GigState.Open) {
+      window.location.href = `/gig/${gig?.gigId}?applicationId=${gig.acceptedApplicationId} `;
+    } else {
+      window.location.href = `/gig/${gig?.gigId}`;
+    }
+  };
+
   // Apply button
   const applyButton =
     !isMyOwnGig && gigState === GigState.Open ? (
-      <Button variant="primary" onClick={() => setShowApplyModal(true)}>
-        Apply
-      </Button>
+      !gig.userApplication ? (
+        <Button variant="primary" onClick={() => setShowApplyModal(true)}>
+          Apply
+        </Button>
+      ) : (
+        <Button variant="outline" onClick={() => navigateToGigDetails()}>
+          My Application
+        </Button>
+      )
     ) : (
-      <Button variant="outline" onClick={() => (window.location.href = `/gig/${gig?.gigId}`)}>
+      <Button variant="outline" onClick={() => navigateToGigDetails()}>
         Details
       </Button>
     );
@@ -104,7 +124,7 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
         title={gig?.title}
         description={gig?.description}
         time={gig?.maxDurationInHours}
-        timeLabel="Max work duration"
+        timeLabel="Work duration"
         category={gig?.category}
         paymentDisplay={paymentDisplay}
         footerLeft={<div className="flex items-center gap-4">{paymentDisplay}</div>}
@@ -116,7 +136,10 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
       {/* Confirm Modal */}
       <FormModal
         modalProps={{
-          title: "Hire this Freelancer",
+          title: "Apply to this Gig",
+          description: `You are applying to the gig: "${gig?.title}". Base payment of ${
+            gig?.basePayment ? formatEthPrice(BigInt(gig.basePayment)) : "Free"
+          } and base duration of ${castHoursToDurationString(+(gig?.maxDurationInHours ?? "0"))}.`,
           onClose: () => setShowApplyModal(false),
           isOpen: showApplyModal,
           loading: isMining,
@@ -136,17 +159,18 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
               error={touched.proposedPayment && !!errors.proposedPayment}
               helperText={touched.proposedPayment && errors.proposedPayment ? errors.proposedPayment : ""}
             />
-            <IntegerInput
-              placeholder="Proposed Duration (in hours)"
+            <DurationInput
+              placeholder="Proposed Duration"
               value={values.proposedDurationInHours}
               onChange={val => setFieldValue("proposedDurationInHours", val)}
               error={touched.proposedDurationInHours && !!errors.proposedDurationInHours}
               helperText={
                 touched.proposedDurationInHours && errors.proposedDurationInHours ? errors.proposedDurationInHours : ""
               }
-              disableMultiplyBy1e18
             />
             <InputBase
+              multiline
+              minRows={4}
               placeholder="Proposal"
               value={values.proposalComment}
               onChange={val => setFieldValue("proposalComment", val)}
