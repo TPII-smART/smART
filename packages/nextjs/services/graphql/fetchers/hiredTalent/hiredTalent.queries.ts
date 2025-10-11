@@ -181,7 +181,16 @@ export const getHiredTalentsFromTalent = gql`
         clientRejected
         clientCancelled
         freelancerCancelled
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -228,6 +237,16 @@ export const getHiredTalentsFromTalentPaginated = gql`
         clientRejected
         clientCancelled
         freelancerCancelled
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
       pageInfo {
         endCursor
@@ -290,7 +309,16 @@ export const getMyHiredTalents = gql`
         emitBy
         clientReceived
         freelancerDelivered
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -322,7 +350,16 @@ export const getHires = gql`
         freelancerDelivered
         clientCancelled
         freelancerCancelled
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -361,6 +398,16 @@ export const getHiresPaginated = gql`
         freelancerDelivered
         clientCancelled
         freelancerCancelled
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
       pageInfo {
         endCursor
@@ -401,7 +448,16 @@ export const getHiredTalentAndHires = gql`
         emitBy
         clientReceived
         freelancerDelivered
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -438,7 +494,16 @@ export const getHiredTalentAndHiresPaginated = gql`
         emitBy
         clientReceived
         freelancerDelivered
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
       pageInfo {
         endCursor
@@ -494,7 +559,16 @@ export const getHiredTalent = gql`
       clientRejected
       clientReceived
       freelancerDelivered
-      disputeQuestionId
+      disputeId
+      freelancerPaidArbitrationFee
+      clientPaidArbitrationFee
+      klerosDisputeId
+      disputeDeadline
+      currentRound
+      currentRuling
+      freelancerFunds
+      clientFunds
+      appealCost
       freelancerUploaded
       rating
       lastTransactionHash

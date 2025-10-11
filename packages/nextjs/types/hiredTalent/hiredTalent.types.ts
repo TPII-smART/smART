@@ -84,10 +84,36 @@ export interface HiredTalent {
   /** (Optional) Ethereum address of the user who emitted the hiredTalent event, formatted as a hexadecimal string. */
   emitBy?: `0x${string}`;
 
-  /** (Optional) Identifier for the dispute question associated with the hired talent, if any. */
-  disputeQuestionId?: string;
-}
+  /** (Optional) Identifier for the dispute associated with the hired talent, if any. */
+  disputeId?: number;
 
+  /** (Optional) Whether the freelancer paid the arbitration fee. */
+  freelancerPaidArbitrationFee?: boolean;
+
+  /** (Optional) Whether the client paid the arbitration fee. */
+  clientPaidArbitrationFee?: boolean;
+
+  /** (Optional) External Kleros dispute identifier, if the dispute was created on Kleros. */
+  klerosDisputeId?: number;
+
+  /** (Optional) ISO date string representing the dispute or appeal deadline. */
+  disputeDeadline?: string;
+
+  /** (Optional) Current arbitration round number. */
+  currentRound?: number;
+
+  /** (Optional) Current ruling for the dispute, represented as an integer. */
+  currentRuling?: number;
+
+  /** (Optional) Funds allocated to the freelancer related to the dispute, represented as a string. */
+  freelancerFunds?: string;
+
+  /** (Optional) Funds allocated to the client related to the dispute, represented as a string. */
+  clientFunds?: string;
+
+  /** (Optional) Cost required to file an appeal, represented as a string. */
+  appealCost?: string;
+}
 export interface HiredTalentsData {
   hiredTalents: HiredTalent[];
 }

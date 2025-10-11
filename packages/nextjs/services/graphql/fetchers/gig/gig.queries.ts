@@ -35,7 +35,16 @@ export const getGigs = gql`
         rating
         acceptedApplicationId
         gigBannerImageHash
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -90,7 +99,16 @@ export const getGigsPaginated = gql`
         rating
         acceptedApplicationId
         gigBannerImageHash
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
       pageInfo {
         endCursor
@@ -129,7 +147,16 @@ export const getMyGigs = gql`
         acceptedApplicationId
         gigBannerImageHash
         emitBy
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -166,7 +193,16 @@ export const getMyGigsPaginated = gql`
         acceptedApplicationId
         gigBannerImageHash
         emitBy
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
       pageInfo {
         endCursor
@@ -259,7 +295,16 @@ export const getGigByIds = gql`
         rating
         acceptedApplicationId
         gigBannerImageHash
-        disputeQuestionId
+        disputeId
+        freelancerPaidArbitrationFee
+        clientPaidArbitrationFee
+        klerosDisputeId
+        disputeDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        appealCost
       }
     }
   }
@@ -366,7 +411,16 @@ export const getGigById = gql`
       rating
       acceptedApplicationId
       gigBannerImageHash
-      disputeQuestionId
+      disputeId
+      freelancerPaidArbitrationFee
+      clientPaidArbitrationFee
+      klerosDisputeId
+      disputeDeadline
+      currentRound
+      currentRuling
+      freelancerFunds
+      clientFunds
+      appealCost
     }
   }
 `;

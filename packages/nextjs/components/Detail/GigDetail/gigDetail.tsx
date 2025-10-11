@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import UniversalDetail from "../UniversalDetail";
 import { ApplicationState, GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatEther } from "viem";
+//import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
+import { StarIcon } from "@heroicons/react/20/solid";
 import {
   ArrowUpTrayIcon,
   BookOpenIcon,
@@ -18,12 +18,12 @@ import {
 import { Badge } from "~~/components/Badge";
 import Button from "~~/components/Button/Button";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
-import DisputeFormModal from "~~/components/DisputeForm/DisputeForm";
-import Modal from "~~/components/Modal/Modal";
+//import DisputeFormModal from "~~/components/DisputeForm/DisputeForm";
+//import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { useDisputeContracts } from "~~/hooks/use-dispute-contracts";
+//import { useDisputeContracts } from "~~/hooks/use-dispute-contracts";
 import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { fetchGigWithApplicationAndDeliverables } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Deliverable } from "~~/types/deliverable";
@@ -51,9 +51,9 @@ export default function GigDetail({
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
-  const [showDisputeModal, setShowDisputeModal] = useState(false);
-  const [showRequestArbitrationModal, setShowRequestArbitrationModal] = useState(false);
-  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  //const [showDisputeModal, setShowDisputeModal] = useState(false);
+  //const [showRequestArbitrationModal, setShowRequestArbitrationModal] = useState(false);
+  //const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
@@ -61,9 +61,11 @@ export default function GigDetail({
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
+  /**
   const { writeContractAsync: writeContractArbiter } = useScaffoldWriteContract({
     contractName: "ArbiterContract",
   });
+  */
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { data, isLoading, error, refetch } = useQuery<GigData>({
@@ -91,7 +93,7 @@ export default function GigDetail({
     await new Promise(resolve => setTimeout(resolve, 1000));
     await refetch();
   };
-
+  /** 
   const {
     disputeFinalized,
     isDisputeFinalizedLoading,
@@ -110,15 +112,7 @@ export default function GigDetail({
   const initiateConflictResolution = async () => {};
 
   const handleFinalizeDispute = async () => {};
-
-  const requestArbitration = async () => {
-    if (!data?.gig.gigId || !data?.gig.disputeQuestionId || !lastSeenBond || !arbitrationFee.data) return;
-    await writeContractArbiter({
-      functionName: "requestArbitration",
-      args: [data.gig.disputeQuestionId as `0x${string}`, lastSeenBond],
-      value: arbitrationFee.data,
-    });
-  };
+  */
 
   const handleFileUploadToIPFS = async (file: File | undefined) => {
     if (!file) return;
@@ -352,6 +346,7 @@ export default function GigDetail({
           </Button>,
         );
       }
+      /**
       if (gigState === GigState.Disputed) {
         if (disputeFinalized) {
           buttons.push(
@@ -383,6 +378,7 @@ export default function GigDetail({
           );
         }
       }
+      */
     }
 
     // Client actions
@@ -487,6 +483,7 @@ export default function GigDetail({
             </Button>,
           );
         }
+        /**
         if (gigState === GigState.Disputed) {
           if (disputeFinalized) {
             buttons.push(
@@ -518,6 +515,7 @@ export default function GigDetail({
             );
           }
         }
+        */
       }
     }
 
@@ -536,22 +534,7 @@ export default function GigDetail({
     }
 
     if (gigState != undefined && gigState >= GigState.InProgress) {
-      if (data?.gig.disputeQuestionId) {
-        return (
-          <span>
-            A dispute has been initiated for this gig. Check the question at{" "}
-            <a
-              href={`https://reality.eth.limo/app/#!/question/0xb7982f20cc159a40eba4b0ea86fd6cba6ff810e1-${data.gig.disputeQuestionId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Reality.eth
-            </a>
-          </span>
-        );
-      } else {
-        return "Got any problems? Initiate a dispute to resolve the issue.";
-      }
+      return "Gig is in progress.";
     }
 
     return "";
@@ -608,10 +591,10 @@ export default function GigDetail({
     acceptedAt: data?.gig.acceptedAt || "",
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
-    wasDisputed: !!data?.gig.disputeQuestionId,
-    disputeFinalized: disputeFinalized,
-    disputeResult: disputeResult,
-    disputeBeingArbitrated: disputeBeingArbitrated,
+    wasDisputed: !!data?.gig.disputeId,
+    //disputeFinalized: disputeFinalized,
+    //disputeResult: disputeResult,
+    //disputeAppealed: disputeAppealed,
     clientRejected: false,
   };
 
@@ -635,10 +618,10 @@ export default function GigDetail({
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
     rating: data?.gig.rating || 0,
-    wasDisputed: !!data?.gig.disputeQuestionId,
-    disputeFinalized: disputeFinalized,
-    disputeResult: disputeResult,
-    disputeBeingArbitrated: disputeBeingArbitrated,
+    wasDisputed: !!data?.gig.disputeId,
+    //disputeFinalized: disputeFinalized,
+    //disputeResult: disputeResult,
+    //disputeAppealed: disputeAppealed,
     clientRejected: data?.gig.clientRejected || false,
   };
 
@@ -666,9 +649,10 @@ export default function GigDetail({
         handleClientConfirmCompletion={handleClientConfirmCompletion}
         handleRejectJob={handleRejectGig}
         handleRateJob={handleRateGig}
-        initiateConflictResolution={() => setShowDisputeModal(true)}
+        initiateConflictResolution={() => {}}
         handleFreelancerConfirmCompletion={handleFreelancerConfirmCompletion}
       />
+      {/**
       <DisputeFormModal
         isOpen={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
@@ -713,6 +697,7 @@ export default function GigDetail({
           </Button>
         </div>
       </Modal>
+      */}
     </>
   );
 }

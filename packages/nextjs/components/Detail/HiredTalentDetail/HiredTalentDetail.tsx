@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useDisputeContracts } from "../../../hooks/use-dispute-contracts";
+//import { useDisputeContracts } from "../../../hooks/use-dispute-contracts";
 import UniversalDetail from "../UniversalDetail";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
-import DisputeFormModal from "@/components/DisputeForm/DisputeForm";
+//import DisputeFormModal from "@/components/DisputeForm/DisputeForm";
 import Spinner from "@/components/Spinner/Spinner";
 import { HiredTalentState } from "@se-2/common";
 import { fetchHiredTalent } from "@services/graphql/fetchers/hiredTalent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { formatEther } from "viem";
+//import { formatEther } from "viem";
 import { useAccount } from "wagmi";
-import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
+import { StarIcon } from "@heroicons/react/20/solid";
 import { ArrowUpTrayIcon, CheckCircleIcon, ClipboardDocumentListIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
-import Modal from "~~/components/Modal/Modal";
+//import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -31,10 +31,11 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
-
+  /* 
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showRequestArbitrationModal, setShowRequestArbitrationModal] = useState(false);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  */
 
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -44,14 +45,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   });
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
-  const { writeContractAsync: writeContractArbiter } = useScaffoldWriteContract({
+  /* const { writeContractAsync: writeContractArbiter } = useScaffoldWriteContract({
     contractName: "ArbiterContract",
-  });
+  }); */
   const { data, isLoading, error, refetch } = useQuery<HiredTalent>({
     queryKey: ["hiredTalentDetail", hiredTalentId],
     queryFn: () => fetchHiredTalent(talentId, hiredTalentId),
   });
-
+  /* 
   const {
     disputeFinalized,
     isDisputeFinalizedLoading,
@@ -80,7 +81,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       value: arbitrationFee.data,
     });
   };
-
+ */
   const {
     data: deliverables,
     isLoading: isDeliverableLoading,
@@ -277,7 +278,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       }
     }
 
-    if (data?.state != undefined && data?.state >= HiredTalentState.Ongoing) {
+    /* if (data?.state != undefined && data?.state >= HiredTalentState.Ongoing) {
       if (data?.disputeQuestionId) {
         return (
           <span>
@@ -295,7 +296,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       } else {
         return "Got any problems? Initiate a dispute to resolve the issue.";
       }
-    }
+    } */
 
     return "";
   };
@@ -382,7 +383,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             <span>Cancel</span>
           </Button>,
         );
-      }
+      } /* 
       if (hiredTalentStatus === HiredTalentState.Disputed) {
         if (disputeFinalized) {
           buttons.push(
@@ -413,7 +414,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             </Button>,
           );
         }
-      }
+      } */
     }
 
     // Client actions
@@ -470,7 +471,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             <span>Cancel</span>
           </Button>,
         );
-      }
+      } /* 
       if (hiredTalentStatus === HiredTalentState.Disputed) {
         if (disputeFinalized) {
           buttons.push(
@@ -501,7 +502,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             </Button>,
           );
         }
-      }
+      } */
     }
 
     return buttons;
@@ -526,10 +527,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     canceledAt: data?.canceledAt || "",
     finishedAt: data?.finishedAt || "",
     rating: data?.rating || 0,
-    wasDisputed: !!data?.disputeQuestionId,
-    disputeFinalized: disputeFinalized,
-    disputeResult: disputeResult,
-    disputeBeingArbitrated: disputeBeingArbitrated,
+    wasDisputed: !!data?.disputeId,
+    //disputeFinalized: disputeFinalized,
+    //disputeResult: disputeResult,
+    //disputeAppealed: disputeAppealed,
     clientRejected: data?.clientRejected || false,
   };
 
@@ -556,12 +557,13 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         onCloseReviewModal={() => setShowReviewModal(false)}
         onCloseRatingModal={() => setIsRatingModalOpen(false)}
         onCloseDeliverableModal={() => setShowDeliverableModal(false)}
-        initiateConflictResolution={() => setShowDisputeModal(true)}
+        initiateConflictResolution={() => {}}
         handleRateJob={handleRateHiredTalent}
         handleFreelancerConfirmCompletion={handleFreelancerConfirmCompletion}
         handleClientConfirmCompletion={handleClientConfirmCompletion}
         handleRejectJob={handleRejectHiredTalent}
       />
+      {/* 
       <DisputeFormModal
         isOpen={showDisputeModal}
         onClose={() => setShowDisputeModal(false)}
@@ -605,7 +607,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             Confirm
           </Button>
         </div>
-      </Modal>
+      </Modal> */}
     </>
   );
 }
