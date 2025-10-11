@@ -73,7 +73,15 @@ interface IArbitrableProxy {
         bytes calldata _arbitratorExtraData
     ) external payable;
 
+    function getDisputeStatus(uint256 _localDisputeId) external view returns (DisputeStatus);
+
+    function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256);
+
+    function hasTimedOut(uint256 _localDisputeId) external view returns (bool);
+
     function timeoutByInaction(uint256 _localDisputeId) external;
+
+    function timeoutRoundByInaction(uint256 _localDisputeId, uint256 _round) external;
 
     // ============ Appeal interactions ============
 

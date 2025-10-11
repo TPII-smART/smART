@@ -199,13 +199,6 @@ contract HiredTalentsContract {
         uint256 timestamp
     );
 
-    event DisputeStarted(
-        uint256 indexed talentId,
-        uint256 indexed hiredTalentId,
-        bytes32 questionId,
-        address indexed requester
-    );
-
     // Modifiers
     modifier onlyFreelancer(uint256 _talentId, uint256 _hiredTalentId) {
         require(
@@ -714,5 +707,144 @@ contract HiredTalentsContract {
             hiredTalent.rejectedAt
         );
     }
-    
+
+    function startDispute(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(
+            hiredTalent.state == HiredTalentState.Ongoing,
+            "Dispute can only be started for ongoing hiredTalents"
+        );
+        require(hiredTalent.disputeId == 0, "Dispute already exists for this hiredTalent");
+        require(msg.value > 0, "Must send arbitration fee");
+
+        uint256 disputeId;
+
+        if (msg.sender == hiredTalent.freelancer) {
+            disputeId = arbiterProxy.startAndPayTalentDisputeByFreelancer{value: msg.value}(
+                _talentId,
+                _hiredTalentId,
+                hiredTalent.client,
+                arbitratorExtraData
+            );
+        } else if (msg.sender == hiredTalent.client) {
+            disputeId = arbiterProxy.startAndPayTalentDisputeByClient{value: msg.value}(
+                _talentId,
+                _hiredTalentId,
+                hiredTalent.freelancer,
+                arbitratorExtraData
+            );
+        } else {
+            revert("Only hired talent parties can start a dispute");
+        }
+
+        hiredTalent.state = HiredTalentState.Disputed;
+        hiredTalent.disputeId = disputeId;
+    }
+
+    function getArbitrationFee() external view returns (uint256) {
+        uint256 feeAmount = arbiterProxy.arbitrator().arbitrationCost(arbitratorExtraData);
+        return feeAmount;
+    }
+
+    function payArbitrationFee(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to pay for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+        uint256 feeAmount = arbiterProxy.arbitrator().arbitrationCost(arbitratorExtraData);
+        require(msg.value >= feeAmount, "Insufficient arbitration fee");
+
+        if (msg.sender == hiredTalent.freelancer) {
+            arbiterProxy.payArbitrationFeeByFreelancer{value: msg.value}(
+                hiredTalent.disputeId,
+                arbitratorExtraData
+            );
+        } else if (msg.sender == hiredTalent.client) {
+            arbiterProxy.payArbitrationFeeByClient{value: msg.value}(
+                hiredTalent.disputeId,
+                arbitratorExtraData
+            );
+        } else {
+            revert("Only hired talent parties can pay arbitration fee");
+        }
+    }
+
+    function finalizeDispute(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        uint256 _currentRound
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to finalize for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+        
+        if (arbiterProxy.hasTimedOut(hiredTalent.disputeId)) {
+            if (_currentRound == 0) {
+                arbiterProxy.timeoutByInaction(hiredTalent.disputeId);
+            } else {
+                arbiterProxy.timeoutRoundByInaction(hiredTalent.disputeId, _currentRound);
+            }
+        } else {
+            require(arbiterProxy.getDisputeStatus(hiredTalent.disputeId) == IArbitrableProxy.DisputeStatus.Resolved, "Dispute is not resolved");
+        } 
+        
+        for (uint256 i = 0; i < _currentRound; i++) {
+            arbiterProxy.withdrawFeesAndRewards(hiredTalent.disputeId, payable(msg.sender), i);
+        }
+
+        uint256 ruling = arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
+
+        if (ruling == 1 || ruling == 2) {
+            address payable recipient = (ruling == 1)
+                ? payable(hiredTalent.freelancer)
+                : payable(hiredTalent.client);
+
+            // Effects before interaction to reduce reentrancy risk
+            uint256 amount = hiredTalent.payment;
+            hiredTalent.payment = 0;
+            hiredTalent.state = HiredTalentState.Finished;
+            hiredTalent.finishedAt = block.timestamp;
+
+            // Interaction: transfer payment to the winner
+            recipient.transfer(amount);
+
+            emit HiredTalentFinished(
+                _talentId,
+                _hiredTalentId,
+                hiredTalent.freelancer,
+                hiredTalent.client,
+                amount,
+                hiredTalent.finishedAt
+            );
+        }
+    }
+
+    function fundAppeal(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        uint8 _side
+    ) external payable hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to appeal for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+        require(_side == 1 || _side == 2, "Invalid side");
+
+        if (msg.sender == hiredTalent.freelancer) {
+            require(_side == 1, "Freelancer can only fund their own side");
+            arbiterProxy.fundAppeal{value: msg.value}(hiredTalent.disputeId, _side);
+        } else if (msg.sender == hiredTalent.client) {
+            require(_side == 2, "Client can only fund their own side");
+            arbiterProxy.fundAppeal{value: msg.value}(hiredTalent.disputeId, _side);
+        }
+    }
+
 }

@@ -263,6 +263,46 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     }
 
     /**
+    * @dev Get the current status of a dispute
+    * @param _localDisputeId The internal dispute ID (from createDispute or events)
+    */
+    function getDisputeStatus(uint256 _localDisputeId) external view returns (DisputeStatus) {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+        return dispute.status;
+    }
+
+    /**
+    * @dev Get the current ruling of a dispute
+    * @param _localDisputeId The internal dispute ID (from createDispute or events)
+    */
+    function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256) {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+        require(dispute.status != DisputeStatus.Resolved, "Dispute already resolved");
+        return dispute.ruling;
+    }
+
+
+    /**
+    * @dev Check if a dispute has timed out (fee payment or appeal)
+    * @param _localDisputeId The internal dispute ID (from createDispute or events)
+    */
+    function hasTimedOut(uint256 _localDisputeId) external view returns (bool) {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+        require(dispute.status != DisputeStatus.Resolved, "Dispute already resolved");
+        if (dispute.status == DisputeStatus.WaitingForFreelancerFee || dispute.status == DisputeStatus.WaitingForClientFee) {
+            return block.timestamp > dispute.feeDepositDeadline;
+        } else if (dispute.status == DisputeStatus.DisputeCreated) {
+            Round storage round = dispute.rounds[dispute.currentRound - 1];
+            return block.timestamp > round.appealDeadline;
+        } else {
+            return false;
+        }
+    }
+
+    /**
     * @dev Timeout dispute if one party fails to pay within deadline
     * Winner is the party who paid (or tried to pay)
     */
