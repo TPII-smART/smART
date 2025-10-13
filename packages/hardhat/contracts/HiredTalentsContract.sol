@@ -258,6 +258,11 @@ contract HiredTalentsContract {
         arbiterProxy = IArbitrableProxy(_KlerosArbitrator);
         owner = _owner;
     }
+    
+    function changeArbitrator(address _newArbitrator) external onlyOwner {
+        require(_newArbitrator != address(0), "Invalid arbitrator address");
+        arbiterProxy = IArbitrableProxy(_newArbitrator);
+    }
 
     /**
      * @dev Create a new talent (Freelancer creates hiredTalent offer)
@@ -727,6 +732,7 @@ contract HiredTalentsContract {
             disputeId = arbiterProxy.startAndPayTalentDisputeByFreelancer{value: msg.value}(
                 _talentId,
                 _hiredTalentId,
+                hiredTalent.freelancer,
                 hiredTalent.client,
                 arbitratorExtraData
             );
@@ -735,6 +741,7 @@ contract HiredTalentsContract {
                 _talentId,
                 _hiredTalentId,
                 hiredTalent.freelancer,
+                hiredTalent.client,
                 arbitratorExtraData
             );
         } else {
@@ -763,11 +770,13 @@ contract HiredTalentsContract {
 
         if (msg.sender == hiredTalent.freelancer) {
             arbiterProxy.payArbitrationFeeByFreelancer{value: msg.value}(
+                msg.sender,
                 hiredTalent.disputeId,
                 arbitratorExtraData
             );
         } else if (msg.sender == hiredTalent.client) {
             arbiterProxy.payArbitrationFeeByClient{value: msg.value}(
+                msg.sender,
                 hiredTalent.disputeId,
                 arbitratorExtraData
             );
@@ -840,10 +849,10 @@ contract HiredTalentsContract {
 
         if (msg.sender == hiredTalent.freelancer) {
             require(_side == 1, "Freelancer can only fund their own side");
-            arbiterProxy.fundAppeal{value: msg.value}(hiredTalent.disputeId, _side);
+            arbiterProxy.fundAppeal{value: msg.value}(msg.sender, hiredTalent.disputeId, _side);
         } else if (msg.sender == hiredTalent.client) {
             require(_side == 2, "Client can only fund their own side");
-            arbiterProxy.fundAppeal{value: msg.value}(hiredTalent.disputeId, _side);
+            arbiterProxy.fundAppeal{value: msg.value}(msg.sender, hiredTalent.disputeId, _side);
         }
     }
 

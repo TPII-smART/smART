@@ -230,6 +230,11 @@ contract GigsContract {
         owner = _owner;
     }
 
+    function changeArbitrator(address _newArbitrator) external onlyOwner {
+        require(_newArbitrator != address(0), "Invalid arbitrator address");
+        arbiterProxy = IArbitrableProxy(_newArbitrator);
+    }
+
     function createGig(GigParams memory params) external returns (uint256) {
         require(params.maxDurationInHours > 0, "Duration must be greater than 0");
         require(bytes(params.title).length > 0, "Title cannot be empty");
@@ -711,6 +716,7 @@ contract GigsContract {
         if (msg.sender == gig.acceptedFreelancer) {
             disputeId = arbiterProxy.createAndPayGigDisputeByFreelancer{value: msg.value}(
                 _gigId,
+                gig.acceptedFreelancer,
                 gig.client,
                 arbitratorExtraData
             );
@@ -718,6 +724,7 @@ contract GigsContract {
             disputeId = arbiterProxy.createAndPayGigDisputeByClient{value: msg.value}(
                 _gigId,
                 gig.acceptedFreelancer,
+                gig.client,
                 arbitratorExtraData
             );
         } else {
@@ -745,11 +752,13 @@ contract GigsContract {
 
         if (msg.sender == gig.acceptedFreelancer) {
             arbiterProxy.payArbitrationFeeByFreelancer{value: msg.value}(
+                msg.sender,
                 gig.disputeId,
                 arbitratorExtraData
             );
         } else if (msg.sender == gig.client) {
             arbiterProxy.payArbitrationFeeByClient{value: msg.value}(
+                msg.sender,
                 gig.disputeId,
                 arbitratorExtraData
             );
@@ -819,10 +828,10 @@ contract GigsContract {
 
         if (msg.sender == gig.acceptedFreelancer) {
             require(_side == 1, "Freelancer can only fund their own side");
-            arbiterProxy.fundAppeal{value: msg.value}(gig.disputeId, _side);
+            arbiterProxy.fundAppeal{value: msg.value}(msg.sender, gig.disputeId, _side);
         } else if (msg.sender == gig.client) {
             require(_side == 2, "Client can only fund their own side");
-            arbiterProxy.fundAppeal{value: msg.value}(gig.disputeId, _side);
+            arbiterProxy.fundAppeal{value: msg.value}(msg.sender, gig.disputeId, _side);
         }
     }
 

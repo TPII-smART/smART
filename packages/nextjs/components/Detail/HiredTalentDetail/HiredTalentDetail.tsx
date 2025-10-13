@@ -52,6 +52,8 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     queryKey: ["hiredTalentDetail", hiredTalentId],
     queryFn: () => fetchHiredTalent(talentId, hiredTalentId),
   });
+
+  console.log(data);
   /* 
   const {
     disputeFinalized,

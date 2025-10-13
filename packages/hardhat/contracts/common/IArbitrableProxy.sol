@@ -40,6 +40,7 @@ interface IArbitrableProxy {
     function startAndPayTalentDisputeByFreelancer(
         uint256 _talentId,
         uint256 _hiredTalentId,
+        address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData
     ) external payable returns (uint256 localDisputeId);
@@ -48,11 +49,13 @@ interface IArbitrableProxy {
         uint256 _talentId,
         uint256 _hiredTalentId,
         address _freelancer,
+        address _client,
         bytes calldata _arbitratorExtraData
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByFreelancer(
         uint256 _gigId,
+        address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData
     ) external payable returns (uint256 localDisputeId);
@@ -60,15 +63,18 @@ interface IArbitrableProxy {
     function createAndPayGigDisputeByClient(
         uint256 _gigId,
         address _freelancer,
+        address _client,
         bytes calldata _arbitratorExtraData
     ) external payable returns (uint256 localDisputeId);
 
     function payArbitrationFeeByFreelancer(
+        address _caller,
         uint256 _localDisputeId,
         bytes calldata _arbitratorExtraData
     ) external payable;
 
     function payArbitrationFeeByClient(
+        address _caller,
         uint256 _localDisputeId,
         bytes calldata _arbitratorExtraData
     ) external payable;
@@ -85,7 +91,7 @@ interface IArbitrableProxy {
 
     // ============ Appeal interactions ============
 
-    function fundAppeal(uint256 _localDisputeId, uint8 _side) external payable;
+    function fundAppeal(address _caller, uint256 _localDisputeId, uint8 _side) external payable;
 
     function withdrawFeesAndRewards(
         uint256 _localDisputeId,

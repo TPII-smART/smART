@@ -372,7 +372,7 @@ const deployedContracts = {
       },
     },
     ArbiterProxy: {
-      address: "0xe41F1bA279845112C3269C05aD7573016caC2F0C",
+      address: "0xF2208F823f0DCF3Be7bE7C08443De30055d52B48",
       abi: [
         {
           inputs: [
@@ -1504,6 +1504,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_newOwner",
+              type: "address",
+            },
+          ],
+          name: "addOwner",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
           inputs: [],
           name: "arbitrator",
           outputs: [
@@ -1529,6 +1542,11 @@ const deployedContracts = {
               type: "address",
             },
             {
+              internalType: "address",
+              name: "_client",
+              type: "address",
+            },
+            {
               internalType: "bytes",
               name: "_arbitratorExtraData",
               type: "bytes",
@@ -1551,6 +1569,11 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_gigId",
               type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_freelancer",
+              type: "address",
             },
             {
               internalType: "address",
@@ -1634,6 +1657,11 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "address",
+              name: "_caller",
+              type: "address",
+            },
+            {
               internalType: "uint256",
               name: "_localDisputeId",
               type: "uint256",
@@ -1688,6 +1716,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "getOwners",
+          outputs: [
+            {
+              internalType: "address[]",
+              name: "",
+              type: "address[]",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "uint256",
@@ -1696,6 +1737,25 @@ const deployedContracts = {
             },
           ],
           name: "hasTimedOut",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "isOwner",
           outputs: [
             {
               internalType: "bool",
@@ -1729,6 +1789,30 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "owners",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_caller",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
               name: "_localDisputeId",
               type: "uint256",
             },
@@ -1746,6 +1830,11 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "address",
+              name: "_caller",
+              type: "address",
+            },
+            {
               internalType: "uint256",
               name: "_localDisputeId",
               type: "uint256",
@@ -1759,6 +1848,19 @@ const deployedContracts = {
           name: "payArbitrationFeeByFreelancer",
           outputs: [],
           stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_owner",
+              type: "address",
+            },
+          ],
+          name: "removeOwner",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -1797,6 +1899,11 @@ const deployedContracts = {
               type: "address",
             },
             {
+              internalType: "address",
+              name: "_client",
+              type: "address",
+            },
+            {
               internalType: "bytes",
               name: "_arbitratorExtraData",
               type: "bytes",
@@ -1824,6 +1931,11 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_hiredTalentId",
               type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "_freelancer",
+              type: "address",
             },
             {
               internalType: "address",
@@ -1924,22 +2036,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xe41F1bA279845112C3269C05aD7573016caC2F0C",
-        transactionIndex: 182,
-        gasUsed: "2770853",
+        contractAddress: "0xF2208F823f0DCF3Be7bE7C08443De30055d52B48",
+        transactionIndex: 366,
+        gasUsed: "3698994",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x4114d193bd1148919ab87299dcd480d77448e0bc60e03dbb7ed2790b75ef8e6b",
-        transactionHash: "0x836a9f4c63b74986762f5da159252a7de1cc92a90f08983224aca11c2270aa9a",
+        blockHash: "0x1a4c856f8e0b6e41a163dc3bd3a7273af73590a4c2860c088ad6fd728a9767a9",
+        transactionHash: "0x7c6f5905e967f3e045db5d73ed8b87a339d7081c6fce6c03a0322dfe2654655a",
         logs: [],
-        blockNumber: 9392371,
-        cumulativeGasUsed: "18107195",
+        blockNumber: 9400941,
+        cumulativeGasUsed: "19099892",
         status: 1,
         byzantium: true,
       },
     },
     GigsContract: {
-      address: "0x726Dda255259c97Cb70947c1D2565C2dd4098A5c",
+      address: "0xf158b9B63Ec35598E7de363dd579414cb101B3BD",
       abi: [
         {
           inputs: [
@@ -2532,6 +2644,19 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "address",
+              name: "_newArbitrator",
+              type: "address",
+            },
+          ],
+          name: "changeArbitrator",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "uint256",
               name: "_gigId",
               type: "uint256",
@@ -2995,22 +3120,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x726Dda255259c97Cb70947c1D2565C2dd4098A5c",
-        transactionIndex: 118,
-        gasUsed: "3927238",
+        contractAddress: "0xf158b9B63Ec35598E7de363dd579414cb101B3BD",
+        transactionIndex: 193,
+        gasUsed: "3977299",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x7b419023eb258bfaa407bb8fb306e715192c849e70f1237c43bfd917e60a035b",
-        transactionHash: "0x6a11253c29ba43e9868a906c7563a9dab2a772becfe71e643f0428bf6a2633a9",
+        blockHash: "0xed952984a591056985436472dee3bc3f564d84d1fd3270a58909195bae4cc974",
+        transactionHash: "0x003cbd426ab02582a5e248a3dcb1ceba9aaa1bdf01f088dcf3a06117db7edc22",
         logs: [],
-        blockNumber: 9392417,
-        cumulativeGasUsed: "19124838",
+        blockNumber: 9400978,
+        cumulativeGasUsed: "27290972",
         status: 1,
         byzantium: true,
       },
     },
     HiredTalentsContract: {
-      address: "0xcbA7e52D34Af928808cFe87d5d7EcF6C86900e06",
+      address: "0xdD6Bed9DDCE6B5840Bd9DEF1AF8828c70B88327D",
       abi: [
         {
           inputs: [
@@ -3571,6 +3696,19 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "address",
+              name: "_newArbitrator",
+              type: "address",
+            },
+          ],
+          name: "changeArbitrator",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "uint256",
               name: "_talentId",
               type: "uint256",
@@ -4051,16 +4189,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xcbA7e52D34Af928808cFe87d5d7EcF6C86900e06",
-        transactionIndex: 105,
-        gasUsed: "4034957",
+        contractAddress: "0xdD6Bed9DDCE6B5840Bd9DEF1AF8828c70B88327D",
+        transactionIndex: 65,
+        gasUsed: "4081877",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xf2cabf68c5db56b4542b1e13e7d10f05166a0422c5584f5bb4d9cbf5223543ce",
-        transactionHash: "0x16be6bcf25492e15eb31a5dc6fe2da72f9bfb7a0b58c8f2fab5e5fd5989a917d",
+        blockHash: "0x92234de985cfc0bfb2366377a80aa8f82976477d17e507d11d8e9c64880cf7c2",
+        transactionHash: "0xa3972ad675ace12ed600ef8f36da27e14595061430d6ffce20f1b47cfb41bd8a",
         logs: [],
-        blockNumber: 9392413,
-        cumulativeGasUsed: "37265602",
+        blockNumber: 9400983,
+        cumulativeGasUsed: "20693147",
         status: 1,
         byzantium: true,
       },

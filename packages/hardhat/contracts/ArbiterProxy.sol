@@ -18,6 +18,11 @@ import {IEvidence} from "./common/IEvidence.sol";
  */
 contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
+    // ============ Owners (multisig-lite) ============
+    // List of addresses that are considered owners and can call owner-only methods
+    address[] public owners;
+    mapping(address => bool) public isOwner;
+
     // ============ State Variables ============
 
     IArbitrator public arbitrator;
@@ -37,9 +42,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     uint256 public constant LOSER_APPEAL_PERIOD_MULTIPLIER = 5000; // 50% of total period
     uint256 public constant MULTIPLIER_DIVISOR = 10000;
     uint256 public constant OVERFLOW = type(uint256).max;
-
-    // ============ Structs ============
-
 
     /**
     * @dev Information about a funding round for appeals
@@ -97,11 +99,49 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     // Reverse mapping: Kleros dispute ID => internal dispute ID
     mapping(uint256 => uint256) public klerosDisputeIdToLocalId;
 
+    // ============ Modifiers ============
+
+    modifier onlyOwners() {
+        require(isOwner[msg.sender], "ArbiterProxy: caller is not an owner");
+        _;
+    }
 
     // ============ Constructor ============
 
     constructor(address _KlerosArbitrator) {
         arbitrator = IArbitrator(_KlerosArbitrator);
+        owners.push(msg.sender);
+        isOwner[msg.sender] = true;
+    }
+
+    // ============ Owner Management ============
+
+    function addOwner(address _newOwner) external onlyOwners() {
+        require(_newOwner != address(0), "Invalid address");
+        require(!isOwner[_newOwner], "Already an owner");
+        owners.push(_newOwner);
+        isOwner[_newOwner] = true;
+    }
+
+    function removeOwner(address _owner) external onlyOwners() {
+        require(isOwner[_owner], "Not an owner");
+        require(owners.length > 1, "Cannot remove the last owner");
+
+        // Remove from mapping
+        isOwner[_owner] = false;
+
+        // Remove from array
+        for (uint256 i = 0; i < owners.length; i++) {
+            if (owners[i] == _owner) {
+                owners[i] = owners[owners.length - 1];
+                owners.pop();
+                break;
+            }
+        }
+    }
+
+    function getOwners() external view returns (address[] memory) {
+        return owners;
     }
 
     // ============ Core Arbitration Functions ============
@@ -125,7 +165,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         bytes calldata _arbitratorExtraData,
         address _freelancer,
         address _client
-    ) public returns (uint256 localDisputeId) {
+    ) public onlyOwners() returns (uint256 localDisputeId) {
         disputeCount++;
         localDisputeId = disputeCount;
 
@@ -167,9 +207,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
      * @param _localDisputeId The internal dispute ID (from createDispute or events)
      */
     function payArbitrationFeeByFreelancer(
+        address _caller,
         uint256 _localDisputeId,
         bytes calldata _arbitratorExtraData
-    ) public payable {
+    ) public onlyOwners() payable {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
         require(dispute.status != DisputeStatus.Resolved, "Dispute already resolved");
@@ -183,10 +224,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Update freelancer address if not set
         if (dispute.freelancer == address(0)) {
-            dispute.freelancer = msg.sender;
+            dispute.freelancer = _caller;
         }
 
-        require(dispute.freelancer == msg.sender, "Only freelancer can pay");
+        require(dispute.freelancer == _caller, "Only freelancer can pay");
 
         dispute.freelancerDisputeFee += msg.value;
 
@@ -201,7 +242,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             dispute.disputeType,
             dispute.externalId1,
             dispute.externalId2,
-            msg.sender,
+            _caller,
             msg.value,
             dispute.freelancerDisputeFee
         );
@@ -217,9 +258,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
      * @param _localDisputeId The internal dispute ID (from createDispute or events)
      */
     function payArbitrationFeeByClient(
+        address _caller,
         uint256 _localDisputeId,
         bytes calldata _arbitratorExtraData
-    ) public payable {
+    ) public onlyOwners() payable {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
         require(dispute.status != DisputeStatus.Resolved, "Dispute already resolved");
@@ -233,10 +275,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Update client address if not set
         if (dispute.client == address(0)) {
-            dispute.client = msg.sender;
+            dispute.client = _caller;
         }
 
-        require(dispute.client == msg.sender, "Only client can pay");
+        require(dispute.client == _caller, "Only client can pay");
 
         dispute.clientDisputeFee += msg.value;
 
@@ -251,7 +293,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             dispute.disputeType,
             dispute.externalId1,
             dispute.externalId2,
-            msg.sender,
+            _caller,
             msg.value,
             dispute.clientDisputeFee
         );
@@ -279,7 +321,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        require(dispute.status != DisputeStatus.Resolved, "Dispute already resolved");
         return dispute.ruling;
     }
 
@@ -291,11 +332,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function hasTimedOut(uint256 _localDisputeId) external view returns (bool) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        require(dispute.status != DisputeStatus.Resolved, "Dispute already resolved");
         if (dispute.status == DisputeStatus.WaitingForFreelancerFee || dispute.status == DisputeStatus.WaitingForClientFee) {
             return block.timestamp > dispute.feeDepositDeadline;
-        } else if (dispute.status == DisputeStatus.DisputeCreated) {
-            Round storage round = dispute.rounds[dispute.currentRound - 1];
+        } else if (dispute.status == DisputeStatus.DisputeCreated && dispute.currentRound > 0) {
+            Round storage round = dispute.rounds[dispute.currentRound];
             return block.timestamp > round.appealDeadline;
         } else {
             return false;
@@ -306,7 +346,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     * @dev Timeout dispute if one party fails to pay within deadline
     * Winner is the party who paid (or tried to pay)
     */
-    function timeoutByInaction(uint256 _localDisputeId) external {
+    function timeoutByInaction(uint256 _localDisputeId) external onlyOwners() {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         require(dispute.localDisputeId != 0, "Dispute does not exist");
@@ -372,7 +412,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     * @dev Timeout round if one party fails to be fully funded within deadline
     * Winner is the party who paid (or tried to pay)
     */
-    function timeoutRoundByInaction(uint256 _localDisputeId, uint256 _round) external {
+    function timeoutRoundByInaction(uint256 _localDisputeId, uint256 _round) external onlyOwners() {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         require(dispute.localDisputeId != 0, "Dispute does not exist");
@@ -440,19 +480,20 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function startAndPayTalentDisputeByFreelancer(
         uint256 _talentId,
         uint256 _hiredTalentId,
+        address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData
-    ) external payable returns (uint256 localDisputeId) {
+    ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _talentId,
             _hiredTalentId,
             DisputeType.Talent,
             _arbitratorExtraData,
-            msg.sender,
+            _freelancer,
             _client
         );
 
-        payArbitrationFeeByFreelancer(localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData);
 
         return localDisputeId;
     }
@@ -464,6 +505,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 _talentId,
         uint256 _hiredTalentId,
         address _freelancer,
+        address _client,
         bytes calldata _arbitratorExtraData
     ) external payable returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
@@ -472,10 +514,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             DisputeType.Talent,
             _arbitratorExtraData,
             _freelancer,
-            msg.sender
+            _client
         );
 
-        payArbitrationFeeByClient(localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData);
 
         return localDisputeId;
     }
@@ -485,19 +527,20 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
      */
     function createAndPayGigDisputeByFreelancer(
         uint256 _gigId,
+        address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData
-    ) external payable returns (uint256 localDisputeId) {
+    ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _gigId,
             _gigId,
             DisputeType.Gig,
             _arbitratorExtraData,
-            msg.sender,
+            _freelancer,
             _client
         );
 
-        payArbitrationFeeByFreelancer(localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData);
 
         return localDisputeId;
     }
@@ -508,18 +551,19 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function createAndPayGigDisputeByClient(
         uint256 _gigId,
         address _freelancer,
+        address _client,
         bytes calldata _arbitratorExtraData
-    ) external payable returns (uint256 localDisputeId) {
+    ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _gigId,
             _gigId,
             DisputeType.Gig,
             _arbitratorExtraData,
             _freelancer,
-            msg.sender
+            _client
         );
 
-        payArbitrationFeeByClient(localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData);
 
         return localDisputeId;
     }
@@ -719,17 +763,17 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         if (dispute.disputeType == DisputeType.Talent) {
             emit TalentRoundRuling(
                 _localDisputeId,
+                dispute.currentRound - 1,
                 dispute.externalId1,  // talentId
                 dispute.externalId2,  // hiredTalentId
-                _ruling,
-                dispute.currentRound
+                _ruling
             );
         } else if (dispute.disputeType == DisputeType.Gig) {
             emit GigRoundRuling(
                 _localDisputeId,
+                dispute.currentRound - 1,
                 dispute.externalId1,  // gigId
-                _ruling,
-                dispute.currentRound
+                _ruling
             );
         }
     }
@@ -759,9 +803,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     * @param _side The side to fund: 1=Freelancer, 2=Client
     */
     function fundAppeal(
+        address _caller,
         uint256 _localDisputeId,
         uint8 _side
-    ) external payable {
+    ) external onlyOwners() payable {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         require(dispute.localDisputeId != 0, "Dispute does not exist");
@@ -822,22 +867,22 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         if (contribution > remainingToPay) {
             contribution = remainingToPay;
             // Refund excess
-            payable(msg.sender).transfer(msg.value - contribution);
+            payable(_caller).transfer(msg.value - contribution);
         }
 
         require(contribution > 0, "No contribution needed");
 
-        uint256 tot;
+        uint256 totalPaid;
 
         // Update round data with contributions to the appeal
         if (_side == FREELANCER_WINS) {
-            round.freelancerContributions[msg.sender] += contribution;
+            round.freelancerContributions[_caller] += contribution;
             round.freelancerPayedRoundFee += contribution;
-            tot = round.freelancerPayedRoundFee;
+            totalPaid = round.freelancerPayedRoundFee;
         } else {
-            round.clientContributions[msg.sender] += contribution;
+            round.clientContributions[_caller] += contribution;
             round.clientPayedRoundFee += contribution;
-            tot = round.clientPayedRoundFee;
+            totalPaid = round.clientPayedRoundFee;
         }
 
         if (dispute.disputeType == DisputeType.Talent)
@@ -847,9 +892,9 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 dispute.externalId1,  // talentId
                 dispute.externalId2,  // hiredTalentId
                 _side,
-                msg.sender,
+                _caller,
                 contribution,
-                tot,
+                totalPaid,
                 requiredAmount
             );
         else if (dispute.disputeType == DisputeType.Gig)
@@ -858,9 +903,9 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 dispute.currentRound,
                 dispute.externalId1,  // talentId or gigId
                 _side,
-                msg.sender,
+                _caller,
                 contribution,
-                tot,
+                totalPaid,
                 requiredAmount
             );
 
