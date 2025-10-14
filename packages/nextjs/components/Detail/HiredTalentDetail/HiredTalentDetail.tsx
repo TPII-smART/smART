@@ -304,7 +304,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   };
 
   const handleViewDeliverable = () => {
-    router.push(`/talents/${hiredTalentId}/${talentId}/deliverables`);
+    router.push(`/talents/${talentId}/${hiredTalentId}/deliverables`);
   };
 
   // Action buttons based on user role and job state

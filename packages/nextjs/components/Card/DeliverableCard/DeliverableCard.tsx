@@ -29,9 +29,7 @@ const getStatusBadge = (status: number) => {
   switch (status) {
     case DeliverableState.Pending:
       return (
-        <Badge
-          className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass} hover:bg-amber-300 transition-colors`}
-        >
+        <Badge className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass}`}>
           Pending Review
         </Badge>
       );
