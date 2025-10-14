@@ -91,4 +91,10 @@ interface IArbitrator {
      * @return ruling The ruling which has been given or the one which will be given if there is no appeal.
      */
     function currentRuling(uint256 _disputeID) external view returns (uint256 ruling);
+
+    /**
+     * @dev Execute the ruling of a dispute. Must be called by the arbitrable contract.
+     * @param _disputeID ID of the dispute to rule.
+     */
+    function executeRuling(uint256 _disputeID) external;
 }

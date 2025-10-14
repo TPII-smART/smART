@@ -768,8 +768,7 @@ contract GigsContract {
     }
 
     function finalizeDispute(
-        uint256 _gigId,
-        uint256 _currentRound
+        uint256 _gigId
     ) external onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
@@ -777,43 +776,35 @@ contract GigsContract {
         require(gig.disputeId != 0, "No dispute exists for this gig");
 
         if (arbiterProxy.hasTimedOut(gig.disputeId)) {
-            if (_currentRound == 0) {
-                arbiterProxy.timeoutByInaction(gig.disputeId);
-            } else {
-                arbiterProxy.timeoutRoundByInaction(gig.disputeId, _currentRound);
-            }
+            arbiterProxy.timeoutByInaction(gig.disputeId);
         } else {
-            require(arbiterProxy.getDisputeStatus(gig.disputeId) == IArbitrableProxy.DisputeStatus.Resolved, "Dispute is not resolved");
-        }
-
-        for (uint256 i = 0; i < _currentRound; i++) {
-            arbiterProxy.withdrawFeesAndRewards(gig.disputeId, payable(msg.sender), i);
+            arbiterProxy.finalizeDispute(gig.disputeId);
         }
 
         uint256 ruling = arbiterProxy.getCurrentRuling(gig.disputeId);
+        address recipient;
 
-        if (ruling == 1 || ruling == 2) {
-            address payable recipient = (ruling == 1)
-                ? payable(gig.acceptedFreelancer)
-                : payable(gig.client);
-
-            // Effects before interaction to reduce reentrancy risk
-            uint256 amount = gig.finalPayment;
-            gig.finalPayment = 0;
-            gig.state = GigState.Completed;
-            gig.finishedAt = block.timestamp;
-
-            // Interaction: transfer payment to the winner
-            recipient.transfer(amount);
-
-            emit GigCompleted(
-                _gigId,
-                gig.acceptedFreelancer,
-                gig.client,
-                amount,
-                gig.finishedAt
-            );
+        if (ruling == 1) {
+            // Ruling in favor of freelancer
+            recipient = gig.acceptedFreelancer;
+        } else if (ruling == 2) {
+            // Ruling in favor of client
+            recipient = gig.client;
+        } else {
+            revert("Invalid ruling from arbitrator");
         }
+
+        gig.state = GigState.Completed;
+        gig.finishedAt = block.timestamp;
+        payable(recipient).transfer(gig.finalPayment);
+
+        emit GigCompleted(
+            _gigId,
+            gig.acceptedFreelancer,
+            gig.client,
+            gig.finalPayment,
+            gig.finishedAt
+        );
     }
 
     function fundAppeal(
@@ -832,7 +823,31 @@ contract GigsContract {
         } else if (msg.sender == gig.client) {
             require(_side == 2, "Client can only fund their own side");
             arbiterProxy.fundAppeal{value: msg.value}(msg.sender, gig.disputeId, _side);
+        } else {
+            arbiterProxy.fundAppeal{value: msg.value}(msg.sender, gig.disputeId, _side);
         }
+    }
+
+    function getDisputeStatus(
+        uint256 _gigId
+    ) external view gigExists(_gigId) returns (IArbitrableProxy.DisputeStatus) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.Disputed, "No dispute for this gig");
+        require(gig.disputeId != 0, "No dispute exists for this gig");
+
+        return arbiterProxy.getDisputeStatus(gig.disputeId);
+    }
+
+    function getCurrentRuling(
+        uint256 _gigId
+    ) external view gigExists(_gigId) returns (uint256) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.Disputed, "No dispute for this gig");
+        require(gig.disputeId != 0, "No dispute exists for this gig");
+
+        return arbiterProxy.getCurrentRuling(gig.disputeId);
     }
 
 }

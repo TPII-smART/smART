@@ -300,7 +300,7 @@ ponder.on("ArbiterProxy:TalentAppealCreated", async ({ event, context }) => {
 
 // Gig fees & rewards withdrawn
 ponder.on("ArbiterProxy:GigFeesAndRewardsWithdrawn", async ({ event, context }) => {
-  const { localDisputeId, round, gigId, beneficiary, reward } = event.args;
+  const { localDisputeId, gigId, beneficiary, reward } = event.args;
 
   // update lastTransactionHash only; reward distribution logic is handled off-chain
   await context.db.update(gig, { gigId }).set({
@@ -321,7 +321,7 @@ ponder.on("ArbiterProxy:GigFeesAndRewardsWithdrawn", async ({ event, context }) 
 
 // Talent fees & rewards withdrawn
 ponder.on("ArbiterProxy:TalentFeesAndRewardsWithdrawn", async ({ event, context }) => {
-  const { localDisputeId, round, talentId, hiredTalentId, beneficiary, reward } = event.args;
+  const { localDisputeId, talentId, hiredTalentId, beneficiary, reward } = event.args;
 
   await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
     lastTransactionHash: event.transaction.hash,
@@ -340,22 +340,20 @@ ponder.on("ArbiterProxy:TalentFeesAndRewardsWithdrawn", async ({ event, context 
 });
 
 // Talent round ruling
-ponder.on("ArbiterProxy:TalentRoundRuling", async ({ event, context }) => {
-  const { localDisputeId, round, talentId, hiredTalentId, ruling } = event.args;
+ponder.on("ArbiterProxy:TalentRuling", async ({ event, context }) => {
+  const { localDisputeId, talentId, hiredTalentId, ruling } = event.args;
 
   await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
-    currentRound: round ?? 0,
     currentRuling: ruling ?? 0,
     lastTransactionHash: event.transaction.hash,
   });
 });
 
 // Gig round ruling
-ponder.on("ArbiterProxy:GigRoundRuling", async ({ event, context }) => {
-  const { localDisputeId, round, gigId, ruling } = event.args;
+ponder.on("ArbiterProxy:GigRuling", async ({ event, context }) => {
+  const { localDisputeId, gigId, ruling } = event.args;
 
   await context.db.update(gig, { gigId }).set({
-    currentRound: round ?? 0,
     currentRuling: ruling ?? 0,
     lastTransactionHash: event.transaction.hash,
   });

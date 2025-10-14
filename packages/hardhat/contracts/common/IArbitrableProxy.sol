@@ -87,17 +87,11 @@ interface IArbitrableProxy {
 
     function timeoutByInaction(uint256 _localDisputeId) external;
 
-    function timeoutRoundByInaction(uint256 _localDisputeId, uint256 _round) external;
+    function finalizeDispute(uint256 _localDisputeId) external;
 
     // ============ Appeal interactions ============
 
     function fundAppeal(address _caller, uint256 _localDisputeId, uint8 _side) external payable;
-
-    function withdrawFeesAndRewards(
-        uint256 _localDisputeId,
-        address payable _beneficiary,
-        uint256 _round
-    ) external;
 
     // ============ Events ============
     event TalentDisputeCreated(
@@ -219,7 +213,6 @@ interface IArbitrableProxy {
 
     event GigFeesAndRewardsWithdrawn(
         uint256 indexed localDisputeId,
-        uint256 indexed round,
         uint256 gigId,
         address beneficiary,
         uint256 reward
@@ -227,24 +220,21 @@ interface IArbitrableProxy {
 
     event TalentFeesAndRewardsWithdrawn(
         uint256 indexed localDisputeId,
-        uint256 indexed round,
         uint256 talentId,
         uint256 hiredTalentId,
         address beneficiary,
         uint256 reward
     );
 
-    event TalentRoundRuling(
+    event TalentRuling(
         uint256 indexed localDisputeId,
-        uint256 indexed round,
         uint256 talentId,
         uint256 hiredTalentId,
         uint256 ruling
     );
 
-    event GigRoundRuling(
+    event GigRuling(
         uint256 indexed localDisputeId,
-        uint256 indexed round,
         uint256 gigId,
         uint256 ruling
     );

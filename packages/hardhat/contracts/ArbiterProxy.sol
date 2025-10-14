@@ -49,6 +49,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     struct Round {
         mapping(address => uint256) freelancerContributions; // Contributor address => amount contributed for freelancer
         mapping(address => uint256) clientContributions;    // Contributor address => amount contributed for client
+        address[] freelancerContributors;  // List of contributors for freelancer
+        address[] clientContributors;     // List of contributors for client
         uint256 freelancerPayedRoundFee; // Fees paid by freelancer
         uint256 clientPayedRoundFee;    // Fees paid by client
         uint256 feeRewards;            // Total fees to be distributed as rewards
@@ -326,7 +328,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
 
     /**
-    * @dev Check if a dispute has timed out (fee payment or appeal)
+    * @dev Check if a dispute fee payment has timed out
     * @param _localDisputeId The internal dispute ID (from createDispute or events)
     */
     function hasTimedOut(uint256 _localDisputeId) external view returns (bool) {
@@ -334,9 +336,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         require(dispute.localDisputeId != 0, "Dispute does not exist");
         if (dispute.status == DisputeStatus.WaitingForFreelancerFee || dispute.status == DisputeStatus.WaitingForClientFee) {
             return block.timestamp > dispute.feeDepositDeadline;
-        } else if (dispute.status == DisputeStatus.DisputeCreated && dispute.currentRound > 0) {
-            Round storage round = dispute.rounds[dispute.currentRound];
-            return block.timestamp > round.appealDeadline;
         } else {
             return false;
         }
@@ -409,27 +408,20 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     }
 
     /**
-    * @dev Timeout round if one party fails to be fully funded within deadline
+    * @dev Resolve all rounds' fees after final ruling
     * Winner is the party who paid (or tried to pay)
     */
-    function timeoutRoundByInaction(uint256 _localDisputeId, uint256 _round) external onlyOwners() {
+    function _resolveRounds(uint256 _localDisputeId) internal {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        require(dispute.status == DisputeStatus.DisputeCreated, "Dispute not in arbitration");
-        require(!dispute.isRuled, "Dispute already ruled");
-        require(_round <= dispute.currentRound, "Invalid round");
 
-        Round storage round = dispute.rounds[_round];
+        // Get last round using currentRound
+        Round storage round = dispute.rounds[dispute.currentRound];
 
-        require(
-            block.timestamp > round.appealDeadline,
-            "Appeal period has not passed yet"
-        );
-
+        // If one of the sides is fully funded but the other isn't, rule in favor of the funded side
         // Determine winner based on who paid
         uint256 ruling;
-        address winner;
 
         bool freelancerFullyFunded = round.freelancerFullyFunded;
         bool clientFullyFunded = round.clientFullyFunded;
@@ -437,39 +429,108 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         if (freelancerFullyFunded && !clientFullyFunded) {
             // Freelancer fully funded, client didn't -> Freelancer wins
             ruling = FREELANCER_WINS;
-            winner = dispute.freelancer;
+            _distributeFeesAndRewards(_localDisputeId, FREELANCER_WINS, false);
         } else if (clientFullyFunded && !freelancerFullyFunded) {
             // Client fully funded, freelancer didn't -> Client wins
             ruling = CLIENT_WINS;
-            winner = dispute.client;
+            _distributeFeesAndRewards(_localDisputeId, CLIENT_WINS, false);
         } else {
-            // Both fully funded or neither fully funded -> revert
-            revert("Both parties fully funded or neither fully funded, cannot timeout");
+            // Neither fully funded -> Use arbitrator's ruling
+            ruling = arbitrator.currentRuling(dispute.klerosDisputeId);
+            _distributeFeesAndRewards(_localDisputeId, ruling, true);
         }
+    }
 
-        // Update dispute state
-        dispute.status = DisputeStatus.Resolved;
-        dispute.isRuled = true;
-        dispute.ruling = ruling;
+    function _distributeFeesAndRewards(uint256 _localDisputeId, uint256 _ruling, bool _reimburseLast) internal {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
 
-        if (dispute.disputeType == DisputeType.Talent) {
-            emit TalentRoundTimeoutByInaction(
-                _localDisputeId,
-                _round,
-                dispute.externalId1,  // talentId
-                dispute.externalId2,  // hiredTalentId
-                ruling,
-                winner
-            );
-        } else if (dispute.disputeType == DisputeType.Gig) {
-            emit GigRoundTimeoutByInaction(
-                _localDisputeId,
-                _round,
-                dispute.externalId1,  // gigId
-                ruling,
-                winner
-            );
+        uint256 roundsToProcess = dispute.currentRound;
+
+        // Distribute fees and rewards for the last round if needed
+        if (_reimburseLast) {
+            _resolveRoundFeesAndRewards(_localDisputeId, 0, dispute.currentRound);
+            roundsToProcess--;            
         }
+        // Iterate backwards through rounds to distribute fees and rewards
+        for (uint256 r = roundsToProcess; ; r--) {
+            _resolveRoundFeesAndRewards(_localDisputeId, _ruling, r);
+            if (r == 0) break;
+        }
+    }
+
+    function _resolveRoundFeesAndRewards(uint256 _localDisputeId, uint256 _ruling, uint256 _round) internal {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+        Round storage round = dispute.rounds[_round];
+
+        // Iterate over all contributions in the round
+        for (uint256 i = 0; i < round.freelancerContributors.length; i++) {
+            address contributor = round.freelancerContributors[i];
+            uint256 contribution = round.freelancerContributions[contributor];
+            if (contribution > 0) {
+                uint256 reward;
+                if (_ruling == FREELANCER_WINS) {
+                    // Full reimbursement + share of fee rewards
+                    reward = contribution + (round.feeRewards - round.freelancerPayedRoundFee) * contribution / round.freelancerPayedRoundFee;
+                } else if (_ruling == 0) {
+                    // Full reimbursement only
+                    reward = contribution;
+                } else {
+                    // No reimbursement or rewards
+                    reward = 0;
+                }
+                // Distribute rewards
+                if (reward > 0) {
+                    payable(contributor).transfer(reward);
+                    _emitWithdrawnEvent(
+                        _localDisputeId,
+                        dispute.disputeType,
+                        dispute.externalId1,
+                        dispute.externalId2,
+                        contributor,
+                        reward
+                    );
+                }
+            }
+        }
+        for (uint256 i = 0; i < round.clientContributors.length; i++) {
+            address contributor = round.clientContributors[i];
+            uint256 contribution = round.clientContributions[contributor];
+            if (contribution > 0) {
+                uint256 reward;
+                if (_ruling == CLIENT_WINS) {
+                    // Full reimbursement + share of fee rewards
+                    reward = contribution + (round.feeRewards - round.clientPayedRoundFee) * contribution / round.clientPayedRoundFee;
+                } else if (_ruling == 0) {
+                    // Full reimbursement only
+                    reward = contribution;
+                } else {
+                    // No reimbursement or rewards
+                    reward = 0;
+                }
+                // Distribute rewards
+                if (reward > 0) {
+                    payable(contributor).transfer(reward);
+                    _emitWithdrawnEvent(
+                        _localDisputeId,
+                        dispute.disputeType,
+                        dispute.externalId1,
+                        dispute.externalId2,
+                        contributor,
+                        reward
+                    );
+                }
+            }
+        }
+    }
+
+    function finalizeDispute(uint256 _localDisputeId) external {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+        require(dispute.status == DisputeStatus.DisputeCreated, "Dispute not in arbitration");
+        require(!dispute.isRuled, "Dispute already ruled");
+
+        arbitrator.executeRuling(dispute.klerosDisputeId);
     }
 
     // ============ Convenience Wrapper Functions ============
@@ -507,7 +568,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData
-    ) external payable returns (uint256 localDisputeId) {
+    ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _talentId,
             _hiredTalentId,
@@ -693,6 +754,35 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     }
 
     /**
+     * @dev Emit type-specific event for dispute raised
+     */
+    function _emitWithdrawnEvent(
+        uint256 _localDisputeId,
+        DisputeType _disputeType,
+        uint256 _externalId1,
+        uint256 _externalId2,
+        address _beneficiary,
+        uint256 _amount
+    ) internal {
+        if (_disputeType == DisputeType.Talent) {
+            emit TalentFeesAndRewardsWithdrawn(
+                _localDisputeId,
+                _externalId1,  // talentId
+                _externalId2,   // hiredTalentId
+                _beneficiary,
+                _amount
+            );
+        } else if (_disputeType == DisputeType.Gig) {
+            emit GigFeesAndRewardsWithdrawn(
+                _localDisputeId,
+                _externalId1,   // gigId
+                _beneficiary,
+                _amount
+            );
+        }
+    }
+
+    /**
      * @dev Create a dispute in Kleros once both parties have paid
      */
     function _raiseDispute(
@@ -721,7 +811,9 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Initialize round 0 with initial fees paid
         Round storage round = dispute.rounds[0];
+        round.freelancerContributors.push(dispute.freelancer);
         round.freelancerContributions[dispute.freelancer] = dispute.freelancerDisputeFee;
+        round.clientContributors.push(dispute.client);
         round.clientContributions[dispute.client] = dispute.clientDisputeFee;
         round.freelancerPayedRoundFee = dispute.freelancerDisputeFee;
         round.clientPayedRoundFee = dispute.clientDisputeFee;
@@ -760,18 +852,18 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         dispute.isRuled = true;
         dispute.ruling = _ruling;
 
+        _resolveRounds(_localDisputeId);
+
         if (dispute.disputeType == DisputeType.Talent) {
-            emit TalentRoundRuling(
+            emit TalentRuling(
                 _localDisputeId,
-                dispute.currentRound - 1,
                 dispute.externalId1,  // talentId
                 dispute.externalId2,  // hiredTalentId
                 _ruling
             );
         } else if (dispute.disputeType == DisputeType.Gig) {
-            emit GigRoundRuling(
+            emit GigRuling(
                 _localDisputeId,
-                dispute.currentRound - 1,
                 dispute.externalId1,  // gigId
                 _ruling
             );
@@ -876,10 +968,16 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Update round data with contributions to the appeal
         if (_side == FREELANCER_WINS) {
+            if (round.freelancerContributions[_caller] == 0) {
+                round.freelancerContributors.push(_caller);
+            }
             round.freelancerContributions[_caller] += contribution;
             round.freelancerPayedRoundFee += contribution;
             totalPaid = round.freelancerPayedRoundFee;
         } else {
+            if (round.clientContributions[_caller] == 0) {
+                round.clientContributors.push(_caller);
+            }
             round.clientContributions[_caller] += contribution;
             round.clientPayedRoundFee += contribution;
             totalPaid = round.clientPayedRoundFee;
@@ -961,94 +1059,5 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             
         // Move to next round
         dispute.currentRound++;
-    }
-
-    /**
-     * @dev Withdraw appeal fees after dispute is resolved
-     * Contributors to the winning side get their money back + rewards
-     *
-     * @param _localDisputeId The internal dispute ID
-     * @param _beneficiary Address to withdraw for
-     * @param _round The round to withdraw from
-     */
-    function withdrawFeesAndRewards(
-        uint256 _localDisputeId,
-        address payable _beneficiary,
-        uint256 _round
-    ) external {
-        DisputeInfo storage dispute = _disputes[_localDisputeId];
-
-        require(dispute.isRuled, "Dispute not resolved yet");
-
-        Round storage round = dispute.rounds[_round];
-        uint256 finalRuling = dispute.ruling;
-
-        uint256 reward;
-
-        if (finalRuling == 0) {
-            // Tie - both sides get proportional refund
-            uint256 freelancerContribution = round.freelancerContributions[_beneficiary];
-            uint256 clientContribution = round.clientContributions[_beneficiary];
-
-            uint256 totalContribution = freelancerContribution + clientContribution;
-
-            if (totalContribution > 0) {
-                // Proportional refund
-                uint256 totalPaid = round.freelancerPayedRoundFee + round.clientPayedRoundFee;
-                reward = (round.feeRewards - totalPaid) * totalContribution / totalPaid;
-                reward += totalContribution; // Base refund
-
-                // Mark as withdrawn
-                round.freelancerContributions[_beneficiary] = 0;
-                round.clientContributions[_beneficiary] = 0;
-            }
-        } else {
-            // Winner takes all
-            uint256 contribution;
-            uint256 winningSideTotalPaid;
-            if (finalRuling == FREELANCER_WINS) {
-                // Freelancer won
-                contribution = round.freelancerContributions[_beneficiary];
-                winningSideTotalPaid = round.freelancerPayedRoundFee;
-            } else if (finalRuling == CLIENT_WINS) {
-                // Client won
-                contribution = round.clientContributions[_beneficiary];
-                winningSideTotalPaid = round.clientPayedRoundFee;
-            }
-
-            if (contribution > 0) {
-                // Winner gets: contribution + proportional share of rewards
-                reward = contribution + (round.feeRewards - winningSideTotalPaid) * contribution / winningSideTotalPaid;
-
-                // Mark as withdrawn
-                if (finalRuling == FREELANCER_WINS) {
-                    round.freelancerContributions[_beneficiary] = 0;
-                } else if (finalRuling == CLIENT_WINS) {
-                    round.clientContributions[_beneficiary] = 0;
-                }
-            }
-        }
-
-        require(reward > 0, "Nothing to withdraw");
-
-        _beneficiary.transfer(reward);
-
-        if (dispute.disputeType == DisputeType.Talent)
-            emit TalentFeesAndRewardsWithdrawn(
-                _localDisputeId,
-                _round,
-                dispute.externalId1,  // talentId
-                dispute.externalId2,  // hiredTalentId
-                _beneficiary,
-                reward
-            );
-        else if (dispute.disputeType == DisputeType.Gig)
-            emit GigFeesAndRewardsWithdrawn(
-                _localDisputeId,
-                _round,
-                dispute.externalId1,  // gigId
-                _beneficiary,
-                reward
-            );
     }
 }
