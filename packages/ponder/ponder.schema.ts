@@ -54,6 +54,7 @@ export const hiredTalent = onchainTable(
 		freelancerFunds: t.bigint(),
 		clientFunds: t.bigint(),
 		appealCost: t.bigint(),	
+		disputeFinished: t.boolean().notNull().default(false),
 		freelancerUploaded: t.boolean().notNull().default(false),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
@@ -102,6 +103,7 @@ export const gig = onchainTable("gig", (t) => ({
 	freelancerFunds: t.bigint(),
 	clientFunds: t.bigint(),
 	appealCost: t.bigint(),	
+	disputeFinished: t.boolean().notNull().default(false),
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 

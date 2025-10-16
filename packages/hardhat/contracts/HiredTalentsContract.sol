@@ -715,7 +715,8 @@ contract HiredTalentsContract {
 
     function startDispute(
         uint256 _talentId,
-        uint256 _hiredTalentId
+        uint256 _hiredTalentId,
+        string calldata _reason
     ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
@@ -725,6 +726,8 @@ contract HiredTalentsContract {
         );
         require(hiredTalent.disputeId == 0, "Dispute already exists for this hiredTalent");
         require(msg.value > 0, "Must send arbitration fee");
+        require(bytes(_reason).length > 0, "Reason cannot be empty");
+        require(bytes(_reason).length <= 256, "Reason must be up to 256 characters");
 
         uint256 disputeId;
 
@@ -734,7 +737,8 @@ contract HiredTalentsContract {
                 _hiredTalentId,
                 hiredTalent.freelancer,
                 hiredTalent.client,
-                arbitratorExtraData
+                arbitratorExtraData,
+                _reason
             );
         } else if (msg.sender == hiredTalent.client) {
             disputeId = arbiterProxy.startAndPayTalentDisputeByClient{value: msg.value}(
@@ -742,7 +746,8 @@ contract HiredTalentsContract {
                 _hiredTalentId,
                 hiredTalent.freelancer,
                 hiredTalent.client,
-                arbitratorExtraData
+                arbitratorExtraData,
+                _reason
             );
         } else {
             revert("Only hired talent parties can start a dispute");
@@ -783,6 +788,35 @@ contract HiredTalentsContract {
         } else {
             revert("Only hired talent parties can pay arbitration fee");
         }
+    }
+
+    function concedeDispute(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to concede for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+
+        if (msg.sender == hiredTalent.freelancer) {
+            // Freelancer concedes, ruling in favor of client
+            arbiterProxy.concedeDispute(hiredTalent.disputeId, 2);
+        } else if (msg.sender == hiredTalent.client) {
+            // Client concedes, ruling in favor of freelancer
+            arbiterProxy.concedeDispute(hiredTalent.disputeId, 1);
+        } else {
+            revert("Only hired talent parties can concede dispute");
+        }
+        
+        emit HiredTalentFinished(
+            _talentId,
+            _hiredTalentId,
+            hiredTalent.freelancer,
+            hiredTalent.client,
+            hiredTalent.payment,
+            hiredTalent.finishedAt
+        );
     }
 
     function finalizeDispute(
@@ -849,25 +883,13 @@ contract HiredTalentsContract {
         }
     }
 
-    function getDisputeStatus(
-        uint256 _talentId,
-        uint256 _hiredTalentId
-    ) external view hiredTalentExists(_talentId, _hiredTalentId) returns (IArbitrableProxy.DisputeStatus) {
-        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-
-        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute for this hired talent");
-        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
-
-        return arbiterProxy.getDisputeStatus(hiredTalent.disputeId);
-    }
-
     function getCurrentRuling(
         uint256 _talentId,
         uint256 _hiredTalentId
     ) external view hiredTalentExists(_talentId, _hiredTalentId) returns (uint256) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
-        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute for this hired talent");
+        require(hiredTalent.state == HiredTalentState.Disputed, "No disputes for this hired talent");
         require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
 
         return arbiterProxy.getCurrentRuling(hiredTalent.disputeId);

@@ -45,6 +45,7 @@ export const getGigs = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -109,6 +110,7 @@ export const getGigsPaginated = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
       pageInfo {
         endCursor
@@ -157,6 +159,7 @@ export const getMyGigs = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -203,6 +206,7 @@ export const getMyGigsPaginated = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
       pageInfo {
         endCursor
@@ -305,6 +309,7 @@ export const getGigByIds = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -421,6 +426,7 @@ export const getGigById = gql`
       freelancerFunds
       clientFunds
       appealCost
+      disputeFinished
     }
   }
 `;

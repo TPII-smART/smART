@@ -1,54 +1,73 @@
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
 
-export function useDisputeContracts(disputeQuestionId?: string) {
-  const validQuestionId =
-    disputeQuestionId && typeof disputeQuestionId === "string" && disputeQuestionId.startsWith("0x")
-      ? (disputeQuestionId as `0x${string}`)
-      : "0x0000000000000000000000000000000000000000000000000000000000000000";
+export enum DisputeStatus {
+  Waiting = 0,
+  Appealable = 1,
+  Solved = 2,
+}
 
-  // RealityETH reads
-  const { data: disputeFinalized, isLoading: isDisputeFinalizedLoading } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "isFinalized",
-    args: [validQuestionId],
-    watch: !!disputeQuestionId,
+export enum Ruling {
+  RefusedToArbitrate = 0,
+  FreelancerWins = 1,
+  ClientWins = 2,
+}
+
+export function useDisputeContracts(disputeId?: number) {
+  // Arbitration proxy reads
+  const { data: disputeCurrentRuling, isLoading: isDisputeCurrentRulingLoading } = useScaffoldReadContract({
+    contractName: "ArbiterProxy",
+    functionName: "getCurrentRuling",
+    args: disputeId ? [BigInt(disputeId)] : [undefined],
+    watch: !!disputeId,
   });
 
-  const { data: disputeResultData, isLoading: isDisputeResultLoading } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "resultFor",
-    args: [validQuestionId],
-    watch: !!disputeQuestionId,
+  const { data: disputeStatus, isLoading: isDisputeStatusLoading } = useScaffoldReadContract({
+    contractName: "ArbiterProxy",
+    functionName: "getDisputeStatus",
+    args: disputeId ? [BigInt(disputeId)] : [undefined],
+    watch: !!disputeId,
   });
 
-  const { data: disputeBeingArbitrated, isLoading: isDisputeArbitrationLoading } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "isPendingArbitration",
-    args: [validQuestionId],
-    watch: !!disputeQuestionId,
+  // Arbitration fee reads
+  const { data: arbitrationCost, isLoading: isArbitrationCostLoading } = useScaffoldReadContract({
+    contractName: "HiredTalentsContract",
+    functionName: "getArbitrationFee",
+    watch: !!disputeId,
   });
 
-  const { data: lastSeenBond } = useScaffoldReadContract({
-    contractName: "RealityETH",
-    functionName: "getBond",
-    args: [validQuestionId],
-    watch: !!disputeQuestionId,
+  const { data: freelancerFee, isLoading: isFreelancerFeeLoading } = useScaffoldReadContract({
+    contractName: "ArbiterProxy",
+    functionName: "getAppealCost",
+    args: disputeId ? [BigInt(disputeId), BigInt(Ruling.FreelancerWins)] : [undefined, undefined],
+    watch: !!disputeId,
   });
 
-  // ArbiterContract read
-  const arbitrationFee = useScaffoldReadContract({
-    contractName: "ArbiterContract",
-    functionName: "arbitrationFee",
+  const { data: clientFee, isLoading: isClientFeeLoading } = useScaffoldReadContract({
+    contractName: "ArbiterProxy",
+    functionName: "getAppealCost",
+    args: disputeId ? [BigInt(disputeId), BigInt(Ruling.ClientWins)] : [undefined, undefined],
+    watch: !!disputeId,
+  });
+
+  const { data: appealDeadline, isLoading: isAppealDeadlineLoading } = useScaffoldReadContract({
+    contractName: "ArbiterProxy",
+    functionName: "getAppealDeadline",
+    args: disputeId ? [BigInt(disputeId)] : [undefined],
+    watch: !!disputeId,
   });
 
   return {
-    disputeFinalized,
-    isDisputeFinalizedLoading,
-    disputeResultData,
-    isDisputeResultLoading,
-    disputeBeingArbitrated,
-    isDisputeArbitrationLoading,
-    lastSeenBond,
-    arbitrationFee,
+    disputeCurrentRuling: disputeCurrentRuling as Ruling | undefined,
+    isDisputeCurrentRulingLoading,
+    disputeStatus: disputeStatus as DisputeStatus | undefined,
+    isDisputeStatusLoading,
+    arbitrationCost: arbitrationCost as number | undefined,
+    isArbitrationCostLoading,
+    freelancerFee: freelancerFee as number | undefined,
+    isFreelancerFeeLoading,
+    clientFee: clientFee as number | undefined,
+    isClientFeeLoading,
+    appealDeadline: appealDeadline as bigint | undefined,
+    isAppealDeadlineLoading,
   };
 }

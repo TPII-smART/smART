@@ -410,9 +410,9 @@ export default function UniversalDetail({
                   {statusMessage && (
                     <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg flex-1">
                       <div className="flex items-center space-x-4 mt-2 justify-around ">
-                        <p className="text-[var(--color-primary-content)] text-base leading-relaxed m-0">
+                        <div className="text-[var(--color-primary-content)] text-base leading-relaxed m-0">
                           {statusMessage}
-                        </p>
+                        </div>
                         {data?.state === HiredTalentState.Ongoing && (
                           <div className="flex items-center space-x-2">
                             <Button

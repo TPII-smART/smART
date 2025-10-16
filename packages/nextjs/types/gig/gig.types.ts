@@ -133,6 +133,9 @@ export class Gig {
   /** (Optional) Cost required to file an appeal, represented as a string. */
   appealCost?: string;
 
+  /** (Optional) Boolean indicating if the dispute has been resolved and finished. */
+  disputeFinished?: boolean;
+
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;

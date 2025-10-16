@@ -113,6 +113,9 @@ export interface HiredTalent {
 
   /** (Optional) Cost required to file an appeal, represented as a string. */
   appealCost?: string;
+
+  /** (Optional) Boolean indicating if the dispute has been resolved and finished. */
+  disputeFinished?: boolean;
 }
 export interface HiredTalentsData {
   hiredTalents: HiredTalent[];

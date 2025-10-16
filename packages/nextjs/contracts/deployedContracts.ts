@@ -372,7 +372,7 @@ const deployedContracts = {
       },
     },
     ArbiterProxy: {
-      address: "0x1Ec704fF1994707a6E2043c9F44FE143b11Df6cD",
+      address: "0x9CEaefA4321698027bd19c4935fBEdF4943ACE5A",
       abi: [
         {
           inputs: [
@@ -735,6 +735,37 @@ const deployedContracts = {
             },
             {
               indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "GigDisputeConceded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
               internalType: "address",
               name: "freelancer",
               type: "address",
@@ -1075,6 +1106,43 @@ const deployedContracts = {
             },
           ],
           name: "TalentAppealExternallyFunded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "talentId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "hiredTalentId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "ruling",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "winner",
+              type: "address",
+            },
+          ],
+          name: "TalentDisputeConceded",
           type: "event",
         },
         {
@@ -1475,6 +1543,16 @@ const deployedContracts = {
               name: "currentRound",
               type: "uint256",
             },
+            {
+              internalType: "uint256",
+              name: "metaEvidenceId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "evidenceGroupId",
+              type: "uint256",
+            },
           ],
           stateMutability: "view",
           type: "function",
@@ -1509,6 +1587,24 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_winningSide",
+              type: "uint256",
+            },
+          ],
+          name: "concedeDispute",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
               name: "_gigId",
               type: "uint256",
             },
@@ -1526,6 +1622,11 @@ const deployedContracts = {
               internalType: "bytes",
               name: "_arbitratorExtraData",
               type: "bytes",
+            },
+            {
+              internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
             },
           ],
           name: "createAndPayGigDisputeByClient",
@@ -1560,6 +1661,11 @@ const deployedContracts = {
               internalType: "bytes",
               name: "_arbitratorExtraData",
               type: "bytes",
+            },
+            {
+              internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
             },
           ],
           name: "createAndPayGigDisputeByFreelancer",
@@ -1604,6 +1710,11 @@ const deployedContracts = {
               internalType: "address",
               name: "_client",
               type: "address",
+            },
+            {
+              internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
             },
           ],
           name: "createDispute",
@@ -1673,6 +1784,49 @@ const deployedContracts = {
               name: "_localDisputeId",
               type: "uint256",
             },
+            {
+              internalType: "uint256",
+              name: "_side",
+              type: "uint256",
+            },
+          ],
+          name: "getAppealCost",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
+          ],
+          name: "getAppealDeadline",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_localDisputeId",
+              type: "uint256",
+            },
           ],
           name: "getCurrentRuling",
           outputs: [
@@ -1696,7 +1850,7 @@ const deployedContracts = {
           name: "getDisputeStatus",
           outputs: [
             {
-              internalType: "enum IArbitrableProxy.DisputeStatus",
+              internalType: "enum IArbitrator.DisputeStatus",
               name: "",
               type: "uint8",
             },
@@ -1873,6 +2027,19 @@ const deployedContracts = {
         {
           inputs: [
             {
+              internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
+            },
+          ],
+          name: "setMetaEvidenceURI",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
               internalType: "uint256",
               name: "_talentId",
               type: "uint256",
@@ -1896,6 +2063,11 @@ const deployedContracts = {
               internalType: "bytes",
               name: "_arbitratorExtraData",
               type: "bytes",
+            },
+            {
+              internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
             },
           ],
           name: "startAndPayTalentDisputeByClient",
@@ -1936,6 +2108,11 @@ const deployedContracts = {
               name: "_arbitratorExtraData",
               type: "bytes",
             },
+            {
+              internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
+            },
           ],
           name: "startAndPayTalentDisputeByFreelancer",
           outputs: [
@@ -1964,6 +2141,7 @@ const deployedContracts = {
       ],
       inheritedFunctions: {
         arbitrator: "contracts/common/IArbitrableProxy.sol",
+        concedeDispute: "contracts/common/IArbitrableProxy.sol",
         createAndPayGigDisputeByClient: "contracts/common/IArbitrableProxy.sol",
         createAndPayGigDisputeByFreelancer: "contracts/common/IArbitrableProxy.sol",
         createDispute: "contracts/common/IArbitrableProxy.sol",
@@ -1983,16 +2161,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x1Ec704fF1994707a6E2043c9F44FE143b11Df6cD",
-        transactionIndex: 34,
-        gasUsed: "3889346",
+        contractAddress: "0x9CEaefA4321698027bd19c4935fBEdF4943ACE5A",
+        transactionIndex: 50,
+        gasUsed: "4416686",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xd6cbb6d665fe78d98e0a1049a0ac9b376021032a9d2378da6ae042ed9eafcf90",
-        transactionHash: "0x8ad166129ea72c406f63ae1b1d446013d036adae34881f45ff9d134e746629c6",
+        blockHash: "0x99301970d2b01545f0aab0702c1fef662080f9a2c509ff017a702b74a1ffe6eb",
+        transactionHash: "0x93500de49a0d97979a50f9c4f237c84ee8966f8ce39d114fd98eea457672ab52",
         logs: [],
-        blockNumber: 9408015,
-        cumulativeGasUsed: "7794167",
+        blockNumber: 9425894,
+        cumulativeGasUsed: "13559512",
         status: 1,
         byzantium: true,
       },
@@ -3115,7 +3293,7 @@ const deployedContracts = {
       },
     },
     HiredTalentsContract: {
-      address: "0xCDFC03202388d47aad13B37eBbE26bFA7DdAE01B",
+      address: "0x676C828745a917E4cb57D385BFb58323e14140AA",
       abi: [
         {
           inputs: [
@@ -3698,6 +3876,24 @@ const deployedContracts = {
               name: "_hiredTalentId",
               type: "uint256",
             },
+          ],
+          name: "concedeDispute",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_talentId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_hiredTalentId",
+              type: "uint256",
+            },
             {
               internalType: "string",
               name: "_comment",
@@ -3948,30 +4144,6 @@ const deployedContracts = {
               name: "_talentId",
               type: "uint256",
             },
-            {
-              internalType: "uint256",
-              name: "_hiredTalentId",
-              type: "uint256",
-            },
-          ],
-          name: "getDisputeStatus",
-          outputs: [
-            {
-              internalType: "enum IArbitrableProxy.DisputeStatus",
-              name: "",
-              type: "uint8",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_talentId",
-              type: "uint256",
-            },
           ],
           name: "getHiredTalentCount",
           outputs: [
@@ -4197,6 +4369,11 @@ const deployedContracts = {
               name: "_hiredTalentId",
               type: "uint256",
             },
+            {
+              internalType: "string",
+              name: "_reason",
+              type: "string",
+            },
           ],
           name: "startDispute",
           outputs: [],
@@ -4212,16 +4389,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xCDFC03202388d47aad13B37eBbE26bFA7DdAE01B",
-        transactionIndex: 57,
-        gasUsed: "4123519",
+        contractAddress: "0x676C828745a917E4cb57D385BFb58323e14140AA",
+        transactionIndex: 86,
+        gasUsed: "4273708",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x6e7aea8ef89cad95a7c8695795492c5b73036177f05ed9e26f23f4571f9d4096",
-        transactionHash: "0xab8679745169f65429701081eb228d05b92772ee7e1e6e866fc875f0cf2686ad",
+        blockHash: "0x1be87701102a2650ee91cfbe3a0753377c972a82c62a6c7f6f926c05ac50f0c3",
+        transactionHash: "0x96d321a7dd36cd2a745e940ea9ea2978cd4d80afbdd7da0fe863f98b32e607c4",
         logs: [],
-        blockNumber: 9407806,
-        cumulativeGasUsed: "14042525",
+        blockNumber: 9425914,
+        cumulativeGasUsed: "13757012",
         status: 1,
         byzantium: true,
       },

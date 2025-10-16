@@ -6,6 +6,7 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
   const { localDisputeId, talentId, hiredTalentId, freelancer, client, feeDepositDeadline } = event.args;
 
   await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
+    state: 4, // Disputed state
     disputeId: localDisputeId,
     freelancerPaidArbitrationFee: false,
     clientPaidArbitrationFee: false,
@@ -96,6 +97,7 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
   const { localDisputeId, gigId, freelancer, client, feeDepositDeadline } = event.args;
 
   await context.db.update(gig, { gigId }).set({
+    state: 4, // Disputed state
     disputeId: localDisputeId,
     freelancerPaidArbitrationFee: false,
     clientPaidArbitrationFee: false,
@@ -232,7 +234,7 @@ ponder.on("ArbiterProxy:GigAppealContribution", async ({ event, context }) => {
     lastTransactionHash: event.transaction.hash,
   };
 
-  if (side === 0) update.freelancerFunds = BigInt(totalPaid ?? 0);
+  if (side === 1) update.freelancerFunds = BigInt(totalPaid ?? 0);
   else update.clientFunds = BigInt(totalPaid ?? 0);
 
   await context.db.update(gig, { gigId }).set(update);
@@ -259,7 +261,7 @@ ponder.on("ArbiterProxy:TalentAppealContribution", async ({ event, context }) =>
     lastTransactionHash: event.transaction.hash,
   };
 
-  if (side === 0) update.freelancerFunds = BigInt(totalPaid ?? 0);
+  if (side === 1) update.freelancerFunds = BigInt(totalPaid ?? 0);
   else update.clientFunds = BigInt(totalPaid ?? 0);
 
   await context.db.update(hiredTalent, { hiredTalentId, talentId }).set(update);
@@ -345,6 +347,7 @@ ponder.on("ArbiterProxy:TalentRuling", async ({ event, context }) => {
 
   await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
     currentRuling: ruling ?? 0,
+    disputeFinished: ruling !== 0,
     lastTransactionHash: event.transaction.hash,
   });
 });
@@ -355,6 +358,7 @@ ponder.on("ArbiterProxy:GigRuling", async ({ event, context }) => {
 
   await context.db.update(gig, { gigId }).set({
     currentRuling: ruling ?? 0,
+    disputeFinished: ruling !== 0,
     lastTransactionHash: event.transaction.hash,
   });
 });
@@ -416,6 +420,47 @@ ponder.on("ArbiterProxy:GigAppealExternallyFunded", async ({ event, context }) =
   const { localDisputeId, round, gigId } = event.args;
   await context.db.update(gig, { gigId }).set({
     currentRound: round ?? 0,
+    lastTransactionHash: event.transaction.hash,
+  });
+});
+
+// Talent / Gig dispute conceded
+ponder.on("ArbiterProxy:TalentDisputeConceded", async ({ event, context }) => {
+  const { localDisputeId, talentId, hiredTalentId, ruling, winner } = event.args;
+  await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
+    currentRuling: ruling ?? 0,
+    disputeFinished: true,
+    lastTransactionHash: event.transaction.hash,
+  });
+
+  await context.db.insert(notification).values({
+    id: `${event.block.number}-${event.log.logIndex}-talent-conceded`,
+    user: winner as string,
+    title: "Dispute conceded",
+    message: `The other party conceded the dispute #${localDisputeId} for hiredTalent ${hiredTalentId}. You won!`,
+    itemId: localDisputeId,
+    href: `/talents/${talentId}`,
+    createdAt: BigInt(event.block.timestamp),
+    lastTransactionHash: event.transaction.hash,
+  });
+});
+
+ponder.on("ArbiterProxy:GigDisputeConceded", async ({ event, context }) => {
+  const { localDisputeId, gigId, ruling, winner } = event.args;
+  await context.db.update(gig, { gigId }).set({
+    currentRuling: ruling ?? 0,
+    disputeFinished: true,
+    lastTransactionHash: event.transaction.hash,
+  });
+
+  await context.db.insert(notification).values({
+    id: `${event.block.number}-${event.log.logIndex}-gig-conceded`,
+    user: winner as string,
+    title: "Dispute conceded",
+    message: `The other party conceded the dispute #${localDisputeId} for gig ${gigId}. You won!`,
+    itemId: localDisputeId,
+    href: `/gig/${gigId}`,
+    createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
   });
 });

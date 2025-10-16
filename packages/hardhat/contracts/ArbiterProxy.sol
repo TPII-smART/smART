@@ -35,6 +35,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     string constant RULING_OPTIONS = "Freelancer is proven right;Client of the freelancer is proven right"; // A plain English of what rulings do. Need to be redefined by the child class.
     uint256 public constant FEE_DEPOSIT_TIMEOUT = 10 days;
 
+    string metaEvidenceURI = "ipfs://test";
+
     // ============ Appeal Constants ============
 
     uint256 public constant WINNER_STAKE_MULTIPLIER = 10000; // Basis points (100%)
@@ -91,6 +93,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         address client;                // Client address
         uint256 currentRound;          // Current appeal round (0 = initial dispute)
         mapping(uint256 => Round) rounds; // Round number => Round info
+        uint256 metaEvidenceId;
+        uint256 evidenceGroupId;
     }
 
     // ============ Storage Mappings ============
@@ -146,6 +150,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         return owners;
     }
 
+    function setMetaEvidenceURI(string calldata _metaEvidenceURI) external onlyOwners() {
+        metaEvidenceURI = _metaEvidenceURI;
+    }
+
     // ============ Core Arbitration Functions ============
 
     /**
@@ -166,7 +174,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         DisputeType _disputeType,
         bytes calldata _arbitratorExtraData,
         address _freelancer,
-        address _client
+        address _client,
+        string calldata _metaEvidenceURI
     ) public onlyOwners() returns (uint256 localDisputeId) {
         disputeCount++;
         localDisputeId = disputeCount;
@@ -188,7 +197,13 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         dispute.freelancer = _freelancer;
         dispute.client = _client;
         dispute.currentRound = 0;
+        // Generate random metaEvidenceId and evidenceGroupId
+        dispute.metaEvidenceId = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, localDisputeId, "meta"))) % OVERFLOW;
+        dispute.evidenceGroupId = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, localDisputeId, "evidence"))) % OVERFLOW;
+
         // Note: mapping fields inside the struct (e.g., rounds and Round.mappings) are auto-initialized as empty.
+
+        emit MetaEvidence(dispute.metaEvidenceId, _metaEvidenceURI);
 
         // Emit type-specific creation event
         _emitDisputeCreatedEvent(
@@ -307,13 +322,68 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     }
 
     /**
+    * @dev Conceede dispute in favor of the other party
+    * @param _localDisputeId The internal dispute ID (from createDispute or events)
+    * @param _winningSide 1 for freelancer, 2 for client
+    */
+    function concedeDispute(uint256 _localDisputeId, uint256 _winningSide) external onlyOwners() {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+        if (_winningSide == FREELANCER_WINS) {
+            require(dispute.status == DisputeStatus.WaitingForClientFee, "Cannot concede at this stage");
+        } else if (_winningSide == CLIENT_WINS) {
+            require(dispute.status == DisputeStatus.WaitingForFreelancerFee, "Cannot concede at this stage");
+        } else {
+            revert("Invalid winning side");
+        }
+
+        // Update dispute state
+        dispute.status = DisputeStatus.Resolved;
+        dispute.isRuled = true;
+        dispute.ruling = _winningSide;
+
+        // Reimburse the winning party if they paid
+        address winningParty;
+        uint256 reimbursement;
+        if (_winningSide == FREELANCER_WINS) {
+            winningParty = dispute.freelancer;
+            reimbursement = dispute.freelancerDisputeFee;
+        } else {
+            winningParty = dispute.client;
+            reimbursement = dispute.clientDisputeFee;
+        }
+
+        if (winningParty != address(0) && reimbursement > 0) {
+            payable(winningParty).transfer(reimbursement);
+        }
+
+        if (dispute.disputeType == DisputeType.Talent) {
+            emit TalentDisputeConceded(
+                _localDisputeId,
+                dispute.externalId1,  // talentId
+                dispute.externalId2,  // hiredTalentId
+                _winningSide,
+                winningParty
+            );
+        } else if (dispute.disputeType == DisputeType.Gig) {
+            emit GigDisputeConceded(
+                _localDisputeId,
+                dispute.externalId1,  // gigId
+                _winningSide,
+                winningParty
+            );
+        }
+    }
+
+    /**
     * @dev Get the current status of a dispute
     * @param _localDisputeId The internal dispute ID (from createDispute or events)
     */
-    function getDisputeStatus(uint256 _localDisputeId) external view returns (DisputeStatus) {
+    function getDisputeStatus(uint256 _localDisputeId) external view returns (IArbitrator.DisputeStatus) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        return dispute.status;
+        return arbitrator.disputeStatus(dispute.klerosDisputeId);
     }
 
     /**
@@ -323,9 +393,49 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        return dispute.ruling;
+        return arbitrator.currentRuling(dispute.klerosDisputeId);
     }
 
+    /**
+    * @dev Get the arbitration cost for a new dispute or the appeal cost for the current round depending on the side
+    * @param _localDisputeId The internal dispute ID (from createDispute or events)
+    * @param _side 1 for freelancer, 2 for client
+    */
+    function getAppealCost(uint256 _localDisputeId, uint256 _side) external view returns (uint256) {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+
+        if (dispute.status == DisputeStatus.WaitingForFreelancerFee || dispute.status == DisputeStatus.WaitingForClientFee) {
+            // Dispute not yet raised, return arbitration cost
+            return arbitrator.arbitrationCost(dispute.arbitratorExtraData);
+        } else if (dispute.status == DisputeStatus.DisputeCreated && arbitrator.disputeStatus(dispute.klerosDisputeId) == IArbitrator.DisputeStatus.Appealable) {
+            // Dispute raised and appealable, get appeal cost and apply multiplier
+            uint256 appealCost = arbitrator.appealCost(dispute.klerosDisputeId, dispute.arbitratorExtraData);
+            uint256 currentRuling = arbitrator.currentRuling(dispute.klerosDisputeId);
+            if (_side == currentRuling) {
+                // Winner side
+                return (appealCost * WINNER_STAKE_MULTIPLIER) / MULTIPLIER_DIVISOR;
+            } else {
+                // Loser side
+                return (appealCost * LOSER_STAKE_MULTIPLIER) / MULTIPLIER_DIVISOR;
+            }
+        } else {
+            // Dispute resolved or not appealable
+            return 0;
+        }
+    }
+
+    function getAppealDeadline(uint256 _localDisputeId) external view returns (uint256) {
+        DisputeInfo storage dispute = _disputes[_localDisputeId];
+        require(dispute.localDisputeId != 0, "Dispute does not exist");
+
+        if (dispute.status == DisputeStatus.DisputeCreated && arbitrator.disputeStatus(dispute.klerosDisputeId) == IArbitrator.DisputeStatus.Appealable) {
+            (, uint256 appealEnd) = arbitrator.appealPeriod(dispute.klerosDisputeId);
+            return appealEnd;
+        } else {
+            return 0;
+        }
+    }
 
     /**
     * @dev Check if a dispute fee payment has timed out
@@ -543,7 +653,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 _hiredTalentId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _metaEvidenceURI
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _talentId,
@@ -551,7 +662,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             DisputeType.Talent,
             _arbitratorExtraData,
             _freelancer,
-            _client
+            _client,
+            _metaEvidenceURI
         );
 
         payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData);
@@ -567,7 +679,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 _hiredTalentId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _metaEvidenceURI
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _talentId,
@@ -575,7 +688,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             DisputeType.Talent,
             _arbitratorExtraData,
             _freelancer,
-            _client
+            _client,
+            _metaEvidenceURI
         );
 
         payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData);
@@ -590,7 +704,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 _gigId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _metaEvidenceURI
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _gigId,
@@ -598,7 +713,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             DisputeType.Gig,
             _arbitratorExtraData,
             _freelancer,
-            _client
+            _client,
+            _metaEvidenceURI
         );
 
         payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData);
@@ -613,7 +729,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 _gigId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _metaEvidenceURI
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _gigId,
@@ -621,7 +738,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             DisputeType.Gig,
             _arbitratorExtraData,
             _freelancer,
-            _client
+            _client,
+            _metaEvidenceURI
         );
 
         payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData);
@@ -824,8 +942,10 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         dispute.currentRound = 1;
 
         // Emit ERC-1497 Dispute event
-        // ToDO: metaEvidenceID and evidenceGroupID are both 0 for now
-        emit Dispute(arbitrator, klerosDisputeId, 0, 0);
+        
+        emit Dispute(arbitrator, klerosDisputeId, dispute.metaEvidenceId, dispute.evidenceGroupId);
+        
+
 
         // Emit type-specific custom event
         _emitDisputeRaisedEvent(

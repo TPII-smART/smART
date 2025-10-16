@@ -191,6 +191,7 @@ export const getHiredTalentsFromTalent = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -247,6 +248,7 @@ export const getHiredTalentsFromTalentPaginated = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
       pageInfo {
         endCursor
@@ -319,6 +321,7 @@ export const getMyHiredTalents = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -360,6 +363,7 @@ export const getHires = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -408,6 +412,7 @@ export const getHiresPaginated = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
       pageInfo {
         endCursor
@@ -458,6 +463,7 @@ export const getHiredTalentAndHires = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
     }
   }
@@ -504,6 +510,7 @@ export const getHiredTalentAndHiresPaginated = gql`
         freelancerFunds
         clientFunds
         appealCost
+        disputeFinished
       }
       pageInfo {
         endCursor
@@ -569,6 +576,7 @@ export const getHiredTalent = gql`
       freelancerFunds
       clientFunds
       appealCost
+      disputeFinished
       freelancerUploaded
       rating
       lastTransactionHash

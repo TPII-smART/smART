@@ -34,7 +34,8 @@ interface IArbitrableProxy {
         DisputeType _disputeType,
         bytes calldata _arbitratorExtraData,
         address _freelancer,
-        address _client
+        address _client,
+        string calldata _reason
     ) external returns (uint256 localDisputeId);
 
     function startAndPayTalentDisputeByFreelancer(
@@ -42,7 +43,8 @@ interface IArbitrableProxy {
         uint256 _hiredTalentId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function startAndPayTalentDisputeByClient(
@@ -50,21 +52,24 @@ interface IArbitrableProxy {
         uint256 _hiredTalentId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByFreelancer(
         uint256 _gigId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByClient(
         uint256 _gigId,
         address _freelancer,
         address _client,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function payArbitrationFeeByFreelancer(
@@ -79,7 +84,9 @@ interface IArbitrableProxy {
         bytes calldata _arbitratorExtraData
     ) external payable;
 
-    function getDisputeStatus(uint256 _localDisputeId) external view returns (DisputeStatus);
+    function concedeDispute(uint256 _localDisputeId, uint256 _winningSide) external;
+
+    function getDisputeStatus(uint256 _localDisputeId) external view returns (IArbitrator.DisputeStatus);
 
     function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256);
 
@@ -169,6 +176,21 @@ interface IArbitrableProxy {
         uint256 indexed localDisputeId,
         uint256 indexed talentId,
         uint256 indexed hiredTalentId,
+        uint256 ruling,
+        address winner
+    );
+
+    event TalentDisputeConceded(
+        uint256 indexed localDisputeId,
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        uint256 ruling,
+        address winner
+    );
+
+    event GigDisputeConceded(
+        uint256 indexed localDisputeId,
+        uint256 indexed gigId,
         uint256 ruling,
         address winner
     );
