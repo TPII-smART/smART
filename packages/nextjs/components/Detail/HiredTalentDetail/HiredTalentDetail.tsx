@@ -19,7 +19,7 @@ import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
+import { uploadToIPFS } from "~~/services/IPFS/pinataIPFS";
 import { fetchDeliverablesForHiredTalent } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
@@ -125,11 +125,13 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           "The client is in the right and the freelancer should not be paid.",
         ],
       },
-      fileURI: "placeholder",
+      fileURI: "/ipfs/bafkreib7j3vvwfz4kz6z7trcj25fi4na7ok4u2vmg63zul76yfgl4vnj7a",
     });
     // Upload meta-evidence to IPFS
     const file = new File([metaEvidenceJSON], "metaEvidence.json", { type: "application/json" });
-    return uploadToIPFS(file);
+    return uploadToIPFS(file).then(ipfsURI => {
+      return ipfsURI ? ipfsURI.replace("ipfs://", "ipfs://ipfs/") : "";
+    });
   };
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
@@ -433,7 +435,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
                 {data.klerosDisputeId &&
                   disputeStatus === DisputeStatus.Appealable &&
-                  (Number(data.clientFunds ?? 0) > 0 && Number(data.freelancerFunds ?? 0) > 0 ? (
+                  (Number(data.clientFunds ?? 0) > 0 || Number(data.freelancerFunds ?? 0) > 0 ? (
                     <>
                       <div>
                         <p className="font-medium">Freelancer Funds</p>
@@ -500,7 +502,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                       <p className="text-sm text-gray-500">
                         Current Ruling:{" "}
                         <span className="font-medium text-gray-700">
-                          {disputeCurrentRuling === Ruling.ClientWins ? "Client Wins" : "Freelancer Wins"}
+                          {BigInt(disputeCurrentRuling) === BigInt(Ruling.ClientWins)
+                            ? "Client Wins"
+                            : "Freelancer Wins"}
                         </span>
                       </p>
                     </div>
@@ -604,7 +608,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         );
       }
       if (hiredTalentStatus === HiredTalentState.Disputed) {
-        if (data?.klerosDisputeId && disputeStatus === DisputeStatus.Solved && !data?.disputeFinished) {
+        if (
+          ((!data?.freelancerPaidArbitrationFee || !data?.clientPaidArbitrationFee) &&
+            data?.disputeDeadline &&
+            new Date() > new Date(Number(data.disputeDeadline) * 1000)) ||
+          (data?.klerosDisputeId && disputeStatus === DisputeStatus.Solved && !data?.disputeFinished)
+        ) {
           buttons.push(
             <Button
               variant="primary"
@@ -693,7 +702,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         );
       }
       if (hiredTalentStatus === HiredTalentState.Disputed) {
-        if (data?.klerosDisputeId && disputeStatus === DisputeStatus.Solved && !data?.disputeFinished) {
+        if (
+          ((!data?.freelancerPaidArbitrationFee || !data?.clientPaidArbitrationFee) &&
+            data?.disputeDeadline &&
+            new Date() > new Date(Number(data.disputeDeadline) * 1000)) ||
+          (data?.klerosDisputeId && disputeStatus === DisputeStatus.Solved && !data?.disputeFinished)
+        ) {
           buttons.push(
             <Button
               variant="primary"

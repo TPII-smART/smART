@@ -24,7 +24,7 @@ import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 //import { useDisputeContracts } from "~~/hooks/use-dispute-contracts";
-import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
+import { uploadToIPFS } from "~~/services/IPFS/pinataIPFS";
 import { fetchGigWithApplicationAndDeliverables } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";

@@ -8,7 +8,7 @@ import { UniversalCardProps } from "./types";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/Card";
 import { BlockieAvatar } from "@/components/scaffold-eth";
 import { castHoursToDurationString, cn } from "@/lib/utils";
-import { resolveIPFSHash } from "@services/IPFS/thirdwebIPFS";
+import { resolveIPFSHash } from "@services/IPFS/pinataIPFS";
 import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
 

@@ -284,6 +284,8 @@ ponder.on("ArbiterProxy:GigAppealCreated", async ({ event, context }) => {
 
   await context.db.update(gig, { gigId }).set({
     currentRound: round ?? 0,
+    clientFunds: BigInt(0),
+    freelancerFunds: BigInt(0),
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     lastTransactionHash: event.transaction.hash,
   });
@@ -295,6 +297,8 @@ ponder.on("ArbiterProxy:TalentAppealCreated", async ({ event, context }) => {
 
   await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
     currentRound: round ?? 0,
+    clientFunds: BigInt(0),
+    freelancerFunds: BigInt(0),
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     lastTransactionHash: event.transaction.hash,
   });

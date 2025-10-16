@@ -6,7 +6,7 @@ import { DeliverableState } from "@se-2/common";
 import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverablePreview from "~~/components/DeliverablePreview/DeliverablePreview";
-import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
+import { resolveIPFSHash } from "~~/services/IPFS/pinataIPFS";
 import { Deliverable } from "~~/types/deliverable";
 
 interface participantDeliverable {
