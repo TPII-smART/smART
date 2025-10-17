@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DisputeStatus, Ruling, useDisputeContracts } from "../../../hooks/use-dispute-contracts";
 import UniversalDetail from "../UniversalDetail";
@@ -77,39 +77,26 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     disputeStatus,
     isDisputeStatusLoading,
     arbitrationCost,
-    isArbitrationCostLoading,
     freelancerFee,
     isFreelancerFeeLoading,
     clientFee,
     isClientFeeLoading,
     appealDeadline,
-    isAppealDeadlineLoading,
   } = useDisputeContracts(data?.disputeId);
 
-  console.log("Dispute info:", {
-    disputeCurrentRuling,
-    isDisputeCurrentRulingLoading,
-    disputeStatus,
-    isDisputeStatusLoading,
-    arbitrationCost,
-    isArbitrationCostLoading,
-    freelancerFee,
-    isFreelancerFeeLoading,
-    clientFee,
-    isClientFeeLoading,
-    appealDeadline,
-    isAppealDeadlineLoading,
-  });
-
-  const disputeLoading =
-    isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
-
-  const reload = async () => {
+  const reload = useCallback(async () => {
     queryClient.invalidateQueries({ queryKey: ["hiredTalentDetail", talentId, hiredTalentId] });
     await new Promise(resolve => setTimeout(resolve, 1000));
     await refetch();
     await refetchDeliverables();
-  };
+  }, [hiredTalentId, queryClient, refetch, refetchDeliverables, talentId]);
+
+  useEffect(() => {
+    reload();
+  }, [disputeStatus, disputeCurrentRuling, reload]);
+
+  const disputeLoading =
+    isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
   const uploadMetaDataToIPFS = (reason: string) => {
     const metaEvidenceJSON = JSON.stringify({

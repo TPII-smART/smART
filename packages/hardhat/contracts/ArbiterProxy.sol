@@ -559,7 +559,11 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         // Distribute fees and rewards for the last round if needed
         if (_reimburseLast) {
             _resolveRoundFeesAndRewards(_localDisputeId, 0, dispute.currentRound);
-            roundsToProcess--;            
+            if (roundsToProcess > 0) {
+                roundsToProcess--;
+            } else {
+                return; // No more rounds to process
+            }
         }
         // Iterate backwards through rounds to distribute fees and rewards
         for (uint256 r = roundsToProcess; ; r--) {
