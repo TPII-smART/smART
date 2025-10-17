@@ -5,21 +5,16 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
-  11155111: {
-    ArbiterContract: {
-      address: "0xd32821572710444a37f26FBAC1b216d9C0857C3C",
+  31337: {
+    GigsContract: {
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
       abi: [
         {
           inputs: [
             {
               internalType: "address",
-              name: "_realitio",
+              name: "_owner",
               type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "_arbitrationFee",
-              type: "uint256",
             },
           ],
           stateMutability: "nonpayable",
@@ -30,24 +25,42 @@ const deployedContracts = {
           inputs: [
             {
               indexed: true,
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "applicationId",
+              type: "uint256",
             },
             {
               indexed: true,
               internalType: "address",
-              name: "requester",
+              name: "freelancer",
               type: "address",
             },
             {
               indexed: false,
               internalType: "uint256",
-              name: "fee",
+              name: "finalPayment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "finalDurationInHours",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deadline",
               type: "uint256",
             },
           ],
-          name: "ArbitrationRequested",
+          name: "ApplicationAccepted",
           type: "event",
         },
         {
@@ -55,122 +68,621 @@ const deployedContracts = {
           inputs: [
             {
               indexed: true,
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
             },
             {
-              indexed: false,
-              internalType: "bytes32",
-              name: "answer",
-              type: "bytes32",
+              indexed: true,
+              internalType: "uint256",
+              name: "applicationId",
+              type: "uint256",
             },
             {
-              indexed: false,
+              indexed: true,
               internalType: "address",
-              name: "answerer",
+              name: "freelancer",
               type: "address",
             },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "rejectionComment",
+              type: "string",
+            },
           ],
-          name: "ArbitrationSettled",
+          name: "ApplicationRejected",
           type: "event",
         },
         {
           anonymous: false,
           inputs: [
             {
-              indexed: false,
+              indexed: true,
               internalType: "uint256",
-              name: "newFee",
+              name: "gigId",
               type: "uint256",
             },
-          ],
-          name: "FeeUpdated",
-          type: "event",
-        },
-        {
-          inputs: [],
-          name: "arbitrationFee",
-          outputs: [
             {
+              indexed: true,
               internalType: "uint256",
-              name: "",
+              name: "applicationId",
               type: "uint256",
             },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
             {
-              internalType: "bytes32",
-              name: "",
-              type: "bytes32",
-            },
-          ],
-          name: "arbitrationRequests",
-          outputs: [
-            {
+              indexed: true,
               internalType: "address",
-              name: "requester",
+              name: "freelancer",
               type: "address",
             },
             {
+              indexed: false,
               internalType: "uint256",
-              name: "feePaid",
+              name: "proposedPayment",
               type: "uint256",
             },
             {
+              indexed: false,
+              internalType: "uint256",
+              name: "proposedDurationInHours",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "proposalComment",
+              type: "string",
+            },
+          ],
+          name: "ApplicationSubmitted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "applicationId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "rejectionComment",
+              type: "string",
+            },
+          ],
+          name: "ApplicationWithdrawn",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ClientMarkedAsReceived",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "response",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "fileUploadedAt",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "CommentAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "resource",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "submissionComment",
+              type: "string",
+            },
+            {
+              indexed: false,
               internalType: "bool",
-              name: "isPending",
+              name: "isLink",
               type: "bool",
             },
             {
-              internalType: "bool",
-              name: "isSettled",
-              type: "bool",
+              indexed: false,
+              internalType: "uint256",
+              name: "uploadedAt",
+              type: "uint256",
             },
           ],
-          stateMutability: "view",
+          name: "FileUploaded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "FreelancerMarkedAsDelivered",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "enum GigsContract.GigState",
+              name: "state",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientCancelled",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerCancelled",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "GigCancelled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "GigCompleted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "basePayment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "maxDurationInHours",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "gigBannerImageHash",
+              type: "string",
+            },
+          ],
+          name: "GigCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "rating",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "GigRated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerDelivered",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientReceived",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientRejected",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "GigRejected",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_applicationId",
+              type: "uint256",
+            },
+          ],
+          name: "acceptApplication",
+          outputs: [],
+          stateMutability: "payable",
           type: "function",
         },
         {
           inputs: [
             {
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_comment",
+              type: "string",
             },
           ],
-          name: "getArbitrationRequest",
-          outputs: [
+          name: "addCommentToGig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
             {
               components: [
                 {
-                  internalType: "address",
-                  name: "requester",
-                  type: "address",
-                },
-                {
                   internalType: "uint256",
-                  name: "feePaid",
+                  name: "proposedPayment",
                   type: "uint256",
                 },
                 {
-                  internalType: "bool",
-                  name: "isPending",
-                  type: "bool",
+                  internalType: "uint256",
+                  name: "proposedDurationInHours",
+                  type: "uint256",
                 },
                 {
-                  internalType: "bool",
-                  name: "isSettled",
-                  type: "bool",
+                  internalType: "string",
+                  name: "proposal",
+                  type: "string",
                 },
               ],
-              internalType: "struct ArbiterContract.ArbitrationRequest",
-              name: "",
+              internalType: "struct GigsContract.ApplicationParams",
+              name: "params",
               type: "tuple",
+            },
+          ],
+          name: "applyToGig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+          ],
+          name: "cancelGig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+          ],
+          name: "confirmCompletion",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "title",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "description",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "category",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "maxDurationInHours",
+                  type: "uint256",
+                },
+                {
+                  internalType: "string",
+                  name: "gigBannerImageHash",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "basePayment",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct GigsContract.GigParams",
+              name: "params",
+              type: "tuple",
+            },
+          ],
+          name: "createGig",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+          ],
+          name: "emergencyCancel",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getTotalGigsPosted",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "owner",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
             },
           ],
           stateMutability: "view",
@@ -179,12 +691,145 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
             },
           ],
-          name: "getDisputeFee",
+          name: "postedGigs",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              internalType: "address",
+              name: "acceptedFreelancer",
+              type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "basePayment",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "finalPayment",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "maxDurationInHours",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "finalDurationInHours",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "deadline",
+              type: "uint256",
+            },
+            {
+              internalType: "enum GigsContract.GigState",
+              name: "state",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "acceptedAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "canceledAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "rejectedAt",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "finishedAt",
+              type: "uint256",
+            },
+            {
+              internalType: "bool",
+              name: "clientReceived",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "freelancerDelivered",
+              type: "bool",
+            },
+            {
+              internalType: "uint8",
+              name: "rating",
+              type: "uint8",
+            },
+            {
+              internalType: "uint256",
+              name: "acceptedApplicationId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "gigBannerImageHash",
+              type: "string",
+            },
+            {
+              internalType: "bool",
+              name: "clientRejected",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "clientCancelled",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "freelancerCancelled",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "postedGigsCounter",
           outputs: [
             {
               internalType: "uint256",
@@ -198,12 +843,879 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint8",
+              name: "_rating",
+              type: "uint8",
             },
           ],
-          name: "isArbitrationPending",
+          name: "rateGig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_applicationId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_rejectionComment",
+              type: "string",
+            },
+          ],
+          name: "rejectApplication",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+          ],
+          name: "rejectGig",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "resource",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "submissionComment",
+                  type: "string",
+                },
+                {
+                  internalType: "bool",
+                  name: "isLink",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct FileParams",
+              name: "_fileParams",
+              type: "tuple",
+            },
+          ],
+          name: "uploadFile",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_applicationId",
+              type: "uint256",
+            },
+          ],
+          name: "withdrawApplication",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          stateMutability: "payable",
+          type: "receive",
+        },
+      ],
+      inheritedFunctions: {},
+      receipt: {
+        to: null,
+        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        contractAddress: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+        transactionIndex: 0,
+        gasUsed: "2832343",
+        logsBloom:
+          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        blockHash: "0x2a24a031b8716ee918ab004f0c7856804721ed1cd0e6a1b55b621cd7962c554a",
+        transactionHash: "0xff0ce75c49cf0c7b1a4355876bac7ee481e4a43ee9bde445ae02c2bad6cf83b6",
+        logs: [],
+        blockNumber: 3,
+        cumulativeGasUsed: "2832343",
+        status: 1,
+        byzantium: true,
+      },
+    },
+    JobsContract: {
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      abi: [
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_owner",
+              type: "address",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ClientMarkedAsReceived",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "response",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "fileUploadedAt",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "CommentAdded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "resource",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "submissionComment",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "isLink",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "FileUploaded",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "FreelancerMarkedAsDelivered",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "deadline",
+              type: "uint256",
+            },
+          ],
+          name: "JobAccepted",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "enum JobsContract.JobState",
+              name: "state",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientCancelled",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerCancelled",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "JobCancelled",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "bannerImageHash",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "jobDuration",
+              type: "uint256",
+            },
+          ],
+          name: "JobCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "payment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "JobFinished",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "freelancer",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "basePayment",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "string",
+              name: "bannerImageHash",
+              type: "string",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "minimumNoticeTime",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "averageWorkDuration",
+              type: "uint256",
+            },
+          ],
+          name: "JobPostingCreated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "client",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint8",
+              name: "rating",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "JobRated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerDelivered",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientReceived",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientRejected",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "JobRejected",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "acceptJob",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_comment",
+              type: "string",
+            },
+          ],
+          name: "addCommentToJob",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "cancelJob",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "confirmCompletion",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "title",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "description",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "payment",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "durationInHours",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct JobsContract.JobParams",
+              name: "params",
+              type: "tuple",
+            },
+          ],
+          name: "createJob",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "title",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "description",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "category",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "bannerImageHash",
+                  type: "string",
+                },
+                {
+                  internalType: "uint256",
+                  name: "basePayment",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "minimumNoticeTime",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
+                  name: "averageWorkDuration",
+                  type: "uint256",
+                },
+              ],
+              internalType: "struct JobsContract.JobPostingParams",
+              name: "params",
+              type: "tuple",
+            },
+          ],
+          name: "createJobPosting",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+          ],
+          name: "emergencyCancel",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+          ],
+          name: "getJobCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "getTotalJobsPosted",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "jobId",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "comment",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "ipfsHash",
+              type: "string",
+            },
+          ],
+          name: "isFileUploaded",
           outputs: [
             {
               internalType: "bool",
@@ -228,13 +1740,77 @@ const deployedContracts = {
           type: "function",
         },
         {
-          inputs: [],
-          name: "realitio",
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "postedJobs",
           outputs: [
             {
-              internalType: "contract IRealityETH",
-              name: "",
+              internalType: "uint256",
+              name: "postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "address",
+              name: "freelancer",
               type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "basePayment",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "title",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "description",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "category",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "bannerImageHash",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "minimumNoticeTime",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "averageWorkDuration",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "createdAt",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "postedJobsCounter",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -243,111 +1819,149 @@ const deployedContracts = {
         {
           inputs: [
             {
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
             },
             {
               internalType: "uint256",
-              name: "lastSeenBond",
+              name: "_jobId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint8",
+              name: "_rating",
+              type: "uint8",
+            },
+          ],
+          name: "rateJob",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
               type: "uint256",
             },
           ],
-          name: "requestArbitration",
+          name: "rejectJob",
           outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_postingId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_jobId",
+              type: "uint256",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "resource",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "submissionComment",
+                  type: "string",
+                },
+                {
+                  internalType: "bool",
+                  name: "isLink",
+                  type: "bool",
+                },
+              ],
+              internalType: "struct FileParams",
+              name: "_fileParams",
+              type: "tuple",
+            },
+          ],
+          name: "uploadFile",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
           stateMutability: "payable",
-          type: "function",
+          type: "receive",
+        },
+      ],
+      inheritedFunctions: {},
+      receipt: {
+        to: null,
+        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        contractAddress: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+        transactionIndex: 0,
+        gasUsed: "2880026",
+        logsBloom:
+          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        blockHash: "0x8b6ae01d01c7d3dc1bfd0f5fde59a0d9e21fe04e37dc7b42ba7d298608c4f2f9",
+        transactionHash: "0x5cc9b0ba634924df942f3d79fa90556a814c77557e0116ebb5edf8c45d599835",
+        logs: [],
+        blockNumber: 1,
+        cumulativeGasUsed: "2880026",
+        status: 1,
+        byzantium: true,
+      },
+    },
+    NotificationsContract: {
+      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      abi: [
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "string[]",
+              name: "ids",
+              type: "string[]",
+            },
+            {
+              indexed: false,
+              internalType: "enum NotificationStatus",
+              name: "status",
+              type: "uint8",
+            },
+            {
+              indexed: false,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "ChangeNotificationsStatus",
+          type: "event",
         },
         {
           inputs: [
             {
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
+              internalType: "string[]",
+              name: "ids",
+              type: "string[]",
             },
             {
-              internalType: "bytes32",
-              name: "answer",
-              type: "bytes32",
-            },
-            {
-              internalType: "address",
-              name: "answerer",
-              type: "address",
+              internalType: "enum NotificationStatus",
+              name: "status",
+              type: "uint8",
             },
           ],
-          name: "submitArbitrationAnswer",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "bytes32",
-              name: "question_id",
-              type: "bytes32",
-            },
-            {
-              internalType: "bytes32",
-              name: "answer",
-              type: "bytes32",
-            },
-            {
-              internalType: "address",
-              name: "payee_if_wrong",
-              type: "address",
-            },
-            {
-              internalType: "bytes32",
-              name: "last_history_hash",
-              type: "bytes32",
-            },
-            {
-              internalType: "bytes32",
-              name: "last_answer_or_commitment_id",
-              type: "bytes32",
-            },
-            {
-              internalType: "address",
-              name: "last_answerer",
-              type: "address",
-            },
-          ],
-          name: "submitArbitrationAnswerWithWinner",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "newOwner",
-              type: "address",
-            },
-          ],
-          name: "transferOwnership",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "newFee",
-              type: "uint256",
-            },
-          ],
-          name: "updateArbitrationFee",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "withdrawFees",
+          name: "changeNotificationsStatus",
           outputs: [],
           stateMutability: "nonpayable",
           type: "function",
@@ -356,23 +1970,269 @@ const deployedContracts = {
       inheritedFunctions: {},
       receipt: {
         to: null,
-        from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xd32821572710444a37f26FBAC1b216d9C0857C3C",
-        transactionIndex: 67,
-        gasUsed: "783948",
+        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        contractAddress: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+        transactionIndex: 0,
+        gasUsed: "144627",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x93eddd9835c1c7ce53bf12756b599e341b03354c582341678f2f365aaa91e009",
-        transactionHash: "0xf138a3973c82b4baba590ff5ad0f787a8704529181a138ed136e449c413f4e80",
+        blockHash: "0x5bb3511d18da075d4e474e914ddb15d2dc2b1b6ed4b2ba6c07997eae54555189",
+        transactionHash: "0x38a6df6fef252bf26b4b57d0650ed1a5ace11dff980d28d88cadbf295763e1ea",
         logs: [],
-        blockNumber: 9277769,
-        cumulativeGasUsed: "9716973",
+        blockNumber: 6,
+        cumulativeGasUsed: "144627",
         status: 1,
         byzantium: true,
       },
     },
+    ProfileConfigContract: {
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      abi: [
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "username",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "profilePicture",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "bannerPicture",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "biography",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "email",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "xUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "instagramUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "linkedinUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "artstationUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "sketchfabUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "customUrl",
+                  type: "string",
+                },
+              ],
+              indexed: false,
+              internalType: "struct ProfileConfigContract.Profile",
+              name: "profile",
+              type: "tuple",
+            },
+          ],
+          name: "ProfileUpdated",
+          type: "event",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+          ],
+          name: "getProfile",
+          outputs: [
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "username",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "profilePicture",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "bannerPicture",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "biography",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "email",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "xUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "instagramUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "linkedinUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "artstationUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "sketchfabUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "customUrl",
+                  type: "string",
+                },
+              ],
+              internalType: "struct ProfileConfigContract.Profile",
+              name: "profileData",
+              type: "tuple",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              components: [
+                {
+                  internalType: "string",
+                  name: "username",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "profilePicture",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "bannerPicture",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "biography",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "email",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "xUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "instagramUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "linkedinUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "artstationUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "sketchfabUrl",
+                  type: "string",
+                },
+                {
+                  internalType: "string",
+                  name: "customUrl",
+                  type: "string",
+                },
+              ],
+              internalType: "struct ProfileConfigContract.Profile",
+              name: "profileData",
+              type: "tuple",
+            },
+          ],
+          name: "setProfile",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ],
+      inheritedFunctions: {},
+      receipt: {
+        to: null,
+        from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+        contractAddress: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+        transactionIndex: 0,
+        gasUsed: "1931107",
+        logsBloom:
+          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+        blockHash: "0x295ef32972d14d163608a86d5f813742300938ca4a91738bbd9bd6cf7d661736",
+        transactionHash: "0xd664cb182942e16fddf537c533fdff4791bbc106dbd3b0d71f70c7a29e4d9495",
+        logs: [],
+        blockNumber: 5,
+        cumulativeGasUsed: "1931107",
+        status: 1,
+        byzantium: true,
+      },
+    },
+  },
+  11155111: {
     ArbiterProxy: {
-      address: "0x9CEaefA4321698027bd19c4935fBEdF4943ACE5A",
+      address: "0xcD046683Fcb50D7EA4B6F72993f9DC26ff1d8e23",
       abi: [
         {
           inputs: [
@@ -2161,22 +4021,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x9CEaefA4321698027bd19c4935fBEdF4943ACE5A",
-        transactionIndex: 50,
-        gasUsed: "4416686",
+        contractAddress: "0xcD046683Fcb50D7EA4B6F72993f9DC26ff1d8e23",
+        transactionIndex: 164,
+        gasUsed: "4423476",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x99301970d2b01545f0aab0702c1fef662080f9a2c509ff017a702b74a1ffe6eb",
-        transactionHash: "0x93500de49a0d97979a50f9c4f237c84ee8966f8ce39d114fd98eea457672ab52",
+        blockHash: "0xbdaf238c0defc0190127553f2e0824ac5cd37ec49f058d18950e5f846a1d8a08",
+        transactionHash: "0xe61741bf2d39ce6d076793427562cd012328823633e3c855fe42672758a017f6",
         logs: [],
-        blockNumber: 9425894,
-        cumulativeGasUsed: "13559512",
+        blockNumber: 9428312,
+        cumulativeGasUsed: "31620795",
         status: 1,
         byzantium: true,
       },
     },
     GigsContract: {
-      address: "0x36ee93865DBa4497d17d50952f0C503Fa60Bfca9",
+      address: "0xCa97320ad29721372E7DCc21ABF5996FcEa2BdAF",
       abi: [
         {
           inputs: [
@@ -2786,6 +4646,19 @@ const deployedContracts = {
               name: "_gigId",
               type: "uint256",
             },
+          ],
+          name: "concedeDispute",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_gigId",
+              type: "uint256",
+            },
             {
               internalType: "string",
               name: "_clientResponse",
@@ -2954,25 +4827,6 @@ const deployedContracts = {
               internalType: "uint256",
               name: "",
               type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_gigId",
-              type: "uint256",
-            },
-          ],
-          name: "getDisputeStatus",
-          outputs: [
-            {
-              internalType: "enum IArbitrableProxy.DisputeStatus",
-              name: "",
-              type: "uint8",
             },
           ],
           stateMutability: "view",
@@ -3245,6 +5099,11 @@ const deployedContracts = {
               name: "_gigId",
               type: "uint256",
             },
+            {
+              internalType: "string",
+              name: "_reason",
+              type: "string",
+            },
           ],
           name: "startDispute",
           outputs: [],
@@ -3278,22 +5137,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x36ee93865DBa4497d17d50952f0C503Fa60Bfca9",
-        transactionIndex: 51,
-        gasUsed: "4029523",
+        contractAddress: "0xCa97320ad29721372E7DCc21ABF5996FcEa2BdAF",
+        transactionIndex: 90,
+        gasUsed: "4159702",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x1cecc439cfbf6f242892ba0d186cc328673bb44e19365a9ded4ca61ab10600b2",
-        transactionHash: "0x51e1efd385cc8cfaab55c7f221c0be2c8dd13233c4510785d5ef5af172ec665c",
+        blockHash: "0x32af9d93d1f59854125eb1fca2672cdfbb175e9d9f9fee23858b8bb062e7cce6",
+        transactionHash: "0x80bdd277ab5aadb89d16d9af7a4c868c00cd60815f7a97a6da8959f0216df301",
         logs: [],
-        blockNumber: 9407820,
-        cumulativeGasUsed: "15509858",
+        blockNumber: 9428319,
+        cumulativeGasUsed: "18331156",
         status: 1,
         byzantium: true,
       },
     },
     HiredTalentsContract: {
-      address: "0x676C828745a917E4cb57D385BFb58323e14140AA",
+      address: "0xb551fc78AcDA679C64Db523fa5e3380555d14820",
       abi: [
         {
           inputs: [
@@ -4389,1136 +6248,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x676C828745a917E4cb57D385BFb58323e14140AA",
-        transactionIndex: 86,
+        contractAddress: "0xb551fc78AcDA679C64Db523fa5e3380555d14820",
+        transactionIndex: 69,
         gasUsed: "4273708",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x1be87701102a2650ee91cfbe3a0753377c972a82c62a6c7f6f926c05ac50f0c3",
-        transactionHash: "0x96d321a7dd36cd2a745e940ea9ea2978cd4d80afbdd7da0fe863f98b32e607c4",
+        blockHash: "0x1265ce044ec4c2158c2dad777fa5717f0afee33b58a8429583188bf4e5cc3954",
+        transactionHash: "0x9f4bc5ca235bd172b4312f4377f3c95a156ecc478abeccf4707dbbb7092dde2c",
         logs: [],
-        blockNumber: 9425914,
-        cumulativeGasUsed: "13757012",
-        status: 1,
-        byzantium: true,
-      },
-    },
-    JobsContract: {
-      address: "0x97899a77a686e1c6E61cE14d929298cECb18CFc7",
-      abi: [
-        {
-          inputs: [
-            {
-              internalType: "address",
-              name: "_owner",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_reality",
-              type: "address",
-            },
-            {
-              internalType: "address",
-              name: "_arbitrator",
-              type: "address",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "constructor",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "ClientMarkedAsReceived",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "response",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "deliverableUploadedAt",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "CommentAdded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "resource",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "submissionComment",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "isLink",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerUpload",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "DeliverableUploaded",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "bytes32",
-              name: "questionId",
-              type: "bytes32",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "requester",
-              type: "address",
-            },
-          ],
-          name: "DisputeStarted",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "FreelancerMarkedAsDelivered",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "deadline",
-              type: "uint256",
-            },
-          ],
-          name: "JobAccepted",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "enum JobsContract.JobState",
-              name: "state",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientCancelled",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerCancelled",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobCancelled",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "payment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "bannerImageHash",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "jobDuration",
-              type: "uint256",
-            },
-          ],
-          name: "JobCreated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "payment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobFinished",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "basePayment",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "string",
-              name: "bannerImageHash",
-              type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "minimumNoticeTime",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "averageWorkDuration",
-              type: "uint256",
-            },
-          ],
-          name: "JobPostingCreated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "address",
-              name: "client",
-              type: "address",
-            },
-            {
-              indexed: false,
-              internalType: "uint8",
-              name: "rating",
-              type: "uint8",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobRated",
-          type: "event",
-        },
-        {
-          anonymous: false,
-          inputs: [
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              indexed: true,
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerDelivered",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientReceived",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "clientRejected",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "freelancerUploaded",
-              type: "bool",
-            },
-            {
-              indexed: false,
-              internalType: "uint256",
-              name: "timestamp",
-              type: "uint256",
-            },
-          ],
-          name: "JobRejected",
-          type: "event",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "acceptJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "arbitratorAddress",
-          outputs: [
-            {
-              internalType: "contract IArbiterContract",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "cancelJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-          ],
-          name: "confirmClientCompletion",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "confirmFreelancerCompletion",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "title",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "description",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "payment",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "durationInHours",
-                  type: "uint256",
-                },
-              ],
-              internalType: "struct JobsContract.JobParams",
-              name: "params",
-              type: "tuple",
-            },
-          ],
-          name: "createJob",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "title",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "description",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "category",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "bannerImageHash",
-                  type: "string",
-                },
-                {
-                  internalType: "uint256",
-                  name: "basePayment",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "minimumNoticeTime",
-                  type: "uint256",
-                },
-                {
-                  internalType: "uint256",
-                  name: "averageWorkDuration",
-                  type: "uint256",
-                },
-              ],
-              internalType: "struct JobsContract.JobPostingParams",
-              name: "params",
-              type: "tuple",
-            },
-          ],
-          name: "createJobPosting",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "emergencyCancel",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "getDisputeResult",
-          outputs: [
-            {
-              internalType: "bytes32",
-              name: "",
-              type: "bytes32",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-          ],
-          name: "getJobCount",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "getTotalJobsPosted",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "comment",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "ipfsHash",
-              type: "string",
-            },
-          ],
-          name: "isDeliverableUploaded",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "owner",
-          outputs: [
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          name: "postedJobs",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "address",
-              name: "freelancer",
-              type: "address",
-            },
-            {
-              internalType: "uint256",
-              name: "basePayment",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "title",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "description",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "category",
-              type: "string",
-            },
-            {
-              internalType: "string",
-              name: "bannerImageHash",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "minimumNoticeTime",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "averageWorkDuration",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "createdAt",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "postedJobsCounter",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint8",
-              name: "_rating",
-              type: "uint8",
-            },
-          ],
-          name: "rateJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "reality",
-          outputs: [
-            {
-              internalType: "contract IRealityETH",
-              name: "",
-              type: "address",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-          ],
-          name: "rejectJob",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-          ],
-          name: "resolveDispute",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              internalType: "string",
-              name: "_comment",
-              type: "string",
-            },
-            {
-              internalType: "uint256",
-              name: "_bountyAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_bondAmount",
-              type: "uint256",
-            },
-            {
-              internalType: "bool",
-              name: "_escalateToArbitrator",
-              type: "bool",
-            },
-          ],
-          name: "startDispute",
-          outputs: [],
-          stateMutability: "payable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "_postingId",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "_jobId",
-              type: "uint256",
-            },
-            {
-              components: [
-                {
-                  internalType: "string",
-                  name: "resource",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "submissionComment",
-                  type: "string",
-                },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
-                },
-              ],
-              internalType: "struct DeliverableParams",
-              name: "_deliverableParams",
-              type: "tuple",
-            },
-          ],
-          name: "uploadDeliverable",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          stateMutability: "payable",
-          type: "receive",
-        },
-      ],
-      inheritedFunctions: {},
-      receipt: {
-        to: null,
-        from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x97899a77a686e1c6E61cE14d929298cECb18CFc7",
-        transactionIndex: 61,
-        gasUsed: "3993746",
-        logsBloom:
-          "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xb300277e5df3124a6fab55e672b7a82f8d719c5101b1582bd8184ee08f88129b",
-        transactionHash: "0xe91083642e621145715e6ad614c8071943f1de23809effd7b2c3e5e83f4f2cbe",
-        logs: [],
-        blockNumber: 9324654,
-        cumulativeGasUsed: "9602459",
+        blockNumber: 9428321,
+        cumulativeGasUsed: "11849664",
         status: 1,
         byzantium: true,
       },
     },
     NotificationsContract: {
-      address: "0x667Cd53f79c9fAC027Ecc07BECCcA0208C997a01",
+      address: "0xaE21f730c1D9D05959F7F33F2dE073E50455d63A",
       abi: [
         {
           anonymous: false,
@@ -5568,22 +6313,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x667Cd53f79c9fAC027Ecc07BECCcA0208C997a01",
-        transactionIndex: 71,
+        contractAddress: "0xaE21f730c1D9D05959F7F33F2dE073E50455d63A",
+        transactionIndex: 73,
         gasUsed: "144627",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x05920a8454d5bf84e2860962e7bc83021a9bc1974f76caf27fb6bbc1bf59de64",
-        transactionHash: "0x0c80df92d4ddefc8a39e561fc77e7637d4901e0ff63b0c8cf279929e112d4a67",
+        blockHash: "0x2c652ac07f7a5d93c9cd6846241ecc8b4c84e3dab1a8c2d1f0959d65ed9b7368",
+        transactionHash: "0xe6a87ad666d741a70b656520de3deae03fdc81bdd321ad79d1810e39d3524be4",
         logs: [],
-        blockNumber: 9198536,
-        cumulativeGasUsed: "5956415",
+        blockNumber: 9428327,
+        cumulativeGasUsed: "7949495",
         status: 1,
         byzantium: true,
       },
     },
     ProfileConfigContract: {
-      address: "0xd50638EDdE512B16f7e42C71caA109402049714A",
+      address: "0x13F09aE4e698065C2bEe584FF8C9DdfFb4553C8E",
       abi: [
         {
           anonymous: false,
@@ -5812,16 +6557,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xd50638EDdE512B16f7e42C71caA109402049714A",
-        transactionIndex: 79,
+        contractAddress: "0x13F09aE4e698065C2bEe584FF8C9DdfFb4553C8E",
+        transactionIndex: 42,
         gasUsed: "1931107",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x632a49e2ee413f55a1ca852f846735028792359addbd346e83ee7e8576d11ec8",
-        transactionHash: "0x7621d1f90c00f45c0eb63f1a5ab89b29986ccf383089b8e5d71f3ebde6c40307",
+        blockHash: "0xf7b60b243d0de10e173081e73f41c23651e27151b62356bd8925a6fbb8513b4b",
+        transactionHash: "0x8221840598d048418fc1f74fd9c0af3755dd4040b70850a427fcf3f52a123592",
         logs: [],
-        blockNumber: 9198535,
-        cumulativeGasUsed: "45916667",
+        blockNumber: 9428324,
+        cumulativeGasUsed: "6588177",
         status: 1,
         byzantium: true,
       },
