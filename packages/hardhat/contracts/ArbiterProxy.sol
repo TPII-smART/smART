@@ -1184,4 +1184,77 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         // Move to next round
         dispute.currentRound++;
     }
+
+    // ============ Evidence Submission Functions ============
+
+    /**
+     * @dev Submit evidence for a dispute
+     * Can be called by either party (freelancer or client) involved in the dispute
+     * Evidence can be submitted at any time before the dispute is resolved
+     *
+     * @param _caller The address submitting the evidence
+     * @param _localDisputeId The internal dispute ID
+     * @param _evidence URI to the evidence JSON file (e.g., ipfs://ipfs/Qm...)
+     */
+        function submitEvidence(
+            address _caller,
+            uint256 _localDisputeId,
+            string calldata _evidence
+        ) external onlyOwners() {
+            DisputeInfo storage dispute = _disputes[_localDisputeId];
+
+            require(dispute.localDisputeId >= 0, "Dispute number invalid");
+            require(!dispute.isRuled, "Dispute already ruled");
+            require(
+                _caller == dispute.freelancer || _caller == dispute.client,
+                "Only dispute parties can submit evidence"
+            );
+
+            // Emit the standard ERC-1497 Evidence event
+            emit Evidence(
+                arbitrator,
+                dispute.evidenceGroupId,
+                _caller,
+                _evidence
+            );
+
+            // Emit type-specific event for easier frontend tracking
+            _emitEvidenceSubmittedEvent(
+                _localDisputeId,
+                dispute.disputeType,
+                dispute.externalId1,
+                dispute.externalId2,
+                _caller,
+                _evidence
+            );
+        }
+
+    /**
+     * @dev Internal function to emit type-specific evidence submission events
+     */
+        function _emitEvidenceSubmittedEvent(
+            uint256 _localDisputeId,
+            DisputeType _disputeType,
+            uint256 _externalId1,
+            uint256 _externalId2,
+            address _submitter,
+            string memory _evidence
+        ) internal {
+            if (_disputeType == DisputeType.Talent) {
+                emit TalentEvidenceSubmitted(
+                    _localDisputeId,
+                    _externalId1,  // talentId
+                    _externalId2,  // hiredTalentId
+                    _submitter,
+                    _evidence
+                );
+            } else if (_disputeType == DisputeType.Gig) {
+                emit GigEvidenceSubmitted(
+                    _localDisputeId,
+                    _externalId1,  // gigId
+                    _submitter,
+                    _evidence
+                );
+            }
+        }
 }

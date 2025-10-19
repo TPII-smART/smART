@@ -24,6 +24,7 @@ import { fetchDeliverablesForHiredTalent } from "~~/services/graphql/fetchers/hi
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { HiredTalent } from "~~/types/hiredTalent";
+import { getTalentMetaEvidence } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
 
 export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentId: string; hiredTalentId: string }) {
   const { address: userAddress } = useAccount();
@@ -98,29 +99,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const disputeLoading =
     isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
-  const uploadMetaDataToIPFS = (reason: string) => {
-    const metaEvidenceJSON = JSON.stringify({
-      category: "Freelance",
-      title: "Talent dispute",
-      description: `A dispute has arisen between a freelancer and a client. The arbitrator must decide who is in the right and allocate the funds held in escrow accordingly. Dispute reason: ${reason}`,
-      question: "Who should win this dispute?",
-      rulingOptions: {
-        type: "single-select",
-        titles: ["Freelancer wins", "Client wins"],
-        descriptions: [
-          "The freelancer fulfilled their contractual obligations and should be paid.",
-          "The client is in the right and the freelancer should not be paid.",
-        ],
-      },
-      fileURI: "/ipfs/bafkreib7j3vvwfz4kz6z7trcj25fi4na7ok4u2vmg63zul76yfgl4vnj7a",
-    });
-    // Upload meta-evidence to IPFS
-    const file = new File([metaEvidenceJSON], "metaEvidence.json", { type: "application/json" });
-    return uploadToIPFS(file).then(ipfsURI => {
-      return ipfsURI ? ipfsURI.replace("ipfs://", "ipfs://ipfs/") : "";
-    });
-  };
-
   const initiateConflictResolution = async (values: DisputeFormData) => {
     console.log("Initiating conflict resolution with values:", values);
     console.log("Current data state:", data);
@@ -128,7 +106,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     if (data?.disputeId) return;
     showSpinner();
     try {
-      const metaDataURI = await uploadMetaDataToIPFS(values.comment);
+      const metaDataURI = await getTalentMetaEvidence(values.comment);
       await writeContract({
         functionName: "startDispute",
         args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), metaDataURI],

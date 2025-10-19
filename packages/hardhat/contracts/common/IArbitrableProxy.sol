@@ -291,4 +291,18 @@ interface IArbitrableProxy {
         uint256 indexed gigId
     );
 
+    event TalentEvidenceSubmitted(
+        uint256 indexed localDisputeId,
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        address submitter,
+        string evidenceURI
+    );
+
+    event GigEvidenceSubmitted(
+        uint256 indexed localDisputeId,
+        uint256 indexed gigId,
+        address submitter,
+        string evidenceURI
+    );
 }
