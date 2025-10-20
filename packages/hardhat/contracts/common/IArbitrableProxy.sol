@@ -100,6 +100,8 @@ interface IArbitrableProxy {
 
     function fundAppeal(address _caller, uint256 _localDisputeId, uint8 _side) external payable;
 
+    function submitEvidence(address _caller, uint256 _localDisputeId, string calldata _evidenceURI) external;
+
     // ============ Events ============
     event TalentDisputeCreated(
         uint256 indexed localDisputeId,

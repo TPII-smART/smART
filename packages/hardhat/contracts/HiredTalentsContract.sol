@@ -895,4 +895,22 @@ contract HiredTalentsContract {
         return arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
     }
 
+    function submitEvidence(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        string calldata _evidenceURI
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to submit evidence for this hired talent");
+        require(hiredTalent.disputeId >= 0, "No dispute exists for this hired talent");
+        require(bytes(_evidenceURI).length > 0, "Evidence URI cannot be empty");
+
+        arbiterProxy.submitEvidence(
+            msg.sender,
+            hiredTalent.disputeId,
+            _evidenceURI
+        );
+    }
+
 }
