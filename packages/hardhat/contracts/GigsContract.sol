@@ -872,5 +872,18 @@ contract GigsContract {
         return arbiterProxy.getCurrentRuling(gig.disputeId);
     }
 
+    function submitEvidence(
+        uint256 _gigId,
+        string calldata _evidenceURI
+    ) external gigExists(_gigId) {
+        Gig storage gig = postedGigs[_gigId];
+
+        require(gig.state == GigState.Disputed, "No dispute ongoing for this gig");
+        require(gig.disputeId >= 0, "No dispute exists for this gig");
+        require(bytes(_evidenceURI).length > 0, "Evidence URI cannot be empty");
+
+
+        arbiterProxy.submitEvidence(msg.sender, gig.disputeId, _evidenceURI);
+    }
 }
 
