@@ -1,10 +1,11 @@
 import { uploadToIPFS } from "@services/IPFS/pinataIPFS";
 
-const createTalentMetaEvidenceJSON = (reason: string) => {
+const createMetaEvidenceJSON = () => {
   return JSON.stringify({
     category: "Freelance",
     title: "Freelance work dispute",
-    description: `A dispute has arisen between a freelancer and a client. The arbitrator must decide who is in the right and allocate the funds held in escrow accordingly. The reason given for the dispute arisal was the following: ${reason}`,
+    description:
+      "A dispute has arisen between a freelancer and a client. The arbitrator must decide who is in the right and allocate the funds held in escrow accordingly.",
     question: "Which of the parties involved in the Job should be considered as the winner of the argument?",
     rulingOptions: {
       type: "single-select",
@@ -14,14 +15,20 @@ const createTalentMetaEvidenceJSON = (reason: string) => {
         "The client is in the right, the freelancer should not be paid due to non-fulfillment of contractual obligations.",
       ],
     },
-    fileURI: "/ipfs/bafkreib7j3vvwfz4kz6z7trcj25fi4na7ok4u2vmg63zul76yfgl4vnj7a",
+    fileURI: "/ipfs/Qmf8fCJNXLW4evBv73DUgAV2WJeBotsrfcoG285E7bRVTg",
   });
 };
 
-export const getTalentMetaEvidence = async (reason: string) => {
+export const createMetaEvidence = async () => {
   // Upload meta-evidence to IPFS
-  const file = new File([createTalentMetaEvidenceJSON(reason)], "metaEvidence.json", { type: "application/json" });
+  const file = new File([createMetaEvidenceJSON()], "metaEvidence.json", { type: "application/json" });
   return uploadToIPFS(file).then(ipfsURI => {
     return ipfsURI ? ipfsURI.replace("ipfs://", "ipfs://ipfs/") : "";
   });
+};
+
+export const getMetaEvidenceURI = () => {
+  // Get the default meta-evidence IPFS hash, hardcoded for simplicity
+  // Uses the Kleros format for rendering from IPFS: ipfs://ipfs/<CID>
+  return "ipfs://ipfs/Qma1bxaVdteZYzBU7vMAbpeMqT1xMihjhESUw8Unf6REjb";
 };

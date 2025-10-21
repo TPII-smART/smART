@@ -43,7 +43,7 @@ const calculateKeccak256 = async (data: string): Promise<string> => {
 };
 
 /**
- * Create Evidence JSON structure and upload to IPFS
+ * Upload evidence file to IPFS and create Evidence JSON structure
  *
  * @param evidenceFile - The file to be submitted as evidence (PDF, image, document, etc.)
  * @param name - Short name/title for the evidence
@@ -63,11 +63,29 @@ export const createAndUploadEvidence = async (
       throw new Error("Failed to upload evidence file to IPFS");
     }
 
-    // Extract the IPFS hash from the upload response
+    // Create Evidence JSON using the existing IPFS URI
+    return await createEvidenceJSON(fileIpfsURI, name, description);
+  } catch (error) {
+    console.error("Error creating evidence:", error);
+    throw error;
+  }
+};
+
+/**
+ * Create Evidence JSON structure from existing IPFS URI and upload to IPFS
+ *
+ * @param fileIpfsURI - The IPFS URI of the evidence file
+ * @param name - Short name/title for the evidence
+ * @param description - Detailed description of what the evidence shows
+ * @returns IPFS URI of the evidence JSON file (format: ipfs://ipfs/...)
+ */
+export const createEvidenceJSON = async (fileIpfsURI: string, name: string, description: string): Promise<string> => {
+  try {
+    // Extract the IPFS hash from the URI
     const fileHash = extractIPFSHash(fileIpfsURI);
 
     // Get file extension
-    const fileExtension = getFileExtension(evidenceFile.name);
+    const fileExtension = getFileExtension(name);
 
     // Create Evidence JSON structure
     const evidenceJSON: EvidenceJSON = {
@@ -96,7 +114,6 @@ export const createAndUploadEvidence = async (
       throw new Error("Failed to upload evidence JSON to IPFS");
     }
 
-    console.log("Evidence uploaded successfully!");
     console.log("Evidence JSON:", evidenceJSON);
     console.log("Evidence JSON IPFS URI:", evidenceJSONIpfsURI);
     console.log("Final result: ", evidenceJSONIpfsURI.replace("ipfs://", "ipfs://ipfs/"));
@@ -104,30 +121,7 @@ export const createAndUploadEvidence = async (
     // Return the IPFS URI in the format expected by Kleros (ipfs://ipfs/...)
     return evidenceJSONIpfsURI.replace("ipfs://", "ipfs://ipfs/");
   } catch (error) {
-    console.error("Error creating evidence:", error);
+    console.error("Error creating evidence JSON:", error);
     throw error;
   }
 };
-
-/**
- * Example usage in a React component:
- * // Creates the URI compatible for rendering information in Kleros court
- * const handleSubmitEvidence = async (file: File) => {
- *   try {
- *     const evidenceURI = await createAndUploadEvidence(
- *       file,
- *       "Contract Email Evidence",
- *       "Email from client confirming the agreed deliverables and timeline"
- *     );
- *
- *     // Now submit to your smart contract
- *     await contract.submitEvidence(
- *       userAddress,
- *       localDisputeId,
- *       evidenceURI
- *     );
- *   } catch (error) {
- *     console.error('Failed to submit evidence:', error);
- *   }
- * };
- */

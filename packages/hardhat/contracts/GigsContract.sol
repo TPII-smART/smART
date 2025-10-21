@@ -15,6 +15,8 @@ contract GigsContract {
 
     bytes public constant arbitratorExtraData = hex"0000000000000000000000000000000000000000000000000000000000000003"; // Court + Jurors quantity for Kleros
 
+    uint256 public constant OVERFLOW = type(uint256).max;
+
     // Enums for gig and application states
     enum GigState {
         Open,
@@ -619,14 +621,24 @@ contract GigsContract {
         require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
+        uint256 _currentDeliverableGroupId = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _gigId, "evidence"))) % OVERFLOW;
+
+        // If there was already a deliverableGroupId generated, keep that one
+        if (gig.deliverableInfo.length > 0) {
+            DeliverableInfo memory lastDeliverable = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+            _currentDeliverableGroupId = lastDeliverable.deliverableGroupId;
+        }
+
         DeliverableInfo memory deliverableToUpload = DeliverableInfo({
             resource: _deliverableParams.resource,
+            parsedResource: _deliverableParams.parsedResource,
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
             responseTimestamp: 0,
             clientResponse: "",
             isLink: _deliverableParams.isLink,
-            state: DeliverableState.Pending
+            state: DeliverableState.Pending,
+            deliverableGroupId: _currentDeliverableGroupId
         });
 
         gig.freelancerUploaded = true;
@@ -640,6 +652,15 @@ contract GigsContract {
             deliverableToUpload.isLink,
             gig.freelancerUploaded,
             deliverableToUpload.uploadedAt
+        );
+
+        arbiterProxy.submitEvidence(
+            gig.acceptedFreelancer,
+            gig.disputeId,
+            gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+            deliverableToUpload.parsedResource,
+            // Avoids checks and operations related to an existing dispute
+            true
         );
     }
 
@@ -722,7 +743,8 @@ contract GigsContract {
                 gig.acceptedFreelancer,
                 gig.client,
                 arbitratorExtraData,
-                _reason
+                _reason,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
             );
         } else if (msg.sender == gig.client) {
             disputeId = arbiterProxy.createAndPayGigDisputeByClient{value: msg.value}(
@@ -730,7 +752,8 @@ contract GigsContract {
                 gig.acceptedFreelancer,
                 gig.client,
                 arbitratorExtraData,
-                _reason
+                _reason,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
             );
         } else {
             revert("Only gig parties can start a dispute");
@@ -760,13 +783,15 @@ contract GigsContract {
             arbiterProxy.payArbitrationFeeByFreelancer{value: msg.value}(
                 msg.sender,
                 gig.disputeId,
-                arbitratorExtraData
+                arbitratorExtraData,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
             );
         } else if (msg.sender == gig.client) {
             arbiterProxy.payArbitrationFeeByClient{value: msg.value}(
                 msg.sender,
                 gig.disputeId,
-                arbitratorExtraData
+                arbitratorExtraData,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
             );
         } else {
             revert("Only gig parties can pay arbitration fee");
@@ -874,7 +899,8 @@ contract GigsContract {
 
     function submitEvidence(
         uint256 _gigId,
-        string calldata _evidenceURI
+        string calldata _evidenceURI,
+        uint256 _evidenceGroupId
     ) external gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
@@ -882,8 +908,14 @@ contract GigsContract {
         require(gig.disputeId >= 0, "No dispute exists for this gig");
         require(bytes(_evidenceURI).length > 0, "Evidence URI cannot be empty");
 
-
-        arbiterProxy.submitEvidence(msg.sender, gig.disputeId, _evidenceURI);
+        arbiterProxy.submitEvidence(
+            msg.sender,
+            gig.disputeId,
+            _evidenceGroupId,
+            _evidenceURI,
+            // If this method is called, we want to emit the evidence event in an ongoing dispute
+            false
+        );
     }
 }
 

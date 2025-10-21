@@ -24,7 +24,8 @@ import { fetchDeliverablesForHiredTalent } from "~~/services/graphql/fetchers/hi
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { HiredTalent } from "~~/types/hiredTalent";
-import { getTalentMetaEvidence } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
+import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
+import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
 
 export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentId: string; hiredTalentId: string }) {
   const { address: userAddress } = useAccount();
@@ -64,13 +65,16 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       return result;
     },
   });
+
+  //deliverables?.forEach(async deliverable => {
+  //  console.log("Value of deliv: ", deliverable.resource.replace("ipfs://", "ipfs://ipfs/"));
+  //});
+
   const hiredTalent = data as HiredTalent;
   const isRejected = hiredTalent?.clientRejected;
   const isFreelancer = hiredTalent?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = hiredTalent?.client?.toLowerCase() === userAddress?.toLowerCase();
   const hiredTalentStatus = hiredTalent?.state as HiredTalentState;
-
-  console.log(data);
 
   const {
     disputeCurrentRuling,
@@ -106,12 +110,23 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     if (data?.disputeId) return;
     showSpinner();
     try {
-      const metaDataURI = await getTalentMetaEvidence(values.comment);
+      const metaDataURI = getMetaEvidenceURI();
+
       await writeContract({
         functionName: "startDispute",
         args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), metaDataURI],
         value: BigInt(arbitrationCost || 0),
       });
+
+      // Iterate over the submitted deliverables and upload each one using the Proxy
+      //deliverables?.forEach(async deliverable => {
+      //  console.log("Value of deliv: ", deliverable.resource.replace("ipfs://", "ipfs://ipfs/"));
+      //  await writeContract({
+      //    functionName: "submitEvidence",
+      //    args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), deliverable.resource],
+      //  });
+      // });
+
       reload();
     } catch (error) {
       console.error("Error initiating conflict resolution:", error);
@@ -332,7 +347,18 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         args: [
           BigInt(hiredTalent.talentId),
           BigInt(hiredTalent.hiredTalentId),
-          { resource, submissionComment: deliverableData.submissionComment, isLink },
+          {
+            resource,
+            parsedResource: isLink
+              ? ""
+              : await createEvidenceJSON(
+                  resource,
+                  deliverableData.file?.name || "",
+                  "Deliverable submission by Freelancer",
+                ),
+            submissionComment: deliverableData.submissionComment,
+            isLink,
+          },
         ],
       });
       if (reload) await reload();

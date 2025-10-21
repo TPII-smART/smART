@@ -94,7 +94,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         uint256 currentRound;          // Current appeal round (0 = initial dispute)
         mapping(uint256 => Round) rounds; // Round number => Round info
         uint256 metaEvidenceId;
-        uint256 evidenceGroupId;
+        // evidenceGroupId --> Provided by the arbitrable contract
     }
 
     // ============ Storage Mappings ============
@@ -198,8 +198,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         dispute.client = _client;
         dispute.currentRound = 0;
         // Generate random metaEvidenceId and evidenceGroupId
-        dispute.metaEvidenceId = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, localDisputeId, "meta"))) % OVERFLOW;
-        dispute.evidenceGroupId = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, localDisputeId, "evidence"))) % OVERFLOW;
+        dispute.metaEvidenceId = uint256(keccak256(abi.encodePacked(block.timestamp, block.prevrandao, localDisputeId, "meta"))) % OVERFLOW ;
 
         // Note: mapping fields inside the struct (e.g., rounds and Round.mappings) are auto-initialized as empty.
 
@@ -226,7 +225,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function payArbitrationFeeByFreelancer(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        uint256 _evidenceGroupId
     ) public onlyOwners() payable {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
@@ -266,7 +266,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Check if both parties have paid
         if (dispute.clientDisputeFee >= arbitrationCost) {
-            _raiseDispute(_localDisputeId, arbitrationCost);
+            _raiseDispute(_localDisputeId, arbitrationCost, _evidenceGroupId);
         }
     }
 
@@ -277,7 +277,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function payArbitrationFeeByClient(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        uint256 _evidenceGroupId
     ) public onlyOwners() payable {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
@@ -317,7 +318,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Check if both parties have paid
         if (dispute.freelancerDisputeFee >= arbitrationCost) {
-            _raiseDispute(_localDisputeId, arbitrationCost);
+            _raiseDispute(_localDisputeId, arbitrationCost, _evidenceGroupId);
         }
     }
 
@@ -658,7 +659,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _metaEvidenceURI
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _talentId,
@@ -670,7 +672,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             _metaEvidenceURI
         );
 
-        payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData, _evidenceGroupId);
 
         return localDisputeId;
     }
@@ -684,7 +686,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _metaEvidenceURI
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _talentId,
@@ -696,7 +699,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             _metaEvidenceURI
         );
 
-        payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData, _evidenceGroupId);
 
         return localDisputeId;
     }
@@ -709,7 +712,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _metaEvidenceURI
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _gigId,
@@ -721,7 +725,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             _metaEvidenceURI
         );
 
-        payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByFreelancer(_freelancer, localDisputeId, _arbitratorExtraData, _evidenceGroupId);
 
         return localDisputeId;
     }
@@ -734,7 +738,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _metaEvidenceURI
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId
     ) external payable onlyOwners() returns (uint256 localDisputeId) {
         localDisputeId = createDispute(
             _gigId,
@@ -746,7 +751,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             _metaEvidenceURI
         );
 
-        payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData);
+        payArbitrationFeeByClient(_client, localDisputeId, _arbitratorExtraData, _evidenceGroupId);
 
         return localDisputeId;
     }
@@ -909,7 +914,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
      */
     function _raiseDispute(
         uint256 _localDisputeId,
-        uint256 _arbitrationCost
+        uint256 _arbitrationCost,
+        uint256 _evidenceGroupId
     ) internal {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
@@ -947,7 +953,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // Emit ERC-1497 Dispute event
         
-        emit Dispute(arbitrator, klerosDisputeId, dispute.metaEvidenceId, dispute.evidenceGroupId);
+        emit Dispute(arbitrator, klerosDisputeId, dispute.metaEvidenceId, _evidenceGroupId);
         
 
 
@@ -1199,8 +1205,24 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         function submitEvidence(
             address _caller,
             uint256 _localDisputeId,
-            string calldata _evidence
+            uint256 _evidenceGroupId,
+            string calldata _evidence,
+            bool justEvidenceEventEmission
         ) external onlyOwners() {
+
+            // If only emitting Evidence event without a dispute ongoing
+            // Allows users to not having to accept multiple arbitration actions when starting a dispute
+            // If the dispute never starts, events are simply ignored.
+            if (justEvidenceEventEmission) {
+                emit Evidence(
+                    arbitrator,
+                    _evidenceGroupId,
+                    _caller,
+                    _evidence
+                );
+                return;
+            }
+
             DisputeInfo storage dispute = _disputes[_localDisputeId];
 
             require(dispute.localDisputeId >= 0, "Dispute number invalid");
@@ -1213,7 +1235,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             // Emit the standard ERC-1497 Evidence event
             emit Evidence(
                 arbitrator,
-                dispute.evidenceGroupId,
+                _evidenceGroupId,
                 _caller,
                 _evidence
             );

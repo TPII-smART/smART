@@ -44,7 +44,8 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason
+        string calldata _reason,
+        uint256 _evidenceGroupId
     ) external payable returns (uint256 localDisputeId);
 
     function startAndPayTalentDisputeByClient(
@@ -53,7 +54,8 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason
+        string calldata _reason,
+        uint256 _evidenceGroupId
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByFreelancer(
@@ -61,7 +63,8 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason
+        string calldata _reason,
+        uint256 _evidenceGroupId
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByClient(
@@ -69,19 +72,22 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason
+        string calldata _reason,
+        uint256 _evidenceGroupId
     ) external payable returns (uint256 localDisputeId);
 
     function payArbitrationFeeByFreelancer(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        uint256 _evidenceGroupId
     ) external payable;
 
     function payArbitrationFeeByClient(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        uint256 _evidenceGroupId
     ) external payable;
 
     function concedeDispute(uint256 _localDisputeId, uint256 _winningSide) external;
@@ -100,7 +106,7 @@ interface IArbitrableProxy {
 
     function fundAppeal(address _caller, uint256 _localDisputeId, uint8 _side) external payable;
 
-    function submitEvidence(address _caller, uint256 _localDisputeId, string calldata _evidenceURI) external;
+    function submitEvidence(address _caller, uint256 _localDisputeId, uint256 _evidenceGroupId, string calldata _evidenceURI, bool justEvidenceEventEmission) external;
 
     // ============ Events ============
     event TalentDisputeCreated(
