@@ -14,7 +14,7 @@ const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvi
 
   await deploy(CONTRACT_NAME, {
     from: deployer,
-    args: [deployer, "0x9CEaefA4321698027bd19c4935fBEdF4943ACE5A"],
+    args: [deployer, "0xcD046683Fcb50D7EA4B6F72993f9DC26ff1d8e23"],
     log: true,
     autoMine: true,
   });
