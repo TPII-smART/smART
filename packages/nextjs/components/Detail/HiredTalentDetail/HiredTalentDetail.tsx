@@ -129,9 +129,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     showSpinner();
     try {
       const metaDataURI = await uploadMetaDataToIPFS(values.comment);
+      console.log("MetaData URI:", metaDataURI);
       await writeContract({
         functionName: "startDispute",
-        args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), metaDataURI],
+        args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), metaDataURI, values.comment],
         value: BigInt(arbitrationCost || 0),
       });
       reload();
