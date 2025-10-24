@@ -5030,7 +5030,7 @@ __metadata:
     drizzle-kit: 0.22.8
     eslint: ^8.57.1
     eslint-config-ponder: ^0.8.33
-    hono: ^4.9.8
+    hono: ^4.10.3
     ponder: ^0.8.33
     typescript: ^5.9.2
     viem: ^2.21.3
@@ -12852,10 +12852,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"hono@npm:^4.9.8":
-  version: 4.9.8
-  resolution: "hono@npm:4.9.8"
-  checksum: dfdd533e69abeb9fa608e0faf4e3b44bb2478ac986f97b42f5bbbe47fab5514869d26c3c6aef56a33673bc7067b1a4ceb333294c83a0dec3ea299549c1c0ac8b
+"hono@npm:^4.10.3":
+  version: 4.10.3
+  resolution: "hono@npm:4.10.3"
+  checksum: 546b7a1ba1ecdb43044f92595a3a398fa87dc3e5665d42d898f0bb602a33440e977d28904e9998159552afb428ea861d27b7532cb339948d3d155b6cea874fb3
   languageName: node
   linkType: hard
 
