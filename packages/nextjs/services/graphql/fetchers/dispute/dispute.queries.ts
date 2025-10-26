@@ -13,7 +13,7 @@ export const getDisputesWithContributors = gql`
         raiseOnKleros
         freelancerPaidArbitrationFee
         clientPaidArbitrationFee
-        disputeDeadline
+        roundDeadline
         currentRound
         currentRuling
         freelancerFunds
@@ -40,7 +40,7 @@ export const getDisputes = gql`
         raiseOnKleros
         freelancerPaidArbitrationFee
         clientPaidArbitrationFee
-        disputeDeadline
+        roundDeadline
         currentRound
         currentRuling
         freelancerFunds
@@ -66,7 +66,7 @@ export const getDisputeByIdWithContributors = gql`
       disputeReason
       freelancerPaidArbitrationFee
       clientPaidArbitrationFee
-      disputeDeadline
+      roundDeadline
       currentRound
       currentRuling
       freelancerFunds
@@ -96,7 +96,7 @@ export const getDisputeById = gql`
       disputeReason
       freelancerPaidArbitrationFee
       clientPaidArbitrationFee
-      disputeDeadline
+      roundDeadline
       currentRound
       currentRuling
       freelancerFunds
@@ -116,11 +116,12 @@ export const getAppelableDisputes = gql`
       items {
         disputeId
         raiseOnKleros
+        type
         title
         description
         disputeReason
         klerosDisputeId
-        disputeDeadline
+        roundDeadline
         currentRound
         currentRuling
         freelancerFunds
@@ -145,7 +146,7 @@ export const getAppelabeDisputeByParticipantId = gql`
         description
         disputeReason
         raiseOnKleros
-        disputeDeadline
+        roundDeadline
         currentRound
         currentRuling
         freelancerFunds
@@ -156,6 +157,74 @@ export const getAppelabeDisputeByParticipantId = gql`
         status
         disputeFinished
       }
+    }
+  }
+`;
+
+// Paginated appelable disputes
+export const getAppelableDisputesPaginated = gql`
+  query GetAppelableDisputesPaginated(
+    $limit: Int!
+    $startCursor: String
+    $endCursor: String
+    $orderBy: String
+    $orderDirection: String
+  ) {
+    disputes(
+      where: { status: 1 }
+      limit: $limit
+      before: $startCursor
+      after: $endCursor
+      orderBy: $orderBy
+      orderDirection: $orderDirection
+    ) {
+      items {
+        disputeId
+        raiseOnKleros
+        type
+        title
+        description
+        disputeReason
+        klerosDisputeId
+        roundDeadline
+        currentRound
+        currentRuling
+        freelancerFunds
+        clientFunds
+        freelancerFee
+        clientFee
+        appealCost
+        status
+        disputeFinished
+      }
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+      }
+      totalCount
+    }
+  }
+`;
+
+// Paginated: obtener disputeIds donde contribuyó un usuario (paginado)
+export const getDisputesContributedByUserPaginated = gql`
+  query GetDisputesContributedByUserPaginated(
+    $contributor: String!
+    $limit: Int!
+    $startCursor: String
+    $endCursor: String
+  ) {
+    disputeContributors(where: { contributor: $contributor }, limit: $limit, before: $startCursor, after: $endCursor) {
+      items {
+        disputeId
+      }
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+      }
+      totalCount
     }
   }
 `;
@@ -182,7 +251,7 @@ export const getDisputesByIds = gql`
         raiseOnKleros
         freelancerPaidArbitrationFee
         clientPaidArbitrationFee
-        disputeDeadline
+        roundDeadline
         currentRound
         currentRuling
         freelancerFunds
