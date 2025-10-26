@@ -28,8 +28,6 @@ export const fetchAppelableDisputesPaginated = async (
     status: typeof status === "number" ? status : undefined,
   });
 
-  console.log("Disputes response:", response);
-
   return {
     data: response.disputes.items,
     meta: {
@@ -95,7 +93,7 @@ export const fetchDisputesIdsContributedByUserPaginated = async (
 ): Promise<Paginated<bigint>> => {
   const response = await request<{
     disputeContributors: PaginationQueryResponse<{ disputeId: bigint }>;
-  }>(endpoint, DisputesQueries.getDisputesContributedByUser, {
+  }>(endpoint, DisputesQueries.getDisputesContributedByUserPaginated, {
     contributor,
     limit: meta.limit,
     startCursor: meta.startCursor,
