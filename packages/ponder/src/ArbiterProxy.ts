@@ -19,10 +19,11 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
 
   await context.db.insert(dispute).values({
     disputeId: BigInt(localDisputeId),
+    type: "hiredTalent",
     klerosDisputeId: BigInt(0),
     freelancerPaidArbitrationFee: false,
     clientPaidArbitrationFee: false,
-    disputeDeadline: BigInt(feeDepositDeadline ?? 0),
+    roundDeadline: BigInt(feeDepositDeadline ?? 0),
     currentRound: 0,
     currentRuling: 0,
     freelancerFunds: BigInt(0),
@@ -121,6 +122,7 @@ ponder.on("ArbiterProxy:TalentDisputeRaised", async ({ event, context }) => {
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     raiseOnKleros: true,
+    currentRound: 1,
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -145,9 +147,10 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
   await context.db.insert(dispute).values({
     disputeId: BigInt(localDisputeId),
     klerosDisputeId: BigInt(0),
+    type: "gig",
     freelancerPaidArbitrationFee: false,
     clientPaidArbitrationFee: false,
-    disputeDeadline: BigInt(feeDepositDeadline ?? 0),
+    roundDeadline: BigInt(feeDepositDeadline ?? 0),
     currentRound: 0,
     currentRuling: 0,
     freelancerFunds: BigInt(0),
@@ -231,6 +234,7 @@ ponder.on("ArbiterProxy:GigDisputeRaised", async ({ event, context }) => {
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
+    currentRound: 1,
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -297,12 +301,22 @@ ponder.on("ArbiterProxy:GigAppealContribution", async ({ event, context }) => {
   else update.clientFunds = BigInt(totalPaid ?? 0);
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set(update);
-
-  await context.db.insert(disputeContributor).values({
-    disputeId: BigInt(localDisputeId),
-    contributor: contributor as string,
-    lastTransactionHash: event.transaction.hash,
-  });
+  {
+    const contributorAddr = (contributor as string).toLowerCase();
+    const pk = { disputeId: BigInt(localDisputeId), contributor: contributorAddr };
+    const existing = await context.db.find(disputeContributor, pk);
+    if (existing) {
+      await context.db.update(disputeContributor, pk).set({
+        lastTransactionHash: event.transaction.hash,
+      });
+    } else {
+      await context.db.insert(disputeContributor).values({
+        disputeId: BigInt(localDisputeId),
+        contributor: contributorAddr,
+        lastTransactionHash: event.transaction.hash,
+      });
+    }
+  }
 
   await context.db.insert(notification).values({
     id: `${event.block.number}-${event.log.logIndex}-gig-appeal-contrib`,
@@ -316,7 +330,6 @@ ponder.on("ArbiterProxy:GigAppealContribution", async ({ event, context }) => {
   });
 });
 
-// Talent appeal contribution
 ponder.on("ArbiterProxy:TalentAppealContribution", async ({ event, context }) => {
   const { localDisputeId, round, talentId, hiredTalentId, side, contributor, amount, totalPaid, requiredAmount } = event.args;
 
@@ -331,11 +344,23 @@ ponder.on("ArbiterProxy:TalentAppealContribution", async ({ event, context }) =>
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set(update);
 
-  await context.db.insert(disputeContributor).values({
-    disputeId: BigInt(localDisputeId),
-    contributor: contributor as string,
-    lastTransactionHash: event.transaction.hash,
-  });
+
+  {
+    const contributorAddr = (contributor as string).toLowerCase();
+    const pk = { disputeId: BigInt(localDisputeId), contributor: contributorAddr };
+    const existing = await context.db.find(disputeContributor, pk);
+    if (existing) {
+      await context.db.update(disputeContributor, pk).set({
+        lastTransactionHash: event.transaction.hash,
+      });
+    } else {
+      await context.db.insert(disputeContributor).values({
+        disputeId: BigInt(localDisputeId),
+        contributor: contributorAddr,
+        lastTransactionHash: event.transaction.hash,
+      });
+    }
+  }
 
   await context.db.insert(notification).values({
     id: `${event.block.number}-${event.log.logIndex}-talent-appeal-contrib`,
@@ -539,3 +564,33 @@ ponder.on("ArbiterProxy:GigDisputeConceded", async ({ event, context }) => {
     lastTransactionHash: event.transaction.hash,
   });
 });
+
+ponder.on("ArbiterProxy:TalentRoundStateUpdated", async ({ event, context }) => {
+  const { localDisputeId, freelancerPayedRoundFee, clientPayedRoundFee, requiredAmountFreelancer, requiredAmountClient, freelancerFullyFunded, clientFullyFunded, roundDeadline } = event.args;
+  await context.db.update(dispute, { disputeId: localDisputeId }).set({
+    freelancerPaidArbitrationFee: freelancerFullyFunded,
+		clientPaidArbitrationFee: clientFullyFunded,
+		freelancerFunds: freelancerPayedRoundFee,
+		clientFunds: clientPayedRoundFee,
+		freelancerFee: requiredAmountFreelancer,
+		clientFee: requiredAmountClient,
+		roundDeadline: roundDeadline,
+    lastTransactionHash: event.transaction.hash,
+  });
+}
+);
+
+ponder.on("ArbiterProxy:GigRoundStateUpdated", async ({ event, context }) => {
+  const { localDisputeId, freelancerPayedRoundFee, clientPayedRoundFee, requiredAmountFreelancer, requiredAmountClient, freelancerFullyFunded, clientFullyFunded, roundDeadline } = event.args;
+  await context.db.update(dispute, { disputeId: localDisputeId }).set({
+    freelancerPaidArbitrationFee: freelancerFullyFunded,
+    clientPaidArbitrationFee: clientFullyFunded,
+    freelancerFunds: freelancerPayedRoundFee,
+    clientFunds: clientPayedRoundFee,
+    freelancerFee: requiredAmountFreelancer,
+    clientFee: requiredAmountClient,
+    roundDeadline: roundDeadline,
+    lastTransactionHash: event.transaction.hash,
+  });
+}
+);

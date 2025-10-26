@@ -213,6 +213,7 @@ export const gigDeliverable = onchainTable(
 export const dispute = onchainTable("disputes", (t) => ({
 		disputeId: t.bigint().notNull(),
 		klerosDisputeId: t.bigint(),
+		type: t.varchar({ length: 16 }).notNull(), // "hiredTalent" | "gig"
 		raiseOnKleros: t.boolean().notNull().default(false),
 		freelancerPaidArbitrationFee: t.boolean(),
 		clientPaidArbitrationFee: t.boolean(),
@@ -220,7 +221,7 @@ export const dispute = onchainTable("disputes", (t) => ({
 		clientFunds: t.bigint(),
 		freelancerFee: t.bigint(),
 		clientFee: t.bigint(),
-		disputeDeadline: t.bigint(),
+		roundDeadline: t.bigint().notNull(),
 		currentRound: t.integer(),
 		currentRuling: t.integer(),
 		appealCost: t.bigint(),	

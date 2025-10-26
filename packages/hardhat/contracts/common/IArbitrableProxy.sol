@@ -275,4 +275,25 @@ interface IArbitrableProxy {
     );
 
     event GigAppealExternallyFunded(uint256 indexed localDisputeId, uint256 indexed round, uint256 indexed gigId);
+
+    event TalentRoundStateUpdated(
+        uint256 indexed localDisputeId,
+        uint256 freelancerPayedRoundFee,
+        uint256 clientPayedRoundFee,
+        uint256 requiredAmountFreelancer,
+        uint256 requiredAmountClient,
+        bool freelancerFullyFunded,
+        bool clientFullyFunded,
+        uint256 roundDeadline
+    );
+    event GigRoundStateUpdated(
+        uint256 indexed localDisputeId,
+        uint256 freelancerPayedRoundFee,
+        uint256 clientPayedRoundFee,
+        uint256 requiredAmountFreelancer,
+        uint256 requiredAmountClient,
+        bool freelancerFullyFunded,
+        bool clientFullyFunded,
+        uint256 roundDeadline
+    );
 }

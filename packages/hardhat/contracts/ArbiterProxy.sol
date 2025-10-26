@@ -1046,6 +1046,12 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         require(currentRuling != 0, "Ruling not yet given");
 
         uint256 multiplier;
+
+        // Loser has only half the appeal period
+        uint256 loserDeadline = appealStart +
+            ((appealEnd - appealStart) * LOSER_APPEAL_PERIOD_MULTIPLIER) /
+            MULTIPLIER_DIVISOR;
+
         if (_side == currentRuling) {
             // Winner side needs to pay 100%
             multiplier = WINNER_STAKE_MULTIPLIER;
@@ -1053,10 +1059,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         } else {
             // Loser side needs to pay 200%
             multiplier = LOSER_STAKE_MULTIPLIER;
-            // Loser has only half the appeal period
-            uint256 loserDeadline = appealStart +
-                ((appealEnd - appealStart) * LOSER_APPEAL_PERIOD_MULTIPLIER) /
-                MULTIPLIER_DIVISOR;
             require(block.timestamp < loserDeadline, "Loser appeal period is over");
         }
 
@@ -1082,6 +1084,16 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 );
             else if (dispute.disputeType == DisputeType.Gig)
                 emit GigAppealExternallyFunded(_localDisputeId, dispute.currentRound, dispute.externalId1);
+        }
+
+        uint256 requiredAmountFreelancer;
+        uint256 requiredAmountClient;
+        if (currentRuling == FREELANCER_WINS) {
+            requiredAmountFreelancer = (round.appealCost * WINNER_STAKE_MULTIPLIER) / MULTIPLIER_DIVISOR;
+            requiredAmountClient = (round.appealCost * LOSER_STAKE_MULTIPLIER) / MULTIPLIER_DIVISOR;
+        } else {
+            requiredAmountFreelancer = (round.appealCost * LOSER_STAKE_MULTIPLIER) / MULTIPLIER_DIVISOR;
+            requiredAmountClient = (round.appealCost * WINNER_STAKE_MULTIPLIER) / MULTIPLIER_DIVISOR;
         }
 
         uint256 requiredAmount = (round.appealCost * multiplier) / MULTIPLIER_DIVISOR;
@@ -1122,7 +1134,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             totalPaid = round.clientPayedRoundFee;
         }
 
-        if (dispute.disputeType == DisputeType.Talent)
+        if (dispute.disputeType == DisputeType.Talent) {
             emit TalentAppealContribution(
                 _localDisputeId,
                 dispute.currentRound,
@@ -1134,7 +1146,17 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 totalPaid,
                 requiredAmount
             );
-        else if (dispute.disputeType == DisputeType.Gig)
+            emit TalentRoundStateUpdated(
+                _localDisputeId,
+                round.freelancerPayedRoundFee,
+                round.clientPayedRoundFee,
+                requiredAmountFreelancer,
+                requiredAmountClient,
+                round.freelancerFullyFunded,
+                round.clientFullyFunded,
+                loserDeadline
+            );
+        } else if (dispute.disputeType == DisputeType.Gig) {
             emit GigAppealContribution(
                 _localDisputeId,
                 dispute.currentRound,
@@ -1145,6 +1167,17 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 totalPaid,
                 requiredAmount
             );
+            emit GigRoundStateUpdated(
+                _localDisputeId,
+                round.freelancerPayedRoundFee,
+                round.clientPayedRoundFee,
+                requiredAmountFreelancer,
+                requiredAmountClient,
+                round.freelancerFullyFunded,
+                round.clientFullyFunded,
+                loserDeadline
+            );
+        }
 
         // Check if side has fully funded
         if (_side == FREELANCER_WINS && round.freelancerPayedRoundFee >= requiredAmount) {
