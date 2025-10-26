@@ -102,3 +102,24 @@ export const getContributorsByDisputeIds = gql`
     }
   }
 `;
+
+export const getTalentIdByDisputeId = gql`
+  query GetTalentIdByDisputeId($disputeId: BigInt!) {
+    hiredTalents(where: { disputeId: $disputeId }) {
+      items {
+        talentId
+        hiredTalentId
+      }
+    }
+  }
+`;
+
+export const getGigIdByDisputeId = gql`
+  query GetGigIdByDisputeId($disputeId: BigInt!) {
+    gigs(where: { disputeId: $disputeId }) {
+      items {
+        gigId
+      }
+    }
+  }
+`;

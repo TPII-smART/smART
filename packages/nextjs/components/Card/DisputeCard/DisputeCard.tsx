@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/index";
 import { Card } from "@/components/Card";
@@ -12,6 +12,7 @@ import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import { formatDate, getDetailedTimeUntilDeadline, getTimeUntilDeadline } from "~~/lib/utils";
+import { fetchGigIdByDisputeId, fetchTalentIdByDisputeId } from "~~/services/graphql/fetchers/dispute/dispute.service";
 import { Dispute } from "~~/types/dispute/dispute.type";
 
 interface DisputeCardProps {
@@ -31,7 +32,21 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
   const timeUntilDeadline = getTimeUntilDeadline(dispute.roundDeadline);
   const timeDetails = getDetailedTimeUntilDeadline(dispute.roundDeadline);
   const hasFunding = totalClientAmount > 0 || totalFreelancerAmount > 0;
-  const isDeadlinePassed = timeDetails.isExpired;
+
+  const router = useRouter();
+
+  const handleCardClick = async () => {
+    if (dispute.type === "hiredTalent") {
+      const [talentId, hiredTalentId] = await fetchTalentIdByDisputeId(dispute.disputeId);
+      console.log("Dispute id: ", dispute.disputeId);
+      console.log("Talent ids: ", talentId, hiredTalentId);
+
+      router.push(`/talents/${talentId}/${hiredTalentId}`);
+    } else if (dispute.type === "gig") {
+      const gigId = await fetchGigIdByDisputeId(dispute.disputeId);
+      router.push(`/gig/${gigId}`);
+    }
+  };
 
   const getStatusInfo = () => {
     if (dispute.disputeFinished) return { text: "Resolved", color: "bg-muted text-muted-foreground" };
@@ -164,12 +179,10 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
       {/* Footer */}
       <div className="border-t items-center border-border bg-card/50 px-6 py-3">
         <div className="flex justify-center">
-          <Link href={`/talents/${dispute.disputeId}`}>
-            <Button variant="outline" className="h-8 px-3 text-sm gap-2 bg-transparent">
-              {hasFunding ? "View Details" : "Fund Appeal"}
-              <ArrowRightIcon className="h-4 w-4" />
-            </Button>
-          </Link>
+          <Button variant="outline" className="h-8 px-3 text-sm gap-2 bg-transparent" onClick={handleCardClick}>
+            {hasFunding ? "View Details" : "Fund Appeal"}
+            <ArrowRightIcon className="h-4 w-4" />
+          </Button>
         </div>
       </div>
     </Card>

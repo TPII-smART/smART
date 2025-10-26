@@ -180,3 +180,21 @@ export const fetchDisputesContributedByUserPaginated = async (
     },
   };
 };
+
+export const fetchTalentIdByDisputeId = async (disputeId: number): Promise<[number | null, number | null]> => {
+  const response = await request<{
+    hiredTalents: { items: { talentId: number; hiredTalentId: number }[] } | null;
+  }>(endpoint, DisputesQueries.getTalentIdByDisputeId, { disputeId });
+
+  return response.hiredTalents
+    ? [response.hiredTalents.items[0].talentId, response.hiredTalents.items[0].hiredTalentId]
+    : [null, null];
+};
+
+export const fetchGigIdByDisputeId = async (disputeId: number): Promise<number | null> => {
+  const response = await request<{
+    gigs: { items: { gigId: number }[] } | null;
+  }>(endpoint, DisputesQueries.getGigIdByDisputeId, { disputeId });
+
+  return response.gigs ? response.gigs.items[0].gigId : null;
+};
