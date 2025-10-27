@@ -1,5 +1,6 @@
 import { endpoint } from "../../config";
 import * as DisputesQueries from "./dispute.queries";
+import { getDisputesById } from "./dispute.queries";
 import request from "graphql-request";
 import { Dispute } from "~~/types/dispute";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
@@ -125,6 +126,13 @@ export const fetchDisputesByIds = async (disputeIds: bigint[]): Promise<Dispute[
   }>(endpoint, DisputesQueries.getDisputesByIds, { ids: disputeIds });
 
   return response.disputes.items;
+};
+
+export const fetchDisputeById = async (disputeId: number) => {
+  const response = await request<{
+    dispute: Dispute;
+  }>(endpoint, DisputesQueries.getDisputesById, { id: disputeId });
+  return response.dispute;
 };
 
 export const fetchDisputesContributedByUserPaginated = async (

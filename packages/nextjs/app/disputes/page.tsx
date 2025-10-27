@@ -5,15 +5,15 @@ import DisputeListing from "~~/components/DisputeListing";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab } from "~~/components/Tabs/types";
 
-type DisputeType = "Appelable" | "participated";
+type DisputeType = "Appealable" | "contributed";
 
 const tabs: Tab[] = [
-  { id: "Appelable", label: "Appelable Disputes" },
-  { id: "participated", label: "Participated Disputes" },
+  { id: "Appealable", label: "Appealable Disputes" },
+  { id: "contributed", label: "Contributed Disputes" },
 ];
 
 export default function DisputesPage() {
-  const initialTab = "Appelable" as DisputeType;
+  const initialTab = "Appealable" as DisputeType;
   const [selectedTab, setSelectedTab] = useState<DisputeType>(initialTab);
 
   const handleTabChange = (tabId: string | number) => {

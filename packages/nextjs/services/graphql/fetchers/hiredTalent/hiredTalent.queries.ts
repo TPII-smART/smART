@@ -497,16 +497,6 @@ export const getHiredTalent = gql`
       clientReceived
       freelancerDelivered
       disputeId
-      freelancerPaidArbitrationFee
-      clientPaidArbitrationFee
-      klerosDisputeId
-      disputeDeadline
-      currentRound
-      currentRuling
-      freelancerFunds
-      clientFunds
-      appealCost
-      disputeFinished
       freelancerUploaded
       rating
       lastTransactionHash

@@ -98,6 +98,32 @@ export const getDisputesByIds = gql`
   }
 `;
 
+export const getDisputesById = gql`
+  query GetDisputesById($id: BigInt!) {
+    dispute(disputeId: $id) {
+      disputeId
+      klerosDisputeId
+      type
+      title
+      description
+      disputeReason
+      raiseOnKleros
+      freelancerPaidArbitrationFee
+      clientPaidArbitrationFee
+      roundDeadline
+      currentRound
+      currentRuling
+      freelancerFunds
+      clientFunds
+      freelancerFee
+      clientFee
+      appealCost
+      status
+      isAppealed
+    }
+  }
+`;
+
 export const getContributorsByDisputeIds = gql`
   query GetContributorsByDisputeIds($disputeIds: [BigInt!]!) {
     disputeContributors(where: { disputeId_in: $disputeIds }) {

@@ -13,7 +13,7 @@ import {
 import { Dispute } from "~~/types/dispute/dispute.type";
 
 interface DisputePageProps {
-  type: "Appelable" | "participated";
+  type: "Appealable" | "contributed";
 }
 
 export default function DisputeListing({ type }: DisputePageProps) {
@@ -27,7 +27,7 @@ export default function DisputeListing({ type }: DisputePageProps) {
   //const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const fetchFunction = useMemo(
-    () => (type === "Appelable" ? fetchAppelableDisputesWithContributors : fetchDisputesContributedByUserPaginated),
+    () => (type === "Appealable" ? fetchAppelableDisputesWithContributors : fetchDisputesContributedByUserPaginated),
     [type, userAddress],
   );
 
@@ -38,8 +38,8 @@ export default function DisputeListing({ type }: DisputePageProps) {
   });
 
   useEffect(() => {
-    if (type === "participated" && !userAddress) return;
-    fetchPaginatedData(true, "disputes", type === "participated" ? userAddress! : undefined);
+    if (type === "contributed" && !userAddress) return;
+    fetchPaginatedData(true, "disputes", type === "contributed" ? userAddress! : undefined);
   }, [type, userAddress, fetchPaginatedData]);
 
   return (

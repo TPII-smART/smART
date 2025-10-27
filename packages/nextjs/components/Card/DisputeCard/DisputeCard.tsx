@@ -130,11 +130,11 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-4 px-6 py-4 min-h-[480px]">
+      <div className="flex flex-1 flex-col justify-evenly gap-3 space-y-4 px-6 py-4 h-full">
         {!isAppealable ? (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex items-center h-full">
             <div
-              className={`flex flex-col items-center text-center gap-3 rounded-lg ${nonAppealableInfo.bgColor} border ${nonAppealableInfo.borderColor} px-4 py-6 max-w-md w-full`}
+              className={`flex flex-col items-center justify-center text-center gap-3 rounded-lg ${nonAppealableInfo.bgColor} border ${nonAppealableInfo.borderColor} px-4 py-6 max-w-md h-full w-full`}
             >
               <IconComponent className={`h-8 w-8 ${nonAppealableInfo.iconColor} flex-shrink-0`} />
               <div className="min-w-0">
@@ -146,7 +146,7 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
         ) : (
           <>
             {/* Dispute Reason */}
-            <div className="flex items-start gap-2 rounded-lg bg-orange-500/10 border border-orange-500/20 px-3 py-2">
+            <div className="flex justify-between gap-2 rounded-lg bg-orange-500/10 border border-orange-500/20 px-3 py-2">
               <ExclamationTriangleIcon className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <span className="text-xs font-medium text-orange-600 dark:text-orange-400 block mb-1">
@@ -156,62 +156,64 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
               </div>
             </div>
 
-            {/* Participants */}
-            <div className="flex items-center gap-2">
-              <UsersIcon className="h-4 w-4 text-muted-foreground" />
+            <div className="space-y-4">
+              {/* Participants */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-foreground">
-                  {totalParticipants} {totalParticipants === 1 ? "contributor" : "contributors"}
-                </span>
-              </div>
-            </div>
-
-            {/* Round Info */}
-            <div className="flex items-center justify-between rounded-lg bg-secondary px-3 py-2">
-              <span className="text-sm font-medium text-foreground">Round</span>
-              <span className="text-sm font-semibold">{dispute.currentRound}</span>
-            </div>
-
-            {/* Amount and Contributions */}
-            <div className="space-y-3">
-              {/* Total Staked */}
-              <div className="flex items-center justify-between border-t pt-2 border-border">
-                <span className="text-sm font-medium text-foreground">Total Client Staked</span>
-                <span className="text-lg font-bold text-foreground">{formatEth(totalClientAmount)} ETH</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Total Freelancer Staked</span>
-                <span className="text-lg font-bold text-foreground">{formatEth(totalFreelancerAmount)} ETH</span>
-              </div>
-
-              {/* Freelancer Stake */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Freelancer Stake</span>
-                  <span className="text-sm font-bold text-foreground">
-                    {formatEth(freelancerAmount)} ETH{" "}
-                    <span className="text-xs text-muted-foreground">({formatPct(freelancerPercentage)})</span>
+                <UsersIcon className="h-4 w-4 text-muted-foreground" />
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-foreground">
+                    {totalParticipants} {totalParticipants === 1 ? "contributor" : "contributors"}
                   </span>
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full transition-all bg-blue-500" style={{ width: `${freelancerPercentage}%` }} />
-                </div>
-                {freelancerAmount === 0 && <p className="text-xs text-muted-foreground italic">Not funded yet</p>}
               </div>
 
-              {/* Client Stake */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Client Stake</span>
-                  <span className="text-sm font-bold text-foreground">
-                    {formatEth(clientAmount)} ETH{" "}
-                    <span className="text-xs text-muted-foreground">({formatPct(clientPercentage)})</span>
-                  </span>
+              {/* Round Info */}
+              <div className="flex items-center justify-between rounded-lg bg-secondary px-3 py-2">
+                <span className="text-sm font-medium text-foreground">Round</span>
+                <span className="text-sm font-semibold">{dispute.currentRound}</span>
+              </div>
+
+              {/* Amount and Contributions */}
+              <div className="space-y-3">
+                {/* Freelancer Stake */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">Freelancer Stake</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {`${formatEth(freelancerAmount)} / ${formatEth(totalFreelancerAmount)}`} ETH{" "}
+                      <span className="text-xs text-muted-foreground">({formatPct(freelancerPercentage)})</span>
+                    </span>
+                  </div>
+                  <div className="relative h-4 w-full rounded-full bg-muted border border-gray-600 overflow-hidden">
+                    {" "}
+                    <div className="absolute inset-0 bg-transparent h-full transition-all" />
+                    <div
+                      className="absolute inset-0 bg-blue-500 h-full transition-all"
+                      style={{ width: `${freelancerPercentage}%` }}
+                    />
+                  </div>
+                  {freelancerAmount === 0 && <p className="text-xs text-muted-foreground italic">Not funded yet</p>}
                 </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full transition-all bg-purple-500" style={{ width: `${clientPercentage}%` }} />
+
+                {/* Client Stake */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground">Client Stake</span>
+                    <span className="text-sm font-bold text-foreground">
+                      {`${formatEth(clientAmount)} / ${formatEth(totalClientAmount)}`} ETH{" "}
+                      <span className="text-xs text-muted-foreground">({formatPct(clientPercentage)})</span>
+                    </span>
+                  </div>
+                  <div className="relative h-4 w-full rounded-full bg-muted border border-gray-600 overflow-hidden">
+                    {" "}
+                    <div className="absolute inset-0 bg-transparent h-full transition-all" />
+                    <div
+                      className="absolute inset-0 bg-blue-500 h-full transition-all"
+                      style={{ width: `${clientPercentage}%` }}
+                    />
+                  </div>
+                  {clientAmount === 0 && <p className="text-xs text-muted-foreground italic">Not funded yet</p>}
                 </div>
-                {clientAmount === 0 && <p className="text-xs text-muted-foreground italic">Not funded yet</p>}
               </div>
             </div>
 
