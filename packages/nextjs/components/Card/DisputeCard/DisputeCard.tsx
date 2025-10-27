@@ -6,7 +6,6 @@ import Button from "@/components/Button/index";
 import { Card } from "@/components/Card";
 import {
   ArrowRightIcon,
-  BanknotesIcon,
   ClockIcon,
   ExclamationTriangleIcon,
   ScaleIcon,
@@ -131,7 +130,7 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 space-y-4 px-6 py-4">
+      <div className="flex-1 space-y-4 px-6 py-4 min-h-[480px]">
         {!isAppealable ? (
           <div className="flex items-center justify-center h-full">
             <div
