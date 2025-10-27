@@ -25,7 +25,7 @@ export default function DisputeListing({ type }: DisputePageProps) {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { showSpinner, hideSpinner } = useGlobalSpinner();
+  //const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const fetchFunction = useMemo(
     () => (type === "Appelable" ? fetchAppelableDisputesWithContributors : fetchDisputesContributedByUserPaginated),
@@ -47,7 +47,7 @@ export default function DisputeListing({ type }: DisputePageProps) {
     <div className="h-full pb-30 bg-background">
       {/* Disputes Grid */}
       <div className="mx-auto px-4 py-12 sm:px-6 lg:px-8 overflow-y-auto h-full">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 min-[640px]:grid-cols-2 min-[1024px]:grid-cols-3 min-[1536px]:grid-cols-4">
           {data?.map(dispute => (
             <DisputeCard key={dispute.disputeId} dispute={dispute} />
           ))}

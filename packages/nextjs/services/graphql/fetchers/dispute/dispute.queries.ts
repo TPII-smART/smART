@@ -34,6 +34,7 @@ export const getAppelableDisputesPaginated = gql`
         clientFee
         appealCost
         status
+        isAppealed
       }
       pageInfo {
         startCursor
@@ -68,7 +69,7 @@ export const getDisputesContributedByUserPaginated = gql`
 export const getDisputesByIds = gql`
   query GetDisputesByIds($ids: [BigInt!]!) {
     disputes(
-      where: { AND: [{ status: 1 }, { disputeId_in: $ids }, { disputeFinished: false }, { isAppealed: true }] }
+      where: { AND: [{ disputeId_in: $ids }, { disputeFinished: false }] }
       orderBy: "disputeId"
       orderDirection: "desc"
     ) {
@@ -91,6 +92,7 @@ export const getDisputesByIds = gql`
         clientFee
         appealCost
         status
+        isAppealed
       }
     }
   }

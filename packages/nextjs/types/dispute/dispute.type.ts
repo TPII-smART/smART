@@ -1,3 +1,9 @@
+export enum DisputeStatus {
+  Waiting = 0,
+  Appealable = 1,
+  Solved = 2,
+}
+
 export interface Dispute {
   disputeId: number;
   arbiterDisputeId: number;
@@ -16,7 +22,8 @@ export interface Dispute {
   freelancerFee: number;
   clientFee: number;
   appealCost: number;
-  status: number;
+  status: DisputeStatus;
   contributors: string[];
   disputeFinished: boolean;
+  isAppealed: boolean;
 }

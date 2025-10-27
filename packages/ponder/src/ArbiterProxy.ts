@@ -119,6 +119,7 @@ ponder.on("ArbiterProxy:TalentDisputeRaised", async ({ event, context }) => {
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     raiseOnKleros: true,
     currentRound: 1,
+    status: 0,
     isAppealed: false,
     lastTransactionHash: event.transaction.hash,
   });
@@ -232,6 +233,7 @@ ponder.on("ArbiterProxy:GigDisputeRaised", async ({ event, context }) => {
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     currentRound: 1,
+    status: 0,
     isAppealed: false,
     lastTransactionHash: event.transaction.hash,
   });
@@ -249,6 +251,7 @@ ponder.on("ArbiterProxy:GigDisputeTimeoutByInaction", async ({ event, context })
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRuling: ruling ?? 0,
+    status: 2, //resolved
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -270,6 +273,7 @@ ponder.on("ArbiterProxy:TalentDisputeTimeoutByInaction", async ({ event, context
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRuling: ruling ?? 0,
+    status: 2, //resolved
     lastTransactionHash: event.transaction.hash,
   }); 
 
@@ -378,8 +382,14 @@ ponder.on("ArbiterProxy:GigAppealCreated", async ({ event, context }) => {
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRound: round ?? 0,
+    status: 0, //wating
     clientFunds: BigInt(0),
     freelancerFunds: BigInt(0),
+    clientFee: BigInt(0),
+    freelancerFee: BigInt(0),
+    clientPaidArbitrationFee: false,
+    freelancerPaidArbitrationFee: false,
+    isAppealed: false,
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     lastTransactionHash: event.transaction.hash,
   });
@@ -391,8 +401,14 @@ ponder.on("ArbiterProxy:TalentAppealCreated", async ({ event, context }) => {
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRound: round ?? 0,
+    status: 0, //waiting
     clientFunds: BigInt(0),
     freelancerFunds: BigInt(0),
+    clientFee: BigInt(0),
+    freelancerFee: BigInt(0),
+    clientPaidArbitrationFee: false,
+    freelancerPaidArbitrationFee: false,
+    isAppealed: false,
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     lastTransactionHash: event.transaction.hash,
   });
@@ -528,6 +544,7 @@ ponder.on("ArbiterProxy:TalentDisputeConceded", async ({ event, context }) => {
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRuling: ruling ?? 0,
     disputeFinished: true,
+    status: 2, //resolved
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -547,6 +564,7 @@ ponder.on("ArbiterProxy:GigDisputeConceded", async ({ event, context }) => {
   const { localDisputeId, gigId, ruling, winner } = event.args;
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRuling: ruling ?? 0,
+    status: 2, //resolved
     disputeFinished: true,
     lastTransactionHash: event.transaction.hash,
   });
