@@ -300,7 +300,7 @@ ponder.on("ArbiterProxy:GigAppealContribution", async ({ event, context }) => {
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set(update);
   {
-    const contributorAddr = (contributor as string).toLowerCase();
+    const contributorAddr = (contributor as string);
     const pk = { disputeId: BigInt(localDisputeId), contributor: contributorAddr };
     const existing = await context.db.find(disputeContributor, pk);
     if (existing) {
@@ -344,7 +344,7 @@ ponder.on("ArbiterProxy:TalentAppealContribution", async ({ event, context }) =>
 
 
   {
-    const contributorAddr = (contributor as string).toLowerCase();
+    const contributorAddr = (contributor as string);
     const pk = { disputeId: BigInt(localDisputeId), contributor: contributorAddr };
     const existing = await context.db.find(disputeContributor, pk);
     if (existing) {
