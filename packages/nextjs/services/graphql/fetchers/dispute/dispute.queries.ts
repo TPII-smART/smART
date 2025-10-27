@@ -7,9 +7,10 @@ export const getAppelableDisputesPaginated = gql`
     $endCursor: String
     $orderBy: String
     $orderDirection: String
+    $now: BigInt!
   ) {
     disputes(
-      where: { status: 1 }
+      where: { AND: [{ status: 1 }, { disputeFinished: false }, { roundDeadline_gt: $now }, { isAppealed: true }] }
       limit: $limit
       before: $startCursor
       after: $endCursor
@@ -33,7 +34,6 @@ export const getAppelableDisputesPaginated = gql`
         clientFee
         appealCost
         status
-        disputeFinished
       }
       pageInfo {
         startCursor
@@ -67,10 +67,15 @@ export const getDisputesContributedByUserPaginated = gql`
 `;
 export const getDisputesByIds = gql`
   query GetDisputesByIds($ids: [BigInt!]!) {
-    disputes(where: { disputeId_in: $ids }, orderBy: "disputeId", orderDirection: "desc") {
+    disputes(
+      where: { AND: [{ status: 1 }, { disputeId_in: $ids }, { disputeFinished: false }, { isAppealed: true }] }
+      orderBy: "disputeId"
+      orderDirection: "desc"
+    ) {
       items {
         disputeId
         klerosDisputeId
+        type
         title
         description
         disputeReason
@@ -86,7 +91,6 @@ export const getDisputesByIds = gql`
         clientFee
         appealCost
         status
-        disputeFinished
       }
     }
   }

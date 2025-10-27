@@ -16,6 +16,7 @@ export const fetchAppelableDisputesPaginated = async (
   orderDirection: "asc" | "desc" = "desc",
   status?: number,
 ): Promise<Paginated<Dispute>> => {
+  const now = Math.floor(Date.now() / 1000);
   const response = await request<{
     disputes: PaginationQueryResponse<Dispute>;
   }>(endpoint, DisputesQueries.getAppelableDisputesPaginated, {
@@ -26,6 +27,7 @@ export const fetchAppelableDisputesPaginated = async (
     orderBy,
     orderDirection,
     status: typeof status === "number" ? status : undefined,
+    now,
   });
 
   return {

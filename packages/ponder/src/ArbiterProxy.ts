@@ -114,15 +114,12 @@ ponder.on("ArbiterProxy:ClientPayedTalentArbitrationFee", async ({ event, contex
 ponder.on("ArbiterProxy:TalentDisputeRaised", async ({ event, context }) => {
   const { localDisputeId, klerosDisputeId } = event.args;
 
-  // await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
-  //   klerosDisputeId: BigInt(klerosDisputeId ?? 0),
-  //   lastTransactionHash: event.transaction.hash,
-  // });
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     raiseOnKleros: true,
     currentRound: 1,
+    isAppealed: false,
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -235,6 +232,7 @@ ponder.on("ArbiterProxy:GigDisputeRaised", async ({ event, context }) => {
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
     currentRound: 1,
+    isAppealed: false,
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -575,6 +573,7 @@ ponder.on("ArbiterProxy:TalentRoundStateUpdated", async ({ event, context }) => 
 		freelancerFee: requiredAmountFreelancer,
 		clientFee: requiredAmountClient,
 		roundDeadline: roundDeadline,
+		isAppealed: true,
     lastTransactionHash: event.transaction.hash,
   });
 }
@@ -590,6 +589,7 @@ ponder.on("ArbiterProxy:GigRoundStateUpdated", async ({ event, context }) => {
     freelancerFee: requiredAmountFreelancer,
     clientFee: requiredAmountClient,
     roundDeadline: roundDeadline,
+    isAppealed: true,
     lastTransactionHash: event.transaction.hash,
   });
 }

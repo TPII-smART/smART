@@ -45,6 +45,8 @@ export function DisputeCard({ dispute }: DisputeCardProps) {
     } else if (dispute.type === "gig") {
       const gigId = await fetchGigIdByDisputeId(dispute.disputeId);
       router.push(`/gig/${gigId}`);
+    } else {
+      console.warn("Unknown dispute type, cannot navigate to detail page.");
     }
   };
 
