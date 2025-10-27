@@ -36,16 +36,6 @@ export const getGigs = gql`
         acceptedApplicationId
         gigBannerImageHash
         disputeId
-        freelancerPaidArbitrationFee
-        clientPaidArbitrationFee
-        klerosDisputeId
-        disputeDeadline
-        currentRound
-        currentRuling
-        freelancerFunds
-        clientFunds
-        appealCost
-        disputeFinished
       }
     }
   }
@@ -101,16 +91,6 @@ export const getGigsPaginated = gql`
         acceptedApplicationId
         gigBannerImageHash
         disputeId
-        freelancerPaidArbitrationFee
-        clientPaidArbitrationFee
-        klerosDisputeId
-        disputeDeadline
-        currentRound
-        currentRuling
-        freelancerFunds
-        clientFunds
-        appealCost
-        disputeFinished
       }
       pageInfo {
         endCursor
@@ -150,16 +130,6 @@ export const getMyGigs = gql`
         gigBannerImageHash
         emitBy
         disputeId
-        freelancerPaidArbitrationFee
-        clientPaidArbitrationFee
-        klerosDisputeId
-        disputeDeadline
-        currentRound
-        currentRuling
-        freelancerFunds
-        clientFunds
-        appealCost
-        disputeFinished
       }
     }
   }
@@ -197,16 +167,6 @@ export const getMyGigsPaginated = gql`
         gigBannerImageHash
         emitBy
         disputeId
-        freelancerPaidArbitrationFee
-        clientPaidArbitrationFee
-        klerosDisputeId
-        disputeDeadline
-        currentRound
-        currentRuling
-        freelancerFunds
-        clientFunds
-        appealCost
-        disputeFinished
       }
       pageInfo {
         endCursor
@@ -300,16 +260,6 @@ export const getGigByIds = gql`
         acceptedApplicationId
         gigBannerImageHash
         disputeId
-        freelancerPaidArbitrationFee
-        clientPaidArbitrationFee
-        klerosDisputeId
-        disputeDeadline
-        currentRound
-        currentRuling
-        freelancerFunds
-        clientFunds
-        appealCost
-        disputeFinished
       }
     }
   }
@@ -417,16 +367,6 @@ export const getGigById = gql`
       acceptedApplicationId
       gigBannerImageHash
       disputeId
-      freelancerPaidArbitrationFee
-      clientPaidArbitrationFee
-      klerosDisputeId
-      disputeDeadline
-      currentRound
-      currentRuling
-      freelancerFunds
-      clientFunds
-      appealCost
-      disputeFinished
     }
   }
 `;
