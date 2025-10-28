@@ -34,6 +34,7 @@ export const getAppelableDisputesPaginated = gql`
         clientFee
         appealCost
         status
+        disputeFinished
         isAppealed
       }
       pageInfo {
@@ -92,6 +93,7 @@ export const getDisputesByIds = gql`
         clientFee
         appealCost
         status
+        disputeFinished
         isAppealed
       }
     }
@@ -119,6 +121,7 @@ export const getDisputesById = gql`
       clientFee
       appealCost
       status
+      disputeFinished
       isAppealed
     }
   }

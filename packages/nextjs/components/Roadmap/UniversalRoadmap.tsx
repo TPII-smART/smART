@@ -16,7 +16,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
     const hiredTalent = data;
     const baseSteps = [
       {
-        title: "Hired Talent Created",
+        title: "Hire Created",
         date: formatDate(hiredTalent.createdAt),
         completed: true,
         current: false,
@@ -30,7 +30,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
         state: "waiting",
       },
       {
-        title: "Hired Talent Accepted",
+        title: "Hire Accepted",
         date: hiredTalent.acceptedAt ? formatDate(hiredTalent.acceptedAt) : null,
         completed: hiredTalent.state > HiredTalentState.Ongoing || !!hiredTalent.acceptedAt,
         current: hiredTalent.state === HiredTalentState.Ongoing,
@@ -56,7 +56,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
     ];
     if (hiredTalent.wasDisputed) {
       baseSteps.push({
-        title: "Hired Talent Disputed",
+        title: "Hire Disputed",
         date: `In Dispute${hiredTalent.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
         completed: true,
         current: hiredTalent.state === HiredTalentState.Disputed,
@@ -77,7 +77,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
 
     if (hiredTalent.state === HiredTalentState.Cancelled) {
       baseSteps.push({
-        title: "Hired Talent Cancelled",
+        title: "Hire Cancelled",
         date: hiredTalent.canceledAt ? formatDate(hiredTalent.canceledAt) : null,
         completed: true,
         current: false,
@@ -85,7 +85,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
       });
     } else {
       baseSteps.push({
-        title: hiredTalent.wasDisputed ? "Hired Talent Finalized After Dispute" : "Hired Talent Completed",
+        title: hiredTalent.wasDisputed ? "Hire Finalized After Dispute" : "Hire Completed",
         date: hiredTalent.finishedAt ? formatDate(hiredTalent.finishedAt) : null,
         completed: hiredTalent.state === HiredTalentState.Finished,
         current: false,
@@ -182,22 +182,25 @@ export function UniversalRoadmap({ data, type }: UniversalRoadmapProps) {
   const allSteps = getAllRoadmapSteps(data, type);
 
   return (
-    <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg flex-1">
+    <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg flex flex-1 flex-col h-full">
       <CardHeader className="p-6">
         <CardTitle className="text-2xl text-[var(--color-primary-content)]">
-          {type === "hiredTalent" ? "HiredTalent Progress" : "Gig Progress"}
+          {type === "hiredTalent" ? "Hire Progress" : "Gig Progress"}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6 pt-0 h-full">
-        <div className="relative pl-2 flex flex-col h-full">
+        <div className="relative pl-2 flex flex-col overflow-auto justify-between h-full">
+          {/* Continuous line from first to last step */}
+          <div
+            className="absolute left-5.5 w-0.5 bg-[var(--color-border)]"
+            style={{
+              top: "16px",
+              bottom: `calc(100% - ${allSteps.length * 100}%)`,
+              height: `calc(100% - 40px)`,
+            }}
+          />
           {allSteps.map((step, index) => (
-            <div key={index} className="relative flex items-start gap-4 pb-8  flex-1">
-              {index < allSteps.length - 1 && (
-                <div
-                  className="absolute left-4 top-8 w-0.5 bg-[var(--color-border)]"
-                  style={{ height: "calc(100% - 16px)" }}
-                />
-              )}
+            <div key={index} className="relative flex items-start gap-6">
               <div
                 className={`
                   relative z-10 w-8 h-8 rounded-full flex items-center justify-center border-2 shrink-0
@@ -218,7 +221,7 @@ export function UniversalRoadmap({ data, type }: UniversalRoadmapProps) {
                 {step.current && !step.completed && <div className="w-3 h-3 bg-white rounded-full" />}
               </div>
               <div className="flex-1 min-w-0 pt-1">
-                <p
+                <div
                   className={`
                   font-semibold text-base
                   ${
@@ -229,12 +232,12 @@ export function UniversalRoadmap({ data, type }: UniversalRoadmapProps) {
                 `}
                 >
                   {step.title}
-                </p>
+                </div>
                 {step.date && step.date !== "N/A" && (
-                  <p className="text-sm text-[var(--color-skeleton)] mt-1">{step.date}</p>
+                  <div className="text-sm text-[var(--color-skeleton)] mt-1">{step.date}</div>
                 )}
                 {!step.date && !step.completed && !step.current && (
-                  <p className="text-sm text-[var(--color-skeleton)]/60 mt-1 italic">Pending</p>
+                  <div className="text-sm text-[var(--color-skeleton)]/60 mt-1 italic">Pending</div>
                 )}
               </div>
             </div>

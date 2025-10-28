@@ -438,7 +438,7 @@ export default function UniversalDetail({
           )}
           {/* Action Buttons Box */}
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
-            <CardContent className="p-12">
+            <CardContent className="flex justify-center items-center h-full p-12">
               <div className="flex justify-center items-center h-full">
                 <div className="flex gap-6 flex-wrap justify-center">{actionButtons}</div>
               </div>
