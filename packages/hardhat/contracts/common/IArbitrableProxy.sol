@@ -45,8 +45,9 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason,
-        uint256 _evidenceGroupId
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function startAndPayTalentDisputeByClient(
@@ -55,8 +56,9 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason,
-        uint256 _evidenceGroupId
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByFreelancer(
@@ -64,8 +66,9 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason,
-        uint256 _evidenceGroupId
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function createAndPayGigDisputeByClient(
@@ -73,8 +76,9 @@ interface IArbitrableProxy {
         address _freelancer,
         address _client,
         bytes calldata _arbitratorExtraData,
-        string calldata _reason,
-        uint256 _evidenceGroupId
+        string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
+        string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function payArbitrationFeeByFreelancer(
