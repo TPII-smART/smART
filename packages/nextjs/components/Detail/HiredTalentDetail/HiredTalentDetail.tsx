@@ -51,7 +51,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   });
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
-  const { data, isLoading, error, refetch } = useQuery<HiredTalent>({
+  const {
+    data,
+    isLoading: isDetailLoading,
+    error,
+    refetch,
+  } = useQuery<HiredTalent>({
     queryKey: ["hiredTalentDetail", hiredTalentId],
     queryFn: () => fetchHiredTalent(talentId, hiredTalentId),
   });
@@ -59,7 +64,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const {
     data: disputeData,
     isLoading: isDisputeLoading,
-    error: disputeError,
+
     refetch: refetchDispute,
   } = useQuery<Dispute>({
     queryKey: ["disputeDetail", data?.disputeId],
@@ -78,10 +83,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     },
   });
 
-  //deliverables?.forEach(async deliverable => {
-  //  console.log("Value of deliv: ", deliverable.resource.replace("ipfs://", "ipfs://ipfs/"));
-  //});
-
+  const isLoading = isDetailLoading || isDisputeLoading;
   const hiredTalent = data as HiredTalent;
   const isRejected = hiredTalent?.clientRejected;
   const isFreelancer = hiredTalent?.freelancer?.toLowerCase() === userAddress?.toLowerCase();

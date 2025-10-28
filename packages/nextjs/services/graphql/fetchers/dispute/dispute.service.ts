@@ -1,6 +1,5 @@
 import { endpoint } from "../../config";
 import * as DisputesQueries from "./dispute.queries";
-import { getDisputesById } from "./dispute.queries";
 import request from "graphql-request";
 import { Dispute } from "~~/types/dispute";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
