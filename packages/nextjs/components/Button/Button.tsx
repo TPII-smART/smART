@@ -7,12 +7,12 @@ const Button: React.FC<ButtonProps> = ({
   children,
   onClick,
   className,
-  style,
   loading,
   icon,
   tooltip,
   size = "md",
   disabled = false,
+  circular = false,
   ...props
 }) => {
   const getSizeStyles = (size: string): React.CSSProperties => {
@@ -108,7 +108,14 @@ const Button: React.FC<ButtonProps> = ({
     <button
       {...props}
       title={tooltip}
-      style={{ ..._style, ...style }}
+      style={{
+        ..._style,
+        borderRadius: circular ? "50%" : _style.borderRadius,
+        padding: circular ? "0.75em" : _style.padding,
+        width: circular ? _style.height || "2.5em" : undefined,
+        height: circular ? _style.height || "2.5em" : undefined,
+        aspectRatio: circular ? "1 / 1" : undefined,
+      }}
       onClick={onClick}
       className={className}
       disabled={disabled || loading}

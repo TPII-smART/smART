@@ -24,4 +24,8 @@ export interface DetailData {
   acceptedAt?: string;
   canceledAt?: string;
   finishedAt?: string;
+  wasDisputed?: boolean;
+  disputeFinalized?: boolean;
+  disputeResult?: boolean;
+  disputeAppealed?: boolean;
 }

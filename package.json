@@ -71,9 +71,11 @@
 		"@mui/icons-material": "^7.3.2",
 		"@mui/material": "^7.3.2",
 		"@thirdweb-dev/storage": "^2.0.15",
+		"axios": "^1.12.2",
 		"class-variance-authority": "^0.7.1",
 		"framer-motion": "^12.23.18",
 		"motion": "^12.23.18",
+		"pinata": "^2.5.1",
 		"tailwind-merge": "^3.3.1"
 	}
 }

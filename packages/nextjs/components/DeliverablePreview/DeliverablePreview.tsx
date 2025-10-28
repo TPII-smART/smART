@@ -9,7 +9,7 @@ import {
   LinkIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
-import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
+import { resolveIPFSHash } from "~~/services/IPFS/pinataIPFS";
 
 interface DeliverablePreviewProps {
   resource?: string;

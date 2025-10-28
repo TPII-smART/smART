@@ -181,6 +181,7 @@ export const getHiredTalentsFromTalent = gql`
         clientRejected
         clientCancelled
         freelancerCancelled
+        disputeId
       }
     }
   }
@@ -227,6 +228,7 @@ export const getHiredTalentsFromTalentPaginated = gql`
         clientRejected
         clientCancelled
         freelancerCancelled
+        disputeId
       }
       pageInfo {
         endCursor
@@ -289,6 +291,7 @@ export const getMyHiredTalents = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        disputeId
       }
     }
   }
@@ -320,6 +323,7 @@ export const getHires = gql`
         freelancerDelivered
         clientCancelled
         freelancerCancelled
+        disputeId
       }
     }
   }
@@ -358,6 +362,7 @@ export const getHiresPaginated = gql`
         freelancerDelivered
         clientCancelled
         freelancerCancelled
+        disputeId
       }
       pageInfo {
         endCursor
@@ -398,6 +403,7 @@ export const getHiredTalentAndHires = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        disputeId
       }
     }
   }
@@ -434,6 +440,7 @@ export const getHiredTalentAndHiresPaginated = gql`
         emitBy
         clientReceived
         freelancerDelivered
+        disputeId
       }
       pageInfo {
         endCursor
@@ -489,6 +496,7 @@ export const getHiredTalent = gql`
       clientRejected
       clientReceived
       freelancerDelivered
+      disputeId
       freelancerUploaded
       rating
       lastTransactionHash

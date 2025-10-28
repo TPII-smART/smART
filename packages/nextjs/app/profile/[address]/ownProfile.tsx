@@ -2,7 +2,7 @@
 
 import { Dispatch, SetStateAction, useState } from "react";
 import styles from "./Profile.module.css";
-import { resolveIPFSHash, uploadToIPFS } from "@services/IPFS/thirdwebIPFS";
+import { resolveIPFSHash, uploadToIPFS } from "@services/IPFS/pinataIPFS";
 import { LinkIcon, PencilIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import BannerImage from "~~/components/BannerImage/BannerImage";

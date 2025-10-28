@@ -7905,6 +7905,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"axios@npm:^1.12.2":
+  version: 1.12.2
+  resolution: "axios@npm:1.12.2"
+  dependencies:
+    follow-redirects: ^1.15.6
+    form-data: ^4.0.4
+    proxy-from-env: ^1.1.0
+  checksum: f0331594fe053a4bbff04104edb073973a3aabfad2e56b0aa18de82428aa63f6f0839ca3d837258ec739cb4528014121793b1649a21e5115ffb2bf8237eadca3
+  languageName: node
+  linkType: hard
+
 "axios@npm:^1.6.7":
   version: 1.11.0
   resolution: "axios@npm:1.11.0"
@@ -17033,6 +17044,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pinata@npm:^2.5.1":
+  version: 2.5.1
+  resolution: "pinata@npm:2.5.1"
+  peerDependencies:
+    react: ">=16.8.0"
+    react-dom: ">=16.8.0"
+  peerDependenciesMeta:
+    react:
+      optional: true
+    react-dom:
+      optional: true
+  checksum: fe4e420ede45d96a346cad0df725b8d09d88348e2c6241f5930a028f02ba1f0c3e07980975c922c312db7ee5f56ec71bfccf2720c01008544128e5e5e7152c1b
+  languageName: node
+  linkType: hard
+
 "pino-abstract-transport@npm:^1.2.0":
   version: 1.2.0
   resolution: "pino-abstract-transport@npm:1.2.0"
@@ -18435,11 +18461,13 @@ __metadata:
     "@mui/icons-material": ^7.3.2
     "@mui/material": ^7.3.2
     "@thirdweb-dev/storage": ^2.0.15
+    axios: ^1.12.2
     class-variance-authority: ^0.7.1
     framer-motion: ^12.23.18
     husky: ~9.1.7
     lint-staged: ~13.2.3
     motion: ^12.23.18
+    pinata: ^2.5.1
     tailwind-merge: ^3.3.1
   languageName: unknown
   linkType: soft

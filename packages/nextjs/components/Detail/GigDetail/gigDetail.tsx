@@ -5,26 +5,31 @@ import { useRouter } from "next/navigation";
 import UniversalDetail from "../UniversalDetail";
 import { ApplicationState, GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+//import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import { StarIcon } from "@heroicons/react/20/solid";
 import {
   ArrowUpTrayIcon,
   BookOpenIcon,
   CheckCircleIcon,
   ClipboardDocumentListIcon,
-  StarIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { Badge } from "~~/components/Badge";
 import Button from "~~/components/Button/Button";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
+//import DisputeFormModal from "~~/components/DisputeForm/DisputeForm";
+//import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
+//import { useDisputeContracts } from "~~/hooks/use-dispute-contracts";
+import { uploadToIPFS } from "~~/services/IPFS/pinataIPFS";
 import { fetchGigWithApplicationAndDeliverables } from "~~/services/graphql/fetchers/gig/gig.service";
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Application, Gig } from "~~/types/gig";
+import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 
 type GigData = {
   gig: Gig;
@@ -47,6 +52,9 @@ export default function GigDetail({
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+  //const [showDisputeModal, setShowDisputeModal] = useState(false);
+  //const [showRequestArbitrationModal, setShowRequestArbitrationModal] = useState(false);
+  //const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
   const [isRatingModalOpen, setIsRatingModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
@@ -54,6 +62,11 @@ export default function GigDetail({
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
   });
+  /**
+  const { writeContractAsync: writeContractArbiter } = useScaffoldWriteContract({
+    contractName: "ArbiterContract",
+  });
+  */
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { data, isLoading, error, refetch } = useQuery<GigData>({
@@ -81,6 +94,26 @@ export default function GigDetail({
     await new Promise(resolve => setTimeout(resolve, 1000));
     await refetch();
   };
+  /** 
+  const {
+    disputeFinalized,
+    isDisputeFinalizedLoading,
+    disputeResultData,
+    isDisputeResultLoading,
+    disputeBeingArbitrated,
+    isDisputeArbitrationLoading,
+    lastSeenBond,
+    arbitrationFee,
+  } = useDisputeContracts(data?.gig.disputeQuestionId);
+
+  const disputeLoading = isDisputeFinalizedLoading || isDisputeResultLoading || isDisputeArbitrationLoading;
+  const disputeResult =
+    disputeResultData && disputeResultData === "0x0000000000000000000000000000000000000000000000000000000000000001";
+
+  const initiateConflictResolution = async () => {};
+
+  const handleFinalizeDispute = async () => {};
+  */
 
   const handleFileUploadToIPFS = async (file: File | undefined) => {
     if (!file) return;
@@ -104,7 +137,17 @@ export default function GigDetail({
 
       await writeContract({
         functionName: "confirmFreelancerCompletion",
-        args: [BigInt(data?.gig.gigId), { resource, submissionComment: fileData.submissionComment, isLink }],
+        args: [
+          BigInt(data?.gig.gigId),
+          {
+            resource,
+            parsedResource: isLink
+              ? ""
+              : await createEvidenceJSON(resource, fileData.file?.name || "", "Deliverable submission by Freelancer"),
+            submissionComment: fileData.submissionComment,
+            isLink,
+          },
+        ],
       });
       if (reload) await reload();
     } catch (err) {
@@ -314,6 +357,39 @@ export default function GigDetail({
           </Button>,
         );
       }
+      /**
+      if (gigState === GigState.Disputed) {
+        if (disputeFinalized) {
+          buttons.push(
+            <Button
+              variant="primary"
+              key="finalizeDispute"
+              onClick={() => handleFinalizeDispute()}
+              disabled={isMining || disputeLoading}
+              size="sm"
+              tooltip="Finalize dispute and release funds"
+            >
+              <TrophyIcon className="h-5 w-5" />
+              <span>Release Funds</span>
+            </Button>,
+          );
+        } else if (!disputeBeingArbitrated) {
+          buttons.push(
+            <Button
+              variant="outline"
+              key="requestArbitration"
+              onClick={() => setShowRequestArbitrationModal(true)}
+              disabled={isMining || disputeLoading}
+              size="sm"
+              tooltip="Request arbitration from Kleros"
+            >
+              <ScaleIcon className="h-5 w-5" />
+              <span>Request Arbitration</span>
+            </Button>,
+          );
+        }
+      }
+      */
     }
 
     // Client actions
@@ -327,7 +403,7 @@ export default function GigDetail({
             onClick={handleAcceptApplication}
             disabled={isMining}
             size="sm"
-            tooltip="Approve Job"
+            tooltip="Accept application"
           >
             <CheckCircleIcon className="h-5 w-5" />
             Accept
@@ -398,7 +474,12 @@ export default function GigDetail({
             </Button>,
           );
         }
-        if (gigState !== GigState.Completed && gigState !== GigState.Cancelled && !data?.gig.clientCancelled) {
+        if (
+          gigState !== GigState.Completed &&
+          gigState !== GigState.Cancelled &&
+          gigState !== GigState.Disputed &&
+          !data?.gig.clientCancelled
+        ) {
           buttons.push(
             <Button
               variant="danger"
@@ -413,6 +494,39 @@ export default function GigDetail({
             </Button>,
           );
         }
+        /**
+        if (gigState === GigState.Disputed) {
+          if (disputeFinalized) {
+            buttons.push(
+              <Button
+                variant="primary"
+                key="finalizeDispute"
+                onClick={() => handleFinalizeDispute()}
+                disabled={isMining || disputeLoading}
+                size="sm"
+                tooltip="Finalize dispute and release funds"
+              >
+                <TrophyIcon className="h-5 w-5" />
+                <span>Release Funds</span>
+              </Button>,
+            );
+          } else if (!disputeBeingArbitrated) {
+            buttons.push(
+              <Button
+                variant="outline"
+                key="requestArbitration"
+                onClick={() => setShowRequestArbitrationModal(true)}
+                disabled={isMining || disputeLoading}
+                size="sm"
+                tooltip="Request arbitration from Kleros"
+              >
+                <ScaleIcon className="h-5 w-5" />
+                <span>Request Arbitration</span>
+              </Button>,
+            );
+          }
+        }
+        */
       }
     }
 
@@ -428,13 +542,10 @@ export default function GigDetail({
       } else {
         return "Gig is waiting for freelancer approval.";
       }
-    } else if (data?.gig.state === GigState.Completed) {
-      // TODO  show rating
-      return "This gig has been completed.";
     }
 
-    if (data?.gig.state != undefined && data?.gig.state >= GigState.InProgress) {
-      return "¿Facing any problems with this gig?";
+    if (gigState != undefined && gigState >= GigState.InProgress) {
+      return "Gig is in progress.";
     }
 
     return "";
@@ -491,6 +602,10 @@ export default function GigDetail({
     acceptedAt: data?.gig.acceptedAt || "",
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
+    wasDisputed: !!data?.gig.disputeId,
+    //disputeFinalized: disputeFinalized,
+    //disputeResult: disputeResult,
+    //disputeAppealed: disputeAppealed,
     clientRejected: false,
   };
 
@@ -514,6 +629,10 @@ export default function GigDetail({
     canceledAt: data?.gig.canceledAt || "",
     finishedAt: data?.gig.finishedAt || "",
     rating: data?.gig.rating || 0,
+    wasDisputed: !!data?.gig.disputeId,
+    //disputeFinalized: disputeFinalized,
+    //disputeResult: disputeResult,
+    //disputeAppealed: disputeAppealed,
     clientRejected: data?.gig.clientRejected || false,
   };
 
@@ -541,8 +660,55 @@ export default function GigDetail({
         handleClientConfirmCompletion={handleClientConfirmCompletion}
         handleRejectJob={handleRejectGig}
         handleRateJob={handleRateGig}
+        initiateConflictResolution={() => {}}
         handleFreelancerConfirmCompletion={handleFreelancerConfirmCompletion}
       />
+      {/**
+      <DisputeFormModal
+        isOpen={showDisputeModal}
+        onClose={() => setShowDisputeModal(false)}
+        loading={isSubmittingDispute}
+        arbitrationFee={arbitrationFee.data?.toString() || "0"}
+        type="gig"
+        onSubmit={async () => {
+          setIsSubmittingDispute(true);
+          try {
+            await initiateConflictResolution();
+            setShowDisputeModal(false);
+          } finally {
+            setIsSubmittingDispute(false);
+          }
+        }}
+      />
+      <Modal
+        isOpen={showRequestArbitrationModal}
+        onClose={() => setShowRequestArbitrationModal(false)}
+        title="Request Arbitration"
+      >
+        <div className="mb-4">
+          <p className="mb-2">
+            By requesting arbitration, you will be escalating the dispute to Kleros, a decentralized arbitration
+            service. This will allow for a fair review of the case by a panel of jurors. Requesting arbitration will
+            incur an additional fee of {formatEther(arbitrationFee.data ?? 0n)} ETH.
+          </p>
+          <p className="mb-2">Are you sure you want to proceed with requesting arbitration?</p>
+          <p className="text-sm text-gray-500">
+            Note: Once arbitration is requested, the decision made by the jurors will be final and binding.
+          </p>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              await requestArbitration();
+              setShowRequestArbitrationModal(false);
+            }}
+          >
+            Confirm
+          </Button>
+        </div>
+      </Modal>
+      */}
     </>
   );
 }

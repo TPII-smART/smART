@@ -2,6 +2,7 @@
 pragma solidity ^0.8.19;
 
 import "./common/DeliverableInfo.sol";
+import "./common/IArbitrableProxy.sol";
 
 /**
  * @title HiredTalentsContract
@@ -9,6 +10,12 @@ import "./common/DeliverableInfo.sol";
  * @author SmArt
  */
 contract HiredTalentsContract {
+    IArbitrableProxy public arbiterProxy;
+
+    bytes public constant arbitratorExtraData = hex"0000000000000000000000000000000000000000000000000000000000000003"; // Court + Jurors quantity for Kleros
+
+    uint256 public constant OVERFLOW = type(uint256).max;
+
     // Enums for hiredTalent states
     enum HiredTalentState {
         WaitingForApproval,
@@ -43,6 +50,7 @@ contract HiredTalentsContract {
         bool clientCancelled; // Whether the client cancelled the hiredTalent
         bool freelancerCancelled; // Whether the freelancer cancelled the hiredTalent
         bool freelancerUploaded; // Whether the freelancer has uploaded a deliverable
+        uint256 disputeId; // ID of the dispute in the arbitrator contract, if any
         DeliverableInfo[] deliverableInfo; // Store the deliverable related to the hiredTalent
     }
 
@@ -233,8 +241,20 @@ contract HiredTalentsContract {
         _;
     }
 
-    constructor(address _owner) {
+    /**
+     * @dev Constructor
+     * @param _owner Address of the contract owner
+     * @param _KlerosArbitrator Address of the Kleros arbitrator for dispute resolution
+     */
+    constructor(address _owner, address _KlerosArbitrator) {
+        require(_KlerosArbitrator != address(0), "Invalid Kleros.io arbiter address");
+        arbiterProxy = IArbitrableProxy(_KlerosArbitrator);
         owner = _owner;
+    }
+
+    function changeArbitrator(address _newArbitrator) external onlyOwner {
+        require(_newArbitrator != address(0), "Invalid arbitrator address");
+        arbiterProxy = IArbitrableProxy(_newArbitrator);
     }
 
     /**
@@ -334,6 +354,7 @@ contract HiredTalentsContract {
             clientCancelled: false,
             freelancerCancelled: false,
             freelancerUploaded: false,
+            disputeId: 0, // No dispute initially
             deliverableInfo: new DeliverableInfo[](0)
         });
 
@@ -624,14 +645,28 @@ contract HiredTalentsContract {
         require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
+        uint256 _currentDeliverableGroupId = uint256(
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _talentId, _hiredTalentId, "evidence"))
+        ) % OVERFLOW;
+
+        // If there was already a deliverableGroupId generated, keep that one
+        if (hiredTalent.deliverableInfo.length > 0) {
+            DeliverableInfo memory lastDeliverable = hiredTalent.deliverableInfo[
+                hiredTalent.deliverableInfo.length - 1
+            ];
+            _currentDeliverableGroupId = lastDeliverable.deliverableGroupId;
+        }
+
         DeliverableInfo memory deliverableToUpload = DeliverableInfo({
             resource: _deliverableParams.resource,
+            parsedResource: _deliverableParams.parsedResource,
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
             clientResponse: "",
             responseTimestamp: 0,
             isLink: _deliverableParams.isLink,
-            state: DeliverableState.Pending
+            state: DeliverableState.Pending,
+            deliverableGroupId: _currentDeliverableGroupId
         });
 
         hiredTalent.freelancerUploaded = true;
@@ -646,6 +681,15 @@ contract HiredTalentsContract {
             deliverableToUpload.isLink,
             hiredTalent.freelancerUploaded,
             deliverableToUpload.uploadedAt
+        );
+
+        arbiterProxy.submitEvidence(
+            hiredTalent.freelancer,
+            hiredTalent.disputeId,
+            deliverableToUpload.deliverableGroupId,
+            deliverableToUpload.parsedResource,
+            // Avoids checks and operations related to an existing dispute
+            true
         );
     }
 
@@ -682,6 +726,212 @@ contract HiredTalentsContract {
             deliverableInfo.clientResponse,
             deliverableInfo.uploadedAt,
             hiredTalent.rejectedAt
+        );
+    }
+
+    function startDispute(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        string calldata _metaEvidenceURI,
+        string calldata _reason
+    ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Ongoing, "Dispute can only be started for ongoing hiredTalents");
+        require(hiredTalent.disputeId == 0, "Dispute already exists for this hiredTalent");
+        require(msg.value > 0, "Must send arbitration fee");
+        require(bytes(_metaEvidenceURI).length > 0, "Metadata URI cannot be empty");
+        require(bytes(_reason).length > 0, "Reason cannot be empty");
+        require(bytes(_reason).length <= 256, "Reason must be up to 256 characters");
+
+        uint256 disputeId;
+
+        if (msg.sender == hiredTalent.freelancer) {
+            disputeId = arbiterProxy.startAndPayTalentDisputeByFreelancer{ value: msg.value }(
+                _talentId,
+                _hiredTalentId,
+                hiredTalent.freelancer,
+                hiredTalent.client,
+                arbitratorExtraData,
+                _reason,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+            );
+        } else if (msg.sender == hiredTalent.client) {
+            disputeId = arbiterProxy.startAndPayTalentDisputeByClient{ value: msg.value }(
+                _talentId,
+                _hiredTalentId,
+                hiredTalent.freelancer,
+                hiredTalent.client,
+                arbitratorExtraData,
+                _reason,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+            );
+        } else {
+            revert("Only hired talent parties can start a dispute");
+        }
+
+        hiredTalent.state = HiredTalentState.Disputed;
+        hiredTalent.disputeId = disputeId;
+    }
+
+    function getArbitrationFee() external view returns (uint256) {
+        uint256 feeAmount = arbiterProxy.arbitrator().arbitrationCost(arbitratorExtraData);
+        return feeAmount;
+    }
+
+    function payArbitrationFee(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to pay for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+        uint256 feeAmount = arbiterProxy.arbitrator().arbitrationCost(arbitratorExtraData);
+        require(msg.value >= feeAmount, "Insufficient arbitration fee");
+
+        if (msg.sender == hiredTalent.freelancer) {
+            arbiterProxy.payArbitrationFeeByFreelancer{ value: msg.value }(
+                msg.sender,
+                hiredTalent.disputeId,
+                arbitratorExtraData,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+            );
+        } else if (msg.sender == hiredTalent.client) {
+            arbiterProxy.payArbitrationFeeByClient{ value: msg.value }(
+                msg.sender,
+                hiredTalent.disputeId,
+                arbitratorExtraData,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+            );
+        } else {
+            revert("Only hired talent parties can pay arbitration fee");
+        }
+    }
+
+    function concedeDispute(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to concede for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+
+        if (msg.sender == hiredTalent.freelancer) {
+            // Freelancer concedes, ruling in favor of client
+            arbiterProxy.concedeDispute(hiredTalent.disputeId, 2);
+        } else if (msg.sender == hiredTalent.client) {
+            // Client concedes, ruling in favor of freelancer
+            arbiterProxy.concedeDispute(hiredTalent.disputeId, 1);
+        } else {
+            revert("Only hired talent parties can concede dispute");
+        }
+
+        emit HiredTalentFinished(
+            _talentId,
+            _hiredTalentId,
+            hiredTalent.freelancer,
+            hiredTalent.client,
+            hiredTalent.payment,
+            hiredTalent.finishedAt
+        );
+    }
+
+    function finalizeDispute(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to finalize for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+
+        if (arbiterProxy.hasTimedOut(hiredTalent.disputeId)) {
+            arbiterProxy.timeoutByInaction(hiredTalent.disputeId);
+        } else {
+            arbiterProxy.finalizeDispute(hiredTalent.disputeId);
+        }
+
+        uint256 ruling = arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
+        address recipient;
+
+        if (ruling == 1) {
+            // Ruling in favor of freelancer
+            recipient = hiredTalent.freelancer;
+        } else if (ruling == 2) {
+            // Ruling in favor of client
+            recipient = hiredTalent.client;
+        } else {
+            revert("Invalid ruling from arbitrator");
+        }
+
+        hiredTalent.state = HiredTalentState.Finished;
+        hiredTalent.finishedAt = block.timestamp;
+        payable(recipient).transfer(hiredTalent.payment);
+
+        emit HiredTalentFinished(
+            _talentId,
+            _hiredTalentId,
+            hiredTalent.freelancer,
+            hiredTalent.client,
+            hiredTalent.payment,
+            hiredTalent.finishedAt
+        );
+    }
+
+    function fundAppeal(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        uint8 _side
+    ) external payable hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to appeal for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+        require(_side == 1 || _side == 2, "Invalid side");
+
+        if (msg.sender == hiredTalent.freelancer) {
+            require(_side == 1, "Freelancer can only fund their own side");
+            arbiterProxy.fundAppeal{ value: msg.value }(msg.sender, hiredTalent.disputeId, _side);
+        } else if (msg.sender == hiredTalent.client) {
+            require(_side == 2, "Client can only fund their own side");
+            arbiterProxy.fundAppeal{ value: msg.value }(msg.sender, hiredTalent.disputeId, _side);
+        } else {
+            arbiterProxy.fundAppeal{ value: msg.value }(msg.sender, hiredTalent.disputeId, _side);
+        }
+    }
+
+    function getCurrentRuling(
+        uint256 _talentId,
+        uint256 _hiredTalentId
+    ) external view hiredTalentExists(_talentId, _hiredTalentId) returns (uint256) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No disputes for this hired talent");
+        require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
+
+        return arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
+    }
+
+    function submitEvidence(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        string calldata _evidenceURI
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to submit evidence for this hired talent");
+        require(hiredTalent.disputeId >= 0, "No dispute exists for this hired talent");
+        require(bytes(_evidenceURI).length > 0, "Evidence URI cannot be empty");
+
+        arbiterProxy.submitEvidence(
+            msg.sender,
+            hiredTalent.disputeId,
+            hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+            _evidenceURI,
+            // If this method is called, we want to emit the evidence event in an ongoing dispute
+            false
         );
     }
 }
