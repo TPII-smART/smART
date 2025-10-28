@@ -5,10 +5,9 @@
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 const deployedContracts = {
-  31337: {},
   11155111: {
     ArbiterProxy: {
-      address: "0xefaFD755413Ee8dA26595CFB567158Df05D58eAd",
+      address: "0x9B9A9ab7f5d1D267484e6Cf57bcEc7a079019d7a",
       abi: [
         {
           inputs: [
@@ -556,6 +555,61 @@ const deployedContracts = {
               type: "uint256",
             },
             {
+              indexed: false,
+              internalType: "uint256",
+              name: "freelancerPayedRoundFee",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "clientPayedRoundFee",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requiredAmountFreelancer",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requiredAmountClient",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerFullyFunded",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientFullyFunded",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "roundDeadline",
+              type: "uint256",
+            },
+          ],
+          name: "GigRoundStateUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
               indexed: true,
               internalType: "uint256",
               name: "round",
@@ -1019,6 +1073,61 @@ const deployedContracts = {
               type: "uint256",
             },
             {
+              indexed: false,
+              internalType: "uint256",
+              name: "freelancerPayedRoundFee",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "clientPayedRoundFee",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requiredAmountFreelancer",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "requiredAmountClient",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "freelancerFullyFunded",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "bool",
+              name: "clientFullyFunded",
+              type: "bool",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "roundDeadline",
+              type: "uint256",
+            },
+          ],
+          name: "TalentRoundStateUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "localDisputeId",
+              type: "uint256",
+            },
+            {
               indexed: true,
               internalType: "uint256",
               name: "round",
@@ -1099,19 +1208,6 @@ const deployedContracts = {
         {
           inputs: [],
           name: "FEE_DEPOSIT_TIMEOUT",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [],
-          name: "LOSER_APPEAL_PERIOD_MULTIPLIER",
           outputs: [
             {
               internalType: "uint256",
@@ -1344,6 +1440,11 @@ const deployedContracts = {
               name: "_evidenceGroupId",
               type: "uint256",
             },
+            {
+              internalType: "string",
+              name: "_reason",
+              type: "string",
+            },
           ],
           name: "createAndPayGigDisputeByClient",
           outputs: [
@@ -1387,6 +1488,11 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_evidenceGroupId",
               type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_reason",
+              type: "string",
             },
           ],
           name: "createAndPayGigDisputeByFreelancer",
@@ -1810,6 +1916,11 @@ const deployedContracts = {
               name: "_evidenceGroupId",
               type: "uint256",
             },
+            {
+              internalType: "string",
+              name: "_reason",
+              type: "string",
+            },
           ],
           name: "startAndPayTalentDisputeByClient",
           outputs: [
@@ -1858,6 +1969,11 @@ const deployedContracts = {
               internalType: "uint256",
               name: "_evidenceGroupId",
               type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "_reason",
+              type: "string",
             },
           ],
           name: "startAndPayTalentDisputeByFreelancer",
@@ -1941,22 +2057,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xefaFD755413Ee8dA26595CFB567158Df05D58eAd",
-        transactionIndex: 12,
-        gasUsed: "4837257",
+        contractAddress: "0x9B9A9ab7f5d1D267484e6Cf57bcEc7a079019d7a",
+        transactionIndex: 43,
+        gasUsed: "5116937",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x3f08d24530d02e0c683af20f90ef5e2e32ef9c100f8047e339142400c0459607",
-        transactionHash: "0xf149d8ceb4406ddd6495222d8f97b04f1a14153baf33573ebabf109afaa75dad",
+        blockHash: "0xbe3a3d2ee20effd29a59a287ff782e71b53b49d7f8038c9a21fec804bcd30ca5",
+        transactionHash: "0xf7325e6ae4baa588ba443a4be3de56144110447ffd53bb404248d16333a1a6e0",
         logs: [],
-        blockNumber: 9454762,
-        cumulativeGasUsed: "5595887",
+        blockNumber: 9505658,
+        cumulativeGasUsed: "9078423",
         status: 1,
         byzantium: true,
       },
     },
     GigsContract: {
-      address: "0x296FD7EeCE8023ca0443f146d847023571Cfe47d",
+      address: "0xC54dBd74D5Eb6e790F75c837bf8b627bE14dF020",
       abi: [
         {
           inputs: [
@@ -3039,6 +3155,11 @@ const deployedContracts = {
             },
             {
               internalType: "string",
+              name: "_metaEvidenceURI",
+              type: "string",
+            },
+            {
+              internalType: "string",
               name: "_reason",
               type: "string",
             },
@@ -3098,22 +3219,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x296FD7EeCE8023ca0443f146d847023571Cfe47d",
-        transactionIndex: 103,
-        gasUsed: "4435230",
+        contractAddress: "0xC54dBd74D5Eb6e790F75c837bf8b627bE14dF020",
+        transactionIndex: 30,
+        gasUsed: "4476333",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xa81dfee7f026afda678a52779d5dd6da5f0b8ace4a29ae3a5f863ce61c29759c",
-        transactionHash: "0xfb0ed4616faf035081e6b7c90ca2eacd7b678ac133e6346fac51ba6993f9936c",
+        blockHash: "0x472ae1cbcec8fb9438bc403ed9fbfccd9ca631da6396cc46acf8ef890a947cba",
+        transactionHash: "0x7b830c8bfe3ed19ad176f3769674f8275fc8e40e28c9e57c4c5351a3f5bc64e2",
         logs: [],
-        blockNumber: 9454780,
-        cumulativeGasUsed: "15042302",
+        blockNumber: 9505699,
+        cumulativeGasUsed: "10031668",
         status: 1,
         byzantium: true,
       },
     },
     HiredTalentsContract: {
-      address: "0xde45bF004AeA3D86fcF8E17Db5fD5867Db173DCd",
+      address: "0x31DA62DC9ef77398a75678DcEd4EaBD316B996a3",
       abi: [
         {
           inputs: [
@@ -4255,16 +4376,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xde45bF004AeA3D86fcF8E17Db5fD5867Db173DCd",
-        transactionIndex: 24,
-        gasUsed: "4584283",
+        contractAddress: "0x31DA62DC9ef77398a75678DcEd4EaBD316B996a3",
+        transactionIndex: 75,
+        gasUsed: "4629229",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x7258598770042087206551967f1ec4c6a10aa1cd444d4c52b463559cf7655d5e",
-        transactionHash: "0x7241e5302a93f4742ce8e5883c4469ed68e3bd7dc3f261ebf47017f0654c7227",
+        blockHash: "0x458abc18b3e1be27e183b0866374dc21fcaced4a55deff6387a4c4141eb0ebd3",
+        transactionHash: "0x6f41d4b25f7226d3595138da12392a21a8d47e59a4f093c8137d1e8b3324a1c3",
         logs: [],
-        blockNumber: 9454776,
-        cumulativeGasUsed: "6130110",
+        blockNumber: 9505687,
+        cumulativeGasUsed: "16329922",
         status: 1,
         byzantium: true,
       },
