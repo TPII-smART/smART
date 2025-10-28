@@ -386,7 +386,15 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        return arbitrator.currentRuling(dispute.klerosDisputeId);
+        Round storage round = dispute.rounds[dispute.currentRound];
+        if (round.freelancerFullyFunded && !round.clientFullyFunded) {
+            return FREELANCER_WINS;
+        } else if (!round.freelancerFullyFunded && round.clientFullyFunded) {
+            return CLIENT_WINS;
+        } else {
+            // Both sides fully funded or neither side funded -> return arbitrator's ruling
+            return arbitrator.currentRuling(dispute.klerosDisputeId);
+        }
     }
 
     /**
@@ -1185,6 +1193,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         } else if (_side == CLIENT_WINS && round.clientPayedRoundFee >= requiredAmount) {
             round.clientFullyFunded = true;
         }
+
+        round.feeRewards = round.freelancerPayedRoundFee + round.clientPayedRoundFee;
 
         // Check if both sides have paid -> create new appeal
         if (round.freelancerFullyFunded && round.clientFullyFunded) {

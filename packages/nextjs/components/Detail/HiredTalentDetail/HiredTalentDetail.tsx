@@ -537,6 +537,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                             ? "Client Wins"
                             : "Freelancer Wins"}
                         </span>
+                        {BigInt(disputeDetail?.freelancerFunds || 0) >= BigInt(freelancerFee || 0) &&
+                          BigInt(disputeDetail?.clientFunds || 0) < BigInt(clientFee || 0) && (
+                            <span> - Freelancer fully funded appeal</span>
+                          )}
+                        {BigInt(disputeDetail?.clientFunds || 0) >= BigInt(clientFee || 0) &&
+                          BigInt(disputeDetail?.freelancerFunds || 0) < BigInt(freelancerFee || 0) && (
+                            <span> - Client fully funded appeal</span>
+                          )}
                       </p>
                     </div>
                   )}
@@ -839,7 +847,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     rating: data?.rating || 0,
     wasDisputed: !!data?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
-    disputeResult: disputeCurrentRuling === Ruling.FreelancerWins,
+    disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
     clientRejected: data?.clientRejected || false,
   };
 
