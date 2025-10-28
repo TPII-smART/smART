@@ -43,6 +43,11 @@
     })
   );
 
+  const maxBlockNumber = Math.max(
+    ...Object.values(deployedContracts[targetNetwork.id] || {}).map(
+      (deployment: any) => deployment?.receipt?.blockNumber || 0
+    )
+  );
   
   const externalContractNames = Object.keys(externalContracts[targetNetwork.id] || {});
   externalContractNames.forEach((contractName) => {
@@ -51,7 +56,7 @@
       
       let startBlock = externalData.startBlock || 0;
        if (contractName === 'KlerosArbitrator' && targetNetwork.name === 'Sepolia') {
-           startBlock = 9428356;
+           startBlock = maxBlockNumber;
        }
 
       contracts[contractName] = { 
