@@ -29,6 +29,7 @@ import { fetchGigWithApplicationAndDeliverables } from "~~/services/graphql/fetc
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Application, Gig } from "~~/types/gig";
+import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 
 type GigData = {
   gig: Gig;
@@ -136,7 +137,17 @@ export default function GigDetail({
 
       await writeContract({
         functionName: "confirmFreelancerCompletion",
-        args: [BigInt(data?.gig.gigId), { resource, submissionComment: fileData.submissionComment, isLink }],
+        args: [
+          BigInt(data?.gig.gigId),
+          {
+            resource,
+            parsedResource: isLink
+              ? ""
+              : await createEvidenceJSON(resource, fileData.file?.name || "", "Deliverable submission by Freelancer"),
+            submissionComment: fileData.submissionComment,
+            isLink,
+          },
+        ],
       });
       if (reload) await reload();
     } catch (err) {

@@ -14,6 +14,8 @@ contract HiredTalentsContract {
 
     bytes public constant arbitratorExtraData = hex"0000000000000000000000000000000000000000000000000000000000000003"; // Court + Jurors quantity for Kleros
 
+    uint256 public constant OVERFLOW = type(uint256).max;
+
     // Enums for hiredTalent states
     enum HiredTalentState {
         WaitingForApproval,
@@ -643,14 +645,28 @@ contract HiredTalentsContract {
         require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
+        uint256 _currentDeliverableGroupId = uint256(
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _talentId, _hiredTalentId, "evidence"))
+        ) % OVERFLOW;
+
+        // If there was already a deliverableGroupId generated, keep that one
+        if (hiredTalent.deliverableInfo.length > 0) {
+            DeliverableInfo memory lastDeliverable = hiredTalent.deliverableInfo[
+                hiredTalent.deliverableInfo.length - 1
+            ];
+            _currentDeliverableGroupId = lastDeliverable.deliverableGroupId;
+        }
+
         DeliverableInfo memory deliverableToUpload = DeliverableInfo({
             resource: _deliverableParams.resource,
+            parsedResource: _deliverableParams.parsedResource,
             submissionComment: _deliverableParams.submissionComment,
             uploadedAt: block.timestamp,
             clientResponse: "",
             responseTimestamp: 0,
             isLink: _deliverableParams.isLink,
-            state: DeliverableState.Pending
+            state: DeliverableState.Pending,
+            deliverableGroupId: _currentDeliverableGroupId
         });
 
         hiredTalent.freelancerUploaded = true;
@@ -665,6 +681,15 @@ contract HiredTalentsContract {
             deliverableToUpload.isLink,
             hiredTalent.freelancerUploaded,
             deliverableToUpload.uploadedAt
+        );
+
+        arbiterProxy.submitEvidence(
+            hiredTalent.freelancer,
+            hiredTalent.disputeId,
+            deliverableToUpload.deliverableGroupId,
+            deliverableToUpload.parsedResource,
+            // Avoids checks and operations related to an existing dispute
+            true
         );
     }
 
@@ -728,8 +753,8 @@ contract HiredTalentsContract {
                 hiredTalent.freelancer,
                 hiredTalent.client,
                 arbitratorExtraData,
-                _metaEvidenceURI,
-                _reason
+                _reason,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
             );
         } else if (msg.sender == hiredTalent.client) {
             disputeId = arbiterProxy.startAndPayTalentDisputeByClient{ value: msg.value }(
@@ -738,8 +763,8 @@ contract HiredTalentsContract {
                 hiredTalent.freelancer,
                 hiredTalent.client,
                 arbitratorExtraData,
-                _metaEvidenceURI,
-                _reason
+                _reason,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
             );
         } else {
             revert("Only hired talent parties can start a dispute");
@@ -769,13 +794,15 @@ contract HiredTalentsContract {
             arbiterProxy.payArbitrationFeeByFreelancer{ value: msg.value }(
                 msg.sender,
                 hiredTalent.disputeId,
-                arbitratorExtraData
+                arbitratorExtraData,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
             );
         } else if (msg.sender == hiredTalent.client) {
             arbiterProxy.payArbitrationFeeByClient{ value: msg.value }(
                 msg.sender,
                 hiredTalent.disputeId,
-                arbitratorExtraData
+                arbitratorExtraData,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
             );
         } else {
             revert("Only hired talent parties can pay arbitration fee");
@@ -885,5 +912,26 @@ contract HiredTalentsContract {
         require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
 
         return arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
+    }
+
+    function submitEvidence(
+        uint256 _talentId,
+        uint256 _hiredTalentId,
+        string calldata _evidenceURI
+    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+        HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
+
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to submit evidence for this hired talent");
+        require(hiredTalent.disputeId >= 0, "No dispute exists for this hired talent");
+        require(bytes(_evidenceURI).length > 0, "Evidence URI cannot be empty");
+
+        arbiterProxy.submitEvidence(
+            msg.sender,
+            hiredTalent.disputeId,
+            hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+            _evidenceURI,
+            // If this method is called, we want to emit the evidence event in an ongoing dispute
+            false
+        );
     }
 }

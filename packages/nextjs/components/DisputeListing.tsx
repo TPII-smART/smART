@@ -17,13 +17,11 @@ interface DisputePageProps {
 }
 
 export default function DisputeListing({ type }: DisputePageProps) {
-  const queryClient = useQueryClient();
   const { address: userAddress } = useAccount();
   const [loading, setLoading] = useState<boolean>(false);
   const [data, setData] = useState<Dispute[]>([]);
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-
+  //const scrollRef = useRef<HTMLDivElement>(null);
   //const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const fetchFunction = useMemo(

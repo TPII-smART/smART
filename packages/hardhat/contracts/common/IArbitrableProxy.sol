@@ -46,6 +46,7 @@ interface IArbitrableProxy {
         address _client,
         bytes calldata _arbitratorExtraData,
         string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
         string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
@@ -56,6 +57,7 @@ interface IArbitrableProxy {
         address _client,
         bytes calldata _arbitratorExtraData,
         string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
         string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
@@ -65,6 +67,7 @@ interface IArbitrableProxy {
         address _client,
         bytes calldata _arbitratorExtraData,
         string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
         string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
@@ -74,19 +77,22 @@ interface IArbitrableProxy {
         address _client,
         bytes calldata _arbitratorExtraData,
         string calldata _metaEvidenceURI,
+        uint256 _evidenceGroupId,
         string calldata _reason
     ) external payable returns (uint256 localDisputeId);
 
     function payArbitrationFeeByFreelancer(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        uint256 _evidenceGroupId
     ) external payable;
 
     function payArbitrationFeeByClient(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData
+        bytes calldata _arbitratorExtraData,
+        uint256 _evidenceGroupId
     ) external payable;
 
     function concedeDispute(uint256 _localDisputeId, uint256 _winningSide) external;
@@ -104,6 +110,14 @@ interface IArbitrableProxy {
     // ============ Appeal interactions ============
 
     function fundAppeal(address _caller, uint256 _localDisputeId, uint8 _side) external payable;
+
+    function submitEvidence(
+        address _caller,
+        uint256 _localDisputeId,
+        uint256 _evidenceGroupId,
+        string calldata _evidenceURI,
+        bool justEvidenceEventEmission
+    ) external;
 
     // ============ Events ============
     event TalentDisputeCreated(
@@ -275,6 +289,21 @@ interface IArbitrableProxy {
     );
 
     event GigAppealExternallyFunded(uint256 indexed localDisputeId, uint256 indexed round, uint256 indexed gigId);
+
+    event TalentEvidenceSubmitted(
+        uint256 indexed localDisputeId,
+        uint256 indexed talentId,
+        uint256 indexed hiredTalentId,
+        address submitter,
+        string evidenceURI
+    );
+
+    event GigEvidenceSubmitted(
+        uint256 indexed localDisputeId,
+        uint256 indexed gigId,
+        address submitter,
+        string evidenceURI
+    );
 
     event TalentRoundStateUpdated(
         uint256 indexed localDisputeId,

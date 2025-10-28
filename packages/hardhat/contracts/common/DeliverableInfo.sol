@@ -10,16 +10,19 @@ enum DeliverableState {
 
 struct DeliverableInfo {
     string resource;
+    string parsedResource; // resource in the format compatible with Kleros court
     uint256 uploadedAt;
     string submissionComment;
     string clientResponse;
     uint256 responseTimestamp;
     DeliverableState state;
     bool isLink; // Whether the file is a link or an uploaded file
+    uint256 deliverableGroupId; // Group id for identifying deliverables from the same group
 }
 
 struct DeliverableParams {
     string resource;
+    string parsedResource;
     string submissionComment;
     bool isLink;
 }
