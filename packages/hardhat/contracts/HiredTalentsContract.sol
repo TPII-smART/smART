@@ -753,8 +753,9 @@ contract HiredTalentsContract {
                 hiredTalent.freelancer,
                 hiredTalent.client,
                 arbitratorExtraData,
-                _reason,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+                _metaEvidenceURI,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                _reason
             );
         } else if (msg.sender == hiredTalent.client) {
             disputeId = arbiterProxy.startAndPayTalentDisputeByClient{ value: msg.value }(
@@ -763,8 +764,9 @@ contract HiredTalentsContract {
                 hiredTalent.freelancer,
                 hiredTalent.client,
                 arbitratorExtraData,
-                _reason,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+                _metaEvidenceURI,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                _reason
             );
         } else {
             revert("Only hired talent parties can start a dispute");

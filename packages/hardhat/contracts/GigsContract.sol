@@ -743,8 +743,9 @@ contract GigsContract {
                 gig.acceptedFreelancer,
                 gig.client,
                 arbitratorExtraData,
-                _reason,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
+                _metaEvidenceURI,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                _reason
             );
         } else if (msg.sender == gig.client) {
             disputeId = arbiterProxy.createAndPayGigDisputeByClient{ value: msg.value }(
@@ -752,8 +753,9 @@ contract GigsContract {
                 gig.acceptedFreelancer,
                 gig.client,
                 arbitratorExtraData,
-                _reason,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
+                _metaEvidenceURI,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                _reason
             );
         } else {
             revert("Only gig parties can start a dispute");
