@@ -32,8 +32,8 @@ export default function AppealFormModal({
   loading?: boolean;
   initialValues?: Partial<AppealFormData>;
   side?: "client" | "freelancer";
-  requiredFee?: string;
-  currentTotal?: string;
+  requiredFee?: number;
+  currentTotal?: number;
   type: "hiredTalent" | "gig";
 }) {
   const formInitialValues = useMemo(

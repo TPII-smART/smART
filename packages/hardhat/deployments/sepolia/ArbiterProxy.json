@@ -408,6 +408,12 @@
           "internalType": "uint256",
           "name": "feeDepositDeadline",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
         }
       ],
       "name": "GigDisputeCreated",
@@ -841,6 +847,12 @@
           "internalType": "uint256",
           "name": "feeDepositDeadline",
           "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "reason",
+          "type": "string"
         }
       ],
       "name": "TalentDisputeCreated",
@@ -1415,6 +1427,11 @@
           "internalType": "string",
           "name": "_metaEvidenceURI",
           "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_reason",
+          "type": "string"
         }
       ],
       "name": "createDispute",
@@ -1968,7 +1985,7 @@
       "createAndPayGigDisputeByFreelancer(uint256,address,address,bytes,string,uint256)": {
         "details": "Convenience: Create dispute and pay fee in one transaction (Gig - Freelancer)"
       },
-      "createDispute(uint256,uint256,uint8,bytes,address,address,string)": {
+      "createDispute(uint256,uint256,uint8,bytes,address,address,string,string)": {
         "details": "Create a new dispute Returns the localDisputeId which must be used for all subsequent operations",
         "params": {
           "_arbitratorExtraData": "Extra data for the arbitrator",

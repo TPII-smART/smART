@@ -35,6 +35,7 @@ interface IArbitrableProxy {
         bytes calldata _arbitratorExtraData,
         address _freelancer,
         address _client,
+        string calldata _metaEvidenceURI,
         string calldata _reason
     ) external returns (uint256 localDisputeId);
 
@@ -106,7 +107,13 @@ interface IArbitrableProxy {
 
     function fundAppeal(address _caller, uint256 _localDisputeId, uint8 _side) external payable;
 
-    function submitEvidence(address _caller, uint256 _localDisputeId, uint256 _evidenceGroupId, string calldata _evidenceURI, bool justEvidenceEventEmission) external;
+    function submitEvidence(
+        address _caller,
+        uint256 _localDisputeId,
+        uint256 _evidenceGroupId,
+        string calldata _evidenceURI,
+        bool justEvidenceEventEmission
+    ) external;
 
     // ============ Events ============
     event TalentDisputeCreated(
@@ -115,7 +122,8 @@ interface IArbitrableProxy {
         uint256 indexed hiredTalentId,
         address freelancer,
         address client,
-        uint256 feeDepositDeadline
+        uint256 feeDepositDeadline,
+        string reason
     );
 
     event FreelancerPayedTalentArbitrationFee(
@@ -148,7 +156,8 @@ interface IArbitrableProxy {
         uint256 indexed gigId,
         address freelancer,
         address client,
-        uint256 feeDepositDeadline
+        uint256 feeDepositDeadline,
+        string reason
     );
 
     event FreelancerPayedGigArbitrationFee(
@@ -167,11 +176,7 @@ interface IArbitrableProxy {
         uint256 totalAmountPaid
     );
 
-    event GigDisputeRaised(
-        uint256 indexed localDisputeId,
-        uint256 indexed klerosDisputeId,
-        uint256 indexed gigId
-    );
+    event GigDisputeRaised(uint256 indexed localDisputeId, uint256 indexed klerosDisputeId, uint256 indexed gigId);
 
     event GigDisputeTimeoutByInaction(
         uint256 indexed localDisputeId,
@@ -196,12 +201,7 @@ interface IArbitrableProxy {
         address winner
     );
 
-    event GigDisputeConceded(
-        uint256 indexed localDisputeId,
-        uint256 indexed gigId,
-        uint256 ruling,
-        address winner
-    );
+    event GigDisputeConceded(uint256 indexed localDisputeId, uint256 indexed gigId, uint256 ruling, address winner);
 
     event GigAppealContribution(
         uint256 indexed localDisputeId,
@@ -256,18 +256,9 @@ interface IArbitrableProxy {
         uint256 reward
     );
 
-    event TalentRuling(
-        uint256 indexed localDisputeId,
-        uint256 talentId,
-        uint256 hiredTalentId,
-        uint256 ruling
-    );
+    event TalentRuling(uint256 indexed localDisputeId, uint256 talentId, uint256 hiredTalentId, uint256 ruling);
 
-    event GigRuling(
-        uint256 indexed localDisputeId,
-        uint256 gigId,
-        uint256 ruling
-    );
+    event GigRuling(uint256 indexed localDisputeId, uint256 gigId, uint256 ruling);
 
     event TalentRoundTimeoutByInaction(
         uint256 indexed localDisputeId,
@@ -293,11 +284,7 @@ interface IArbitrableProxy {
         uint256 hiredTalentId
     );
 
-    event GigAppealExternallyFunded(
-        uint256 indexed localDisputeId,
-        uint256 indexed round,
-        uint256 indexed gigId
-    );
+    event GigAppealExternallyFunded(uint256 indexed localDisputeId, uint256 indexed round, uint256 indexed gigId);
 
     event TalentEvidenceSubmitted(
         uint256 indexed localDisputeId,
@@ -312,5 +299,26 @@ interface IArbitrableProxy {
         uint256 indexed gigId,
         address submitter,
         string evidenceURI
+    );
+
+    event TalentRoundStateUpdated(
+        uint256 indexed localDisputeId,
+        uint256 freelancerPayedRoundFee,
+        uint256 clientPayedRoundFee,
+        uint256 requiredAmountFreelancer,
+        uint256 requiredAmountClient,
+        bool freelancerFullyFunded,
+        bool clientFullyFunded,
+        uint256 roundDeadline
+    );
+    event GigRoundStateUpdated(
+        uint256 indexed localDisputeId,
+        uint256 freelancerPayedRoundFee,
+        uint256 clientPayedRoundFee,
+        uint256 requiredAmountFreelancer,
+        uint256 requiredAmountClient,
+        bool freelancerFullyFunded,
+        bool clientFullyFunded,
+        uint256 roundDeadline
     );
 }

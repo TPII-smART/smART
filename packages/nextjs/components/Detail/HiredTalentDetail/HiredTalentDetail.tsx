@@ -8,6 +8,7 @@ import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/Appeal
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
 import Spinner from "@/components/Spinner/Spinner";
 import { HiredTalentState } from "@se-2/common";
+import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { fetchHiredTalent } from "@services/graphql/fetchers/hiredTalent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther, parseEther } from "viem";
@@ -23,6 +24,7 @@ import { uploadToIPFS } from "~~/services/IPFS/pinataIPFS";
 import { fetchDeliverablesForHiredTalent } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
 import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
+import { Dispute } from "~~/types/dispute/dispute.type";
 import { HiredTalent } from "~~/types/hiredTalent";
 import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
@@ -55,6 +57,16 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   });
 
   const {
+    data: disputeData,
+    isLoading: isDisputeLoading,
+    error: disputeError,
+    refetch: refetchDispute,
+  } = useQuery<Dispute>({
+    queryKey: ["disputeDetail", data?.disputeId],
+    queryFn: () => fetchDisputeById(data?.disputeId || 0),
+  });
+
+  const {
     data: deliverables,
     isLoading: isDeliverableLoading,
     refetch: refetchDeliverables,
@@ -75,6 +87,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const isFreelancer = hiredTalent?.freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const isClient = hiredTalent?.client?.toLowerCase() === userAddress?.toLowerCase();
   const hiredTalentStatus = hiredTalent?.state as HiredTalentState;
+  const disputeDetail = disputeData ? disputeData : null;
+  console.log("Hired Talent:", data);
+  console.log("Dispute Detail:", disputeDetail);
 
   const {
     disputeCurrentRuling,
@@ -94,7 +109,8 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     await new Promise(resolve => setTimeout(resolve, 1000));
     await refetch();
     await refetchDeliverables();
-  }, [hiredTalentId, queryClient, refetch, refetchDeliverables, talentId]);
+    await refetchDispute();
+  }, [hiredTalentId, queryClient, refetch, refetchDeliverables, refetchDispute, talentId]);
 
   useEffect(() => {
     reload();
@@ -114,7 +130,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
       await writeContract({
         functionName: "startDispute",
-        args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), metaDataURI],
+        args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), metaDataURI, values.comment],
         value: BigInt(arbitrationCost || 0),
       });
 
@@ -388,6 +404,13 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     }
   };
 
+  const isWaiting = disputeStatus === DisputeStatus.Waiting;
+  const currentDeadline = (disputeDetail?.currentRound || 0) == 0 ? disputeDetail?.roundDeadline : appealDeadline;
+  const expiredRound =
+    (!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
+    disputeDetail?.roundDeadline &&
+    new Date() > new Date(Number(currentDeadline) * 1000);
+
   // Get status message based on hiredTalent state and user role
   const getStatusMessage = () => {
     if (data?.state === HiredTalentState.WaitingForApproval) {
@@ -400,81 +423,103 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       }
     }
 
+    const freelancerAmount = Number(disputeDetail?.freelancerFunds || 0);
+    const clientAmount = Number(disputeDetail?.clientFunds || 0);
+    const totalFreelancerAmount = Number(freelancerFee || 1);
+    const totalClientAmount = Number(clientFee || 1);
+
+    const freelancerPercentage = totalFreelancerAmount > 0 ? (freelancerAmount / totalFreelancerAmount) * 100 : 0;
+    const clientPercentage = totalClientAmount > 0 ? (clientAmount / totalClientAmount) * 100 : 0;
+
+    const formatPct = (p: number) => `${Math.max(0, Math.min(100, p)).toFixed(1)}%`;
+
     if (data?.state != undefined && data?.state >= HiredTalentState.Ongoing) {
       if (data?.disputeId && data?.disputeId > 0) {
-        if (data?.disputeFinished) return null;
+        if (disputeDetail?.disputeFinished) return null;
         return (
           <div>
             {data?.disputeId && data?.disputeId > 0 ? (
               <>
-                {(!data?.freelancerPaidArbitrationFee || !data?.clientPaidArbitrationFee) && (
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center">
-                      <CheckCircleIcon
-                        className={`h-6 w-6 ${data.freelancerPaidArbitrationFee ? "text-green-500" : "text-gray-400"}`}
-                      />
-                      <span className="ml-2">Freelancer Paid Fee</span>
+                {(!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
+                  (disputeDetail?.currentRound || 0) == 0 && (
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center">
+                        <CheckCircleIcon
+                          className={`h-6 w-6 ${disputeDetail?.freelancerPaidArbitrationFee ? "text-green-500" : "text-gray-400"}`}
+                        />
+                        <span className="ml-2">Freelancer Paid Fee</span>
+                      </div>
+                      <div className="flex items-center">
+                        <CheckCircleIcon
+                          className={`h-6 w-6 ${disputeDetail?.clientPaidArbitrationFee ? "text-green-500" : "text-gray-400"}`}
+                        />
+                        <span className="ml-2">Client Paid Fee</span>
+                      </div>
                     </div>
-                    <div className="flex items-center">
-                      <CheckCircleIcon
-                        className={`h-6 w-6 ${data.clientPaidArbitrationFee ? "text-green-500" : "text-gray-400"}`}
-                      />
-                      <span className="ml-2">Client Paid Fee</span>
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {data.klerosDisputeId &&
+                {disputeDetail?.raiseOnKleros &&
                   disputeStatus === DisputeStatus.Appealable &&
-                  (Number(data.clientFunds ?? 0) > 0 || Number(data.freelancerFunds ?? 0) > 0 ? (
-                    <>
-                      <div>
-                        <p className="font-medium">Freelancer Funds</p>
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div
-                            className="bg-blue-500 h-4 rounded-full"
-                            style={{
-                              width: `${Math.min(((Number(data.freelancerFunds) || 0) / (Number(freelancerFee) || 1)) * 100, 100)}%`,
-                            }}
-                          ></div>
+                  (Number(disputeDetail?.clientFunds ?? 0) > 0 || Number(disputeDetail?.freelancerFunds ?? 0) > 0 ? (
+                    <div className="space-y-3">
+                      {/* Freelancer Stake */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">Freelancer Stake</span>
+                          <span className="text-sm font-bold text-foreground">
+                            {`${formatEther(BigInt(freelancerAmount))} / ${formatEther(BigInt(totalFreelancerAmount))}`}{" "}
+                            ETH{" "}
+                            <span className="text-xs text-muted-foreground">({formatPct(freelancerPercentage)})</span>
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {formatEther(BigInt(data.freelancerFunds || 0))} / {formatEther(BigInt(freelancerFee || 0))}{" "}
-                          ETH
-                        </p>
+                        <div className="relative h-4 w-full rounded-full bg-muted border border-gray-600 overflow-hidden">
+                          {" "}
+                          <div className="absolute inset-0 bg-transparent h-full transition-all" />
+                          <div
+                            className="absolute inset-0 bg-blue-500 h-full transition-all"
+                            style={{ width: `${freelancerPercentage}%` }}
+                          />
+                        </div>
                       </div>
 
-                      <div>
-                        <p className="font-medium">Client Funds</p>
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                          <div
-                            className="bg-green-500 h-4 rounded-full"
-                            style={{
-                              width: `${Math.min(((Number(data?.clientFunds) || 0) / (Number(clientFee) || 1)) * 100, 100)}%`,
-                            }}
-                          ></div>
+                      {/* Client Stake */}
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-muted-foreground">Client Stake</span>
+                          <span className="text-sm font-bold text-foreground">
+                            {`${formatEther(BigInt(clientAmount))} / ${formatEther(BigInt(totalClientAmount))}`} ETH{" "}
+                            <span className="text-xs text-muted-foreground">({formatPct(clientPercentage)})</span>
+                          </span>
                         </div>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {formatEther(BigInt(data.clientFunds || 0))} / {formatEther(BigInt(clientFee || 0))} ETH
-                        </p>
+                        <div className="relative h-4 w-full rounded-full bg-muted border border-gray-600 overflow-hidden">
+                          {" "}
+                          <div className="absolute inset-0 bg-transparent h-full transition-all" />
+                          <div
+                            className="absolute inset-0 bg-blue-500 h-full transition-all"
+                            style={{ width: `${clientPercentage}%` }}
+                          />
+                        </div>
                       </div>
-                    </>
+                    </div>
                   ) : (
                     <p>Dispute is appealable. Fund your side to appeal the ruling.</p>
                   ))}
 
-                {(!data?.freelancerPaidArbitrationFee ||
-                  !data?.clientPaidArbitrationFee ||
-                  (disputeStatus === DisputeStatus.Appealable && data?.klerosDisputeId)) && (
+                {(((!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
+                  (disputeDetail?.currentRound || 0) == 0) ||
+                  (disputeStatus === DisputeStatus.Appealable && disputeDetail?.raiseOnKleros)) && (
                   <div>
                     <p className="text-sm text-gray-500">
                       Deadline to{" "}
-                      {data?.clientPaidArbitrationFee && data?.freelancerPaidArbitrationFee ? "appeal" : "pay fee"}:{" "}
+                      {disputeDetail?.clientPaidArbitrationFee && disputeDetail?.freelancerPaidArbitrationFee
+                        ? "appeal"
+                        : "pay fee"}
+                      :{" "}
                       <span className="font-medium text-gray-700">
                         {disputeStatus === DisputeStatus.Appealable && appealDeadline
                           ? new Date(Number(appealDeadline) * 1000).toLocaleString()
-                          : data.disputeDeadline
-                            ? new Date(Number(data.disputeDeadline) * 1000).toLocaleString()
+                          : disputeDetail?.roundDeadline
+                            ? new Date(Number(disputeDetail?.roundDeadline) * 1000).toLocaleString()
                             : "N/A"}
                       </span>
                     </p>
@@ -487,7 +532,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
                 {disputeCurrentRuling !== undefined &&
                   BigInt(disputeCurrentRuling) !== 0n &&
-                  data?.klerosDisputeId &&
+                  disputeDetail?.raiseOnKleros &&
                   disputeStatus !== DisputeStatus.Waiting && (
                     <div>
                       <p className="text-sm text-gray-500">
@@ -497,6 +542,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                             ? "Client Wins"
                             : "Freelancer Wins"}
                         </span>
+                        {BigInt(disputeDetail?.freelancerFunds || 0) >= BigInt(freelancerFee || 0) &&
+                          BigInt(disputeDetail?.clientFunds || 0) < BigInt(clientFee || 0) && (
+                            <span> - Freelancer fully funded appeal</span>
+                          )}
+                        {BigInt(disputeDetail?.clientFunds || 0) >= BigInt(clientFee || 0) &&
+                          BigInt(disputeDetail?.freelancerFunds || 0) < BigInt(freelancerFee || 0) && (
+                            <span> - Client fully funded appeal</span>
+                          )}
                       </p>
                     </div>
                   )}
@@ -600,10 +653,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       }
       if (hiredTalentStatus === HiredTalentState.Disputed) {
         if (
-          ((!data?.freelancerPaidArbitrationFee || !data?.clientPaidArbitrationFee) &&
-            data?.disputeDeadline &&
-            new Date() > new Date(Number(data.disputeDeadline) * 1000)) ||
-          (data?.klerosDisputeId && disputeStatus === DisputeStatus.Solved && !data?.disputeFinished)
+          !isWaiting &&
+          (expiredRound ||
+            (disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Solved && !disputeDetail?.disputeFinished))
         ) {
           buttons.push(
             <Button
@@ -618,7 +670,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
               <span>Release Funds</span>
             </Button>,
           );
-        } else if (!data?.freelancerPaidArbitrationFee) {
+        } else if (!disputeDetail?.freelancerPaidArbitrationFee && (disputeDetail?.currentRound || 0) == 0) {
           buttons.push(
             <Button
               variant="outline"
@@ -694,10 +746,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       }
       if (hiredTalentStatus === HiredTalentState.Disputed) {
         if (
-          ((!data?.freelancerPaidArbitrationFee || !data?.clientPaidArbitrationFee) &&
-            data?.disputeDeadline &&
-            new Date() > new Date(Number(data.disputeDeadline) * 1000)) ||
-          (data?.klerosDisputeId && disputeStatus === DisputeStatus.Solved && !data?.disputeFinished)
+          !isWaiting &&
+          (expiredRound ||
+            (disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Solved && !disputeDetail?.disputeFinished))
         ) {
           buttons.push(
             <Button
@@ -712,7 +763,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
               <span>Release Funds</span>
             </Button>,
           );
-        } else if (!data?.clientPaidArbitrationFee) {
+        } else if (!disputeDetail?.clientPaidArbitrationFee && (disputeDetail?.currentRound || 0) == 0) {
           buttons.push(
             <Button
               variant="outline"
@@ -731,11 +782,15 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     }
 
     if (hiredTalentStatus === HiredTalentState.Disputed && disputeStatus === DisputeStatus.Appealable) {
-      if (data?.freelancerFunds !== undefined && Number(data.freelancerFunds) < (freelancerFee ?? 0) && !isClient) {
+      if (
+        disputeDetail?.freelancerFunds !== undefined &&
+        Number(disputeDetail.freelancerFunds) < (freelancerFee ?? 0) &&
+        !isClient
+      ) {
         buttons.push(
           <Button
             variant="outline"
-            key="appeal"
+            key="appealFreelancer"
             onClick={() => {
               setFundingSide("freelancer");
               setShowAppealModal(true);
@@ -749,11 +804,15 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           </Button>,
         );
       }
-      if (data?.clientFunds !== undefined && Number(data.clientFunds) < (clientFee ?? 0) && !isFreelancer) {
+      if (
+        disputeDetail?.clientFunds !== undefined &&
+        Number(disputeDetail.clientFunds) < (clientFee ?? 0) &&
+        !isFreelancer
+      ) {
         buttons.push(
           <Button
             variant="outline"
-            key="appeal"
+            key="appealClient"
             onClick={() => {
               setFundingSide("client");
               setShowAppealModal(true);
@@ -792,8 +851,8 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     finishedAt: data?.finishedAt || "",
     rating: data?.rating || 0,
     wasDisputed: !!data?.disputeId,
-    disputeFinalized: data?.disputeFinished || false,
-    disputeResult: disputeCurrentRuling === Ruling.FreelancerWins,
+    disputeFinalized: disputeDetail?.disputeFinished || false,
+    disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
     clientRejected: data?.clientRejected || false,
   };
 
@@ -847,8 +906,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         onClose={() => setShowAppealModal(false)}
         loading={isSubmittingDispute}
         side={fundingSide}
-        requiredFee={fundingSide === "freelancer" ? String(freelancerFee) : String(clientFee)}
-        currentTotal={fundingSide === "freelancer" ? data?.freelancerFunds || "0" : data?.clientFunds || "0"}
+        requiredFee={fundingSide === "freelancer" ? freelancerFee : clientFee}
+        currentTotal={
+          fundingSide === "freelancer" ? disputeDetail?.freelancerFunds || 0 : disputeDetail?.clientFunds || 0
+        }
         type="hiredTalent"
         onSubmit={async (values: AppealFormData) => {
           setIsSubmittingDispute(true);

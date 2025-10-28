@@ -1095,6 +1095,11 @@
         },
         {
           "internalType": "string",
+          "name": "_metaEvidenceURI",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
           "name": "_reason",
           "type": "string"
         }
