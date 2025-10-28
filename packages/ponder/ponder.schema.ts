@@ -1,6 +1,4 @@
-import { table } from "console";
-import { desc, onchainTable, primaryKey } from "ponder";
-import { title } from "process";
+import { onchainTable, primaryKey } from "ponder";
 
 // Talent table
 export const talent = onchainTable("talent", (t) => ({
@@ -47,7 +45,6 @@ export const hiredTalent = onchainTable(
 		freelancerCancelled: t.boolean().notNull(),
 		freelancerDelivered: t.boolean().notNull(),
 		freelancerUploaded: t.boolean().notNull().default(false),
-		disputeId: t.bigint(),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 	}),
 	(table) => ({
@@ -85,7 +82,6 @@ export const gig = onchainTable("gig", (t) => ({
 	rating: t.integer(), // Rating given by the client to the freelancer
 	acceptedApplicationId: t.bigint(),
 	gigBannerImageHash: t.varchar({ length: 128 }),
-	disputeId: t.bigint(),
 	lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 }));
 
@@ -187,54 +183,4 @@ export const gigDeliverable = onchainTable(
   table => ({
     pk: primaryKey({ columns: [table.gigId, table.uploadedAt] }),
   })
-);
-
-
-export const dispute = onchainTable("disputes", (t) => ({
-		disputeId: t.bigint().notNull(),
-		klerosDisputeId: t.bigint(),
-		type: t.varchar({ length: 16 }).notNull(), // "hiredTalent" | "gig"
-		raiseOnKleros: t.boolean().notNull().default(false),
-		freelancerPaidArbitrationFee: t.boolean(),
-		clientPaidArbitrationFee: t.boolean(),
-		freelancerFunds: t.bigint(),
-		clientFunds: t.bigint(),
-		freelancerFee: t.bigint(),
-		clientFee: t.bigint(),
-		roundDeadline: t.bigint().notNull(),
-		currentRound: t.integer(),
-		currentRuling: t.integer(),
-		appealCost: t.bigint(),	
-		status: t.integer().default(0),
-		disputeFinished: t.boolean().notNull().default(false),
-		isAppealed: t.boolean().notNull().default(false),
-		disputeReason: t.varchar({ length: 256 }),
-		title: t.varchar({ length: 128 }),
-		description: t.varchar({ length: 512 }),
-		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
-
-}),
-table => ({
-	pk: primaryKey({ columns: [table.disputeId] }),
-})
-);
-
-export const klerosDispute = onchainTable("klerosdisputes", (t) => ({
-		klerosDisputeId: t.bigint().notNull(),
-		disputeId: t.bigint().notNull(),
-		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
-}),
-table => ({
-	pk: primaryKey({ columns: [table.klerosDisputeId] }),
-})
-);
-
-export const disputeContributor = onchainTable("disputeContributors", (t) => ({
-		disputeId: t.bigint().notNull(),
-		contributor: t.varchar({ length: 128 }).notNull(),
-		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
-}),
-table => ({
-	pk: primaryKey({ columns: [table.disputeId, table.contributor] }),
-})
 );

@@ -39,7 +39,6 @@ export default function UniversalDetail({
   isMining,
   isDeliverableLoading,
   handleRateJob,
-  initiateConflictResolution,
   handleFreelancerConfirmCompletion: handleUploadDeliverable,
   handleClientConfirmCompletion,
   handleRejectJob,
@@ -406,36 +405,17 @@ export default function UniversalDetail({
           ) : (
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardContent className="p-6">
-                <div className="space-y-4 h-full flex flex-row">
+                <div className="space-y-4">
                   {statusMessage && (
-                    <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg flex-1">
-                      <div className="flex items-center space-x-4 mt-2 justify-around ">
-                        <div className="text-[var(--color-primary-content)] text-base leading-relaxed m-0">
-                          {statusMessage}
-                        </div>
-                        {data?.state === HiredTalentState.Ongoing && (
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="primary"
-                              size={"md"}
-                              onClick={() => {
-                                initiateConflictResolution();
-                              }}
-                              disabled={isMining}
-                              tooltip="Dispute resolution"
-                              circular={true}
-                            >
-                              <ExclamationCircleIcon className="h-8 w-8" />
-                            </Button>
-                          </div>
-                        )}
-                      </div>
+                    <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg">
+                      <p className="text-[var(--color-primary-content)] text-base leading-relaxed">{statusMessage}</p>
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
           )}
+
           {/* Action Buttons Box */}
           <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
             <CardContent className="p-12">

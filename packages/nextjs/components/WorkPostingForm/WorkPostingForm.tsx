@@ -12,7 +12,7 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
-import { uploadToIPFS } from "~~/services/IPFS/pinataIPFS";
+import { uploadToIPFS } from "~~/services/IPFS/thirdwebIPFS";
 import { Gig } from "~~/types/gig/gig.types";
 import { Talent } from "~~/types/hiredTalent";
 import { ScaffoldWriteContractVariables } from "~~/utils/scaffold-eth/contract";

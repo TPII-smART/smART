@@ -6,7 +6,7 @@ import { DeliverableState } from "@se-2/common";
 import { CheckCircleIcon, ClockIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverablePreview from "~~/components/DeliverablePreview/DeliverablePreview";
-import { resolveIPFSHash } from "~~/services/IPFS/pinataIPFS";
+import { resolveIPFSHash } from "~~/services/IPFS/thirdwebIPFS";
 import { Deliverable } from "~~/types/deliverable";
 
 interface participantDeliverable {
@@ -29,7 +29,9 @@ const getStatusBadge = (status: number) => {
   switch (status) {
     case DeliverableState.Pending:
       return (
-        <Badge className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass}`}>
+        <Badge
+          className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass} hover:bg-amber-300 transition-colors`}
+        >
           Pending Review
         </Badge>
       );

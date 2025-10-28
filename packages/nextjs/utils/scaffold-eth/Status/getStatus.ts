@@ -5,7 +5,6 @@ import {
   ExclamationTriangleIcon,
   PaperAirplaneIcon,
   PlayIcon,
-  ScaleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { castDateToTimestampNum } from "~~/lib/utils";
@@ -95,15 +94,6 @@ export function getHiredTalentStatus(
     };
   }
 
-  if (hiredTalentState === HiredTalentState.Disputed) {
-    return {
-      label: "In Dispute",
-      color: "bg-yellow-500",
-      icon: ScaleIcon,
-      description: "Hired Talent is currently in dispute",
-    };
-  }
-
   return {
     label: "Unknown",
     color: "bg-gray-500",
@@ -177,15 +167,6 @@ export function getGigStatus(gigState: GigState, gig: Gig, isFreelancer: boolean
       color: "bg-red-500",
       icon: XCircleIcon,
       description: "Gig was cancelled",
-    };
-  }
-
-  if (gigState === GigState.Disputed) {
-    return {
-      label: "In Dispute",
-      color: "bg-yellow-500",
-      icon: ScaleIcon,
-      description: "Gig is currently in dispute",
     };
   }
 

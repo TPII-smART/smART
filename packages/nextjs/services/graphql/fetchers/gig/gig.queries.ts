@@ -35,7 +35,6 @@ export const getGigs = gql`
         rating
         acceptedApplicationId
         gigBannerImageHash
-        disputeId
       }
     }
   }
@@ -90,7 +89,6 @@ export const getGigsPaginated = gql`
         rating
         acceptedApplicationId
         gigBannerImageHash
-        disputeId
       }
       pageInfo {
         endCursor
@@ -129,7 +127,6 @@ export const getMyGigs = gql`
         acceptedApplicationId
         gigBannerImageHash
         emitBy
-        disputeId
       }
     }
   }
@@ -166,7 +163,6 @@ export const getMyGigsPaginated = gql`
         acceptedApplicationId
         gigBannerImageHash
         emitBy
-        disputeId
       }
       pageInfo {
         endCursor
@@ -259,7 +255,6 @@ export const getGigByIds = gql`
         rating
         acceptedApplicationId
         gigBannerImageHash
-        disputeId
       }
     }
   }
@@ -366,7 +361,6 @@ export const getGigById = gql`
       rating
       acceptedApplicationId
       gigBannerImageHash
-      disputeId
     }
   }
 `;
