@@ -40,7 +40,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
     uint256 public constant WINNER_STAKE_MULTIPLIER = 10000; // Basis points (100%)
     uint256 public constant LOSER_STAKE_MULTIPLIER = 20000; // Basis points (200%)
-    uint256 public constant LOSER_APPEAL_PERIOD_MULTIPLIER = 5000; // 50% of total period
     uint256 public constant MULTIPLIER_DIVISOR = 10000;
     uint256 public constant OVERFLOW = type(uint256).max;
 
@@ -1058,19 +1057,12 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         uint256 multiplier;
 
-        // Loser has only half the appeal period
-        uint256 loserDeadline = appealStart +
-            ((appealEnd - appealStart) * LOSER_APPEAL_PERIOD_MULTIPLIER) /
-            MULTIPLIER_DIVISOR;
-
         if (_side == currentRuling) {
             // Winner side needs to pay 100%
             multiplier = WINNER_STAKE_MULTIPLIER;
-            // Winner can only appeal during the full period
         } else {
             // Loser side needs to pay 200%
             multiplier = LOSER_STAKE_MULTIPLIER;
-            require(block.timestamp < loserDeadline, "Loser appeal period is over");
         }
 
         Round storage round = dispute.rounds[dispute.currentRound];
@@ -1165,7 +1157,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 requiredAmountClient,
                 round.freelancerFullyFunded,
                 round.clientFullyFunded,
-                loserDeadline
+                appealEnd
             );
         } else if (dispute.disputeType == DisputeType.Gig) {
             emit GigAppealContribution(
@@ -1186,7 +1178,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 requiredAmountClient,
                 round.freelancerFullyFunded,
                 round.clientFullyFunded,
-                loserDeadline
+                appealEnd
             );
         }
 
