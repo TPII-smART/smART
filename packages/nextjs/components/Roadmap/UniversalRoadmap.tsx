@@ -16,7 +16,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
     const hiredTalent = data;
     const baseSteps = [
       {
-        title: "Hired Talent Created",
+        title: "HiredTalent Created",
         date: formatDate(hiredTalent.createdAt),
         completed: true,
         current: false,
@@ -30,7 +30,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
         state: "waiting",
       },
       {
-        title: "Hired Talent Accepted",
+        title: "HiredTalent Accepted",
         date: hiredTalent.acceptedAt ? formatDate(hiredTalent.acceptedAt) : null,
         completed: hiredTalent.state > HiredTalentState.Ongoing || !!hiredTalent.acceptedAt,
         current: hiredTalent.state === HiredTalentState.Ongoing,
@@ -54,38 +54,26 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
         state: "received",
       },
     ];
-    if (hiredTalent.wasDisputed) {
-      baseSteps.push({
-        title: "Hired Talent Disputed",
-        date: `In Dispute${hiredTalent.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
-        completed: true,
-        current: hiredTalent.state === HiredTalentState.Disputed,
-        state: "disputed",
-      });
-      baseSteps.push({
-        title: hiredTalent.disputeFinalized
-          ? hiredTalent.disputeResult
-            ? "Dispute Resolved: Freelancer Wins"
-            : "Dispute Resolved: Client Wins"
-          : "Dispute Resolution",
-        date: hiredTalent.finishedAt ? formatDate(hiredTalent.finishedAt) : null,
-        completed: hiredTalent.disputeFinalized || false,
-        current: false,
-        state: "disputed",
-      });
-    }
 
     if (hiredTalent.state === HiredTalentState.Cancelled) {
       baseSteps.push({
-        title: "Hired Talent Cancelled",
+        title: "HiredTalent Cancelled",
         date: hiredTalent.canceledAt ? formatDate(hiredTalent.canceledAt) : null,
         completed: true,
         current: false,
         state: "cancelled",
       });
+    } else if (hiredTalent.state === HiredTalentState.Disputed) {
+      baseSteps.push({
+        title: "HiredTalent Disputed",
+        date: "In Dispute",
+        completed: true,
+        current: false,
+        state: "disputed",
+      });
     } else {
       baseSteps.push({
-        title: hiredTalent.wasDisputed ? "Hired Talent Finalized After Dispute" : "Hired Talent Completed",
+        title: "HiredTalent Completed",
         date: hiredTalent.finishedAt ? formatDate(hiredTalent.finishedAt) : null,
         completed: hiredTalent.state === HiredTalentState.Finished,
         current: false,
@@ -135,27 +123,6 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
       },
     ];
 
-    if (gig.wasDisputed) {
-      baseSteps.push({
-        title: "Gig Disputed",
-        date: `In Dispute${gig.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
-        completed: true,
-        current: gig.state === GigState.Disputed,
-        state: "disputed",
-      });
-      baseSteps.push({
-        title: gig.disputeFinalized
-          ? gig.disputeResult
-            ? "Dispute Resolved: Freelancer Wins"
-            : "Dispute Resolved: Client Wins"
-          : "Dispute Resolution",
-        date: gig.finishedAt ? formatDate(gig.finishedAt) : null,
-        completed: gig.disputeFinalized || false,
-        current: false,
-        state: "disputed",
-      });
-    }
-
     if (gig.state === GigState.Cancelled) {
       baseSteps.push({
         title: "Gig Cancelled",
@@ -164,9 +131,17 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
         current: false,
         state: "cancelled",
       });
+    } else if (gig.state === GigState.Disputed) {
+      baseSteps.push({
+        title: "Gig Disputed",
+        date: "In Dispute",
+        completed: true,
+        current: false,
+        state: "disputed",
+      });
     } else {
       baseSteps.push({
-        title: gig.wasDisputed ? "Gig Finalized After Dispute" : "Gig Completed",
+        title: "Gig Completed",
         date: gig.finishedAt ? formatDate(gig.finishedAt) : null,
         completed: gig.state === GigState.Completed,
         current: false,

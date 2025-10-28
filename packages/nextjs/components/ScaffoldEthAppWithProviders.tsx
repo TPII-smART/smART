@@ -9,14 +9,7 @@ import { AppProgressBar as ProgressBar } from "next-nprogress-bar";
 import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiProvider, useAccount } from "wagmi";
-import {
-  BugAntIcon,
-  HomeIcon,
-  MagnifyingGlassIcon,
-  ScaleIcon,
-  TableCellsIcon,
-  UserIcon,
-} from "@heroicons/react/24/outline";
+import { BugAntIcon, HomeIcon, MagnifyingGlassIcon, TableCellsIcon, UserIcon } from "@heroicons/react/24/outline";
 import { BlockieAvatar } from "~~/components/scaffold-eth";
 import { NotificationsProvider } from "~~/context/NotificationsCountProvider";
 import { SpinnerProvider } from "~~/context/SpinnerProvider";
@@ -54,11 +47,6 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
                 label: "Dashboard",
                 href: "/dashboard",
                 icon: TableCellsIcon,
-              },
-              {
-                label: "Disputes",
-                href: "/disputes",
-                icon: ScaleIcon,
               },
               {
                 label: "Debug Contracts",

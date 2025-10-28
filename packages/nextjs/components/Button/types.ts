@@ -52,10 +52,4 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
    * This can provide additional context or information about the button's action.
    */
   tooltip?: string;
-  /**
-   * Optional circular style for the button.
-   * When true, the button will have a circular shape.
-   * @default false
-   */
-  circular?: boolean;
 }

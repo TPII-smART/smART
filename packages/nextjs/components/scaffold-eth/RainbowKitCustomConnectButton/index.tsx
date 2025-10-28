@@ -35,7 +35,7 @@ export const RainbowKitCustomConnectButton = () => {
           : undefined;
 
         return (
-          <Skeleton variant="rounded" active={!mounted || loadingUser} width={200}>
+          <Skeleton variant="rounded" active={!mounted || !chain} width={200}>
             {(() => {
               if (!connected) {
                 return (

@@ -83,10 +83,8 @@ export interface HiredTalent {
 
   /** (Optional) Ethereum address of the user who emitted the hiredTalent event, formatted as a hexadecimal string. */
   emitBy?: `0x${string}`;
-
-  /** (Optional) Identifier for the dispute associated with the hired talent, if any. */
-  disputeId?: number;
 }
+
 export interface HiredTalentsData {
   hiredTalents: HiredTalent[];
 }

@@ -7,7 +7,7 @@ export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElemen
   deliverables?: Deliverable[];
   statusBadge?: React.ReactNode;
   actionButtons: React.ReactNode[];
-  statusMessage: React.ReactNode;
+  statusMessage: string;
   loading?: boolean;
   isMining: boolean;
   isDeliverableLoading: boolean;
@@ -24,6 +24,5 @@ export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElemen
   handleClientConfirmCompletion: (clientResponse: string) => Promise<void>;
   handleRejectJob: (reason: string) => void;
   handleRateJob: (rating: number) => void;
-  initiateConflictResolution: () => void;
   handleFreelancerConfirmCompletion: (deliverableData: FileFormData) => Promise<void>;
 }
