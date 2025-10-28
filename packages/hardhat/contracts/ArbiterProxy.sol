@@ -539,7 +539,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         // If one of the sides is fully funded but the other isn't, rule in favor of the funded side
         // Determine winner based on who paid
-        uint256 ruling;
+        uint256 ruling = 0;
 
         bool freelancerFullyFunded = round.freelancerFullyFunded;
         bool clientFullyFunded = round.clientFullyFunded;
@@ -547,31 +547,27 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         if (freelancerFullyFunded && !clientFullyFunded) {
             // Freelancer fully funded, client didn't -> Freelancer wins
             ruling = FREELANCER_WINS;
-            _distributeFeesAndRewards(_localDisputeId, FREELANCER_WINS, false);
         } else if (clientFullyFunded && !freelancerFullyFunded) {
             // Client fully funded, freelancer didn't -> Client wins
             ruling = CLIENT_WINS;
-            _distributeFeesAndRewards(_localDisputeId, CLIENT_WINS, false);
         } else {
             // Neither fully funded -> Use arbitrator's ruling
             ruling = arbitrator.currentRuling(dispute.klerosDisputeId);
-            _distributeFeesAndRewards(_localDisputeId, ruling, true);
         }
+        _distributeFeesAndRewards(_localDisputeId, ruling);
     }
 
-    function _distributeFeesAndRewards(uint256 _localDisputeId, uint256 _ruling, bool _reimburseLast) internal {
+    function _distributeFeesAndRewards(uint256 _localDisputeId, uint256 _ruling) internal {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         uint256 roundsToProcess = dispute.currentRound;
 
-        // Distribute fees and rewards for the last round if needed
-        if (_reimburseLast) {
-            _resolveRoundFeesAndRewards(_localDisputeId, 0, dispute.currentRound);
-            if (roundsToProcess > 0) {
-                roundsToProcess--;
-            } else {
-                return; // No more rounds to process
-            }
+        // Distribute fees and rewards for the last round (never reached appeal)
+        _resolveRoundFeesAndRewards(_localDisputeId, 0, dispute.currentRound);
+        if (roundsToProcess > 0) {
+            roundsToProcess--;
+        } else {
+            return; // No more rounds to process
         }
         // Iterate backwards through rounds to distribute fees and rewards
         for (uint256 r = roundsToProcess; ; r--) {
