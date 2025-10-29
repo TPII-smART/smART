@@ -803,15 +803,23 @@ contract GigsContract {
         require(gig.state == GigState.Disputed, "No dispute to concede for this gig");
         require(gig.disputeId != 0, "No dispute exists for this gig");
 
+        address recipient;
+
         if (msg.sender == gig.acceptedFreelancer) {
             // Freelancer concedes, ruling in favor of client
             arbiterProxy.concedeDispute(gig.disputeId, 2);
+            recipient = gig.client;
         } else if (msg.sender == gig.client) {
             // Client concedes, ruling in favor of freelancer
             arbiterProxy.concedeDispute(gig.disputeId, 1);
+            recipient = gig.acceptedFreelancer;
         } else {
             revert("Only hired talent parties can concede dispute");
         }
+
+        gig.state = GigState.Completed;
+        gig.finishedAt = block.timestamp;
+        payable(recipient).transfer(gig.finalPayment);
 
         emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
     }

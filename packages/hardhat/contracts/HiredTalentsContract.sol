@@ -820,15 +820,23 @@ contract HiredTalentsContract {
         require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to concede for this hired talent");
         require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
 
+        address recipient;
+
         if (msg.sender == hiredTalent.freelancer) {
             // Freelancer concedes, ruling in favor of client
             arbiterProxy.concedeDispute(hiredTalent.disputeId, 2);
+            recipient = hiredTalent.client;
         } else if (msg.sender == hiredTalent.client) {
             // Client concedes, ruling in favor of freelancer
             arbiterProxy.concedeDispute(hiredTalent.disputeId, 1);
+            recipient = hiredTalent.freelancer;
         } else {
             revert("Only hired talent parties can concede dispute");
         }
+        
+        hiredTalent.state = HiredTalentState.Finished;
+        hiredTalent.finishedAt = block.timestamp;
+        payable(recipient).transfer(hiredTalent.payment);
 
         emit HiredTalentFinished(
             _talentId,
