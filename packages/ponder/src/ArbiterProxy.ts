@@ -71,8 +71,8 @@ ponder.on("ArbiterProxy:FreelancerPayedTalentArbitrationFee", async ({ event, co
   const { localDisputeId, talentId, hiredTalentId, freelancer: freelancerAddr, amountPaid, totalAmountPaid } = event.args;
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
-      freelancerPaidArbitrationFee: true,
-      freelancerFunds: BigInt(totalAmountPaid ?? 0),
+    freelancerPaidArbitrationFee: true,
+    freelancerFunds: BigInt(totalAmountPaid ?? 0),
     lastTransactionHash: event.transaction.hash,
   });    
 
@@ -134,7 +134,13 @@ ponder.on("ArbiterProxy:TalentDisputeRaised", async ({ event, context }) => {
 
 // Gig dispute created
 ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
-  const { localDisputeId, gigId, freelancer, client, feeDepositDeadline } = event.args;
+  const { localDisputeId, gigId, freelancer, client, feeDepositDeadline, reason } = event.args;
+
+  const gigRecord = await context.db.find(gig, { gigId });
+  if (!gigRecord) {
+    console.error(`Gig not found for gigId: ${gigId}`);
+    return;
+  }
 
   await context.db.update(gig, { gigId }).set({
     state: 4, // Disputed state
@@ -155,10 +161,16 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     clientFunds: BigInt(0),
     appealCost: BigInt(0),
     disputeFinished: false,
+    disputeReason: reason,
+    title: gigRecord.title,
+    description: gigRecord.description,
     lastTransactionHash: event.transaction.hash,
   });
 
-  
+  await context.db.insert(disputeContributor).values([
+    { disputeId: BigInt(localDisputeId), contributor: freelancer as string, lastTransactionHash: event.transaction.hash },
+    { disputeId: BigInt(localDisputeId), contributor: client as string, lastTransactionHash: event.transaction.hash },
+  ]);  
 
   await context.db.insert(notification).values({
     id: `${event.block.number}-${event.log.logIndex}-gigdispute-freelancer`,
@@ -189,6 +201,7 @@ ponder.on("ArbiterProxy:FreelancerPayedGigArbitrationFee", async ({ event, conte
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     freelancerPaidArbitrationFee: true,
+    freelancerFunds: BigInt(totalAmountPaid ?? 0),
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -211,6 +224,7 @@ ponder.on("ArbiterProxy:ClientPayedGigArbitrationFee", async ({ event, context }
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     clientPaidArbitrationFee: true,
+    clientFunds: BigInt(totalAmountPaid ?? 0),
     lastTransactionHash: event.transaction.hash,
   });
     
@@ -232,6 +246,7 @@ ponder.on("ArbiterProxy:GigDisputeRaised", async ({ event, context }) => {
 
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     klerosDisputeId: BigInt(klerosDisputeId ?? 0),
+    raiseOnKleros: true,
     currentRound: 1,
     status: 0,
     isAppealed: false,

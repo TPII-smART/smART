@@ -106,36 +106,6 @@ export class Gig {
   /** (Optional) Identifier for the dispute associated with the gig, if any. */
   disputeId?: number;
 
-  /** (Optional) Whether the freelancer paid the arbitration fee. */
-  freelancerPaidArbitrationFee?: boolean;
-
-  /** (Optional) Whether the client paid the arbitration fee. */
-  clientPaidArbitrationFee?: boolean;
-
-  /** (Optional) External Kleros dispute identifier, if the dispute was created on Kleros. */
-  klerosDisputeId?: number;
-
-  /** (Optional) ISO date string representing the dispute or appeal deadline. */
-  disputeDeadline?: string | number;
-
-  /** (Optional) Current arbitration round number. */
-  currentRound?: number;
-
-  /** (Optional) Current ruling for the dispute, represented as an integer. */
-  currentRuling?: number;
-
-  /** (Optional) Funds allocated to the freelancer related to the dispute, represented as a string. */
-  freelancerFunds?: string;
-
-  /** (Optional) Funds allocated to the client related to the dispute, represented as a string. */
-  clientFunds?: string;
-
-  /** (Optional) Cost required to file an appeal, represented as a string. */
-  appealCost?: string;
-
-  /** (Optional) Boolean indicating if the dispute has been resolved and finished. */
-  disputeFinished?: boolean;
-
   constructor() {
     this.gigId = "";
     this.client = ZERO_ADDRESS;

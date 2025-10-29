@@ -64,7 +64,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const {
     data: disputeData,
     isLoading: isDisputeLoading,
-
     refetch: refetchDispute,
   } = useQuery<Dispute>({
     queryKey: ["disputeDetail", data?.disputeId],
@@ -108,11 +107,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
   const reload = useCallback(async () => {
     queryClient.invalidateQueries({ queryKey: ["hiredTalentDetail", talentId, hiredTalentId] });
+    queryClient.invalidateQueries({ queryKey: ["disputeDetail", data?.disputeId] });
     await new Promise(resolve => setTimeout(resolve, 1000));
     await refetch();
     await refetchDeliverables();
     await refetchDispute();
-  }, [hiredTalentId, queryClient, refetch, refetchDeliverables, refetchDispute, talentId]);
+  }, [data?.disputeId, hiredTalentId, queryClient, refetch, refetchDeliverables, refetchDispute, talentId]);
 
   useEffect(() => {
     reload();
