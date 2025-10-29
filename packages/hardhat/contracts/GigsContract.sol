@@ -837,21 +837,22 @@ contract GigsContract {
         }
 
         uint256 ruling = arbiterProxy.getCurrentRuling(gig.disputeId);
-        address recipient;
 
         if (ruling == 1) {
             // Ruling in favor of freelancer
-            recipient = gig.acceptedFreelancer;
+            payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
         } else if (ruling == 2) {
             // Ruling in favor of client
-            recipient = gig.client;
+            payable(gig.client).transfer(gig.finalPayment);
         } else {
-            revert("Invalid ruling from arbitrator");
+            // No ruling or invalid ruling, split payment
+            uint256 splitAmount = gig.finalPayment / 2;
+            payable(gig.acceptedFreelancer).transfer(splitAmount);
+            payable(gig.client).transfer(splitAmount);
         }
 
         gig.state = GigState.Completed;
         gig.finishedAt = block.timestamp;
-        payable(recipient).transfer(gig.finalPayment);
 
         emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
     }

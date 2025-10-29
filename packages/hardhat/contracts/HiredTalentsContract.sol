@@ -864,21 +864,22 @@ contract HiredTalentsContract {
         }
 
         uint256 ruling = arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
-        address recipient;
-
+        
         if (ruling == 1) {
             // Ruling in favor of freelancer
-            recipient = hiredTalent.freelancer;
+            payable(hiredTalent.freelancer).transfer(hiredTalent.payment);
         } else if (ruling == 2) {
             // Ruling in favor of client
-            recipient = hiredTalent.client;
+            payable(hiredTalent.client).transfer(hiredTalent.payment);
         } else {
-            revert("Invalid ruling from arbitrator");
+            // No ruling or invalid ruling, split payment
+            uint256 splitAmount = hiredTalent.payment / 2;
+            payable(hiredTalent.freelancer).transfer(splitAmount);
+            payable(hiredTalent.client).transfer(splitAmount);
         }
 
         hiredTalent.state = HiredTalentState.Finished;
         hiredTalent.finishedAt = block.timestamp;
-        payable(recipient).transfer(hiredTalent.payment);
 
         emit HiredTalentFinished(
             _talentId,

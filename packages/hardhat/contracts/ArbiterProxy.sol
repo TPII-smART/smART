@@ -384,6 +384,9 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     function getCurrentRuling(uint256 _localDisputeId) external view returns (uint256) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
         require(dispute.localDisputeId != 0, "Dispute does not exist");
+        if (dispute.status == DisputeStatus.Resolved) {
+            return dispute.ruling;
+        }
         Round storage round = dispute.rounds[dispute.currentRound];
         if (round.freelancerFullyFunded && !round.clientFullyFunded) {
             return FREELANCER_WINS;
@@ -529,7 +532,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
      * @dev Resolve all rounds' fees after final ruling
      * Winner is the party who paid (or tried to pay)
      */
-    function _resolveRounds(uint256 _localDisputeId) internal {
+    function _resolveRounds(uint256 _localDisputeId) internal returns (uint256) {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         require(dispute.localDisputeId != 0, "Dispute does not exist");
@@ -555,6 +558,8 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
             ruling = arbitrator.currentRuling(dispute.klerosDisputeId);
         }
         _distributeFeesAndRewards(_localDisputeId, ruling);
+
+        return ruling;
     }
 
     function _distributeFeesAndRewards(uint256 _localDisputeId, uint256 _ruling) internal {
@@ -651,7 +656,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         DisputeInfo storage dispute = _disputes[_localDisputeId];
 
         require(dispute.localDisputeId != 0, "Dispute does not exist");
-        require(dispute.status == DisputeStatus.DisputeCreated, "Dispute not in arbitration");
+        require(dispute.status == DisputeStatus.DisputeCreated, "Dispute not in arbitration state");
         require(!dispute.isRuled, "Dispute already ruled");
 
         arbitrator.executeRuling(dispute.klerosDisputeId);
@@ -990,25 +995,25 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
         require(dispute.status == DisputeStatus.DisputeCreated, "Dispute not in correct state");
         require(!dispute.isRuled, "Dispute already ruled");
 
+        uint256 finalRuling = _resolveRounds(_localDisputeId);
+        
         // Update dispute state
         dispute.status = DisputeStatus.Resolved;
         dispute.isRuled = true;
-        dispute.ruling = _ruling;
-
-        _resolveRounds(_localDisputeId);
+        dispute.ruling = finalRuling;
 
         if (dispute.disputeType == DisputeType.Talent) {
             emit TalentRuling(
                 _localDisputeId,
                 dispute.externalId1, // talentId
                 dispute.externalId2, // hiredTalentId
-                _ruling
+                finalRuling
             );
         } else if (dispute.disputeType == DisputeType.Gig) {
             emit GigRuling(
                 _localDisputeId,
                 dispute.externalId1, // gigId
-                _ruling
+                finalRuling
             );
         }
     }
