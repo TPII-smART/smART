@@ -41,8 +41,8 @@ export const fetchAppelableDisputesPaginated = async (
   };
 };
 
-export const fetchAppelableDisputesWithContributors = async (): Promise<Paginated<Dispute>> => {
-  const disputes = await fetchAppelableDisputesPaginated({ limit: 20 }, "search text", "title", "desc", 1);
+export const fetchAppelableDisputesWithContributors = async (meta: PaginationMetaArg): Promise<Paginated<Dispute>> => {
+  const disputes = await fetchAppelableDisputesPaginated(meta, "search text", "title", "desc", 1);
 
   console.log("Disputes fetched:", disputes);
   if (disputes.data.length === 0) {

@@ -29,6 +29,7 @@ export default function DisputeListing({ type }: DisputePageProps) {
     fetchFunction,
     loadingFunction: setLoading,
     setDataFunction: setData,
+    itemsPerPage: 20,
   });
 
   useEffect(() => {
@@ -55,7 +56,7 @@ export default function DisputeListing({ type }: DisputePageProps) {
         </div>
 
         {/* Empty State */}
-        {data?.length === 0 && (
+        {data?.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center rounded-lg  bg-card/50 py-12">
             <p className="text-lg text-muted-foreground">No disputes found</p>
             <p className="mt-1 text-sm text-muted-foreground">All your projects are running smoothly!</p>
