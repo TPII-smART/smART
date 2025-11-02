@@ -8,6 +8,13 @@ export const analyzeDeliverable = async (
   deliverables: string[],
   expected: string,
 ): Promise<DeliverableAnalysis> => {
+  if (!API_URL) {
+    return {
+      badge: AnalysisBadge.UNKNOWN,
+      details: "Backend service is not configured.",
+    };
+  }
+
   try {
     const response = await axios.post(`${API_URL}/gemini`, {
       workId,
