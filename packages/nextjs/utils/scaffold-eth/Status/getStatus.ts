@@ -200,6 +200,7 @@ export function getGigStatus(gigState: GigState, gig: Gig, isFreelancer: boolean
 export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: string) {
   const isClient = hiredTalent.client === userAddress;
 
+  console.log("Hired talent state:", hiredTalent.state);
   switch (hiredTalent.state) {
     case HiredTalentState.WaitingForApproval:
       return {
@@ -332,7 +333,7 @@ export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: 
         description: `The hire "${hiredTalent.title}" is in dispute.`,
         type: ActivityItemType.status,
         timestamp: 0,
-        status: ActivityItemStatus.unknown,
+        status: ActivityItemStatus.disputed,
         interactionType: InteractionType.hiredTalent,
       };
 

@@ -89,8 +89,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const isClient = hiredTalent?.client?.toLowerCase() === userAddress?.toLowerCase();
   const hiredTalentStatus = hiredTalent?.state as HiredTalentState;
   const disputeDetail = disputeData ? disputeData : null;
-  console.log("Hired Talent:", data);
-  console.log("Dispute Detail:", disputeDetail);
 
   const {
     disputeCurrentRuling,

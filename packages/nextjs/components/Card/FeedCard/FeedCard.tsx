@@ -11,6 +11,7 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   EyeIcon,
+  ScaleIcon,
   StarIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
@@ -33,6 +34,8 @@ const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["statu
         return <XCircleIcon className="h-6 w-6" />;
       } else if (status === ActivityItemStatus.waitingForReview) {
         return <ClockIcon className="h-6 w-6" />;
+      } else if (status === ActivityItemStatus.disputed) {
+        return <ScaleIcon className="h-6 w-6" />;
       }
       break;
     case "payment":
