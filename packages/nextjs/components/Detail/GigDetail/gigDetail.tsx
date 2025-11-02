@@ -954,6 +954,7 @@ export default function GigDetail({
   return (
     <>
       <UniversalDetail
+        workId={"gig-" + gigId + "-" + applicationId}
         data={type === "partial" ? partialData : finalDetailData}
         deliverables={data?.deliverables}
         isMining={isMining}
