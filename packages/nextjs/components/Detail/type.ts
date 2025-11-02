@@ -3,6 +3,7 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 
 export interface UniversalDetailProps extends React.HTMLAttributes<HTMLDivElement> {
+  workId: string;
   data?: DetailData;
   deliverables?: Deliverable[];
   statusBadge?: React.ReactNode;

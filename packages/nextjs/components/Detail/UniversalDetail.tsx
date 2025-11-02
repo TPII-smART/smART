@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { UniversalRoadmap } from "../Roadmap/UniversalRoadmap";
+import DeliverableVerification from "../deliverableVerification/DeliverableVerification";
 import { UniversalDetailProps } from "./type";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
@@ -24,6 +25,7 @@ import { useGlobalState } from "~~/services/store/store";
 import { UserProfile } from "~~/types/user-profile.type";
 
 export default function UniversalDetail({
+  workId,
   data,
   deliverables,
   statusBadge,
@@ -339,7 +341,17 @@ export default function UniversalDetail({
 
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardHeader className="p-6">
-                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Delivery Status</CardTitle>
+                <CardTitle className="text-2xl text-[var(--color-primary-content)] space-x-6 flex flex-row">
+                  <label>Delivery Status</label>
+                  {deliverables && deliverables.length > 0 && (
+                    <DeliverableVerification
+                      workId={workId}
+                      deliverables={deliverables?.map(d => d.resource) ?? []}
+                      workTitle={data.title}
+                      workDescription={data.description ?? ""}
+                    />
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4">
                 <div className="flex justify-between items-center p-4 bg-[var(--color-primary)]/20 rounded-lg">
