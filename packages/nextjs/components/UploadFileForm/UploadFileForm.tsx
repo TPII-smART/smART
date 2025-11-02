@@ -81,7 +81,10 @@ const UploadDeliverableForm = ({
               />
             </div>
             {selectedTab === "file" ? (
-              <FileUploadBox onUploadSuccess={(val: File) => setFieldValue("file", val)} acceptedFileType={"Image"} />
+              <FileUploadBox
+                onUploadSuccess={(val: File) => setFieldValue("file", val)}
+                acceptedFileTypes={["Document", "Image", "Video"]}
+              />
             ) : (
               <InputBase
                 placeholder="Paste your link here"

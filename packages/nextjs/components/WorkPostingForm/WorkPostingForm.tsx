@@ -177,7 +177,7 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
             <FileUploadBox
               onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
               //onUploadError={Render error message}
-              acceptedFileType={"Image"}
+              acceptedFileTypes={["Document", "Image", "Video"]}
             />
             <EtherInput
               placeholder="Payment"
