@@ -23,7 +23,7 @@ const acceptedFileTypesMapper = {
 interface FileUploadProps {
   onUploadSuccess?: (file: File) => void; // Callback for successful upload, it loads the File in the parent component
   onUploadError?: (error: string) => void;
-  acceptedFileType?: string; // e.g., Image, Video, Audio, Document
+  acceptedFileTypes?: string[]; // Array of accepted file type keys
   maxFileSize?: number; // in bytes
   currentFile?: File | null; // Add current file prop
   onFileRemove?: () => void; // Add callback for file removal
@@ -92,8 +92,8 @@ const successIconVariants = {
 export default function FileUpload({
   onUploadSuccess,
   onUploadError,
-  acceptedFileType,
-  maxFileSize = 25 * 1024 * 1024, // Default --> 25MB
+  acceptedFileTypes = [], // Default to empty array
+  maxFileSize = 25 * 1024 * 1024,
   currentFile: initialFile = null,
   onFileRemove,
 }: FileUploadProps) {
@@ -104,11 +104,18 @@ export default function FileUpload({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const acceptedFileTypes = useMemo(() => {
-    return acceptedFileType
-      ? (acceptedFileTypesMapper[acceptedFileType as keyof typeof acceptedFileTypesMapper] as string[])
-      : [];
-  }, [acceptedFileType]);
+  // Flatten all accepted MIME types from the provided file types
+  const acceptedMimeTypes = useMemo(() => {
+    if (acceptedFileTypes.length === 0) return [];
+
+    return acceptedFileTypes.reduce<string[]>((acc, fileType) => {
+      const mimeTypes = acceptedFileTypesMapper[fileType as keyof typeof acceptedFileTypesMapper];
+      if (mimeTypes) {
+        acc.push(...mimeTypes);
+      }
+      return acc;
+    }, []);
+  }, [acceptedFileTypes]);
 
   // Creates a preview of the file if it's an image
   useEffect(() => {
@@ -137,17 +144,20 @@ export default function FileUpload({
 
   const handleFileValidation = useCallback(
     (selectedFile: File): boolean => {
-      setError(null); // Reset error before validation
-      if (acceptedFileTypes && acceptedFileTypes.length > 0 && !acceptedFileTypes.includes(selectedFile.type)) {
-        const err = `Invalid file type. Accepted: ${acceptedFileTypes
-          .map(t => t.split("/")[1])
+      setError(null);
+
+      if (acceptedMimeTypes.length > 0 && !acceptedMimeTypes.includes(selectedFile.type)) {
+        const acceptedExtensions = acceptedMimeTypes
+          .map(type => type.split("/")[1])
           .join(", ")
-          .toUpperCase()}`;
+          .toUpperCase();
+        const err = `Invalid file type. Accepted: ${acceptedExtensions}`;
         setError(err);
         setStatus("error");
         if (onUploadError) onUploadError(err);
         return false;
       }
+
       if (maxFileSize && selectedFile.size > maxFileSize) {
         const err = `File size exceeds the limit of ${formatBytes(maxFileSize)}.`;
         setError(err);
@@ -155,9 +165,10 @@ export default function FileUpload({
         if (onUploadError) onUploadError(err);
         return false;
       }
+
       return true;
     },
-    [acceptedFileTypes, maxFileSize, onUploadError, formatBytes],
+    [acceptedMimeTypes, maxFileSize, onUploadError, formatBytes],
   );
 
   const onFileSelected = useCallback(
@@ -278,6 +289,18 @@ export default function FileUpload({
     if (onFileRemove) onFileRemove();
   }, [onFileRemove]);
 
+  // Generate display text for accepted file types
+  const getAcceptedTypesText = useCallback(() => {
+    if (acceptedFileTypes.length === 0) return "SVG, PNG, JPG or GIF";
+
+    const extensions = acceptedMimeTypes
+      .map(type => type.split("/")[1])
+      .join(", ")
+      .toUpperCase();
+
+    return `Accepted: ${extensions}`;
+  }, [acceptedFileTypes, acceptedMimeTypes]);
+
   return (
     <motion.div variants={cardVariants} initial="initial" animate="animate" exit="exit" className="relative">
       <Card
@@ -308,9 +331,6 @@ export default function FileUpload({
                   {previewUrl && (
                     <motion.div
                       className="relative w-32 h-32 mb-4 rounded-lg overflow-hidden ring-2"
-                      // style={{
-                      // ringColor: "color-mix(in srgb, var(--color-accent) 20%, transparent)",
-                      // }}
                       initial={{
                         rotate: -10,
                         scale: 0.9,
@@ -422,7 +442,6 @@ export default function FileUpload({
                         : "color-mix(in srgb, var(--color-border) 50%, transparent)",
                     backgroundColor:
                       status === "dragging" ? "color-mix(in srgb, var(--color-accent) 5%, transparent)" : "transparent",
-                    // "--hover-border-color": "var(--color-accent)",
                   }}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
@@ -509,13 +528,7 @@ export default function FileUpload({
                     className="text-xs transition-colors duration-500 group-hover:opacity-80"
                     style={{ color: "color-mix(in srgb, var(--color-primary-content) 50%, transparent)" }}
                   >
-                    {acceptedFileTypes && acceptedFileTypes.length > 0
-                      ? `Accepted: ${acceptedFileTypes
-                          .map(t => t.split("/")[1])
-                          .join(", ")
-                          .toUpperCase()}`
-                      : "SVG, PNG, JPG or GIF"}{" "}
-                    {/* Default text */}
+                    {getAcceptedTypesText()}
                     {maxFileSize && ` (Max ${formatBytes(maxFileSize)})`}
                   </p>
                   <input
@@ -523,7 +536,7 @@ export default function FileUpload({
                     type="file"
                     className="sr-only"
                     onChange={handleFileInputChange}
-                    accept={acceptedFileTypes?.join(",")}
+                    accept={acceptedMimeTypes?.join(",")}
                     aria-label="File input"
                   />
                 </motion.div>
