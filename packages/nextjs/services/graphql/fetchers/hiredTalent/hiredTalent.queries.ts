@@ -467,7 +467,6 @@ export const getDeliverablesForHiredTalent = gql`
         submissionComment
         clientResponse
         responseTimestamp
-        isLink
         lastTransactionHash
       }
     }

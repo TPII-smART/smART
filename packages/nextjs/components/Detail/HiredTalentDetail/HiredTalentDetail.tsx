@@ -348,16 +348,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const handleFreelancerConfirmCompletion = async (deliverableData: FileFormData) => {
     try {
       let resource = "";
-      const isLink = deliverableData.isLink;
 
       showSpinner();
 
-      if (deliverableData.file && !isLink) {
+      if (deliverableData.file) {
         resource = (await handleFileUploadToIPFS(deliverableData.file)) || "";
-      } else if (!deliverableData.file && isLink) {
-        resource = deliverableData.link || "";
       }
-
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
@@ -365,15 +361,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           BigInt(hiredTalent.hiredTalentId),
           {
             resource,
-            parsedResource: isLink
-              ? ""
-              : await createEvidenceJSON(
-                  resource,
-                  deliverableData.file?.name || "",
-                  "Deliverable submission by Freelancer",
-                ),
+            parsedResource: await createEvidenceJSON(
+              resource,
+              deliverableData.file?.name || "",
+              "Deliverable submission by Freelancer",
+            ),
             submissionComment: deliverableData.submissionComment,
-            isLink,
           },
         ],
       });

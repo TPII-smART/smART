@@ -180,7 +180,6 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
           loading={false}
           showFullInfo={false}
           resource={data.deliverables[currentDeliverableIndex].resource}
-          isLink={data.deliverables[currentDeliverableIndex].isLink}
           modalTitle="Review Deliverable"
           modalDescription="Please review the deliverable and provide your feedback."
         />

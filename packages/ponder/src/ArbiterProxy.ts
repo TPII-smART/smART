@@ -90,7 +90,7 @@ ponder.on("ArbiterProxy:FreelancerPayedTalentArbitrationFee", async ({ event, co
 
 // Client paid talent arbitration fee
 ponder.on("ArbiterProxy:ClientPayedTalentArbitrationFee", async ({ event, context }) => {
-  const { localDisputeId, talentId, hiredTalentId, client: clientAddr, amountPaid, totalAmountPaid } = event.args;
+  const { localDisputeId, talentId, client: clientAddr, amountPaid, totalAmountPaid } = event.args;
 
     await context.db.update(dispute, { disputeId: localDisputeId }).set({
       clientPaidArbitrationFee: true,

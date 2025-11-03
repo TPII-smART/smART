@@ -155,7 +155,6 @@ export default function UniversalDetail({
   });
 
   const resource = deliverables?.[0]?.resource;
-  const isLink = deliverables?.[0]?.isLink;
   const submissionComment = deliverables?.[0]?.submissionComment;
   const clientResponse = deliverables?.[0]?.clientResponse;
 
@@ -455,7 +454,7 @@ export default function UniversalDetail({
         isOpen={isUploadModalOpen}
         onClose={onCloseUploadModal}
         modalTitle="Upload Deliverable"
-        modalDescription={`You are about to upload your deliverable.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+        modalDescription={`You are about to upload your deliverable.\nPlease upload the required file, and add a comment for the client.\nPayment will be released once the client confirms receipt.`}
       />
 
       <PreviewModal
@@ -464,7 +463,6 @@ export default function UniversalDetail({
         modalTitle="Preview of deliverable"
         modalDescription={reviewModalDescription}
         resource={resource || ""}
-        isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
         isClient={isClient}
       />
@@ -475,7 +473,6 @@ export default function UniversalDetail({
         onApprove={handleClientConfirmCompletion}
         onReject={handleRejectJob}
         resource={resource || ""}
-        isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
         loading={isMining && isDeliverableLoading}
         showFullInfo={true}

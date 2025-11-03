@@ -181,7 +181,6 @@ contract GigsContract {
         address indexed freelancer,
         string resource,
         string submissionComment,
-        bool isLink,
         bool freelancerUploaded,
         uint256 uploadedAt
     );
@@ -637,7 +636,6 @@ contract GigsContract {
             uploadedAt: block.timestamp,
             responseTimestamp: 0,
             clientResponse: "",
-            isLink: _deliverableParams.isLink,
             state: DeliverableState.Pending,
             deliverableGroupId: _currentDeliverableGroupId
         });
@@ -650,7 +648,6 @@ contract GigsContract {
             msg.sender,
             deliverableToUpload.resource,
             deliverableToUpload.submissionComment,
-            deliverableToUpload.isLink,
             gig.freelancerUploaded,
             deliverableToUpload.uploadedAt
         );

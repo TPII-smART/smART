@@ -7,14 +7,12 @@ export class Deliverable {
   submissionComment?: string;
   clientResponse?: string;
   responseTimestamp?: string;
-  isLink: boolean;
   state: DeliverableState = DeliverableState.Pending;
 
   constructor(
     resource: string,
     uploadedAt: string,
     state: DeliverableState,
-    isLink: boolean,
     submissionComment?: string,
     clientResponse?: string,
     responseTimestamp?: string,
@@ -24,7 +22,6 @@ export class Deliverable {
     this.submissionComment = submissionComment;
     this.clientResponse = clientResponse;
     this.responseTimestamp = responseTimestamp;
-    this.isLink = isLink;
     this.state = state;
   }
 }

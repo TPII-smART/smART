@@ -252,14 +252,11 @@ export default function GigDetail({
     try {
       showSpinner();
       let resource = "";
-      const isLink = fileData.isLink;
 
       if (!data?.gig.gigId) return;
 
-      if (fileData.file && !isLink) {
+      if (fileData.file) {
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
-      } else if (!fileData.file && isLink) {
-        resource = fileData.link || "";
       }
 
       await writeContract({
@@ -268,11 +265,12 @@ export default function GigDetail({
           BigInt(data?.gig.gigId),
           {
             resource,
-            parsedResource: isLink
-              ? ""
-              : await createEvidenceJSON(resource, fileData.file?.name || "", "Deliverable submission by Freelancer"),
+            parsedResource: await createEvidenceJSON(
+              resource,
+              fileData.file?.name || "",
+              "Deliverable submission by Freelancer",
+            ),
             submissionComment: fileData.submissionComment,
-            isLink,
           },
         ],
       });

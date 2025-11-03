@@ -152,7 +152,6 @@ ponder.on(
 			talentId: event.args.talentId,
 			resource: event.args.resource,
 			submissionComment: event.args.submissionComment,
-			isLink: event.args.isLink,
 			state: DeliverableState.Pending,
 			uploadedAt: BigInt(event.block.timestamp),
 			lastTransactionHash: event.transaction.hash,

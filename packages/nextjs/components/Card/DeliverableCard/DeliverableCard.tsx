@@ -50,7 +50,7 @@ const getStatusBadge = (status: number) => {
 };
 
 export function DeliverableCard({ deliverable, client, freelancer, actionButtons }: DeliverableCardProps) {
-  const resolvedResource = deliverable.resource && !deliverable.isLink ? resolveIPFSHash(deliverable.resource) : "";
+  const resolvedResource = deliverable.resource ? resolveIPFSHash(deliverable.resource) : "";
 
   return (
     <Card className="overflow-hidden relative ">
@@ -59,14 +59,12 @@ export function DeliverableCard({ deliverable, client, freelancer, actionButtons
         {/* File Preview */}
         <div className="space-y-3 w-full max-h-[200px] ">
           <div className="relative aspect-[16/9] w-full h-full rounded-lg overflow-hidden bg-muted border border-border">
-            <DeliverablePreview resource={deliverable.resource} isLink={deliverable.isLink} />
-            {!deliverable.isLink && (
-              <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground">IPFS</Badge>
-            )}
+            <DeliverablePreview resource={deliverable.resource} />
+            <Badge className="absolute top-2 right-2 bg-accent text-accent-foreground">IPFS</Badge>
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm font-medium"></div>
-            {!deliverable.isLink && deliverable.resource && (
+            {deliverable.resource && (
               <div className="text-xs text-muted-foreground text-accent font-mono truncate overflow-hidden whitespace-nowrap max-w-xs block">
                 {resolvedResource}
               </div>

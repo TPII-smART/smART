@@ -392,7 +392,6 @@ export const getDeliverablesForGig = gql`
         submissionComment
         clientResponse
         responseTimestamp
-        isLink
         uploadedAt
       }
     }
