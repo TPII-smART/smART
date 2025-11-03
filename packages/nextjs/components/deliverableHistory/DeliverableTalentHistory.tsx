@@ -85,7 +85,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     role: "Freelancer",
   };
   const isClient = userAddress?.toLowerCase() === client?.address?.toLowerCase();
-  const jobStatus = data?.hiredTalent?.state ?? null;
+  const talentStatus = data?.hiredTalent?.state ?? null;
   const hireTalent = data?.hiredTalent ?? ({} as HiredTalent);
 
   const handleRejectJob = async (clientResponse: string) => {
@@ -126,7 +126,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     const buttons: React.ReactNode[] = [];
     if (
       isClient &&
-      jobStatus === HiredTalentState.Ongoing &&
+      talentStatus === HiredTalentState.Ongoing &&
       hireTalent.freelancerDelivered &&
       !hireTalent.clientReceived
     ) {
@@ -160,6 +160,10 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     );
   }
 
+  const isDisputed =
+    hireTalent.state === HiredTalentState.Disputed ||
+    (hireTalent.state === HiredTalentState.Finished && !!hireTalent.disputeId);
+
   return (
     <div className="h-full flex flex-col px-8 py-4 space-y-4 mx-5">
       <div className="mb-8 ">
@@ -180,6 +184,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
               }}
               client={client}
               freelancer={freelancer}
+              isDisputed={isDisputed}
               actionButtons={getActionButtons()}
             />
           ))}

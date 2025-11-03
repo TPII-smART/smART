@@ -146,6 +146,8 @@ export function DeliverableGigHistory(deliverableProps: any) {
     return buttons;
   };
 
+  const isDisputed = gigState === GigState.Disputed || (gigState === GigState.Completed && !!data?.gig.disputeId);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center w-full h-64">
@@ -174,6 +176,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
               }}
               client={client}
               freelancer={freelancer}
+              isDisputed={isDisputed}
               actionButtons={getActionButtons()}
             />
           ))}

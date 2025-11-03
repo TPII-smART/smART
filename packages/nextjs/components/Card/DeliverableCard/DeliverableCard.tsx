@@ -22,17 +22,22 @@ interface DeliverableCardProps {
   freelancer: participantDeliverable;
   client: participantDeliverable | null;
   actionButtons: React.ReactNode[];
+  isDisputed?: boolean;
 }
 
-const getStatusBadge = (status: number) => {
+const getStatusBadge = (status: number, isDisputed: boolean) => {
   const badgeClass = "min-w-[110px] text-center ";
   switch (status) {
     case DeliverableState.Pending:
-      return (
-        <Badge className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass}`}>
-          Pending Review
-        </Badge>
-      );
+      if (isDisputed) {
+        return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
+      } else {
+        return (
+          <Badge className={`bg-amber-200 text-amber-800 border border-amber-300 shadow-sm ${badgeClass}`}>
+            Pending Review
+          </Badge>
+        );
+      }
     case DeliverableState.Approved:
       return (
         <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
@@ -40,21 +45,25 @@ const getStatusBadge = (status: number) => {
         </Badge>
       );
     case DeliverableState.Rejected:
-      return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
-
+      if (!isDisputed) {
+        return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
+      } else {
+        return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
+      }
     case DeliverableState.Disputed:
       return <Badge className={`bg-[var(--color-accent)] text-white ${badgeClass}`}>Disputed</Badge>;
+
     default:
       return null;
   }
 };
 
-export function DeliverableCard({ deliverable, client, freelancer, actionButtons }: DeliverableCardProps) {
+export function DeliverableCard({ deliverable, client, freelancer, actionButtons, isDisputed }: DeliverableCardProps) {
   const resolvedResource = deliverable.resource ? resolveIPFSHash(deliverable.resource) : "";
 
   return (
     <Card className="overflow-hidden relative ">
-      <div className="absolute top-4 right-4 z-10">{getStatusBadge(deliverable.state)}</div>
+      <div className="absolute top-4 right-4 z-10">{getStatusBadge(deliverable.state, isDisputed || false)}</div>
       <div className="grid md:grid-cols-[300px_1fr] gap-10 py-20 px-10 w-full">
         {/* File Preview */}
         <div className="space-y-3 w-full max-h-[200px] ">
@@ -147,10 +156,14 @@ export function DeliverableCard({ deliverable, client, freelancer, actionButtons
           ) : (
             <div className="pl-4 border-l-2 border-dashed border-border">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
-                  <ClockIcon className="h-4 w-4" />
-                  <span>Awaiting response...</span>
-                </div>
+                {!isDisputed && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
+                    <>
+                      <ClockIcon className="h-4 w-4" />
+                      <span>Awaiting response...</span>{" "}
+                    </>
+                  </div>
+                )}
                 {actionButtons && actionButtons.length > 0 && (
                   <div className="flex text-base justify-end ">{actionButtons}</div>
                 )}
