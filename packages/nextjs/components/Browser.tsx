@@ -100,15 +100,15 @@ export default function BrowsePage({ type }: BrowsePageProps) {
   }, [filterItems]);
 
   const Filters = (
-    <aside className="w-64 mx-4">
-      <div className="w-64" style={{ position: "fixed" }}>
+    <aside className="w-68 h-[87.5vh] overflow-y-auto pb-4 ml-4">
+      <div className="w-64 pb-4 ">
         <InputBase
           variant="outlined"
           placeholder={`Search ${type === "hiredTalent" ? "talents" : "gigs"}...`}
           value={search}
           onChange={setSearch}
         />
-        <Accordion title="Categories">
+        <Accordion title="Categories" defaultExpanded={false}>
           {optionsCategories.map(value => (
             <Chip
               key={value.id}
@@ -148,10 +148,10 @@ export default function BrowsePage({ type }: BrowsePageProps) {
             />
           ))}
         </Accordion>
-        <Accordion title="Price range (ETH)">
+        <Accordion title="Price range (ETH)" defaultExpanded={false}>
           <Slider max={maxPaymentETH} defaultValue={priceRange} onChange={v => setPriceRange(v as [number, number])} />
         </Accordion>
-        <Accordion title="Sort by">
+        <Accordion title="Sort by" defaultExpanded={false}>
           {optionsSorts.map(value => (
             <Chip
               key={value.id}
@@ -175,10 +175,12 @@ export default function BrowsePage({ type }: BrowsePageProps) {
 
   return (
     <div className="min-h-full max-h-full flex flex-col">
-      <main className="flex max-h-full">
+      <main className="flex max-h-full flex-1 flex-row ">
+        {Filters}
+
         <div
           ref={scrollRef}
-          className="flex max-h-full flex-1 flex-row pb-10 overflow-scroll h-[87.5vh]"
+          className="flex-1 pb-10 overflow-y-auto h-[87.5vh] px-4 pt-4"
           onScroll={async event => {
             const sort = optionsSorts.find(option => option.id === sortBy);
             await handleScroll(
@@ -193,8 +195,6 @@ export default function BrowsePage({ type }: BrowsePageProps) {
             );
           }}
         >
-          {Filters}
-
           {/* HiredTalents Listing */}
           <div className="flex-1 flex flex-col space-y-6 pr-4 mb-10 pt-[0.85rem] pb-10">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
