@@ -33,7 +33,6 @@ ponder.on("GigsContract:GigCreated", async ({ event, context }) => {
 		freelancerCancelled: false,
 		freelancerUploaded: false,
 		acceptedApplicationId: null,
-		isLink: false,
 		gigBannerImageHash: event.args.gigBannerImageHash,
 		lastTransactionHash: event.transaction.hash,
 	});
@@ -326,7 +325,6 @@ ponder.on("GigsContract:DeliverableUploaded", async ({ event, context }) => {
 		gigId: event.args.gigId,
 		resource: event.args.resource,
 		submissionComment: event.args.submissionComment,
-		isLink: event.args.isLink,
 		uploadedAt: BigInt(event.block.timestamp),
 		state: DeliverableState.Pending,
 		lastTransactionHash: event.transaction.hash,
