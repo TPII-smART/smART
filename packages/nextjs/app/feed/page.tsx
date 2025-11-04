@@ -208,12 +208,15 @@ export default function ActivityFeed() {
 
   const newData: any[] = useMemo(() => {
     const combined = [...filteredApplicationData(), ...filteredGigApplicationData(), ...filteredHiredTalentsData()];
-    return combined.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
+    return combined.sort((a, b) => Number(a.timestamp ?? 0) - Number(b.timestamp ?? 0));
   }, [filteredApplicationData, filteredGigApplicationData, filteredHiredTalentsData]);
 
   useEffect(() => {
     if (newData.length > 0) {
-      setOrderedData(prev => prev.concat(newData));
+      setOrderedData(prev => {
+        const merged = prev.concat(newData);
+        return merged.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+      });
     }
   }, [newData]);
 
