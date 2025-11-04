@@ -54,7 +54,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
         state: "received",
       },
     ];
-    if (hiredTalent.wasDisputed) {
+    if (hiredTalent.wasDisputed && hiredTalent.state !== HiredTalentState.Ongoing) {
       baseSteps.push({
         title: "Hire Disputed",
         date: `In Dispute${hiredTalent.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
@@ -85,7 +85,10 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
       });
     } else {
       baseSteps.push({
-        title: hiredTalent.wasDisputed ? "Hire Finalized After Dispute" : "Hire Completed",
+        title:
+          hiredTalent.wasDisputed && hiredTalent.state !== HiredTalentState.Ongoing
+            ? "Hire Finalized After Dispute"
+            : "Hire Completed",
         date: hiredTalent.finishedAt ? formatDate(hiredTalent.finishedAt) : null,
         completed: hiredTalent.state === HiredTalentState.Finished,
         current: false,
@@ -135,7 +138,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
       },
     ];
 
-    if (gig.wasDisputed) {
+    if (gig.wasDisputed && gig.state !== GigState.InProgress) {
       baseSteps.push({
         title: "Gig Disputed",
         date: `In Dispute${gig.disputeBeingArbitrated ? " (Under Arbitration)" : ""}`,
@@ -166,7 +169,7 @@ function getAllRoadmapSteps(data: any, type: "hiredTalent" | "gig") {
       });
     } else {
       baseSteps.push({
-        title: gig.wasDisputed ? "Gig Finalized After Dispute" : "Gig Completed",
+        title: gig.wasDisputed && gig.state !== GigState.InProgress ? "Gig Finalized After Dispute" : "Gig Completed",
         date: gig.finishedAt ? formatDate(gig.finishedAt) : null,
         completed: gig.state === GigState.Completed,
         current: false,

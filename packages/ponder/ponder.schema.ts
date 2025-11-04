@@ -1,5 +1,5 @@
 import { table } from "console";
-import { desc, onchainTable, primaryKey } from "ponder";
+import { desc, onchainTable, primaryKey, timestamp } from "ponder";
 import { title } from "process";
 
 // Talent table
@@ -211,6 +211,7 @@ export const dispute = onchainTable("disputes", (t) => ({
 		disputeReason: t.varchar({ length: 256 }),
 		title: t.varchar({ length: 128 }),
 		description: t.varchar({ length: 512 }),
+		timesDismissed: t.integer().notNull().default(0),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 
 }),

@@ -729,40 +729,47 @@ contract GigsContract {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "Dispute can only be started for ongoing gigs");
-        require(gig.disputeId == 0, "Dispute already exists for this gig");
         require(msg.value > 0, "Must send arbitration fee");
-        require(bytes(_metaEvidenceURI).length > 0, "Meta evidence URI cannot be empty");
+        require(bytes(_metaEvidenceURI).length > 0, "Metadata URI cannot be empty");
         require(bytes(_reason).length > 0, "Reason cannot be empty");
         require(bytes(_reason).length <= 256, "Reason must be up to 256 characters");
 
-        uint256 disputeId;
-
-        if (msg.sender == gig.acceptedFreelancer) {
-            disputeId = arbiterProxy.createAndPayGigDisputeByFreelancer{ value: msg.value }(
-                _gigId,
-                gig.acceptedFreelancer,
-                gig.client,
-                arbitratorExtraData,
-                _metaEvidenceURI,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
-                _reason
-            );
-        } else if (msg.sender == gig.client) {
-            disputeId = arbiterProxy.createAndPayGigDisputeByClient{ value: msg.value }(
-                _gigId,
-                gig.acceptedFreelancer,
-                gig.client,
-                arbitratorExtraData,
-                _metaEvidenceURI,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
-                _reason
-            );
+        if (gig.disputeId == 0) {
+            uint256 disputeId = 0;
+            if (msg.sender == gig.acceptedFreelancer) {
+                disputeId = arbiterProxy.createAndPayGigDisputeByFreelancer{ value: msg.value }(
+                    _gigId,
+                    gig.acceptedFreelancer,
+                    gig.client,
+                    arbitratorExtraData,
+                    _metaEvidenceURI,
+                    gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                    _reason
+                );
+            } else if (msg.sender == gig.client) {
+                disputeId = arbiterProxy.createAndPayGigDisputeByClient{ value: msg.value }(
+                    _gigId,
+                    gig.acceptedFreelancer,
+                    gig.client,
+                    arbitratorExtraData,
+                    _metaEvidenceURI,
+                    gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                    _reason
+                );
+            } else {
+                revert("Only hired talent parties can start a dispute");
+            }
+            gig.disputeId = disputeId;
         } else {
-            revert("Only gig parties can start a dispute");
+            arbiterProxy.reLaunchDispute{ value: msg.value }(
+                gig.disputeId,
+                _reason,
+                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                msg.sender
+            );
         }
 
         gig.state = GigState.Disputed;
-        gig.disputeId = disputeId;
     }
 
     function getArbitrationFee() external view returns (uint256) {
@@ -782,14 +789,12 @@ contract GigsContract {
             arbiterProxy.payArbitrationFeeByFreelancer{ value: msg.value }(
                 msg.sender,
                 gig.disputeId,
-                arbitratorExtraData,
                 gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
             );
         } else if (msg.sender == gig.client) {
             arbiterProxy.payArbitrationFeeByClient{ value: msg.value }(
                 msg.sender,
                 gig.disputeId,
-                arbitratorExtraData,
                 gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
             );
         } else {
@@ -797,31 +802,17 @@ contract GigsContract {
         }
     }
 
-    function concedeDispute(uint256 _gigId) external onlyGigParties(_gigId) gigExists(_gigId) {
+    function dismissDispute(
+        uint256 _gigId
+    ) external onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
-        require(gig.state == GigState.Disputed, "No dispute to concede for this gig");
+        require(gig.state == GigState.Disputed, "No dispute to dismiss for this gig");
         require(gig.disputeId != 0, "No dispute exists for this gig");
 
-        address recipient;
+        arbiterProxy.dismissDispute(gig.disputeId, msg.sender);
 
-        if (msg.sender == gig.acceptedFreelancer) {
-            // Freelancer concedes, ruling in favor of client
-            arbiterProxy.concedeDispute(gig.disputeId, 2);
-            recipient = gig.client;
-        } else if (msg.sender == gig.client) {
-            // Client concedes, ruling in favor of freelancer
-            arbiterProxy.concedeDispute(gig.disputeId, 1);
-            recipient = gig.acceptedFreelancer;
-        } else {
-            revert("Only hired talent parties can concede dispute");
-        }
-
-        gig.state = GigState.Completed;
-        gig.finishedAt = block.timestamp;
-        payable(recipient).transfer(gig.finalPayment);
-
-        emit GigCompleted(_gigId, gig.acceptedFreelancer, gig.client, gig.finalPayment, gig.finishedAt);
+        gig.state = GigState.InProgress;
     }
 
     function finalizeDispute(uint256 _gigId) external onlyGigParties(_gigId) gigExists(_gigId) {
@@ -832,7 +823,7 @@ contract GigsContract {
 
         if (arbiterProxy.hasTimedOut(gig.disputeId)) {
             arbiterProxy.timeoutByInaction(gig.disputeId);
-        } else {
+        } else if (!arbiterProxy.wasExecuted(gig.disputeId)) {
             arbiterProxy.finalizeDispute(gig.disputeId);
         }
 

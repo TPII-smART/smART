@@ -19,7 +19,8 @@ interface IArbitrableProxy {
         WaitingForFreelancerFee,
         WaitingForClientFee,
         DisputeCreated,
-        Resolved
+        Resolved,
+        Dismissed
     }
 
     // ============ Basic getters ============
@@ -38,6 +39,8 @@ interface IArbitrableProxy {
         string calldata _metaEvidenceURI,
         string calldata _reason
     ) external returns (uint256 localDisputeId);
+
+    function reLaunchDispute(uint256 _localDisputeId, string calldata _reason, uint256 _evidenceGroupId, address _caller) external payable;
 
     function startAndPayTalentDisputeByFreelancer(
         uint256 _talentId,
@@ -84,18 +87,18 @@ interface IArbitrableProxy {
     function payArbitrationFeeByFreelancer(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData,
         uint256 _evidenceGroupId
     ) external payable;
 
     function payArbitrationFeeByClient(
         address _caller,
         uint256 _localDisputeId,
-        bytes calldata _arbitratorExtraData,
         uint256 _evidenceGroupId
     ) external payable;
 
-    function concedeDispute(uint256 _localDisputeId, uint256 _winningSide) external;
+    function dismissDispute(uint256 _localDisputeId, address _caller) external;
+
+    function wasExecuted(uint256 _localDisputeId) external view returns (bool);
 
     function getDisputeStatus(uint256 _localDisputeId) external view returns (IArbitrator.DisputeStatus);
 
@@ -197,15 +200,15 @@ interface IArbitrableProxy {
         address winner
     );
 
-    event TalentDisputeConceded(
+    event TalentDisputeDismissed(
         uint256 indexed localDisputeId,
         uint256 indexed talentId,
         uint256 indexed hiredTalentId,
-        uint256 ruling,
-        address winner
+        uint256 timesDismissed,
+        address caller        
     );
 
-    event GigDisputeConceded(uint256 indexed localDisputeId, uint256 indexed gigId, uint256 ruling, address winner);
+    event GigDisputeDismissed(uint256 indexed localDisputeId, uint256 indexed gigId, uint256 timesDismissed, address caller);
 
     event GigAppealContribution(
         uint256 indexed localDisputeId,

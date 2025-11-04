@@ -738,42 +738,49 @@ contract HiredTalentsContract {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
         require(hiredTalent.state == HiredTalentState.Ongoing, "Dispute can only be started for ongoing hiredTalents");
-        require(hiredTalent.disputeId == 0, "Dispute already exists for this hiredTalent");
         require(msg.value > 0, "Must send arbitration fee");
         require(bytes(_metaEvidenceURI).length > 0, "Metadata URI cannot be empty");
         require(bytes(_reason).length > 0, "Reason cannot be empty");
         require(bytes(_reason).length <= 256, "Reason must be up to 256 characters");
 
-        uint256 disputeId;
-
-        if (msg.sender == hiredTalent.freelancer) {
-            disputeId = arbiterProxy.startAndPayTalentDisputeByFreelancer{ value: msg.value }(
-                _talentId,
-                _hiredTalentId,
-                hiredTalent.freelancer,
-                hiredTalent.client,
-                arbitratorExtraData,
-                _metaEvidenceURI,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
-                _reason
-            );
-        } else if (msg.sender == hiredTalent.client) {
-            disputeId = arbiterProxy.startAndPayTalentDisputeByClient{ value: msg.value }(
-                _talentId,
-                _hiredTalentId,
-                hiredTalent.freelancer,
-                hiredTalent.client,
-                arbitratorExtraData,
-                _metaEvidenceURI,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
-                _reason
-            );
+        if (hiredTalent.disputeId == 0) {
+            uint256 disputeId = 0;
+            if (msg.sender == hiredTalent.freelancer) {
+                disputeId = arbiterProxy.startAndPayTalentDisputeByFreelancer{ value: msg.value }(
+                    _talentId,
+                    _hiredTalentId,
+                    hiredTalent.freelancer,
+                    hiredTalent.client,
+                    arbitratorExtraData,
+                    _metaEvidenceURI,
+                    hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                    _reason
+                );
+            } else if (msg.sender == hiredTalent.client) {
+                disputeId = arbiterProxy.startAndPayTalentDisputeByClient{ value: msg.value }(
+                    _talentId,
+                    _hiredTalentId,
+                    hiredTalent.freelancer,
+                    hiredTalent.client,
+                    arbitratorExtraData,
+                    _metaEvidenceURI,
+                    hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                    _reason
+                );
+            } else {
+                revert("Only hired talent parties can start a dispute");
+            }
+            hiredTalent.disputeId = disputeId;
         } else {
-            revert("Only hired talent parties can start a dispute");
+            arbiterProxy.reLaunchDispute{ value: msg.value }(
+                hiredTalent.disputeId,
+                _reason,
+                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                msg.sender
+            );
         }
 
         hiredTalent.state = HiredTalentState.Disputed;
-        hiredTalent.disputeId = disputeId;
     }
 
     function getArbitrationFee() external view returns (uint256) {
@@ -796,14 +803,12 @@ contract HiredTalentsContract {
             arbiterProxy.payArbitrationFeeByFreelancer{ value: msg.value }(
                 msg.sender,
                 hiredTalent.disputeId,
-                arbitratorExtraData,
                 hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
             );
         } else if (msg.sender == hiredTalent.client) {
             arbiterProxy.payArbitrationFeeByClient{ value: msg.value }(
                 msg.sender,
                 hiredTalent.disputeId,
-                arbitratorExtraData,
                 hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
             );
         } else {
@@ -811,41 +816,19 @@ contract HiredTalentsContract {
         }
     }
 
-    function concedeDispute(
+    function dismissDispute(
         uint256 _talentId,
         uint256 _hiredTalentId
     ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
-        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to concede for this hired talent");
+        require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to dismiss for this hired talent");
         require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
 
-        address recipient;
 
-        if (msg.sender == hiredTalent.freelancer) {
-            // Freelancer concedes, ruling in favor of client
-            arbiterProxy.concedeDispute(hiredTalent.disputeId, 2);
-            recipient = hiredTalent.client;
-        } else if (msg.sender == hiredTalent.client) {
-            // Client concedes, ruling in favor of freelancer
-            arbiterProxy.concedeDispute(hiredTalent.disputeId, 1);
-            recipient = hiredTalent.freelancer;
-        } else {
-            revert("Only hired talent parties can concede dispute");
-        }
-        
-        hiredTalent.state = HiredTalentState.Finished;
-        hiredTalent.finishedAt = block.timestamp;
-        payable(recipient).transfer(hiredTalent.payment);
+        arbiterProxy.dismissDispute(hiredTalent.disputeId, msg.sender);
 
-        emit HiredTalentFinished(
-            _talentId,
-            _hiredTalentId,
-            hiredTalent.freelancer,
-            hiredTalent.client,
-            hiredTalent.payment,
-            hiredTalent.finishedAt
-        );
+        hiredTalent.state = HiredTalentState.Ongoing;
     }
 
     function finalizeDispute(
@@ -859,7 +842,7 @@ contract HiredTalentsContract {
 
         if (arbiterProxy.hasTimedOut(hiredTalent.disputeId)) {
             arbiterProxy.timeoutByInaction(hiredTalent.disputeId);
-        } else {
+        } else if (!arbiterProxy.wasExecuted(hiredTalent.disputeId)) {
             arbiterProxy.finalizeDispute(hiredTalent.disputeId);
         }
 

@@ -26,4 +26,5 @@ export interface Dispute {
   contributors: string[];
   disputeFinished: boolean;
   isAppealed: boolean;
+  timesDismissed: number;
 }

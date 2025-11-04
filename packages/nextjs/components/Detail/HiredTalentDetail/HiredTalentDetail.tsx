@@ -125,7 +125,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     console.log("Initiating conflict resolution with values:", values);
     console.log("Current data state:", data);
     if (!data?.hiredTalentId || !data?.talentId) return;
-    if (data?.disputeId) return;
     showSpinner();
     try {
       const metaDataURI = getMetaEvidenceURI();
@@ -175,18 +174,18 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     }
   };
 
-  const concedeDispute = async () => {
+  const dismissDispute = async () => {
     if (!data?.disputeId || !data?.hiredTalentId || !data?.talentId) return;
     if (data?.disputeId === 0) return;
     showSpinner();
     try {
       await writeContract({
-        functionName: "concedeDispute",
+        functionName: "dismissDispute",
         args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId)],
       });
       reload();
     } catch (error) {
-      console.error("Error conceding dispute:", error);
+      console.error("Error dismissing dispute:", error);
     } finally {
       hideSpinner();
       setShowPayFeeModal(false);
@@ -195,8 +194,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
   const handleFinalizeDispute = async () => {
     if (!data?.disputeId || !data?.hiredTalentId || !data?.talentId) return;
-    if (data?.disputeId === 0) return;
-    if (disputeStatus !== DisputeStatus.Solved) return;
     showSpinner();
     try {
       await writeContract({
@@ -406,12 +403,16 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     }
   };
 
-  const isWaiting = disputeStatus === DisputeStatus.Waiting;
+  const isWaiting = disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Waiting;
   const currentDeadline = (disputeDetail?.currentRound || 0) == 0 ? disputeDetail?.roundDeadline : appealDeadline;
   const expiredRound =
     (!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
     disputeDetail?.roundDeadline &&
     new Date() > new Date(Number(currentDeadline) * 1000);
+
+  console.log("Is Waiting:", isWaiting);
+  console.log("Current Deadline:", currentDeadline);
+  console.log("Expired Round:", expiredRound);
 
   // Get status message based on hiredTalent state and user role
   const getStatusMessage = () => {
@@ -442,7 +443,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           <div>
             {data?.disputeId && data?.disputeId > 0 ? (
               <>
-                {(!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
+                {!!disputeDetail?.freelancerPaidArbitrationFee !== !!disputeDetail?.clientPaidArbitrationFee &&
                   (disputeDetail?.currentRound || 0) == 0 && (
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center">
@@ -507,7 +508,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                     <p>Dispute is appealable. Fund your side to appeal the ruling.</p>
                   ))}
 
-                {(((!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
+                {((!!disputeDetail?.freelancerPaidArbitrationFee !== !!disputeDetail?.clientPaidArbitrationFee &&
                   (disputeDetail?.currentRound || 0) == 0) ||
                   (disputeStatus === DisputeStatus.Appealable && disputeDetail?.raiseOnKleros)) && (
                   <div>
@@ -528,9 +529,19 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                   </div>
                 )}
 
-                {disputeStatus === DisputeStatus.Waiting && (
+                {disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Waiting && (
                   <p>Waiting for the Kleros jurors to rule on the dispute.</p>
                 )}
+
+                {disputeDetail?.freelancerPaidArbitrationFee === disputeDetail?.clientPaidArbitrationFee &&
+                  !disputeDetail?.raiseOnKleros &&
+                  disputeDetail?.timesDismissed !== undefined &&
+                  disputeDetail?.timesDismissed > 0 && (
+                    <p>
+                      The dispute has been dismissed. Try to resolve the issue directly with the other party or start a
+                      new dispute.
+                    </p>
+                  )}
 
                 {disputeCurrentRuling !== undefined &&
                   BigInt(disputeCurrentRuling) !== 0n &&
@@ -562,7 +573,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           </div>
         );
       } else {
-        return "Got any problems? Initiate a dispute to resolve the issue.";
+        return <p>Got any problems? Initiate a dispute to resolve the issue.</p>;
       }
     }
 
@@ -657,7 +668,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         if (
           !isWaiting &&
           (expiredRound ||
-            (disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Solved && !disputeDetail?.disputeFinished))
+            (disputeDetail?.raiseOnKleros &&
+              disputeStatus === DisputeStatus.Solved &&
+              (!disputeDetail?.disputeFinished || hiredTalent.state !== HiredTalentState.Finished)))
         ) {
           buttons.push(
             <Button
@@ -684,6 +697,20 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             >
               <ScaleIcon className="h-5 w-5" />
               <span>Dispute Actions</span>
+            </Button>,
+          );
+        } else if (!disputeDetail?.clientPaidArbitrationFee && (disputeDetail?.currentRound || 0) == 0) {
+          buttons.push(
+            <Button
+              variant="danger"
+              key="dismissDispute"
+              onClick={() => dismissDispute()}
+              disabled={isMining || disputeLoading}
+              size="sm"
+              tooltip="Dismiss Dispute"
+            >
+              <XCircleIcon className="h-5 w-5" />
+              <span>Dismiss Dispute</span>
             </Button>,
           );
         }
@@ -750,7 +777,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         if (
           !isWaiting &&
           (expiredRound ||
-            (disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Solved && !disputeDetail?.disputeFinished))
+            (disputeDetail?.raiseOnKleros &&
+              disputeStatus === DisputeStatus.Solved &&
+              (!disputeDetail?.disputeFinished || hiredTalent.state !== HiredTalentState.Finished)))
         ) {
           buttons.push(
             <Button
@@ -777,6 +806,20 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             >
               <ScaleIcon className="h-5 w-5" />
               <span>Dispute Actions</span>
+            </Button>,
+          );
+        } else if (!disputeDetail?.freelancerPaidArbitrationFee && (disputeDetail?.currentRound || 0) == 0) {
+          buttons.push(
+            <Button
+              variant="danger"
+              key="dismissDispute"
+              onClick={() => dismissDispute()}
+              disabled={isMining || disputeLoading}
+              size="sm"
+              tooltip="Dismiss Dispute"
+            >
+              <XCircleIcon className="h-5 w-5" />
+              <span>Dismiss Dispute</span>
             </Button>,
           );
         }
@@ -926,31 +969,48 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       />
       <Modal isOpen={showPayFeeModal} onClose={() => setShowPayFeeModal(false)} title="A dispute has been raised">
         <div className="mb-4">
-          <p className="mb-2">
-            The other party has initiated a dispute. You can either match the arbitration fee to continue the dispute
-            process or concede the dispute to the other party. If you choose to pay the arbitration fee, the case will
-            be reviewed by jurors in Kleros. Once an initial ruling has been established, anyone interested will have
-            the option to fund an appeal if they disagree with the outcome. Once finished, the funds will be released
-            based on the ruling, and all arbitration fees from the winning side will be reimbursed. If you do not take
-            any action before the deadline, you will automatically concede the dispute. The arbitration fee for you to
-            continue the dispute is{" "}
-            <span className="font-medium">
-              {arbitrationCost ? `${formatEther(BigInt(arbitrationCost))} ETH` : "N/A"}
-            </span>
-            .
-          </p>
-          <p className="mb-2">Do you wish to pay the arbitration fee or concede the dispute?</p>
+          {(disputeDetail?.timesDismissed ?? 0) < 1 ? (
+            <>
+              <p className="mb-2">
+                The other party has opened a dispute to be resolved by Kleros. You have a one‑time option to dismiss the
+                dispute if you believe the issue can be resolved off‑chain. Using this dismissal will pause the Kleros
+                process but it can only be used once for this case. If you do not dismiss, you can match the arbitration
+                fee and let Kleros jurors review the case. The arbitration fee to continue is{" "}
+                <span className="font-medium">
+                  {arbitrationCost ? `${formatEther(BigInt(arbitrationCost))} ETH` : "N/A"}
+                </span>
+                . If you neither pay nor dismiss before the deadline, the dispute will time out and the ruling will be
+                entered in favor of the party who initiated the dispute.
+              </p>
+              <p className="mb-2">Do you wish to pay the arbitration fee or use the one‑time dismissal?</p>
+            </>
+          ) : (
+            <>
+              <p className="mb-2">
+                A one‑time dismissal has already been used for this dispute, so no further dismissals are allowed. To
+                keep the case in Kleros for juror review you must match the arbitration fee:
+                <span className="font-medium">
+                  {" "}
+                  {arbitrationCost ? `${formatEther(BigInt(arbitrationCost))} ETH` : "N/A"}
+                </span>
+                . If you fail to pay before the deadline the dispute will time out and the ruling will be decided in
+                favor of the initiator.
+              </p>
+              <p className="mb-2">Do you wish to pay the arbitration fee?</p>
+            </>
+          )}
         </div>
         <div className="flex justify-between">
           <Button
             variant="danger"
             className="ml-2"
+            disabled={disputeDetail?.timesDismissed ? disputeDetail.timesDismissed >= 1 : false}
             onClick={async () => {
-              await concedeDispute();
+              await dismissDispute();
               setShowPayFeeModal(false);
             }}
           >
-            Concede Dispute
+            Dismiss Dispute
           </Button>
           <Button
             variant="primary"

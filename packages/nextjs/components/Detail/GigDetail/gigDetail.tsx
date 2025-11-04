@@ -183,18 +183,18 @@ export default function GigDetail({
     }
   };
 
-  const concedeDispute = async () => {
+  const dismissDispute = async () => {
     if (!data?.gig?.disputeId || !data?.gig?.gigId) return;
     if (data?.gig?.disputeId === 0) return;
     showSpinner();
     try {
       await writeContract({
-        functionName: "concedeDispute",
+        functionName: "dismissDispute",
         args: [BigInt(data?.gig?.gigId)],
       });
       reload();
     } catch (error) {
-      console.error("Error conceding dispute:", error);
+      console.error("Error dismissing dispute:", error);
     } finally {
       hideSpinner();
       setShowPayFeeModal(false);
@@ -1037,11 +1037,11 @@ export default function GigDetail({
             variant="danger"
             className="ml-2"
             onClick={async () => {
-              await concedeDispute();
+              await dismissDispute();
               setShowPayFeeModal(false);
             }}
           >
-            Concede Dispute
+            Dismiss Dispute
           </Button>
           <Button
             variant="primary"
