@@ -17,7 +17,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
 import { cn } from "~~/lib/utils";
-import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.type";
+import { ActivityItem, ActivityItemStatus, InteractionType } from "~~/types/feed/activityItem.type";
 
 const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["status"]) => {
   switch (type) {
@@ -73,6 +73,16 @@ export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityIt
     }
   };
 
+  const handleCardClick = () => {
+    if (activity.interactionType === InteractionType.gig) {
+      router.push(`/gig/${activity.primaryKey}`);
+    } else if (activity.interactionType === InteractionType.hiredTalent) {
+      router.push(`/talents/${activity.primaryKey}/${activity.secondaryKey}`);
+    } else if (activity.interactionType === InteractionType.application) {
+      router.push(`/gig/${activity.primaryKey}?applicationId=${activity.secondaryKey}`);
+    }
+  };
+
   const renderAvatar = () => {
     const imageToShow = profilePicture;
 
@@ -114,7 +124,9 @@ export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityIt
         "group relative  transition-all duration-300 ease-in-out",
         // Only shadow and translate on hover, not scale or blur
         "over:shadow-xl hover:-translate-y-1 hover:z-10",
+        "cursor-pointer",
       )}
+      onClick={handleCardClick}
     >
       <CardContent>
         <div className="flex items-start gap-8">
