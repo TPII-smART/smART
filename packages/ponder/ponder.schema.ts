@@ -39,6 +39,7 @@ export const hiredTalent = onchainTable(
 		canceledAt: t.bigint(), // When the hiredTalent was canceled
 		deliveredAt: t.bigint(), // When the hiredTalent was delivered
 		rejectedAt: t.bigint(), // When the hiredTalent was rejected by the client
+		disputedAt: t.bigint(), // When the hiredTalent was disputed
 		emitBy: t.varchar({ length: 128 }),
 		rating: t.integer(), // Rating given by the client to the freelancer
 		clientReceived: t.boolean().notNull(),
@@ -75,6 +76,7 @@ export const gig = onchainTable("gig", (t) => ({
 	canceledAt: t.bigint(),
 	deliveredAt: t.bigint(), // When the hiredTalent was delivered
 	rejectedAt: t.bigint(), // When the hiredTalent was rejected by the client
+	disputedAt: t.bigint(), // When the hiredTalent was disputed
 	emitBy: t.varchar({ length: 128 }),
 	clientReceived: t.boolean().notNull(),
 	freelancerDelivered: t.boolean().notNull(),

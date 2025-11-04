@@ -15,6 +15,7 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     state: 4, // Disputed state
     lastTransactionHash: event.transaction.hash,
     disputeId: localDisputeId,
+    disputedAt: BigInt(event.block.timestamp),
   });
 
   await context.db.insert(dispute).values({
@@ -35,6 +36,8 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     description: hireTalent.description,
     lastTransactionHash: event.transaction.hash,
   });
+
+  
 
   await context.db.insert(disputeContributor).values([
     { disputeId: BigInt(localDisputeId), contributor: freelancer as string, lastTransactionHash: event.transaction.hash },
@@ -146,6 +149,7 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     state: 4, // Disputed state
     disputeId: localDisputeId,
     lastTransactionHash: event.transaction.hash,
+    disputedAt: BigInt(event.block.timestamp),
   });
 
   await context.db.insert(dispute).values({

@@ -329,7 +329,9 @@ export default function UniversalDetail({
                     <p className="text-[var(--color-skeleton)] text-base">
                       {data.state === HiredTalentState.WaitingForApproval
                         ? "Deadline not yet defined"
-                        : formatDate(String(data.deadline))}
+                        : data.state === HiredTalentState.Cancelled
+                          ? "Deadline not defined"
+                          : formatDate(String(data.deadline))}
                     </p>
                   </div>
                 </div>

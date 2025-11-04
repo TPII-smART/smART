@@ -533,6 +533,8 @@ contract HiredTalentsContract {
 
         if (hiredTalent.state == HiredTalentState.WaitingForApproval) {
             // If hiredTalent is still waiting for approval, simply remove it
+            hiredTalent.canceledAt = block.timestamp;
+
             hiredTalent.state = HiredTalentState.Cancelled;
         } else if (hiredTalent.state == HiredTalentState.Ongoing) {
             if (msg.sender == hiredTalent.client) {

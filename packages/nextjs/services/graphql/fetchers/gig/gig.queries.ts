@@ -160,6 +160,7 @@ export const getMyGigsPaginated = gql`
         acceptedAt
         finishedAt
         canceledAt
+        disputedAt
         state
         clientReceived
         freelancerDelivered

@@ -436,6 +436,7 @@ export const getHiredTalentAndHiresPaginated = gql`
         acceptedAt
         finishedAt
         canceledAt
+        disputedAt
         deliveredAt
         emitBy
         clientReceived

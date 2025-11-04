@@ -426,7 +426,11 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
     const formatPct = (p: number) => `${Math.max(0, Math.min(100, p)).toFixed(1)}%`;
 
-    if (data?.state != undefined && data?.state >= HiredTalentState.Ongoing) {
+    if (
+      data?.state != undefined &&
+      data?.state != HiredTalentState.Cancelled &&
+      data?.state >= HiredTalentState.Ongoing
+    ) {
       if (data?.disputeId && data?.disputeId > 0) {
         if (disputeDetail?.disputeFinished) return null;
         return (
@@ -556,7 +560,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         return "Got any problems? Initiate a dispute to resolve the issue.";
       }
     }
-
     return "";
   };
 
