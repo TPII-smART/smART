@@ -22,11 +22,14 @@ export enum ActivityItemStatus {
 export enum InteractionType {
   hiredTalent = "hiredTalent",
   gig = "gig",
+  application = "application",
   unknown = "",
 }
 
 export interface ActivityItem {
   id: string;
+  primaryKey: string;
+  secondaryKey: string;
   type: ActivityItemType;
   interactionType: InteractionType;
   title?: string;

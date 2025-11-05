@@ -59,6 +59,11 @@ export interface HiredTalent {
   deliveredAt?: string;
 
   /**
+   * (Optional) ISO date string representing when the hiredTalent was rejected by the client.
+   */
+  disputedAt?: string;
+
+  /**
    * (Optional) Number between 1 and 5 representing the hiredTalent rating.
    */
   rating?: number;

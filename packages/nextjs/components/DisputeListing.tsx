@@ -48,12 +48,13 @@ export default function DisputeListing({ type }: DisputePageProps) {
           {data?.map(dispute => (
             <DisputeCard key={dispute.disputeId} dispute={dispute} />
           ))}
-          {loading && (
-            <div className="flex items-center justify-center w-full h-64">
-              <Spinner />
-            </div>
-          )}
         </div>
+
+        {loading && (
+          <div className="flex items-center justify-center w-full h-64">
+            <Spinner />
+          </div>
+        )}
 
         {/* Empty State */}
         {data?.length === 0 && !loading && (

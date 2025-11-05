@@ -89,8 +89,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const isClient = hiredTalent?.client?.toLowerCase() === userAddress?.toLowerCase();
   const hiredTalentStatus = hiredTalent?.state as HiredTalentState;
   const disputeDetail = disputeData ? disputeData : null;
-  console.log("Hired Talent:", data);
-  console.log("Dispute Detail:", disputeDetail);
 
   const {
     disputeCurrentRuling,
@@ -350,16 +348,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const handleFreelancerConfirmCompletion = async (deliverableData: FileFormData) => {
     try {
       let resource = "";
-      const isLink = deliverableData.isLink;
 
       showSpinner();
 
-      if (deliverableData.file && !isLink) {
+      if (deliverableData.file) {
         resource = (await handleFileUploadToIPFS(deliverableData.file)) || "";
-      } else if (!deliverableData.file && isLink) {
-        resource = deliverableData.link || "";
       }
-
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
@@ -367,15 +361,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           BigInt(hiredTalent.hiredTalentId),
           {
             resource,
-            parsedResource: isLink
-              ? ""
-              : await createEvidenceJSON(
-                  resource,
-                  deliverableData.file?.name || "",
-                  "Deliverable submission by Freelancer",
-                ),
+            parsedResource: await createEvidenceJSON(
+              resource,
+              deliverableData.file?.name || "",
+              "Deliverable submission by Freelancer",
+            ),
             submissionComment: deliverableData.submissionComment,
-            isLink,
           },
         ],
       });
@@ -435,7 +426,11 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
     const formatPct = (p: number) => `${Math.max(0, Math.min(100, p)).toFixed(1)}%`;
 
-    if (data?.state != undefined && data?.state >= HiredTalentState.Ongoing) {
+    if (
+      data?.state != undefined &&
+      data?.state != HiredTalentState.Cancelled &&
+      data?.state >= HiredTalentState.Ongoing
+    ) {
       if (data?.disputeId && data?.disputeId > 0) {
         if (disputeDetail?.disputeFinished) return null;
         return (
@@ -565,7 +560,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         return "Got any problems? Initiate a dispute to resolve the issue.";
       }
     }
-
     return "";
   };
 

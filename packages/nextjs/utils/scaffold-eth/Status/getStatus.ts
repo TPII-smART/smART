@@ -200,6 +200,7 @@ export function getGigStatus(gigState: GigState, gig: Gig, isFreelancer: boolean
 export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: string) {
   const isClient = hiredTalent.client === userAddress;
 
+  console.log("Hired talent state:", hiredTalent.state);
   switch (hiredTalent.state) {
     case HiredTalentState.WaitingForApproval:
       return {
@@ -331,8 +332,8 @@ export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: 
         title: "Hire in Dispute",
         description: `The hire "${hiredTalent.title}" is in dispute.`,
         type: ActivityItemType.status,
-        timestamp: 0,
-        status: ActivityItemStatus.unknown,
+        timestamp: castDateToTimestampNum(hiredTalent.disputedAt),
+        status: ActivityItemStatus.disputed,
         interactionType: InteractionType.hiredTalent,
       };
 
@@ -484,6 +485,16 @@ export function getFeedGigStatus(application: Application, userAddress: string) 
       };
     }
 
+    case GigState.Disputed:
+      return {
+        title: "Gig in Dispute",
+        description: `The gig "${gig.title}" is in dispute.`,
+        type: ActivityItemType.status,
+        timestamp: castDateToTimestampNum(gig.disputedAt),
+        status: ActivityItemStatus.disputed,
+        interactionType: InteractionType.gig,
+      };
+
     default:
       return {
         title: "Unknown Gig State",
@@ -509,7 +520,7 @@ export function getFeedApplicationStatus(application: Application, userAddress: 
         type: ActivityItemType.application,
         timestamp: castDateToTimestampNum(application.createdAt),
         status: ActivityItemStatus.pending,
-        interactionType: InteractionType.gig,
+        interactionType: InteractionType.application,
       };
 
     case ApplicationState.Accepted:
@@ -524,7 +535,7 @@ export function getFeedApplicationStatus(application: Application, userAddress: 
         type: ActivityItemType.status,
         timestamp: castDateToTimestampNum(application.rejectAt),
         status: ActivityItemStatus.rejected,
-        interactionType: InteractionType.gig,
+        interactionType: InteractionType.application,
       };
 
     default:
@@ -534,7 +545,7 @@ export function getFeedApplicationStatus(application: Application, userAddress: 
         type: ActivityItemType.unknown,
         timestamp: 0,
         status: ActivityItemStatus.unknown,
-        interactionType: InteractionType.gig,
+        interactionType: InteractionType.application,
       };
   }
 }

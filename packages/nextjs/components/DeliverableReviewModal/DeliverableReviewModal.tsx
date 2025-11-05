@@ -24,7 +24,6 @@ interface DeliverableReviewModalProps {
   onReject?: (comment: string) => void;
   comment: string;
   resource: string;
-  isLink: boolean;
   showFullInfo?: boolean;
 }
 
@@ -39,7 +38,6 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
     onClose,
     comment,
     resource,
-    isLink,
     showFullInfo,
   } = props;
   const [submitAction, setSubmitAction] = useState("");
@@ -72,7 +70,6 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
         initialValues: { reviewComment: "", fileValues: new FileFormData() },
         validationSchema: validationSchema,
         onSubmit: async (values, { resetForm }) => {
-          console.log("File values:", values.fileValues);
           await handleSubmit(values);
           resetForm();
         },
@@ -81,7 +78,6 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
     >
       {formik => (
         <div className="space-y-4 px-1 pb-2">
-          {/* Si showFullInfo está activo, mostrar toda la info */}
           {showFullInfo && (
             <>
               {/* Deliverable Preview */}
@@ -97,7 +93,7 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                     borderColor: "var(--color-inside-border)",
                   }}
                 >
-                  <DeliverablePreview resource={resource} isLink={isLink} />
+                  <DeliverablePreview resource={resource} />
                 </div>
               </div>
               <Separator />

@@ -12,7 +12,7 @@ import {
   fetchApplicationsWithGigDetailsPaginated,
 } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchHiredTalentsAndHiresPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
-import { ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
+import { ActivityItem, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
 import { Application } from "~~/types/gig/gig-application.types";
 import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 import { Paginated, PaginationMetaArg } from "~~/types/paginated.types";
@@ -48,7 +48,7 @@ export default function ActivityFeed() {
     applications: 0,
     gigApplications: 0,
   });
-  const [orderedData, setOrderedData] = useState<any[]>([]);
+  const [orderedData, setOrderedData] = useState<ActivityItem[]>([]);
 
   const fetchFunction = useCallback(
     async (meta: PaginationMetaArg): Promise<Paginated<HiredTalent | Application>> => {
@@ -142,6 +142,8 @@ export default function ActivityFeed() {
       const feedInfo = getFeedHiredTalentStatus(hiredTalent, userAddress ?? "");
       return {
         id: "hiredTalent-" + hiredTalent.talentId + "-" + hiredTalent.hiredTalentId,
+        primaryKey: hiredTalent.talentId,
+        secondaryKey: hiredTalent.hiredTalentId,
         ...feedInfo,
         client: hiredTalent.client,
         freelancer: hiredTalent.freelancer,
@@ -164,6 +166,8 @@ export default function ActivityFeed() {
       const applicationInfo = getFeedApplicationStatus(application, userAddress ?? "");
       return {
         id: "application-" + application.applicationId + "-" + application.gigId,
+        primaryKey: application.gigId,
+        secondaryKey: application.applicationId,
         ...applicationInfo,
         client: application.gig ? application.gig.client : userAddress,
         freelancer: application.freelancer,
@@ -185,6 +189,8 @@ export default function ActivityFeed() {
       const applicationInfo = getFeedApplicationStatus(application, userAddress ?? "");
       return {
         id: "application-" + application.applicationId + "-" + application.gigId,
+        primaryKey: application.gigId,
+        secondaryKey: application.applicationId,
         ...applicationInfo,
         client: application.gig ? application.gig.client : userAddress,
         freelancer: application.freelancer,
@@ -202,12 +208,15 @@ export default function ActivityFeed() {
 
   const newData: any[] = useMemo(() => {
     const combined = [...filteredApplicationData(), ...filteredGigApplicationData(), ...filteredHiredTalentsData()];
-    return combined.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
+    return combined.sort((a, b) => Number(a.timestamp ?? 0) - Number(b.timestamp ?? 0));
   }, [filteredApplicationData, filteredGigApplicationData, filteredHiredTalentsData]);
 
   useEffect(() => {
     if (newData.length > 0) {
-      setOrderedData(prev => prev.concat(newData));
+      setOrderedData(prev => {
+        const merged = prev.concat(newData);
+        return merged.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+      });
     }
   }, [newData]);
 
@@ -215,9 +224,6 @@ export default function ActivityFeed() {
     <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between mt-12 px-10">
         <h2 className="text-2xl font-semibold text-foreground">Activity Feed</h2>
-        {/* <Button variant="outline" size="sm">
-          Mark All as Read
-        </Button> */}
       </div>
       <div
         className="overflow-y-auto h-full"
@@ -231,7 +237,7 @@ export default function ActivityFeed() {
                 ...activity,
                 type: activity.type ?? ActivityItemType.unknown,
                 interactionType: activity.interactionType ?? InteractionType.unknown,
-                timestamp: castDateToTimestamp(String((activity.timestamp ?? 0) / 1000)),
+                timestamp: castDateToTimestamp(String(Number(activity.timestamp ?? 0) / 1000)),
               }}
             />
           ))}
