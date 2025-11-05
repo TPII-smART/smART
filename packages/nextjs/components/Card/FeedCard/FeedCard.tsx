@@ -73,13 +73,14 @@ export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityIt
     }
   };
 
-  const handleCardClick = () => {
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (activity.interactionType === InteractionType.gig) {
-      router.push(`/gig/${activity.primaryKey}`);
+      window.location.href = `/gig/${activity.primaryKey}`;
     } else if (activity.interactionType === InteractionType.hiredTalent) {
-      router.push(`/talents/${activity.primaryKey}/${activity.secondaryKey}`);
+      window.location.href = `/talents/${activity.primaryKey}/${activity.secondaryKey}`;
     } else if (activity.interactionType === InteractionType.application) {
-      router.push(`/gig/${activity.primaryKey}?applicationId=${activity.secondaryKey}`);
+      window.location.href = `/gig/${activity.primaryKey}?applicationId=${activity.secondaryKey}`;
     }
   };
 
@@ -119,6 +120,7 @@ export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityIt
   return (
     <Card
       data-slot="card"
+      highlight={false}
       className={cn(
         `flex flex-col gap-6 transition-all p-7`,
         "group relative  transition-all duration-300 ease-in-out",
