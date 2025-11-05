@@ -35,6 +35,7 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     disputeReason: reason,
     title: hireTalent.title,
     description: hireTalent.description,
+    currentlyDismissed: false,
     lastTransactionHash: event.transaction.hash,
   };
 
@@ -175,6 +176,7 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     disputeReason: reason,
     title: gigRecord.title,
     description: gigRecord.description,
+    currentlyDismissed: false,
     lastTransactionHash: event.transaction.hash,
   };
 
@@ -589,6 +591,7 @@ ponder.on("ArbiterProxy:TalentDisputeDismissed", async ({ event, context }) => {
     clientPaidArbitrationFee: false,
     freelancerPaidArbitrationFee: false,
     timesDismissed: timesDismissed ?? 0,
+    currentlyDismissed: true,
     status: 0, // waiting
     lastTransactionHash: event.transaction.hash,
   });
@@ -618,6 +621,7 @@ ponder.on("ArbiterProxy:GigDisputeDismissed", async ({ event, context }) => {
     clientPaidArbitrationFee: false,
     freelancerPaidArbitrationFee: false,
     timesDismissed: timesDismissed ?? 0,
+    currentlyDismissed: true,
     status: 0, // waiting
     lastTransactionHash: event.transaction.hash,
   });

@@ -961,6 +961,7 @@ export default function GigDetail({
     wasDisputed: !!data?.gig?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
+    disputeDismissed: disputeDetail?.currentlyDismissed || false,
     clientRejected: false,
   };
 
@@ -987,6 +988,7 @@ export default function GigDetail({
     wasDisputed: !!data?.gig.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
+    disputeDismissed: disputeDetail?.currentlyDismissed || false,
     clientRejected: data?.gig.clientRejected || false,
   };
 

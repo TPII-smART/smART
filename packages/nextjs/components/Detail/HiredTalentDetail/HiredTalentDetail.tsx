@@ -898,6 +898,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     wasDisputed: !!data?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
+    disputeDismissed: disputeDetail?.currentlyDismissed || false,
     clientRejected: data?.clientRejected || false,
   };
 

@@ -37,6 +37,7 @@ export const getAppelableDisputesPaginated = gql`
         disputeFinished
         isAppealed
         timesDismissed
+        currentlyDismissed
       }
       pageInfo {
         startCursor
@@ -97,6 +98,7 @@ export const getDisputesByIds = gql`
         disputeFinished
         isAppealed
         timesDismissed
+        currentlyDismissed
       }
     }
   }
@@ -126,6 +128,7 @@ export const getDisputesById = gql`
       disputeFinished
       isAppealed
       timesDismissed
+      currentlyDismissed
     }
   }
 `;

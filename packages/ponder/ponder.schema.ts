@@ -212,6 +212,7 @@ export const dispute = onchainTable("disputes", (t) => ({
 		title: t.varchar({ length: 128 }),
 		description: t.varchar({ length: 512 }),
 		timesDismissed: t.integer().notNull().default(0),
+		currentlyDismissed: t.boolean().notNull().default(false),
 		lastTransactionHash: t.varchar({ length: 256 }).notNull(),
 
 }),

@@ -27,4 +27,5 @@ export interface Dispute {
   disputeFinished: boolean;
   isAppealed: boolean;
   timesDismissed: number;
+  currentlyDismissed: boolean;
 }
