@@ -59,20 +59,35 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
   useEffect(() => {
     if (!userAddress) return;
 
-    notificationStatusCache.current = {
-      ...(typeof window !== "undefined"
-        ? JSON.parse(localStorage.getItem("notificationStatusCache") || "{'0': [], '1': [], '2': []}")
-        : {
-            [NotificationStatus.UNREAD]: [],
-            [NotificationStatus.READ]: [],
-            [NotificationStatus.DONE]: [],
-          }),
-    };
+    // Leer cache de forma segura (JSON.parse puede fallar si el string está corrupto)
+    const defaultCache = {
+      [NotificationStatus.UNREAD]: [],
+      [NotificationStatus.READ]: [],
+      [NotificationStatus.DONE]: [],
+    } as { [key in NotificationStatus]: string[] };
+
+    let parsed: { [key in NotificationStatus]: string[] } = defaultCache;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("notificationStatusCache");
+        parsed = raw ? JSON.parse(raw) : defaultCache;
+        // ensure keys exist
+        parsed = {
+          [NotificationStatus.UNREAD]: parsed[NotificationStatus.UNREAD] ?? [],
+          [NotificationStatus.READ]: parsed[NotificationStatus.READ] ?? [],
+          [NotificationStatus.DONE]: parsed[NotificationStatus.DONE] ?? [],
+        };
+      } catch (e) {
+        // si falla el parse, resetear y sobreescribir más abajo al salvar
+        console.warn("Failed to parse notificationStatusCache, resetting to default", e);
+        parsed = defaultCache;
+      }
+    }
 
     notificationStatusCache.current = {
-      [NotificationStatus.UNREAD]: new Set(notificationStatusCache.current[NotificationStatus.UNREAD] || []),
-      [NotificationStatus.READ]: new Set(notificationStatusCache.current[NotificationStatus.READ] || []),
-      [NotificationStatus.DONE]: new Set(notificationStatusCache.current[NotificationStatus.DONE] || []),
+      [NotificationStatus.UNREAD]: new Set(parsed[NotificationStatus.UNREAD] || []),
+      [NotificationStatus.READ]: new Set(parsed[NotificationStatus.READ] || []),
+      [NotificationStatus.DONE]: new Set(parsed[NotificationStatus.DONE] || []),
     };
 
     setMounted(true);
