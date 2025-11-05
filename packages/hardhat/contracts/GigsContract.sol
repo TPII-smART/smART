@@ -886,8 +886,7 @@ contract GigsContract {
 
     function submitEvidence(
         uint256 _gigId,
-        string calldata _evidenceURI,
-        uint256 _evidenceGroupId
+        string calldata _evidenceURI
     ) external gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
@@ -898,7 +897,7 @@ contract GigsContract {
         arbiterProxy.submitEvidence(
             msg.sender,
             gig.disputeId,
-            _evidenceGroupId,
+            gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
             _evidenceURI,
             // If this method is called, we want to emit the evidence event in an ongoing dispute
             false
