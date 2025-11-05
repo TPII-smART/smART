@@ -40,7 +40,7 @@ const NotificationsDashboard = () => {
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [localNotifications, setLocalNotifications] = useState<Notification[]>([]);
-  const [activeView, setActiveView] = useState("inbox");
+  const [activeView, setActiveView] = useState<NotificationStatus>(NotificationStatus.UNREAD);
   const [search, setSearch] = useState("");
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
@@ -54,14 +54,17 @@ const NotificationsDashboard = () => {
 
   const activeViewStatusIds = useMemo((): string[][] => {
     switch (activeView) {
-      case "inbox":
-        return [[], [...notificationStatusCache[NotificationStatus.DONE]]];
-      case "unread":
+      case NotificationStatus.UNREAD:
         return [
           [],
           [...notificationStatusCache[NotificationStatus.READ], ...notificationStatusCache[NotificationStatus.DONE]],
         ];
-      case "done":
+      case NotificationStatus.READ:
+        return [
+          [...notificationStatusCache[NotificationStatus.READ]],
+          [...notificationStatusCache[NotificationStatus.UNREAD], ...notificationStatusCache[NotificationStatus.DONE]],
+        ];
+      case NotificationStatus.DONE:
         return [
           [...notificationStatusCache[NotificationStatus.DONE]],
           [...notificationStatusCache[NotificationStatus.UNREAD], ...notificationStatusCache[NotificationStatus.READ]],
@@ -166,7 +169,7 @@ const NotificationsDashboard = () => {
     const includeIds = activeViewStatusIds[0] ?? [];
     const excludeIds = activeViewStatusIds[1] ?? [];
 
-    fetchPaginatedData(true, activeView, userAddress, includeIds, excludeIds, "");
+    fetchPaginatedData(true, activeView.toString(), userAddress, includeIds, excludeIds, "");
     if (search) setSelectedNotifications([]);
   }, [search, activeView, userAddress, fetchPaginatedData, activeViewStatusIds]);
 
@@ -213,10 +216,9 @@ const NotificationsDashboard = () => {
         const updatedLocalNotifications = localNotifications.filter(notification => {
           if (selectedNotifications.includes(notification.id)) {
             // Remove notification if its new status excludes it from the current view
-            if (activeView === "inbox" && status === NotificationStatus.DONE) return false;
-            if (activeView === "unread" && (status === NotificationStatus.READ || status === NotificationStatus.DONE))
+            if (activeView !== status) {
               return false;
-            if (activeView === "done" && status !== NotificationStatus.DONE) return false;
+            }
           }
           return true;
         });
@@ -287,22 +289,13 @@ const NotificationsDashboard = () => {
       <div className="w-64 bg-[var(--color-surface)] border-r border-border p-4 flex flex-col space-y-2">
         <h2 className="text-xl font-semibold mb-4 text-white">Notifications</h2>
         <SideBarButton
-          isActive={activeView === "inbox"}
+          isActive={activeView === NotificationStatus.UNREAD}
           onClick={() => {
-            setActiveView("inbox");
+            setActiveView(NotificationStatus.UNREAD);
           }}
         >
           <InboxIcon className="h-5 w-5" />
           <span>Inbox</span>
-        </SideBarButton>
-        <SideBarButton
-          isActive={activeView === "unread"}
-          onClick={() => {
-            setActiveView("unread");
-          }}
-        >
-          <ArchiveBoxIcon className="h-5 w-5" />
-          <span>Unread</span>
           {unreadCount > 0 && (
             <span className="ml-auto bg-gray-800 text-accent font-bold text-xs px-2 py-1 rounded-full">
               {unreadCount}
@@ -310,9 +303,18 @@ const NotificationsDashboard = () => {
           )}
         </SideBarButton>
         <SideBarButton
-          isActive={activeView === "done"}
+          isActive={activeView === NotificationStatus.READ}
           onClick={() => {
-            setActiveView("done");
+            setActiveView(NotificationStatus.READ);
+          }}
+        >
+          <ArchiveBoxIcon className="h-5 w-5" />
+          <span>Read</span>
+        </SideBarButton>
+        <SideBarButton
+          isActive={activeView === NotificationStatus.DONE}
+          onClick={() => {
+            setActiveView(NotificationStatus.DONE);
           }}
         >
           <CheckCircleIcon className="h-5 w-5" />
@@ -338,7 +340,7 @@ const NotificationsDashboard = () => {
         {/* Notifications List */}
         <div
           className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2"
-          onScroll={event => handleScroll(event, activeView, userAddress, activeViewStatusIds, search)}
+          onScroll={event => handleScroll(event, activeView.toString(), userAddress, activeViewStatusIds, search)}
         >
           {localNotifications.length > 0
             ? localNotifications.map(notification => (
