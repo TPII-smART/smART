@@ -123,8 +123,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
-    console.log("Initiating conflict resolution with values:", values);
-    console.log("Current data state:", data);
     if (!data?.hiredTalentId || !data?.talentId) return;
     if (data?.disputeId) return;
     showSpinner();

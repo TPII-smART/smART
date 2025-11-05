@@ -130,8 +130,6 @@ export default function GigDetail({
     isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
-    console.log("Initiating conflict resolution with values:", values);
-    console.log("Current data state:", data);
     if (!data?.gig?.gigId) return;
     if (data?.gig?.disputeId) return;
     showSpinner();
