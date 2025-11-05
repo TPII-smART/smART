@@ -60,7 +60,10 @@ const UploadDeliverableForm = ({
         {({ values, setFieldValue, touched, errors }) => (
           <div className="space-y-4">
             <div className="flex gap-2 mb-2"></div>
-            <FileUploadBox onUploadSuccess={(val: File) => setFieldValue("file", val)} acceptedFileType={"Image"} />
+            <FileUploadBox
+              onUploadSuccess={(val: File) => setFieldValue("file", val)}
+              acceptedFileTypes={["Document", "Image", "Video"]}
+            />
 
             <InputBase
               placeholder="Comment"

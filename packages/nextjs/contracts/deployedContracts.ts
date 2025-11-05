@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   11155111: {
     ArbiterProxy: {
-      address: "0x87C99b703e1ffd9790643f2A126915526dCb9397",
+      address: "0xb7a3A8d826a221D8A1340EcbbeAdAD6CE4157Ad7",
       abi: [
         {
           inputs: [
@@ -2057,22 +2057,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x87C99b703e1ffd9790643f2A126915526dCb9397",
-        transactionIndex: 50,
+        contractAddress: "0xb7a3A8d826a221D8A1340EcbbeAdAD6CE4157Ad7",
+        transactionIndex: 30,
         gasUsed: "4362519",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x63b51a623889c2f7682bc8ec945bbe4461a21231df2a208fb55769a95219ea50",
-        transactionHash: "0x679526a689980eaba93ae7b3432d57c0ba1e9d0528b51077e9eb0ece5b31ed6c",
+        blockHash: "0xfda6fb574fe494ea538b03e992a630c6c43b5960332578775a6e052cc5d719d4",
+        transactionHash: "0x8424cc14bcbd18846ec236f7bc3794e7365fe8f5ac9fbaf9109a0f54e8f87c48",
         logs: [],
-        blockNumber: 9513537,
-        cumulativeGasUsed: "14483852",
+        blockNumber: 9546548,
+        cumulativeGasUsed: "9577446",
         status: 1,
         byzantium: true,
       },
     },
     GigsContract: {
-      address: "0xfe9db60572979F8Bd7Eb0435e7B3398eB4a2E9a5",
+      address: "0x8312187fc86aC996aE8caF67F51861579d98395b",
       abi: [
         {
           inputs: [
@@ -2301,12 +2301,6 @@ const deployedContracts = {
               internalType: "string",
               name: "submissionComment",
               type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "isLink",
-              type: "bool",
             },
             {
               indexed: false,
@@ -2742,11 +2736,6 @@ const deployedContracts = {
                   internalType: "string",
                   name: "submissionComment",
                   type: "string",
-                },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
                 },
               ],
               internalType: "struct DeliverableParams",
@@ -3219,22 +3208,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xfe9db60572979F8Bd7Eb0435e7B3398eB4a2E9a5",
-        transactionIndex: 46,
-        gasUsed: "4509444",
+        contractAddress: "0x8312187fc86aC996aE8caF67F51861579d98395b",
+        transactionIndex: 64,
+        gasUsed: "4480113",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xaf70cd689db279749a001e41a2488a6c1e4ae0328c2d84b82224231d1bde9802",
-        transactionHash: "0xb9e50617eee3a9d97e6109f205fdfd47b3a24bbeda83fa9c0205e082fe26c82c",
+        blockHash: "0xbef98056e77708bbbc82e05010b972837aa0a6f769f8037026abe2103595b74a",
+        transactionHash: "0x13d7e3b3bbace07953b95b9ede0f96e1bd9690a88cf00105cd97d66ffabc1563",
         logs: [],
-        blockNumber: 9513553,
-        cumulativeGasUsed: "11107134",
+        blockNumber: 9568381,
+        cumulativeGasUsed: "11450459",
         status: 1,
         byzantium: true,
       },
     },
     HiredTalentsContract: {
-      address: "0xD5c314483C55D395FDfE0665510dA86F15e3Ec76",
+      address: "0xB738A7b7258935B2d002a638bB09b02F6181E269",
       abi: [
         {
           inputs: [
@@ -3327,12 +3316,6 @@ const deployedContracts = {
               internalType: "string",
               name: "submissionComment",
               type: "string",
-            },
-            {
-              indexed: false,
-              internalType: "bool",
-              name: "isLink",
-              type: "bool",
             },
             {
               indexed: false,
@@ -3888,11 +3871,6 @@ const deployedContracts = {
                   name: "submissionComment",
                   type: "string",
                 },
-                {
-                  internalType: "bool",
-                  name: "isLink",
-                  type: "bool",
-                },
               ],
               internalType: "struct DeliverableParams",
               name: "_deliverableParams",
@@ -4376,22 +4354,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0xD5c314483C55D395FDfE0665510dA86F15e3Ec76",
-        transactionIndex: 42,
-        gasUsed: "4657147",
+        contractAddress: "0xB738A7b7258935B2d002a638bB09b02F6181E269",
+        transactionIndex: 66,
+        gasUsed: "4697891",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xd760e039a1865bde0540e57826fef436d18d539318d50144ea28a65819883aa2",
-        transactionHash: "0x176bc3485db56adba1897f9c9fb07d0b8256c2a064fcbe407cdc046835fa0e77",
+        blockHash: "0x8fe0f84c2d76d4c8270f2d6c278608cba7396a5362d286bbf8066e1555c7b3e6",
+        transactionHash: "0xb5dea585484aab0ade5a99e61e07c198085e37d6553d9f8d7f0cccab627e4c88",
         logs: [],
-        blockNumber: 9513546,
-        cumulativeGasUsed: "8236913",
+        blockNumber: 9568388,
+        cumulativeGasUsed: "13933999",
         status: 1,
         byzantium: true,
       },
     },
     NotificationsContract: {
-      address: "0x5A48443986E6BD660B8D10bcc8e038d8C405c105",
+      address: "0x989E00CD610E490775ff2b9fFb4b1C38b323787a",
       abi: [
         {
           anonymous: false,
@@ -4441,22 +4419,22 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x5A48443986E6BD660B8D10bcc8e038d8C405c105",
-        transactionIndex: 61,
+        contractAddress: "0x989E00CD610E490775ff2b9fFb4b1C38b323787a",
+        transactionIndex: 37,
         gasUsed: "144627",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0xc144251cf8f70b3d5ab3940565fb7d2b9cf5750bafbd0ff4a48c2afc96319e7a",
-        transactionHash: "0x97a9affa1799d0da4e10ecc93ca6a1c553139cc91885353f878eed92a5e9fd17",
+        blockHash: "0xcbb7a0b9ef5bfa5916f69265daef5798a83f9c104e58c71f88d4e36ac0066b78",
+        transactionHash: "0xeb4bdc304b710800e371591ddbe7c82a1c137a4cc8f101e774e20a31b47aafd2",
         logs: [],
-        blockNumber: 9505805,
-        cumulativeGasUsed: "9429900",
+        blockNumber: 9546578,
+        cumulativeGasUsed: "24801534",
         status: 1,
         byzantium: true,
       },
     },
     ProfileConfigContract: {
-      address: "0x4aCeb7D11ee662067DEEC00122E630881c0E31C5",
+      address: "0xe5BA68FBD7934aA7E3C1B1D7F3F4B8e89beaBeDA",
       abi: [
         {
           anonymous: false,
@@ -4685,16 +4663,16 @@ const deployedContracts = {
       receipt: {
         to: null,
         from: "0xAd98E5E1745F4040361015a5E2325ca94e4312F7",
-        contractAddress: "0x4aCeb7D11ee662067DEEC00122E630881c0E31C5",
-        transactionIndex: 32,
+        contractAddress: "0xe5BA68FBD7934aA7E3C1B1D7F3F4B8e89beaBeDA",
+        transactionIndex: 15,
         gasUsed: "1931107",
         logsBloom:
           "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-        blockHash: "0x51b306525f19c76617565020e475e4f7793ae78b5482d9a0a5110926ee77bec2",
-        transactionHash: "0x556f9f58630a722a60c8566d48c7e4a4f1a6663e84ef68bc31863dcf3a6ba664",
+        blockHash: "0x0b170e269af7ef9e8a315f8a3987db00d8b06df2ebb310fe1b82968157fa0e3a",
+        transactionHash: "0xb140862bf94f41e9cfc50ea15c59f97dc4124efe272df21207528a9a289c75b7",
         logs: [],
-        blockNumber: 9505822,
-        cumulativeGasUsed: "14260607",
+        blockNumber: 9546583,
+        cumulativeGasUsed: "4178263",
         status: 1,
         byzantium: true,
       },

@@ -26,6 +26,17 @@ export class Deliverable {
   }
 }
 
+export enum AnalysisBadge {
+  MATCHS_WITH_DESCRIPTION = "MATCHS WITH DESCRIPTION",
+  NEEDS_REVISION = "NEEDS REVISION",
+  UNKNOWN = "UNKNOWN",
+}
+
+export interface DeliverableAnalysis {
+  badge: AnalysisBadge;
+  details: string;
+}
+
 export interface DeliverableData {
   deliverables: Deliverable[];
 }

@@ -855,6 +855,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   return (
     <>
       <UniversalDetail
+        workId={"hiredTalent-" + hiredTalentId + "-" + talentId}
         data={detailData}
         deliverables={deliverables}
         isMining={isMining}
