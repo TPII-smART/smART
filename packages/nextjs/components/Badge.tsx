@@ -36,6 +36,10 @@ export function StatusBadge({ status }: { status: ActivityItem["status"] | undef
       );
     case ActivityItemStatus.rejected:
       return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
+
+    case ActivityItemStatus.disputed:
+      return <Badge className={`bg-purple-350 text-white ${badgeClass}`}>Disputed</Badge>;
+
     default:
       return null;
   }

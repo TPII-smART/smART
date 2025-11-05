@@ -69,9 +69,9 @@ export class Gig {
 
   /**
    * (Optional) ISO date string representing when the hiredTalent was
-   * rejected by the client.
+   * disputed by the client.
    */
-  rejectedAt?: string;
+  disputedAt?: string;
 
   /** Ethereum address of the user who emitted the last update of the gig. */
   emitBy?: string;
@@ -125,7 +125,6 @@ export class Gig {
     this.finishedAt = "";
     this.canceledAt = "";
     this.deliveredAt = "";
-    this.rejectedAt = "";
     this.emitBy = ZERO_ADDRESS;
     this.rating = 0;
     this.clientRejected = false;

@@ -12,13 +12,12 @@ interface PreviewModalProps {
   isOpen: boolean;
   onClose: () => void;
   resource: string;
-  isLink: boolean;
   comment?: string;
   isClient?: boolean;
 }
 
 const PreviewModal = (props: PreviewModalProps) => {
-  const { loading, modalTitle, modalDescription, isOpen, onClose, resource, isLink, comment, isClient } = props;
+  const { loading, modalTitle, modalDescription, isOpen, onClose, resource, comment, isClient } = props;
 
   return (
     <>
@@ -44,7 +43,7 @@ const PreviewModal = (props: PreviewModalProps) => {
                 borderColor: "var(--color-inside-border)",
               }}
             >
-              <DeliverablePreview resource={resource} isLink={isLink} />
+              <DeliverablePreview resource={resource} />
             </div>
           </div>
           <Separator />

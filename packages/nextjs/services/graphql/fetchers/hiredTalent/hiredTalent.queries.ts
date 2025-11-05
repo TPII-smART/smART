@@ -436,6 +436,7 @@ export const getHiredTalentAndHiresPaginated = gql`
         acceptedAt
         finishedAt
         canceledAt
+        disputedAt
         deliveredAt
         emitBy
         clientReceived
@@ -467,7 +468,6 @@ export const getDeliverablesForHiredTalent = gql`
         submissionComment
         clientResponse
         responseTimestamp
-        isLink
         lastTransactionHash
       }
     }

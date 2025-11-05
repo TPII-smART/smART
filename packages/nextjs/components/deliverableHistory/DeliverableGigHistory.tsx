@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { DeliverableCard } from "../Card/DeliverableCard/DeliverableCard";
+import { Spinner } from "../Spinner/Spinner";
 import Button from "@/components/Button/Button";
 import { DeliverableState, GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { castDateToTimestamp, isImageUrl } from "~~/lib/utils";
 import { fetchDeliverablesForGig, fetchGigById } from "~~/services/graphql/fetchers/gig/gig.service";
@@ -16,6 +18,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
   const [freelancerProfile, setFreelancerProfile] = useState<UserProfile | null>(null);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
   const { address: userAddress } = useAccount();
   const { writeContractAsync: writeContract, isMining } = useScaffoldWriteContract({
     contractName: "GigsContract",
@@ -84,6 +87,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
   const handleClientConfirmCompletion = async (clientResponse?: string) => {
     try {
       if (!data?.gig.gigId) return;
+      showSpinner();
       await writeContract({
         functionName: "confirmClientCompletion",
         args: [BigInt(data.gig.gigId), clientResponse],
@@ -91,12 +95,16 @@ export function DeliverableGigHistory(deliverableProps: any) {
       if (reload) await reload();
     } catch (err) {
       console.error("Confirm gig completion failed:", err);
+    } finally {
+      setShowDeliverableModal(false);
+      hideSpinner();
     }
   };
 
   const handleRejectGig = async (reason: string) => {
     try {
       if (!data?.gig.gigId) return;
+      showSpinner();
 
       await writeContract({
         functionName: "rejectGig",
@@ -108,6 +116,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
       console.error("Reject gig failed:", err);
     } finally {
       setShowDeliverableModal(false);
+      hideSpinner();
     }
   };
 
@@ -137,6 +146,16 @@ export function DeliverableGigHistory(deliverableProps: any) {
     return buttons;
   };
 
+  const isDisputed = gigState === GigState.Disputed || (gigState === GigState.Completed && !!data?.gig.disputeId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center w-full h-64">
+        <Spinner />
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col px-8 py-4 space-y-4 mx-5">
       <div className="mb-8 ">
@@ -157,6 +176,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
               }}
               client={client}
               freelancer={freelancer}
+              isDisputed={isDisputed}
               actionButtons={getActionButtons()}
             />
           ))}
@@ -169,10 +189,9 @@ export function DeliverableGigHistory(deliverableProps: any) {
           onApprove={handleClientConfirmCompletion}
           onReject={handleRejectGig}
           comment={data.deliverables[currentDeliverableIndex].submissionComment || ""}
-          loading={false}
+          loading={isMining}
           showFullInfo={false}
           resource={data.deliverables[currentDeliverableIndex].resource}
-          isLink={data.deliverables[currentDeliverableIndex].isLink}
           modalTitle="Review Deliverable"
           modalDescription="Please review the deliverable and provide your feedback."
         />

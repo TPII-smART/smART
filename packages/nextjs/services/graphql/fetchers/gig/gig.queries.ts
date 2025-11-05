@@ -160,6 +160,7 @@ export const getMyGigsPaginated = gql`
         acceptedAt
         finishedAt
         canceledAt
+        disputedAt
         state
         clientReceived
         freelancerDelivered
@@ -392,7 +393,6 @@ export const getDeliverablesForGig = gql`
         submissionComment
         clientResponse
         responseTimestamp
-        isLink
         uploadedAt
       }
     }

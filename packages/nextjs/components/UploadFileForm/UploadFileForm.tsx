@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { FileFormData, UploadTab, tabs } from "./types";
+import { FileFormData } from "./types";
 import * as Yup from "yup";
 import FileUploadBox from "~~/components/FileUploadBox";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
-import Tabs from "~~/components/Tabs/Tabs";
 import { InputBase } from "~~/components/scaffold-eth/Input/InputBase";
 
 interface UploadDeliverableFormProps {
@@ -21,7 +20,7 @@ const UploadDeliverableForm = ({
   onSubmit,
   loading,
   modalTitle = "Upload Deliverable",
-  modalDescription = "Please upload the required file or paste a link, and optionally add a comment for the client.",
+  modalDescription = "Please upload the required file, and add a comment for the client.",
   isOpen,
   onClose,
 }: UploadDeliverableFormProps) => {
@@ -31,21 +30,10 @@ const UploadDeliverableForm = ({
     setInternalOpen(false);
     onClose?.();
   };
-  const [selectedTab, setSelectedTab] = useState<UploadTab>("file");
 
   const validationSchema = Yup.object().shape({
     submissionComment: Yup.string().max(512, "Comment must be at most 512 characters"),
-    link: Yup.string().when([], {
-      is: () => selectedTab === "link",
-      then: schema =>
-        schema.required("Link is required").url("Must be a valid URL").max(256, "Link must be at most 256 characters"),
-      otherwise: schema => schema.notRequired(),
-    }),
-    file: Yup.mixed().when([], {
-      is: () => selectedTab === "file",
-      then: schema => schema.required("File is required"),
-      otherwise: schema => schema.notRequired(),
-    }),
+    file: Yup.mixed().required("File is required"),
   });
 
   return (
@@ -71,30 +59,12 @@ const UploadDeliverableForm = ({
       >
         {({ values, setFieldValue, touched, errors }) => (
           <div className="space-y-4">
-            <div className="flex gap-2 mb-2">
-              <Tabs
-                tabs={tabs}
-                onChange={id => {
-                  setSelectedTab(id.toString() as UploadTab);
-                  setFieldValue("isLink", id.toString() === "link");
-                }}
-              />
-            </div>
-            {selectedTab === "file" ? (
-              <FileUploadBox
-                onUploadSuccess={(val: File) => setFieldValue("file", val)}
-                acceptedFileTypes={["Document", "Image", "Video"]}
-              />
-            ) : (
-              <InputBase
-                placeholder="Paste your link here"
-                variant="filled"
-                value={values.link || ""}
-                onChange={(val: string) => setFieldValue("link", val)}
-                error={touched.link && !!errors.link}
-                helperText={touched.link && errors.link ? errors.link : ""}
-              />
-            )}
+            <div className="flex gap-2 mb-2"></div>
+            <FileUploadBox
+              onUploadSuccess={(val: File) => setFieldValue("file", val)}
+              acceptedFileTypes={["Document", "Image", "Video"]}
+            />
+
             <InputBase
               placeholder="Comment"
               multiline

@@ -181,7 +181,6 @@ contract GigsContract {
         address indexed freelancer,
         string resource,
         string submissionComment,
-        bool isLink,
         bool freelancerUploaded,
         uint256 uploadedAt
     );
@@ -536,6 +535,7 @@ contract GigsContract {
 
         if (gig.state == GigState.Open) {
             // If gig is still open, simply cancel the gig
+            gig.canceledAt = block.timestamp;
             gig.state = GigState.Cancelled;
         } else if (gig.state == GigState.InProgress) {
             // If gig is in progress, cancel and refund full amount to client
@@ -637,7 +637,6 @@ contract GigsContract {
             uploadedAt: block.timestamp,
             responseTimestamp: 0,
             clientResponse: "",
-            isLink: _deliverableParams.isLink,
             state: DeliverableState.Pending,
             deliverableGroupId: _currentDeliverableGroupId
         });
@@ -650,7 +649,6 @@ contract GigsContract {
             msg.sender,
             deliverableToUpload.resource,
             deliverableToUpload.submissionComment,
-            deliverableToUpload.isLink,
             gig.freelancerUploaded,
             deliverableToUpload.uploadedAt
         );
