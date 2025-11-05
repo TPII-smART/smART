@@ -58,8 +58,6 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
 
   useEffect(() => {
     if (!userAddress) return;
-
-    // Leer cache de forma segura (JSON.parse puede fallar si el string está corrupto)
     const defaultCache = {
       [NotificationStatus.UNREAD]: [],
       [NotificationStatus.READ]: [],
@@ -71,14 +69,12 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
       try {
         const raw = localStorage.getItem("notificationStatusCache");
         parsed = raw ? JSON.parse(raw) : defaultCache;
-        // ensure keys exist
         parsed = {
           [NotificationStatus.UNREAD]: parsed[NotificationStatus.UNREAD] ?? [],
           [NotificationStatus.READ]: parsed[NotificationStatus.READ] ?? [],
           [NotificationStatus.DONE]: parsed[NotificationStatus.DONE] ?? [],
         };
       } catch (e) {
-        // si falla el parse, resetear y sobreescribir más abajo al salvar
         console.warn("Failed to parse notificationStatusCache, resetting to default", e);
         parsed = defaultCache;
       }
