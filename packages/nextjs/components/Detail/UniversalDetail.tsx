@@ -399,34 +399,32 @@ export default function UniversalDetail({
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  {statusMessage && (
-                    <div className="bg-[var(--color-primary)]/20 p-2 rounded-lg flex justify-center">
-                      <RatingDisplay
-                        ratingData={{
-                          averageRating: data.rating || 0,
-                          totalRatings: 1,
-                          hiredTalentRatings: {},
-                          gigRatings: {},
-                        }}
-                        interactive={false}
-                      />
-                    </div>
-                  )}
+                  <div className="bg-[var(--color-primary)]/20 p-2 rounded-lg flex justify-center">
+                    <RatingDisplay
+                      ratingData={{
+                        averageRating: data.rating || 0,
+                        totalRatings: 1,
+                        hiredTalentRatings: {},
+                        gigRatings: {},
+                      }}
+                      interactive={false}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ) : (
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardContent className="p-6">
-                <div className="space-y-4 h-full flex flex-row">
+                <div className="space-y-4 h-full w-full flex flex-row">
                   {statusMessage && (
-                    <div className="bg-[var(--color-primary)]/20 p-4 rounded-lg flex-1">
-                      <div className="flex items-center space-x-4 mt-2 justify-around ">
-                        <div className="text-[var(--color-primary-content)] text-base leading-relaxed m-0">
+                    <div className="bg-[var(--color-primary)]/20 w-full p-4 rounded-lg flex-1">
+                      <div className="flex w-full items-center space-x-4 mt-2 justify-around ">
+                        <div className="w-full text-[var(--color-primary-content)] text-base leading-relaxed m-0">
                           {statusMessage}
                         </div>
                         {data?.state === HiredTalentState.Ongoing && (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center p-2 space-x-2">
                             <Button
                               variant="primary"
                               size={"md"}
