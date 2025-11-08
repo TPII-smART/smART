@@ -16,6 +16,7 @@ struct DeliverableInfo {
     string clientResponse;
     uint256 responseTimestamp;
     DeliverableState state;
+    uint256 deliverableGroupId; // ID for grouping deliverables as evidence in disputes
 }
 
 struct DeliverableParams {

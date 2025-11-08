@@ -698,7 +698,7 @@ contract GigsContract {
             deliverableInfo.clientResponse = _comment;
             deliverableInfo.state = DeliverableState.Rejected;
             deliverableInfo.responseTimestamp = block.timestamp;
-            uploadedAt = deliverableInfo.uploadedAt;
+            _uploadedAt = deliverableInfo.uploadedAt;
         }
 
 

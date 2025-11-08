@@ -703,14 +703,14 @@ contract HiredTalentsContract {
         hiredTalent.freelancerUploaded = false;
         hiredTalent.rejectedAt = block.timestamp;
 
-        uint256 uploadedAt = 0;
+        uint256 _uploadedAt = 0;
 
         if (hiredTalent.deliverableInfo.length > 0) {
             DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
             deliverableInfo.clientResponse = _comment;
             deliverableInfo.state = DeliverableState.Rejected;
             deliverableInfo.responseTimestamp = block.timestamp;
-            uploadedAt = deliverableInfo.uploadedAt;
+            _uploadedAt = deliverableInfo.uploadedAt;
         }
 
         emit HiredTalentRejected(
@@ -721,7 +721,7 @@ contract HiredTalentsContract {
             hiredTalent.clientRejected,
             hiredTalent.freelancerUploaded,
             _comment,
-            uploadedAt,
+            _uploadedAt,
             hiredTalent.rejectedAt
         );
     }
