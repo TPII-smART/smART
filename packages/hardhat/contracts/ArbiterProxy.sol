@@ -1276,6 +1276,9 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         round.feeRewards = round.freelancerPayedRoundFee + round.clientPayedRoundFee - round.appealCost;
 
+        // Move to next round
+        dispute.currentRound++;
+        
         if (dispute.disputeType == DisputeType.Talent)
             emit TalentAppealCreated(
                 _localDisputeId,
@@ -1291,9 +1294,6 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
                 dispute.currentRound,
                 dispute.externalId1 // gigId
             );
-
-        // Move to next round
-        dispute.currentRound++;
     }
 
     // ============ Evidence Submission Functions ============
