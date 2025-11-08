@@ -12,7 +12,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
-import { ArrowUpTrayIcon, CheckCircleIcon, ClipboardDocumentListIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpTrayIcon,
+  CheckCircleIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { Badge } from "~~/components/Badge";
 import Button from "~~/components/Button/Button";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
@@ -132,7 +138,6 @@ export default function GigDetail({
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
     if (!data?.gig?.gigId) return;
-    if (data?.gig?.disputeId) return;
     showSpinner();
     try {
       const metaDataURI = getMetaEvidenceURI();
@@ -197,18 +202,18 @@ export default function GigDetail({
     }
   };
 
-  const concedeDispute = async () => {
+  const dismissDispute = async () => {
     if (!data?.gig?.disputeId || !data?.gig?.gigId) return;
     if (data?.gig?.disputeId === 0) return;
     showSpinner();
     try {
       await writeContract({
-        functionName: "concedeDispute",
+        functionName: "dismissDispute",
         args: [BigInt(data?.gig?.gigId)],
       });
       reload();
     } catch (error) {
-      console.error("Error conceding dispute:", error);
+      console.error("Error dismissing dispute:", error);
     } finally {
       hideSpinner();
       setShowPayFeeModal(false);
@@ -417,7 +422,7 @@ export default function GigDetail({
     router.push(`/gig/${gigId}/deliverables`);
   };
 
-  const isWaiting = disputeStatus === DisputeStatus.Waiting;
+  const isWaiting = disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Waiting;
   const currentDeadline = (disputeDetail?.currentRound || 0) == 0 ? disputeDetail?.roundDeadline : appealDeadline;
   const expiredRound =
     (!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
@@ -513,7 +518,9 @@ export default function GigDetail({
         if (
           !isWaiting &&
           (expiredRound ||
-            (disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Solved && !disputeDetail?.disputeFinished))
+            (disputeDetail?.raiseOnKleros &&
+              disputeStatus === DisputeStatus.Solved &&
+              (!disputeDetail?.disputeFinished || data?.gig?.state !== GigState.Completed)))
         ) {
           buttons.push(
             <Button
@@ -540,6 +547,20 @@ export default function GigDetail({
             >
               <ScaleIcon className="h-5 w-5" />
               <span>Dispute Actions</span>
+            </Button>,
+          );
+        } else if (!disputeDetail?.clientPaidArbitrationFee && (disputeDetail?.currentRound || 0) == 0) {
+          buttons.push(
+            <Button
+              variant="danger"
+              key="dismissDispute"
+              onClick={() => dismissDispute()}
+              disabled={isMining || disputeLoading}
+              size="sm"
+              tooltip="Dismiss Dispute"
+            >
+              <XCircleIcon className="h-5 w-5" />
+              <span>Dismiss Dispute</span>
             </Button>,
           );
         }
@@ -641,7 +662,7 @@ export default function GigDetail({
             (expiredRound ||
               (disputeDetail?.raiseOnKleros &&
                 disputeStatus === DisputeStatus.Solved &&
-                !disputeDetail?.disputeFinished))
+                (!disputeDetail?.disputeFinished || data?.gig?.state !== GigState.Completed)))
           ) {
             buttons.push(
               <Button
@@ -668,6 +689,20 @@ export default function GigDetail({
               >
                 <ScaleIcon className="h-5 w-5" />
                 <span>Dispute Actions</span>
+              </Button>,
+            );
+          } else if (!disputeDetail?.freelancerPaidArbitrationFee && (disputeDetail?.currentRound || 0) == 0) {
+            buttons.push(
+              <Button
+                variant="danger"
+                key="dismissDispute"
+                onClick={() => dismissDispute()}
+                disabled={isMining || disputeLoading}
+                size="sm"
+                tooltip="Dismiss Dispute"
+              >
+                <XCircleIcon className="h-5 w-5" />
+                <span>Dismiss Dispute</span>
               </Button>,
             );
           }
@@ -725,7 +760,7 @@ export default function GigDetail({
     return buttons;
   };
 
-  // Get status message based on hiredTalent state and user role
+  // Get status message based on gig state and user role
   const getStatusMessage = () => {
     if (data?.gig?.state === GigState.Open) {
       if (isClient) {
@@ -759,12 +794,53 @@ export default function GigDetail({
       if (data?.gig?.disputeId && data?.gig?.disputeId > 0) {
         if (disputeDetail?.disputeFinished) return null;
         return (
-          <div>
-            {data?.gig?.disputeId && data?.gig?.disputeId > 0 ? (
-              <>
-                {(!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
+          <div className="w-full">
+            {disputeDetail?.currentlyDismissed ? (
+              <p className="mr-1 w-[95%]">
+                The dispute has been dismissed. Try to resolve the issue directly with the other party or start a new
+                dispute.
+              </p>
+            ) : data?.gig?.disputeId && data?.gig?.disputeId > 0 ? (
+              <div className="flex flex-col w-[100%] p-4 rounded-lg border border-gray-700 bg-gradient-to-r from-gray-900 via-[rgb(20,20,20)] to-[rgb(10,10,10)]">
+                <div className="flex flex-col  justify-between w-full">
+                  <div className="flex flex-col items-start">
+                    <div className="text-md items-start font-semibold">Dispute overview</div>
+                    <div className="mt-1 text-xs text-gray-500">
+                      {(() => {
+                        const round = Number(disputeDetail?.currentRound ?? 0);
+                        if (round === 0 || (round === 1 && disputeStatus === DisputeStatus.Waiting))
+                          return "Initial Stage";
+                        else if (round >= 1) return `Appeal Round ${round}`;
+                        else return "Status unknown";
+                      })()}
+                      {" · "}
+                      {!disputeDetail?.raiseOnKleros
+                        ? "Not yet on Kleros"
+                        : disputeStatus === DisputeStatus.Waiting
+                          ? "Waiting for jurors"
+                          : disputeStatus === DisputeStatus.Appealable
+                            ? "Appealable (fund your side)"
+                            : disputeStatus === DisputeStatus.Solved
+                              ? "Ruled / Resolved"
+                              : "Status unknown"}
+                    </div>
+                  </div>
+
+                  {disputeDetail?.disputeReason && (
+                    <div className="flex justify-between gap-3 mt-3 rounded-lg bg-orange-500/10 border border-orange-500/20 pt-4 pb-2 px-4">
+                      <ExclamationTriangleIcon className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium text-orange-600 dark:text-orange-400 block mb-1">
+                          Dispute Reason
+                        </span>
+                        <p className="text-xs text-foreground line-clamp-2">{disputeDetail?.disputeReason}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {!!disputeDetail?.freelancerPaidArbitrationFee !== !!disputeDetail?.clientPaidArbitrationFee &&
                   (disputeDetail?.currentRound || 0) == 0 && (
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-4 mt-4">
                       <div className="flex items-center">
                         <CheckCircleIcon
                           className={`h-6 w-6 ${disputeDetail?.freelancerPaidArbitrationFee ? "text-green-500" : "text-gray-400"}`}
@@ -783,15 +859,14 @@ export default function GigDetail({
                 {disputeDetail?.raiseOnKleros &&
                   disputeStatus === DisputeStatus.Appealable &&
                   (Number(disputeDetail?.clientFunds ?? 0) > 0 || Number(disputeDetail?.freelancerFunds ?? 0) > 0 ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3 mt-4">
                       {/* Freelancer Stake */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground">Freelancer Stake</span>
+                          <span className="text-xs font-medium">Freelancer Stake</span>
                           <span className="text-sm font-bold text-foreground">
                             {`${formatEther(BigInt(freelancerAmount))} / ${formatEther(BigInt(totalFreelancerAmount))}`}{" "}
-                            ETH{" "}
-                            <span className="text-xs text-muted-foreground">({formatPct(freelancerPercentage)})</span>
+                            ETH <span className="text-xs">({formatPct(freelancerPercentage)})</span>
                           </span>
                         </div>
                         <div className="relative h-4 w-full rounded-full bg-muted border border-gray-600 overflow-hidden">
@@ -807,10 +882,10 @@ export default function GigDetail({
                       {/* Client Stake */}
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-muted-foreground">Client Stake</span>
+                          <span className="text-xs font-medium">Client Stake</span>
                           <span className="text-sm font-bold text-foreground">
                             {`${formatEther(BigInt(clientAmount))} / ${formatEther(BigInt(totalClientAmount))}`} ETH{" "}
-                            <span className="text-xs text-muted-foreground">({formatPct(clientPercentage)})</span>
+                            <span className="text-xs">({formatPct(clientPercentage)})</span>
                           </span>
                         </div>
                         <div className="relative h-4 w-full rounded-full bg-muted border border-gray-600 overflow-hidden">
@@ -827,62 +902,64 @@ export default function GigDetail({
                     <p>Dispute is appealable. Fund your side to appeal the ruling.</p>
                   ))}
 
-                {(((!disputeDetail?.freelancerPaidArbitrationFee || !disputeDetail?.clientPaidArbitrationFee) &&
-                  (disputeDetail?.currentRound || 0) == 0) ||
-                  (disputeStatus === DisputeStatus.Appealable && disputeDetail?.raiseOnKleros)) && (
-                  <div>
-                    <p className="text-sm text-gray-500">
-                      Deadline to{" "}
-                      {disputeDetail?.clientPaidArbitrationFee && disputeDetail?.freelancerPaidArbitrationFee
-                        ? "appeal"
-                        : "pay fee"}
-                      :{" "}
-                      <span className="font-medium text-gray-700">
-                        {disputeStatus === DisputeStatus.Appealable && appealDeadline
-                          ? new Date(Number(appealDeadline) * 1000).toLocaleString()
-                          : disputeDetail?.roundDeadline
-                            ? new Date(Number(disputeDetail?.roundDeadline) * 1000).toLocaleString()
-                            : "N/A"}
-                      </span>
-                    </p>
-                  </div>
-                )}
-
-                {disputeStatus === DisputeStatus.Waiting && (
-                  <p>Waiting for the Kleros jurors to rule on the dispute.</p>
-                )}
-
-                {disputeCurrentRuling !== undefined &&
-                  BigInt(disputeCurrentRuling) !== 0n &&
-                  disputeDetail?.raiseOnKleros &&
-                  disputeStatus !== DisputeStatus.Waiting && (
+                <div>
+                  {((!!disputeDetail?.freelancerPaidArbitrationFee !== !!disputeDetail?.clientPaidArbitrationFee &&
+                    (disputeDetail?.currentRound || 0) == 0) ||
+                    (disputeStatus === DisputeStatus.Appealable && disputeDetail?.raiseOnKleros)) && (
                     <div>
-                      <p className="text-sm text-gray-500">
-                        Current Ruling:{" "}
-                        <span className="font-medium text-gray-700">
-                          {BigInt(disputeCurrentRuling) === BigInt(Ruling.ClientWins)
-                            ? "Client Wins"
-                            : "Freelancer Wins"}
+                      <p className="text-sm">
+                        Deadline to{" "}
+                        {disputeDetail?.clientPaidArbitrationFee && disputeDetail?.freelancerPaidArbitrationFee
+                          ? "appeal"
+                          : "pay fee"}
+                        :{" "}
+                        <span className="font-bold">
+                          {disputeStatus === DisputeStatus.Appealable && appealDeadline
+                            ? new Date(Number(appealDeadline) * 1000).toLocaleString()
+                            : disputeDetail?.roundDeadline
+                              ? new Date(Number(disputeDetail?.roundDeadline) * 1000).toLocaleString()
+                              : "N/A"}
                         </span>
-                        {BigInt(disputeDetail?.freelancerFunds || 0) >= BigInt(freelancerFee || 0) &&
-                          BigInt(disputeDetail?.clientFunds || 0) < BigInt(clientFee || 0) && (
-                            <span> - Freelancer fully funded appeal</span>
-                          )}
-                        {BigInt(disputeDetail?.clientFunds || 0) >= BigInt(clientFee || 0) &&
-                          BigInt(disputeDetail?.freelancerFunds || 0) < BigInt(freelancerFee || 0) && (
-                            <span> - Client fully funded appeal</span>
-                          )}
                       </p>
                     </div>
                   )}
-              </>
+
+                  {disputeDetail?.raiseOnKleros && disputeStatus === DisputeStatus.Waiting && (
+                    <p className="mt-4">Waiting for the Kleros jurors to rule on the dispute.</p>
+                  )}
+
+                  {disputeCurrentRuling !== undefined &&
+                    BigInt(disputeCurrentRuling) !== 0n &&
+                    disputeDetail?.raiseOnKleros &&
+                    disputeStatus !== DisputeStatus.Waiting && (
+                      <div>
+                        <p className="text-sm">
+                          Current Ruling:{" "}
+                          <span className="font-bold">
+                            {BigInt(disputeCurrentRuling) === BigInt(Ruling.ClientWins)
+                              ? "Client Wins"
+                              : "Freelancer Wins"}
+                          </span>
+                          {BigInt(disputeDetail?.freelancerFunds || 0) >= BigInt(freelancerFee || 0) &&
+                            BigInt(disputeDetail?.clientFunds || 0) < BigInt(clientFee || 0) && (
+                              <span> - Freelancer fully funded appeal</span>
+                            )}
+                          {BigInt(disputeDetail?.clientFunds || 0) >= BigInt(clientFee || 0) &&
+                            BigInt(disputeDetail?.freelancerFunds || 0) < BigInt(freelancerFee || 0) && (
+                              <span> - Client fully funded appeal</span>
+                            )}
+                        </p>
+                      </div>
+                    )}
+                </div>
+              </div>
             ) : (
               <p>Got any problems? Initiate a dispute to resolve the issue.</p>
             )}
           </div>
         );
       } else {
-        return "Got any problems? Initiate a dispute to resolve the issue.";
+        return <p>Got any problems? Initiate a dispute to resolve the issue.</p>;
       }
     }
 
@@ -948,6 +1025,7 @@ export default function GigDetail({
     wasDisputed: !!data?.gig?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
+    disputeDismissed: disputeDetail?.currentlyDismissed || false,
     clientRejected: false,
   };
 
@@ -974,6 +1052,7 @@ export default function GigDetail({
     wasDisputed: !!data?.gig.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
+    disputeDismissed: disputeDetail?.currentlyDismissed || false,
     clientRejected: data?.gig.clientRejected || false,
   };
 
@@ -1043,31 +1122,48 @@ export default function GigDetail({
       />
       <Modal isOpen={showPayFeeModal} onClose={() => setShowPayFeeModal(false)} title="A dispute has been raised">
         <div className="mb-4">
-          <p className="mb-2">
-            The other party has initiated a dispute. You can either match the arbitration fee to continue the dispute
-            process or concede the dispute to the other party. If you choose to pay the arbitration fee, the case will
-            be reviewed by jurors in Kleros. Once an initial ruling has been established, anyone interested will have
-            the option to fund an appeal if they disagree with the outcome. Once finished, the funds will be released
-            based on the ruling, and all arbitration fees from the winning side will be reimbursed. If you do not take
-            any action before the deadline, you will automatically concede the dispute. The arbitration fee for you to
-            continue the dispute is{" "}
-            <span className="font-medium">
-              {arbitrationCost ? `${formatEther(BigInt(arbitrationCost))} ETH` : "N/A"}
-            </span>
-            .
-          </p>
-          <p className="mb-2">Do you wish to pay the arbitration fee or concede the dispute?</p>
+          {(disputeDetail?.timesDismissed ?? 0) < 1 ? (
+            <>
+              <p className="mb-2">
+                The other party has opened a dispute to be resolved by Kleros. You have a one‑time option to dismiss the
+                dispute if you believe the issue can be resolved off‑chain. Using this dismissal will pause the Kleros
+                process but it can only be used once for this case. If you do not dismiss, you can match the arbitration
+                fee and let Kleros jurors review the case. The arbitration fee to continue is{" "}
+                <span className="font-medium">
+                  {arbitrationCost ? `${formatEther(BigInt(arbitrationCost))} ETH` : "N/A"}
+                </span>
+                . If you neither pay nor dismiss before the deadline, the dispute will time out and the ruling will be
+                entered in favor of the party who initiated the dispute.
+              </p>
+              <p className="mb-2">Do you wish to pay the arbitration fee or use the one‑time dismissal?</p>
+            </>
+          ) : (
+            <>
+              <p className="mb-2">
+                A one‑time dismissal has already been used for this dispute, so no further dismissals are allowed. To
+                keep the case in Kleros for juror review you must match the arbitration fee:
+                <span className="font-medium">
+                  {" "}
+                  {arbitrationCost ? `${formatEther(BigInt(arbitrationCost))} ETH` : "N/A"}
+                </span>
+                . If you fail to pay before the deadline the dispute will time out and the ruling will be decided in
+                favor of the initiator.
+              </p>
+              <p className="mb-2">Do you wish to pay the arbitration fee?</p>
+            </>
+          )}
         </div>
         <div className="flex justify-between">
           <Button
             variant="danger"
             className="ml-2"
+            disabled={disputeDetail?.timesDismissed ? disputeDetail.timesDismissed >= 1 : false}
             onClick={async () => {
-              await concedeDispute();
+              await dismissDispute();
               setShowPayFeeModal(false);
             }}
           >
-            Concede Dispute
+            Dismiss Dispute
           </Button>
           <Button
             variant="primary"

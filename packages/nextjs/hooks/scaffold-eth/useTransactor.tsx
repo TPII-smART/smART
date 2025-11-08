@@ -1,6 +1,6 @@
 import { Hash, SendTransactionParameters, TransactionReceipt, WalletClient } from "viem";
 import { Config, useWalletClient } from "wagmi";
-import { getPublicClient } from "wagmi/actions";
+import { getPublicClient, getWalletClient } from "wagmi/actions";
 import { SendTransactionMutate } from "wagmi/query";
 import { wagmiConfig } from "~~/services/web3/wagmiConfig";
 import { getBlockExplorerTxLink, getParsedError, notification } from "~~/utils/scaffold-eth";
@@ -28,22 +28,47 @@ const TxnNotification = ({ message, blockExplorerLink }: { message: string; bloc
 };
 
 /**
+ * Wait for wallet client using wagmi actions with exponential backoff
+ */
+const waitForWalletClient = async (maxAttempts = 10, initialDelay = 100): Promise<WalletClient> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      // Use wagmi action to get fresh wallet client
+      const client = await getWalletClient(wagmiConfig);
+      if (client) {
+        return client;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      // Client not ready yet
+    }
+
+    const delay = initialDelay * Math.pow(2, attempt);
+    await new Promise(resolve => setTimeout(resolve, Math.min(delay, 3000)));
+  }
+  throw new Error("Wallet client not available after multiple attempts");
+};
+
+/**
  * Runs Transaction passed in to returned function showing UI feedback.
  * @param _walletClient - Optional wallet client to use. If not provided, will use the one from useWalletClient.
  * @returns function that takes in transaction function as callback, shows UI feedback for transaction and returns a promise of the transaction hash
  */
 export const useTransactor = (_walletClient?: WalletClient): TransactionFunc => {
-  let walletClient = _walletClient;
   const { data } = useWalletClient();
-  if (walletClient === undefined && data) {
-    walletClient = data;
-  }
-
   const result: TransactionFunc = async (tx, options) => {
+    // Get wallet client, either from parameter, hook data, or wait for it
+    let walletClient = _walletClient || data;
+
     if (!walletClient) {
-      notification.error("Cannot access account");
-      console.error("⚡️ ~ file: useTransactor.tsx ~ error");
-      return;
+      try {
+        // Use wagmi action to fetch wallet client directly
+        walletClient = await waitForWalletClient();
+      } catch (error) {
+        notification.error("Cannot access account. Please ensure your wallet is connected.");
+        console.error("⚡️ ~ file: useTransactor.tsx ~ error: Wallet client not available", error);
+        return;
+      }
     }
 
     let notificationId = null;

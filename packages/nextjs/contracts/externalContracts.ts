@@ -1110,7 +1110,7 @@ const externalContracts = {
       ],
     },
     KlerosArbitrator: {
-      address: "0xa742eeb24772d9a2bf840a3f8e3da712b8d0f731",
+      address: "0x95b914a0e265661038976f8651cc71168b0850a6",
       abi: [
         {
           constant: false,

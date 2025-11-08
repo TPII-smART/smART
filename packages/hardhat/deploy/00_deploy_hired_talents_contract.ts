@@ -27,7 +27,7 @@ const deployedContract: DeployFunction = async function (hre: HardhatRuntimeEnvi
   await deploy(CONTRACT_NAME, {
     from: deployer,
     // Contract constructor arguments
-    args: [deployer, "0x577F082F22c4647CD707778c6C74dEf623dF1D9F"],
+    args: [deployer, "0x9a795B2D7F8edAB13206BB862016e375E57fFEE6"],
     log: true,
     // autoMine: can be passed to the deploy function to make the deployment process faster on local networks by
     // automatically mining the contract deployment transaction. There is no effect on live networks.

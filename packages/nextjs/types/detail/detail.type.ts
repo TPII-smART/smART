@@ -28,4 +28,5 @@ export interface DetailData {
   disputeFinalized?: boolean;
   disputeResult?: boolean;
   disputeAppealed?: boolean;
+  disputeDismissed?: boolean;
 }

@@ -18,8 +18,10 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     disputedAt: BigInt(event.block.timestamp),
   });
 
-  await context.db.insert(dispute).values({
-    disputeId: BigInt(localDisputeId),
+  const disputePk = { disputeId: BigInt(localDisputeId) };
+  const existingDispute = await context.db.find(dispute, disputePk);
+
+  const disputeData = {
     type: "hiredTalent",
     klerosDisputeId: BigInt(0),
     freelancerPaidArbitrationFee: false,
@@ -34,16 +36,23 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     disputeReason: reason,
     title: hireTalent.title,
     description: hireTalent.description,
+    currentlyDismissed: false,
     lastTransactionHash: event.transaction.hash,
-  });
+  };
 
-  
+  if (existingDispute) {
+    await context.db.update(dispute, disputePk).set(disputeData);
+  } else {
+    await context.db.insert(dispute).values({
+      disputeId: BigInt(localDisputeId),
+      ...disputeData,
+    });
 
-  await context.db.insert(disputeContributor).values([
-    { disputeId: BigInt(localDisputeId), contributor: freelancer as string, lastTransactionHash: event.transaction.hash },
-    { disputeId: BigInt(localDisputeId), contributor: client as string, lastTransactionHash: event.transaction.hash },
-  ]);
-
+    await context.db.insert(disputeContributor).values([
+      { disputeId: BigInt(localDisputeId), contributor: freelancer as string, lastTransactionHash: event.transaction.hash },
+      { disputeId: BigInt(localDisputeId), contributor: client as string, lastTransactionHash: event.transaction.hash },
+    ]);
+  }
 
   // notifications for both parties
   await context.db.insert(notification).values({
@@ -151,9 +160,10 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     lastTransactionHash: event.transaction.hash,
     disputedAt: BigInt(event.block.timestamp),
   });
+  const disputePk = { disputeId: BigInt(localDisputeId) };
+  const existingDispute = await context.db.find(dispute, disputePk);
 
-  await context.db.insert(dispute).values({
-    disputeId: BigInt(localDisputeId),
+  const disputeData = {
     klerosDisputeId: BigInt(0),
     type: "gig",
     freelancerPaidArbitrationFee: false,
@@ -168,13 +178,23 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     disputeReason: reason,
     title: gigRecord.title,
     description: gigRecord.description,
+    currentlyDismissed: false,
     lastTransactionHash: event.transaction.hash,
-  });
+  };
 
-  await context.db.insert(disputeContributor).values([
-    { disputeId: BigInt(localDisputeId), contributor: freelancer as string, lastTransactionHash: event.transaction.hash },
-    { disputeId: BigInt(localDisputeId), contributor: client as string, lastTransactionHash: event.transaction.hash },
-  ]);  
+  if (existingDispute) {
+    await context.db.update(dispute, disputePk).set(disputeData);
+  } else {
+    await context.db.insert(dispute).values({
+      disputeId: BigInt(localDisputeId),
+      ...disputeData,
+    });
+
+    await context.db.insert(disputeContributor).values([
+      { disputeId: BigInt(localDisputeId), contributor: freelancer as string, lastTransactionHash: event.transaction.hash },
+      { disputeId: BigInt(localDisputeId), contributor: client as string, lastTransactionHash: event.transaction.hash },
+    ]);
+  }
 
   await context.db.insert(notification).values({
     id: `${event.block.number}-${event.log.logIndex}-gigdispute-freelancer`,
@@ -271,6 +291,7 @@ ponder.on("ArbiterProxy:GigDisputeTimeoutByInaction", async ({ event, context })
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRuling: ruling ?? 0,
     status: 2, //resolved
+    disputeFinished: true,
     lastTransactionHash: event.transaction.hash,
   });
 
@@ -293,6 +314,7 @@ ponder.on("ArbiterProxy:TalentDisputeTimeoutByInaction", async ({ event, context
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
     currentRuling: ruling ?? 0,
     status: 2, //resolved
+    disputeFinished: true,
     lastTransactionHash: event.transaction.hash,
   }); 
 
@@ -557,21 +579,30 @@ ponder.on("ArbiterProxy:GigAppealExternallyFunded", async ({ event, context }) =
   });
 });
 
-// Talent / Gig dispute conceded
-ponder.on("ArbiterProxy:TalentDisputeConceded", async ({ event, context }) => {
-  const { localDisputeId, talentId, hiredTalentId, ruling, winner } = event.args;
+// Talent / Gig dispute dismissed
+ponder.on("ArbiterProxy:TalentDisputeDismissed", async ({ event, context }) => {
+  const { localDisputeId, talentId, hiredTalentId, timesDismissed, caller } = event.args;
+
+  // Mark talent as active again
+  await context.db.update(hiredTalent, { hiredTalentId, talentId }).set({
+    state: 1, // Active state
+    lastTransactionHash: event.transaction.hash,
+  });
+
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
-    currentRuling: ruling ?? 0,
-    disputeFinished: true,
-    status: 2, //resolved
+    clientPaidArbitrationFee: false,
+    freelancerPaidArbitrationFee: false,
+    timesDismissed: timesDismissed ?? 0,
+    currentlyDismissed: true,
+    status: 0, // waiting
     lastTransactionHash: event.transaction.hash,
   });
 
   await context.db.insert(notification).values({
-    id: `${event.block.number}-${event.log.logIndex}-talent-conceded`,
-    user: winner as string,
-    title: "Dispute conceded",
-    message: `The other party conceded the dispute #${localDisputeId} for hiredTalent ${hiredTalentId}. You won!`,
+    id: `${event.block.number}-${event.log.logIndex}-talent-dismissed`,
+    user: caller as string,
+    title: "Dispute dismissed",
+    message: `The dispute #${localDisputeId} for hiredTalent ${hiredTalentId} was dismissed.`,
     itemId: localDisputeId,
     href: `/talents/${talentId}`,
     createdAt: BigInt(event.block.timestamp),
@@ -579,20 +610,29 @@ ponder.on("ArbiterProxy:TalentDisputeConceded", async ({ event, context }) => {
   });
 });
 
-ponder.on("ArbiterProxy:GigDisputeConceded", async ({ event, context }) => {
-  const { localDisputeId, gigId, ruling, winner } = event.args;
+ponder.on("ArbiterProxy:GigDisputeDismissed", async ({ event, context }) => {
+  const { localDisputeId, gigId, timesDismissed, caller } = event.args;
+
+  // Mark gig as active again
+  await context.db.update(gig, { gigId }).set({
+    state: 1, // Active state
+    lastTransactionHash: event.transaction.hash,
+  });
+
   await context.db.update(dispute, { disputeId: localDisputeId }).set({
-    currentRuling: ruling ?? 0,
-    status: 2, //resolved
-    disputeFinished: true,
+    clientPaidArbitrationFee: false,
+    freelancerPaidArbitrationFee: false,
+    timesDismissed: timesDismissed ?? 0,
+    currentlyDismissed: true,
+    status: 0, // waiting
     lastTransactionHash: event.transaction.hash,
   });
 
   await context.db.insert(notification).values({
-    id: `${event.block.number}-${event.log.logIndex}-gig-conceded`,
-    user: winner as string,
-    title: "Dispute conceded",
-    message: `The other party conceded the dispute #${localDisputeId} for gig ${gigId}. You won!`,
+    id: `${event.block.number}-${event.log.logIndex}-gig-dismissed`,
+    user: caller as string,
+    title: "Dispute dismissed",
+    message: `The dispute #${localDisputeId} for gig ${gigId} was dismissed.`,
     itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
