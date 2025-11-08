@@ -15,6 +15,7 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     state: 4, // Disputed state
     lastTransactionHash: event.transaction.hash,
     disputeId: localDisputeId,
+    disputedAt: BigInt(event.block.timestamp),
   });
 
   const disputePk = { disputeId: BigInt(localDisputeId) };
@@ -101,7 +102,7 @@ ponder.on("ArbiterProxy:FreelancerPayedTalentArbitrationFee", async ({ event, co
 
 // Client paid talent arbitration fee
 ponder.on("ArbiterProxy:ClientPayedTalentArbitrationFee", async ({ event, context }) => {
-  const { localDisputeId, talentId, hiredTalentId, client: clientAddr, amountPaid, totalAmountPaid } = event.args;
+  const { localDisputeId, talentId, client: clientAddr, amountPaid, totalAmountPaid } = event.args;
 
     await context.db.update(dispute, { disputeId: localDisputeId }).set({
       clientPaidArbitrationFee: true,
@@ -157,6 +158,7 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     state: 4, // Disputed state
     disputeId: localDisputeId,
     lastTransactionHash: event.transaction.hash,
+    disputedAt: BigInt(event.block.timestamp),
   });
   const disputePk = { disputeId: BigInt(localDisputeId) };
   const existingDispute = await context.db.find(dispute, disputePk);

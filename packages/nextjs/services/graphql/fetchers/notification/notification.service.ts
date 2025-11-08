@@ -17,6 +17,21 @@ export const fetchUnreadNotificationsAmountByUser = async (userAddress: string) 
   return res.notifications.totalCount;
 };
 
+export const fetchNotificationIdsByUser = async (userAddress: string): Promise<string[]> => {
+  const query = gql`
+    query GetNotificationsByUser($address: String!) {
+      notifications(where: { user: $address }) {
+        items {
+          id
+        }
+      }
+    }
+  `;
+
+  const res = await request<{ notifications: { items: Notification[] } }>(endpoint, query, { address: userAddress });
+  return res.notifications.items.map(notification => notification.id);
+};
+
 export const fetchNotificationsByUser = async (userAddress: string) => {
   const query = gql`
     query GetNotificationsByUser($address: String!) {
@@ -41,7 +56,8 @@ export const fetchNotificationsByUser = async (userAddress: string) => {
 export const fetchNotificationsByUserPaginated = async (
   meta: PaginationMetaArg,
   userAddress: string,
-  statusList: NotificationStatus[] = [NotificationStatus.UNREAD, NotificationStatus.READ, NotificationStatus.DONE],
+  whitelistedIds: string[],
+  blacklistedIds: string[],
   search: string = "",
 ): Promise<Paginated<Notification>> => {
   const query = gql`
@@ -50,14 +66,20 @@ export const fetchNotificationsByUserPaginated = async (
       $limit: Int!
       $startCursor: String
       $endCursor: String
-      $statusList: [Int!]
+      $whitelistedIds: [String]
+      $blacklistedIds: [String]
       $search: String
     ) {
       notifications(
         limit: $limit
         after: $endCursor
         before: $startCursor
-        where: { user: $address, status_in: $statusList, OR: { message_contains: $search, title_contains: $search } }
+        where: {
+          user: $address
+          id_in: $whitelistedIds
+          id_not_in: $blacklistedIds
+          OR: { message_contains: $search, title_contains: $search }
+        }
         orderBy: "createdAt"
         orderDirection: "desc"
       ) {
@@ -87,7 +109,8 @@ export const fetchNotificationsByUserPaginated = async (
     limit: meta.limit,
     startCursor: meta.startCursor,
     endCursor: meta.endCursor,
-    statusList: statusList,
+    whitelistedIds: whitelistedIds.length > 0 ? whitelistedIds : undefined,
+    blacklistedIds: blacklistedIds.length > 0 ? blacklistedIds : undefined,
     search,
   });
 

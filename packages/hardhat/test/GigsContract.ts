@@ -12,7 +12,6 @@ type DeliverableParams = {
   uploadedAt: number;
   submissionComment: string;
   clientResponse: string;
-  isLink: boolean;
 };
 
 describe("GigsContract", function () {
@@ -42,7 +41,6 @@ describe("GigsContract", function () {
   const deliverableToUpload: DeliverableParams = {
     resource: "http://test.com",
     submissionComment: "Here is the deliverable",
-    isLink: true,
     clientResponse: "",
     uploadedAt: Date.now(),
   };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { styled } from "@mui/material";
 import { NotificationStatus } from "@se-2/common";
@@ -13,10 +13,8 @@ import Spinner from "~~/components/Spinner/Spinner";
 import { InputBase } from "~~/components/scaffold-eth";
 import { useGlobalNotifications } from "~~/context/NotificationsCountProvider";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
-import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { usePagination } from "~~/hooks/use-pagination";
 import { castDateToTimestamp } from "~~/lib/utils";
-import { waitTransaction } from "~~/lib/waitTransaction.util";
 import { fetchNotificationsByUserPaginated } from "~~/services/graphql/fetchers/notification/notification.service";
 import { Notification } from "~~/types/notification.types";
 
@@ -38,33 +36,43 @@ const SideBarButton = styled("button")<{ isActive: boolean }>(({ isActive }) => 
   cursor: "pointer",
 }));
 
-const getActiveViewStatusList = (activeView: string): NotificationStatus[] => {
-  switch (activeView) {
-    case "inbox":
-      return [NotificationStatus.READ, NotificationStatus.UNREAD];
-    case "unread":
-      return [NotificationStatus.UNREAD];
-    case "done":
-      return [NotificationStatus.DONE];
-    default:
-      return [NotificationStatus.UNREAD, NotificationStatus.READ, NotificationStatus.DONE];
-  }
-};
-
 const NotificationsDashboard = () => {
   const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [localNotifications, setLocalNotifications] = useState<Notification[]>([]);
-  const [activeView, setActiveView] = useState("inbox");
+  const [activeView, setActiveView] = useState<NotificationStatus>(NotificationStatus.UNREAD);
   const [search, setSearch] = useState("");
   const { showSpinner, hideSpinner } = useGlobalSpinner();
 
   const { address: userAddress } = useAccount();
-  const { unreadCount, refreshUnreadCount } = useGlobalNotifications();
+  const { unreadCount, refreshUnreadCount, editCache, notificationStatusCache, saveCache, getState } =
+    useGlobalNotifications();
 
-  const { writeContractAsync: changeNotificationStatus } = useScaffoldWriteContract({
-    contractName: "NotificationsContract",
-  });
+  // const { writeContractAsync: changeNotificationStatus } = useScaffoldWriteContract({
+  //   contractName: "NotificationsContract",
+  // });
+
+  const activeViewStatusIds = useMemo((): string[][] => {
+    switch (activeView) {
+      case NotificationStatus.UNREAD:
+        return [
+          [],
+          [...notificationStatusCache[NotificationStatus.READ], ...notificationStatusCache[NotificationStatus.DONE]],
+        ];
+      case NotificationStatus.READ:
+        return [
+          [...notificationStatusCache[NotificationStatus.READ]],
+          [...notificationStatusCache[NotificationStatus.UNREAD], ...notificationStatusCache[NotificationStatus.DONE]],
+        ];
+      case NotificationStatus.DONE:
+        return [
+          [...notificationStatusCache[NotificationStatus.DONE]],
+          [...notificationStatusCache[NotificationStatus.UNREAD], ...notificationStatusCache[NotificationStatus.READ]],
+        ];
+      default:
+        return [];
+    }
+  }, [notificationStatusCache, activeView]);
 
   const { handleScroll, fetchPaginatedData, totalItems } = usePagination({
     fetchFunction: fetchNotificationsByUserPaginated,
@@ -90,16 +98,18 @@ const NotificationsDashboard = () => {
       setCreatedAt(castDateToTimestamp(notification.createdAt));
     }, [notification.createdAt]);
 
+    const state = useMemo(() => getState(notification.id), [notification.id]);
+
     return (
       <Link
         key={notification.id}
         className={`
         flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
-        ${notification.status !== NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
+        ${state === undefined || state === NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
       `}
         href={{ pathname: notification.href ?? "#", query: notification.href ? { itemId: notification.itemId } : {} }}
         onClick={
-          notification.status === NotificationStatus.UNREAD
+          state === undefined || state === NotificationStatus.UNREAD
             ? () => {
                 showSpinner();
                 onNavigate(NotificationStatus.READ, [notification.id]);
@@ -108,9 +118,9 @@ const NotificationsDashboard = () => {
             : undefined
         }
       >
-        {notification.status === NotificationStatus.UNREAD ? (
+        {state === undefined || state === NotificationStatus.UNREAD ? (
           <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-accent`} />
-        ) : notification.status === NotificationStatus.DONE ? (
+        ) : state === NotificationStatus.DONE ? (
           <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] bg-success`} />
         ) : (
           <div className={`mr-2 h-3 w-3 rounded-4xl place-self-start mt-[4px] transparent`} />
@@ -140,29 +150,28 @@ const NotificationsDashboard = () => {
     }
 
     refreshUnreadCount();
-  }, [userAddress, refreshUnreadCount]);
 
+    return () => {
+      saveCache();
+    };
+  }, [userAddress, refreshUnreadCount, saveCache]);
+
+  // Fetch on activeView change or when status-id lists change (fix stale fetch args)
   useEffect(() => {
     if (!userAddress) {
       setLocalNotifications([]);
       return;
     }
 
-    fetchPaginatedData(true, activeView, userAddress, getActiveViewStatusList(activeView), search);
-    setSearch("");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeView, userAddress, fetchPaginatedData]);
+    if (activeViewStatusIds.length === 0) return;
 
-  useEffect(() => {
-    if (!userAddress) {
-      setLocalNotifications([]);
-      return;
-    }
+    // ensure safe defaults if inner arrays are undefined
+    const includeIds = activeViewStatusIds[0] ?? [];
+    const excludeIds = activeViewStatusIds[1] ?? [];
 
-    fetchPaginatedData(false, activeView, userAddress, getActiveViewStatusList(activeView), search);
-    setSelectedNotifications([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+    fetchPaginatedData(true, activeView.toString(), userAddress, includeIds, excludeIds, "");
+    if (search) setSelectedNotifications([]);
+  }, [search, activeView, userAddress, fetchPaginatedData, activeViewStatusIds]);
 
   const allSelected = selectedNotifications.length === localNotifications.length && localNotifications.length > 0;
 
@@ -182,37 +191,48 @@ const NotificationsDashboard = () => {
     }
   };
 
-  const changeNotificationsStatus = async (status: NotificationStatus, ids: string[]) => {
-    const transactionHash = await changeNotificationStatus({
-      functionName: "changeNotificationsStatus",
-      args: [ids, status],
-    });
-    await waitTransaction("notification", transactionHash);
-    await refreshUnreadCount();
-  };
+  const changeNotificationsStatus = useCallback(
+    async (status: NotificationStatus, ids: string[]) => {
+      // const transactionHash = await changeNotificationStatus({
+      //   functionName: "changeNotificationsStatus",
+      //   args: [ids, status],
+      // });
+      // await waitTransaction("notification", transactionHash);
+      for (const id of ids) {
+        editCache(id, status);
+      }
+      saveCache();
+      await refreshUnreadCount();
+    },
+    [editCache, refreshUnreadCount, saveCache],
+  );
 
-  const handleSelected = async (status: NotificationStatus) => {
-    try {
-      showSpinner();
-      await changeNotificationsStatus(status, selectedNotifications);
+  const handleSelected = useCallback(
+    async (status: NotificationStatus) => {
+      try {
+        showSpinner();
+        await changeNotificationsStatus(status, selectedNotifications);
 
-      const updatedLocalNotifications = localNotifications
-        .map(n => {
-          if (selectedNotifications.includes(n.id)) {
-            return { ...n, status };
+        const updatedLocalNotifications = localNotifications.filter(notification => {
+          if (selectedNotifications.includes(notification.id)) {
+            // Remove notification if its new status excludes it from the current view
+            if (activeView !== status) {
+              return false;
+            }
           }
-          return n;
-        })
-        .filter(notification => getActiveViewStatusList(activeView).includes(notification.status));
+          return true;
+        });
 
-      setLocalNotifications(updatedLocalNotifications);
-      setSelectedNotifications([]);
-    } catch (error) {
-      console.error("Failed to change notification status:", error);
-    } finally {
-      hideSpinner();
-    }
-  };
+        setLocalNotifications(updatedLocalNotifications);
+        setSelectedNotifications([]);
+      } catch (error) {
+        console.error("Failed to change notification status:", error);
+      } finally {
+        hideSpinner();
+      }
+    },
+    [showSpinner, changeNotificationsStatus, selectedNotifications, localNotifications, activeView, hideSpinner],
+  );
 
   const ActionBar = () => (
     <div className="flex justify-between items-center p-4 border-b border-t border-border">
@@ -269,22 +289,13 @@ const NotificationsDashboard = () => {
       <div className="w-64 bg-[var(--color-surface)] border-r border-border p-4 flex flex-col space-y-2">
         <h2 className="text-xl font-semibold mb-4 text-white">Notifications</h2>
         <SideBarButton
-          isActive={activeView === "inbox"}
+          isActive={activeView === NotificationStatus.UNREAD}
           onClick={() => {
-            setActiveView("inbox");
+            setActiveView(NotificationStatus.UNREAD);
           }}
         >
           <InboxIcon className="h-5 w-5" />
           <span>Inbox</span>
-        </SideBarButton>
-        <SideBarButton
-          isActive={activeView === "unread"}
-          onClick={() => {
-            setActiveView("unread");
-          }}
-        >
-          <ArchiveBoxIcon className="h-5 w-5" />
-          <span>Unread</span>
           {unreadCount > 0 && (
             <span className="ml-auto bg-gray-800 text-accent font-bold text-xs px-2 py-1 rounded-full">
               {unreadCount}
@@ -292,9 +303,18 @@ const NotificationsDashboard = () => {
           )}
         </SideBarButton>
         <SideBarButton
-          isActive={activeView === "done"}
+          isActive={activeView === NotificationStatus.READ}
           onClick={() => {
-            setActiveView("done");
+            setActiveView(NotificationStatus.READ);
+          }}
+        >
+          <ArchiveBoxIcon className="h-5 w-5" />
+          <span>Read</span>
+        </SideBarButton>
+        <SideBarButton
+          isActive={activeView === NotificationStatus.DONE}
+          onClick={() => {
+            setActiveView(NotificationStatus.DONE);
           }}
         >
           <CheckCircleIcon className="h-5 w-5" />
@@ -320,7 +340,7 @@ const NotificationsDashboard = () => {
         {/* Notifications List */}
         <div
           className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-2"
-          onScroll={event => handleScroll(event, activeView, userAddress, getActiveViewStatusList(activeView), search)}
+          onScroll={event => handleScroll(event, activeView.toString(), userAddress, activeViewStatusIds, search)}
         >
           {localNotifications.length > 0
             ? localNotifications.map(notification => (

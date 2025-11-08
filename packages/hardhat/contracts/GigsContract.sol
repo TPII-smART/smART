@@ -181,7 +181,6 @@ contract GigsContract {
         address indexed freelancer,
         string resource,
         string submissionComment,
-        bool isLink,
         bool freelancerUploaded,
         uint256 uploadedAt
     );
@@ -536,6 +535,7 @@ contract GigsContract {
 
         if (gig.state == GigState.Open) {
             // If gig is still open, simply cancel the gig
+            gig.canceledAt = block.timestamp;
             gig.state = GigState.Cancelled;
         } else if (gig.state == GigState.InProgress) {
             // If gig is in progress, cancel and refund full amount to client
@@ -637,7 +637,6 @@ contract GigsContract {
             uploadedAt: block.timestamp,
             responseTimestamp: 0,
             clientResponse: "",
-            isLink: _deliverableParams.isLink,
             state: DeliverableState.Pending,
             deliverableGroupId: _currentDeliverableGroupId
         });
@@ -650,7 +649,6 @@ contract GigsContract {
             msg.sender,
             deliverableToUpload.resource,
             deliverableToUpload.submissionComment,
-            deliverableToUpload.isLink,
             gig.freelancerUploaded,
             deliverableToUpload.uploadedAt
         );
@@ -727,6 +725,7 @@ contract GigsContract {
         string calldata _reason
     ) external payable onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
+        DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.InProgress, "Dispute can only be started for ongoing gigs");
         require(msg.value > 0, "Must send arbitration fee");
@@ -770,6 +769,7 @@ contract GigsContract {
         }
 
         gig.state = GigState.Disputed;
+        deliverableInfo.state = DeliverableState.Disputed;
     }
 
     function getArbitrationFee() external view returns (uint256) {
@@ -806,6 +806,7 @@ contract GigsContract {
         uint256 _gigId
     ) external onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
+        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.Disputed, "No dispute to dismiss for this gig");
         require(gig.disputeId != 0, "No dispute exists for this gig");
@@ -813,6 +814,7 @@ contract GigsContract {
         arbiterProxy.dismissDispute(gig.disputeId, msg.sender);
 
         gig.state = GigState.InProgress;
+        deliverableInfo.state = DeliverableState.Pending;
     }
 
     function finalizeDispute(uint256 _gigId) external onlyGigParties(_gigId) gigExists(_gigId) {
@@ -877,8 +879,7 @@ contract GigsContract {
 
     function submitEvidence(
         uint256 _gigId,
-        string calldata _evidenceURI,
-        uint256 _evidenceGroupId
+        string calldata _evidenceURI
     ) external gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
@@ -889,7 +890,7 @@ contract GigsContract {
         arbiterProxy.submitEvidence(
             msg.sender,
             gig.disputeId,
-            _evidenceGroupId,
+            gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
             _evidenceURI,
             // If this method is called, we want to emit the evidence event in an ongoing dispute
             false

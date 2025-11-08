@@ -26,7 +26,8 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Dispute } from "~~/types/dispute/dispute.type";
 import { HiredTalent } from "~~/types/hiredTalent";
-import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
+import { createInitialEvidencePDF } from "~~/utils/kleros-disputes/createInitialEvidencePDF";
+import { createAndUploadEvidence, createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
 
 export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentId: string; hiredTalentId: string }) {
@@ -89,8 +90,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const isClient = hiredTalent?.client?.toLowerCase() === userAddress?.toLowerCase();
   const hiredTalentStatus = hiredTalent?.state as HiredTalentState;
   const disputeDetail = disputeData ? disputeData : null;
-  console.log("Hired Talent:", data);
-  console.log("Dispute Detail:", disputeDetail);
 
   const {
     disputeCurrentRuling,
@@ -122,8 +121,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
-    console.log("Initiating conflict resolution with values:", values);
-    console.log("Current data state:", data);
     if (!data?.hiredTalentId || !data?.talentId) return;
     showSpinner();
     try {
@@ -135,14 +132,29 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         value: BigInt(arbitrationCost || 0),
       });
 
-      // Iterate over the submitted deliverables and upload each one using the Proxy
-      //deliverables?.forEach(async deliverable => {
-      //  console.log("Value of deliv: ", deliverable.resource.replace("ipfs://", "ipfs://ipfs/"));
-      //  await writeContract({
-      //    functionName: "submitEvidence",
-      //    args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), deliverable.resource],
-      //  });
-      // });
+      // Upload the Initial Evidence PDF as part of the dispute creation process
+      const initialEvidenceFile = await createInitialEvidencePDF(
+        new Date().toISOString().split("T")[0],
+        isFreelancer ? "Freelancer" : "Client",
+        `
+        Client address: ${data?.client}\n
+        Freelancer: ${data?.freelancer}\n
+        Freelancer job Title: ${data?.title}\n
+        Freelancer job Description: ${data?.description || ""}\n
+        Payment proposed: ${formatEther(BigInt(data?.payment || 0))} ETH\n`,
+        values.comment,
+      );
+
+      const evidenceJSON = await createAndUploadEvidence(
+        initialEvidenceFile,
+        "Initial Evidence",
+        "All the information regarding the job present in the platform.",
+      );
+
+      await writeContract({
+        functionName: "submitEvidence",
+        args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), evidenceJSON],
+      });
 
       reload();
     } catch (error) {
@@ -347,16 +359,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const handleFreelancerConfirmCompletion = async (deliverableData: FileFormData) => {
     try {
       let resource = "";
-      const isLink = deliverableData.isLink;
 
       showSpinner();
 
-      if (deliverableData.file && !isLink) {
+      if (deliverableData.file) {
         resource = (await handleFileUploadToIPFS(deliverableData.file)) || "";
-      } else if (!deliverableData.file && isLink) {
-        resource = deliverableData.link || "";
       }
-
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
@@ -364,15 +372,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           BigInt(hiredTalent.hiredTalentId),
           {
             resource,
-            parsedResource: isLink
-              ? ""
-              : await createEvidenceJSON(
-                  resource,
-                  deliverableData.file?.name || "",
-                  "Deliverable submission by Freelancer",
-                ),
+            parsedResource: await createEvidenceJSON(
+              resource,
+              deliverableData.file?.name || "",
+              "Deliverable submission by Freelancer",
+            ),
             submissionComment: deliverableData.submissionComment,
-            isLink,
           },
         ],
       });
@@ -436,7 +441,11 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
     const formatPct = (p: number) => `${Math.max(0, Math.min(100, p)).toFixed(1)}%`;
 
-    if (data?.state != undefined && data?.state >= HiredTalentState.Ongoing) {
+    if (
+      data?.state != undefined &&
+      data?.state != HiredTalentState.Cancelled &&
+      data?.state >= HiredTalentState.Ongoing
+    ) {
       if (data?.disputeId && data?.disputeId > 0) {
         if (disputeDetail?.disputeFinished) return null;
         return (
@@ -603,7 +612,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         return <p>Got any problems? Initiate a dispute to resolve the issue.</p>;
       }
     }
-
     return "";
   };
 

@@ -26,7 +26,8 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Dispute } from "~~/types/dispute/dispute.type";
 import { Application, Gig } from "~~/types/gig";
-import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
+import { createInitialEvidencePDF } from "~~/utils/kleros-disputes/createInitialEvidencePDF";
+import { createAndUploadEvidence, createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
 
 type GigData = {
@@ -130,8 +131,6 @@ export default function GigDetail({
     isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
-    console.log("Initiating conflict resolution with values:", values);
-    console.log("Current data state:", data);
     if (!data?.gig?.gigId) return;
     showSpinner();
     try {
@@ -143,14 +142,29 @@ export default function GigDetail({
         value: BigInt(arbitrationCost || 0),
       });
 
-      // Iterate over the submitted deliverables and upload each one using the Proxy
-      //deliverables?.forEach(async deliverable => {
-      //  console.log("Value of deliv: ", deliverable.resource.replace("ipfs://", "ipfs://ipfs/"));
-      //  await writeContract({
-      //    functionName: "submitEvidence",
-      //    args: [BigInt(data?.gig?.gigId), deliverable.resource],
-      //  });
-      // });
+      // Upload the Initial Evidence PDF as part of the dispute creation process
+      const initialEvidenceFile = await createInitialEvidencePDF(
+        new Date().toISOString().split("T")[0],
+        isFreelancer ? "Freelancer" : "Client",
+        `
+        Client address: ${data?.gig.client}\n
+        Freelancer selected among the candidates: ${data?.gig.acceptedFreelancer}\n
+        Job Title: ${data?.gig.title}\n
+        Job Description: ${data?.gig.description || ""}\n
+        Payment amount declared: ${formatEther(BigInt(data?.gig.finalPayment || data?.gig.basePayment || 0))} ETH\n`,
+        values.comment,
+      );
+
+      const evidenceJSON = await createAndUploadEvidence(
+        initialEvidenceFile,
+        "Initial Evidence",
+        "All the information regarding the job present in the platform.",
+      );
+
+      await writeContract({
+        functionName: "submitEvidence",
+        args: [BigInt(data?.gig.gigId), evidenceJSON],
+      });
 
       reload();
     } catch (error) {
@@ -251,14 +265,11 @@ export default function GigDetail({
     try {
       showSpinner();
       let resource = "";
-      const isLink = fileData.isLink;
 
       if (!data?.gig.gigId) return;
 
-      if (fileData.file && !isLink) {
+      if (fileData.file) {
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
-      } else if (!fileData.file && isLink) {
-        resource = fileData.link || "";
       }
 
       await writeContract({
@@ -267,11 +278,12 @@ export default function GigDetail({
           BigInt(data?.gig.gigId),
           {
             resource,
-            parsedResource: isLink
-              ? ""
-              : await createEvidenceJSON(resource, fileData.file?.name || "", "Deliverable submission by Freelancer"),
+            parsedResource: await createEvidenceJSON(
+              resource,
+              fileData.file?.name || "",
+              "Deliverable submission by Freelancer",
+            ),
             submissionComment: fileData.submissionComment,
-            isLink,
           },
         ],
       });
@@ -479,6 +491,7 @@ export default function GigDetail({
         gigState !== GigState.Completed &&
         gigState !== GigState.Cancelled &&
         gigState !== GigState.Disputed &&
+        applicationState !== ApplicationState.Rejected &&
         !data?.gig.freelancerCancelled
       ) {
         buttons.push(
@@ -620,6 +633,7 @@ export default function GigDetail({
           gigState !== GigState.Completed &&
           gigState !== GigState.Cancelled &&
           gigState !== GigState.Disputed &&
+          applicationState !== ApplicationState.Rejected &&
           !data?.gig.clientCancelled
         ) {
           buttons.push(
@@ -744,9 +758,17 @@ export default function GigDetail({
   const getStatusMessage = () => {
     if (data?.gig?.state === GigState.Open) {
       if (isClient) {
-        return "Please review the proposal and approve it to start the gig.";
+        if (applicationState === ApplicationState.Rejected) {
+          return "You have rejected this application.";
+        } else {
+          return "Please review the proposal and approve it to start the gig.";
+        }
       } else if (isFreelancer) {
-        return "Waiting for client approval.";
+        if (applicationState === ApplicationState.Rejected) {
+          return "Your application has been rejected by the client.";
+        } else {
+          return "Waiting for client approval.";
+        }
       } else {
         return "Gig is waiting for freelancer approval.";
       }
@@ -933,17 +955,21 @@ export default function GigDetail({
     return "";
   };
 
-  const getStatusBadge = (status: number) => {
+  const getStatusBadge = (gigState: number, applicationState: number) => {
     const badgeClass = "min-w-[140px] text-center justify-center px-4 py-2";
-    switch (status) {
+    switch (gigState) {
       case GigState.Open:
-        return (
-          <Badge
-            className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
-          >
-            Waiting for approval
-          </Badge>
-        );
+        if (applicationState === ApplicationState.Rejected) {
+          return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
+        } else {
+          return (
+            <Badge
+              className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
+            >
+              Waiting for approval
+            </Badge>
+          );
+        }
       case GigState.InProgress:
         return (
           <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
@@ -1029,7 +1055,7 @@ export default function GigDetail({
         loading={isLoading}
         error={error}
         reload={reload}
-        statusBadge={getStatusBadge((data?.gig.state as number) || 0)}
+        statusBadge={getStatusBadge((data?.gig.state as number) || 0, applicationState)}
         actionButtons={getActionButtons()}
         statusMessage={getStatusMessage()}
         isUploadModalOpen={showUploadModal}
