@@ -14,7 +14,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { ScaleIcon, StarIcon, TrophyIcon } from "@heroicons/react/20/solid";
-import { ArrowUpTrayIcon, CheckCircleIcon, ClipboardDocumentListIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpTrayIcon,
+  CheckCircleIcon,
+  ClipboardDocumentListIcon,
+  ExclamationTriangleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
 import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
@@ -456,10 +462,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                 dispute.
               </p>
             ) : data?.disputeId && data?.disputeId > 0 ? (
-              <div className="flex flex-col w-[100%] p-4 rounded-lg border border-gray-700 bg-gradient-to-r from-gray-900 to-gray-800">
+              <div className="flex flex-col w-[100%] p-4 rounded-lg border border-gray-700 bg-gradient-to-r from-gray-900 via-[rgb(20,20,20)] to-[rgb(10,10,10)]">
                 <div className="flex flex-col  justify-between w-full">
                   <div className="flex flex-col items-start">
-                    <div className="text-sm items-start font-semibold">Dispute overview</div>
+                    <div className="text-md items-start font-semibold">Dispute overview</div>
                     <div className="mt-1 text-xs text-gray-500">
                       {(() => {
                         const round = Number(disputeDetail?.currentRound ?? 0);
@@ -482,9 +488,14 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                   </div>
 
                   {disputeDetail?.disputeReason && (
-                    <div className="mt-3 rounded-md border border-gray-700 bg-muted p-3">
-                      <div className="text-xs font-semibold text-muted-foreground mb-1">Dispute reason</div>
-                      <div className="text-sm text-foreground break-words">{disputeDetail.disputeReason}</div>
+                    <div className="flex justify-between gap-3 mt-3 rounded-lg bg-orange-500/10 border border-orange-500/20 pt-4 pb-2 px-4">
+                      <ExclamationTriangleIcon className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium text-orange-600 dark:text-orange-400 block mb-1">
+                          Dispute Reason
+                        </span>
+                        <p className="text-xs text-foreground line-clamp-2">{disputeDetail?.disputeReason}</p>
+                      </div>
                     </div>
                   )}
                 </div>
