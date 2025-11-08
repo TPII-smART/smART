@@ -11,12 +11,13 @@ import {
   CurrencyDollarIcon,
   DocumentTextIcon,
   EyeIcon,
+  ScaleIcon,
   StarIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useUserProfile } from "~~/hooks/use-user-profile";
 import { cn } from "~~/lib/utils";
-import { ActivityItem, ActivityItemStatus } from "~~/types/feed/activityItem.type";
+import { ActivityItem, ActivityItemStatus, InteractionType } from "~~/types/feed/activityItem.type";
 
 const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["status"]) => {
   switch (type) {
@@ -33,6 +34,8 @@ const getActivityIcon = (type: ActivityItem["type"], status: ActivityItem["statu
         return <XCircleIcon className="h-6 w-6" />;
       } else if (status === ActivityItemStatus.waitingForReview) {
         return <ClockIcon className="h-6 w-6" />;
+      } else if (status === ActivityItemStatus.disputed) {
+        return <ScaleIcon className="h-6 w-6" />;
       }
       break;
     case "payment":
@@ -67,6 +70,17 @@ export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityIt
     e.stopPropagation();
     if (activity.emitBy) {
       router.push(`/profile/${activity.emitBy}`);
+    }
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (activity.interactionType === InteractionType.gig) {
+      window.location.href = `/gig/${activity.primaryKey}`;
+    } else if (activity.interactionType === InteractionType.hiredTalent) {
+      window.location.href = `/talents/${activity.primaryKey}/${activity.secondaryKey}`;
+    } else if (activity.interactionType === InteractionType.application) {
+      window.location.href = `/gig/${activity.primaryKey}?applicationId=${activity.secondaryKey}`;
     }
   };
 
@@ -106,12 +120,15 @@ export const FeedActivityCard = React.memo(({ activity }: { activity: ActivityIt
   return (
     <Card
       data-slot="card"
+      highlight={false}
       className={cn(
         `flex flex-col gap-6 transition-all p-7`,
         "group relative  transition-all duration-300 ease-in-out",
         // Only shadow and translate on hover, not scale or blur
         "over:shadow-xl hover:-translate-y-1 hover:z-10",
+        "cursor-pointer",
       )}
+      onClick={handleCardClick}
     >
       <CardContent>
         <div className="flex items-start gap-8">

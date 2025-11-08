@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { DeliverableCard } from "../Card/DeliverableCard/DeliverableCard";
 import { queryClient } from "../ScaffoldEthAppWithProviders";
+import { Spinner } from "../Spinner/Spinner";
 import { DeliverableHistoryProps } from "./types";
 import Button from "@/components/Button/Button";
 import { DeliverableState, HiredTalentState } from "@se-2/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
+import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWriteContract";
 import { castDateToTimestamp, isImageUrl } from "~~/lib/utils";
 import {
@@ -22,8 +24,11 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
   const [clientProfile, setClientProfile] = useState<UserProfile | null>(null);
   const [freelancerProfile, setFreelancerProfile] = useState<UserProfile | null>(null);
   const [showDeliverableModal, setShowDeliverableModal] = useState(false);
+  const { showSpinner, hideSpinner } = useGlobalSpinner();
   const { address: userAddress } = useAccount();
-  const { writeContractAsync: writeJobContract } = useScaffoldWriteContract({ contractName: "HiredTalentsContract" });
+  const { writeContractAsync: writeJobContract, isMining } = useScaffoldWriteContract({
+    contractName: "HiredTalentsContract",
+  });
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["HiredTalent", deliverableProps.mainId, deliverableProps.secondaryId],
     queryFn: async () => {
@@ -32,10 +37,6 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
       return { hiredTalent, deliverables };
     },
   });
-
-  console.log("Primary IDs:", deliverableProps.mainId, deliverableProps.secondaryId);
-
-  console.log("DeliverableTalentHistory data:", data);
 
   const reload = async () => {
     queryClient.invalidateQueries({ queryKey: ["hiredTalent", deliverableProps.mainId, deliverableProps.secondaryId] });
@@ -84,12 +85,13 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     role: "Freelancer",
   };
   const isClient = userAddress?.toLowerCase() === client?.address?.toLowerCase();
-  const jobStatus = data?.hiredTalent?.state ?? null;
+  const talentStatus = data?.hiredTalent?.state ?? null;
   const hireTalent = data?.hiredTalent ?? ({} as HiredTalent);
 
   const handleRejectJob = async (clientResponse: string) => {
     try {
       if (!hireTalent.hiredTalentId) return;
+      showSpinner();
       await writeJobContract({
         functionName: "rejectHiredTalent",
         args: [BigInt(hireTalent.talentId), BigInt(hireTalent.hiredTalentId), clientResponse],
@@ -99,11 +101,14 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
       console.error("Reject job failed:", err);
     } finally {
       setShowDeliverableModal(false);
+      hideSpinner();
     }
   };
 
   const handleClientConfirmCompletion = async (clientResponse: string) => {
     try {
+      if (!hireTalent.hiredTalentId) return;
+      showSpinner();
       await writeJobContract({
         functionName: "confirmClientCompletion",
         args: [BigInt(hireTalent.talentId), BigInt(hireTalent.hiredTalentId), clientResponse],
@@ -113,6 +118,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
       console.error("Confirm job completion failed:", err);
     } finally {
       setShowDeliverableModal(false);
+      hideSpinner();
     }
   };
 
@@ -120,7 +126,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     const buttons: React.ReactNode[] = [];
     if (
       isClient &&
-      jobStatus === HiredTalentState.Ongoing &&
+      talentStatus === HiredTalentState.Ongoing &&
       hireTalent.freelancerDelivered &&
       !hireTalent.clientReceived
     ) {
@@ -136,6 +142,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
             }}
             size="sm"
             tooltip="Review Deliverable"
+            disabled={isMining}
           >
             <span>Review</span>
           </Button>,
@@ -144,6 +151,18 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     }
     return buttons;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center w-full h-64">
+        <Spinner />
+      </div>
+    );
+  }
+
+  const isDisputed =
+    hireTalent.state === HiredTalentState.Disputed ||
+    (hireTalent.state === HiredTalentState.Finished && !!hireTalent.disputeId);
 
   return (
     <div className="h-full flex flex-col px-8 py-4 space-y-4 mx-5">
@@ -165,6 +184,7 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
               }}
               client={client}
               freelancer={freelancer}
+              isDisputed={isDisputed}
               actionButtons={getActionButtons()}
             />
           ))}
@@ -177,10 +197,9 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
           onApprove={handleClientConfirmCompletion}
           onReject={handleRejectJob}
           comment={data.deliverables[currentDeliverableIndex].submissionComment || ""}
-          loading={false}
+          loading={isMining}
           showFullInfo={false}
           resource={data.deliverables[currentDeliverableIndex].resource}
-          isLink={data.deliverables[currentDeliverableIndex].isLink}
           modalTitle="Review Deliverable"
           modalDescription="Please review the deliverable and provide your feedback."
         />

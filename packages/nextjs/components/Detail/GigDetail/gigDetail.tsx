@@ -266,14 +266,11 @@ export default function GigDetail({
     try {
       showSpinner();
       let resource = "";
-      const isLink = fileData.isLink;
 
       if (!data?.gig.gigId) return;
 
-      if (fileData.file && !isLink) {
+      if (fileData.file) {
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
-      } else if (!fileData.file && isLink) {
-        resource = fileData.link || "";
       }
 
       await writeContract({
@@ -282,11 +279,12 @@ export default function GigDetail({
           BigInt(data?.gig.gigId),
           {
             resource,
-            parsedResource: isLink
-              ? ""
-              : await createEvidenceJSON(resource, fileData.file?.name || "", "Deliverable submission by Freelancer"),
+            parsedResource: await createEvidenceJSON(
+              resource,
+              fileData.file?.name || "",
+              "Deliverable submission by Freelancer",
+            ),
             submissionComment: fileData.submissionComment,
-            isLink,
           },
         ],
       });
@@ -494,6 +492,7 @@ export default function GigDetail({
         gigState !== GigState.Completed &&
         gigState !== GigState.Cancelled &&
         gigState !== GigState.Disputed &&
+        applicationState !== ApplicationState.Rejected &&
         !data?.gig.freelancerCancelled
       ) {
         buttons.push(
@@ -619,6 +618,7 @@ export default function GigDetail({
           gigState !== GigState.Completed &&
           gigState !== GigState.Cancelled &&
           gigState !== GigState.Disputed &&
+          applicationState !== ApplicationState.Rejected &&
           !data?.gig.clientCancelled
         ) {
           buttons.push(
@@ -729,9 +729,17 @@ export default function GigDetail({
   const getStatusMessage = () => {
     if (data?.gig?.state === GigState.Open) {
       if (isClient) {
-        return "Please review the proposal and approve it to start the gig.";
+        if (applicationState === ApplicationState.Rejected) {
+          return "You have rejected this application.";
+        } else {
+          return "Please review the proposal and approve it to start the gig.";
+        }
       } else if (isFreelancer) {
-        return "Waiting for client approval.";
+        if (applicationState === ApplicationState.Rejected) {
+          return "Your application has been rejected by the client.";
+        } else {
+          return "Waiting for client approval.";
+        }
       } else {
         return "Gig is waiting for freelancer approval.";
       }
@@ -881,17 +889,21 @@ export default function GigDetail({
     return "";
   };
 
-  const getStatusBadge = (status: number) => {
+  const getStatusBadge = (gigState: number, applicationState: number) => {
     const badgeClass = "min-w-[140px] text-center justify-center px-4 py-2";
-    switch (status) {
+    switch (gigState) {
       case GigState.Open:
-        return (
-          <Badge
-            className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
-          >
-            Waiting for approval
-          </Badge>
-        );
+        if (applicationState === ApplicationState.Rejected) {
+          return <Badge className={`bg-[var(--color-error)] text-white ${badgeClass}`}>Rejected</Badge>;
+        } else {
+          return (
+            <Badge
+              className={`bg-[var(--color-warning)] text-[var(--color-primary-content)] hover:bg-[var(--color-warning)] ${badgeClass}`}
+            >
+              Waiting for approval
+            </Badge>
+          );
+        }
       case GigState.InProgress:
         return (
           <Badge className={`bg-[var(--color-success)] text-[var(--color-primary-content)] ${badgeClass}`}>
@@ -968,13 +980,14 @@ export default function GigDetail({
   return (
     <>
       <UniversalDetail
+        workId={"gig-" + gigId + "-" + applicationId}
         data={type === "partial" ? partialData : finalDetailData}
         deliverables={data?.deliverables}
         isMining={isMining}
         loading={isLoading}
         error={error}
         reload={reload}
-        statusBadge={getStatusBadge((data?.gig.state as number) || 0)}
+        statusBadge={getStatusBadge((data?.gig.state as number) || 0, applicationState)}
         actionButtons={getActionButtons()}
         statusMessage={getStatusMessage()}
         isUploadModalOpen={showUploadModal}

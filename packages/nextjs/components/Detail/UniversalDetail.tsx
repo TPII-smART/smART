@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { UniversalRoadmap } from "../Roadmap/UniversalRoadmap";
+import DeliverableVerification from "../deliverableVerification/DeliverableVerification";
 import { UniversalDetailProps } from "./type";
 import { Badge } from "@/components/Badge";
 import Button from "@/components/Button/Button";
@@ -24,6 +25,7 @@ import { useGlobalState } from "~~/services/store/store";
 import { UserProfile } from "~~/types/user-profile.type";
 
 export default function UniversalDetail({
+  workId,
   data,
   deliverables,
   statusBadge,
@@ -155,7 +157,6 @@ export default function UniversalDetail({
   });
 
   const resource = deliverables?.[0]?.resource;
-  const isLink = deliverables?.[0]?.isLink;
   const submissionComment = deliverables?.[0]?.submissionComment;
   const clientResponse = deliverables?.[0]?.clientResponse;
 
@@ -330,7 +331,9 @@ export default function UniversalDetail({
                     <p className="text-[var(--color-skeleton)] text-base">
                       {data.state === HiredTalentState.WaitingForApproval
                         ? "Deadline not yet defined"
-                        : formatDate(String(data.deadline))}
+                        : data.state === HiredTalentState.Cancelled
+                          ? "Deadline not defined"
+                          : formatDate(String(data.deadline))}
                     </p>
                   </div>
                 </div>
@@ -339,7 +342,17 @@ export default function UniversalDetail({
 
             <Card className="bg-[var(--color-surface)] border-[var(--color-border)] shadow-lg">
               <CardHeader className="p-6">
-                <CardTitle className="text-2xl text-[var(--color-primary-content)]">Delivery Status</CardTitle>
+                <CardTitle className="text-2xl text-[var(--color-primary-content)] space-x-6 flex flex-row">
+                  <label>Delivery Status</label>
+                  {deliverables && deliverables.length > 0 && (
+                    <DeliverableVerification
+                      workId={workId}
+                      deliverables={deliverables?.map(d => d.resource) ?? []}
+                      workTitle={data.title}
+                      workDescription={data.description ?? ""}
+                    />
+                  )}
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-6 pt-0 space-y-4">
                 <div className="flex justify-between items-center p-4 bg-[var(--color-primary)]/20 rounded-lg">
@@ -455,7 +468,7 @@ export default function UniversalDetail({
         isOpen={isUploadModalOpen}
         onClose={onCloseUploadModal}
         modalTitle="Upload Deliverable"
-        modalDescription={`You are about to upload your deliverable.\nPlease upload the required file or paste a link, and optionally add a comment for the client.\nPayment will be released once the client confirms receipt.`}
+        modalDescription={`You are about to upload your deliverable.\nPlease upload the required file, and add a comment for the client.\nPayment will be released once the client confirms receipt.`}
       />
 
       <PreviewModal
@@ -464,7 +477,6 @@ export default function UniversalDetail({
         modalTitle="Preview of deliverable"
         modalDescription={reviewModalDescription}
         resource={resource || ""}
-        isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
         isClient={isClient}
       />
@@ -475,7 +487,6 @@ export default function UniversalDetail({
         onApprove={handleClientConfirmCompletion}
         onReject={handleRejectJob}
         resource={resource || ""}
-        isLink={isLink || false}
         comment={isClient ? submissionComment || "" : clientResponse || ""}
         loading={isMining && isDeliverableLoading}
         showFullInfo={true}
