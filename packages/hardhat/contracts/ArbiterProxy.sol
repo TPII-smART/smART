@@ -32,7 +32,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
     uint8 constant FREELANCER_WINS = 1;
     uint8 constant CLIENT_WINS = 2;
     string constant RULING_OPTIONS = "Freelancer is proven right;Client of the freelancer is proven right"; // A plain English of what rulings do. Need to be redefined by the child class.
-    uint256 public constant FEE_DEPOSIT_TIMEOUT = 10 minutes;
+    uint256 public constant FEE_DEPOSIT_TIMEOUT = 10 days;
 
     string metaEvidenceURI = "ipfs://test";
 
