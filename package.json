@@ -77,6 +77,7 @@
 		"framer-motion": "^12.23.18",
 		"motion": "^12.23.18",
 		"next": "latest",
+		"pdf-lib": "^1.17.1",
 		"pinata": "^2.5.1",
 		"tailwind-merge": "^3.3.1"
 	}

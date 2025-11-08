@@ -26,7 +26,8 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Dispute } from "~~/types/dispute/dispute.type";
 import { HiredTalent } from "~~/types/hiredTalent";
-import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
+import { createInitialEvidencePDF } from "~~/utils/kleros-disputes/createInitialEvidencePDF";
+import { createAndUploadEvidence, createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";
 
 export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentId: string; hiredTalentId: string }) {
@@ -120,8 +121,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     isDisputeCurrentRulingLoading || isDisputeStatusLoading || isFreelancerFeeLoading || isClientFeeLoading;
 
   const initiateConflictResolution = async (values: DisputeFormData) => {
-    console.log("Initiating conflict resolution with values:", values);
-    console.log("Current data state:", data);
     if (!data?.hiredTalentId || !data?.talentId) return;
     if (data?.disputeId) return;
     showSpinner();
@@ -134,14 +133,29 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         value: BigInt(arbitrationCost || 0),
       });
 
-      // Iterate over the submitted deliverables and upload each one using the Proxy
-      //deliverables?.forEach(async deliverable => {
-      //  console.log("Value of deliv: ", deliverable.resource.replace("ipfs://", "ipfs://ipfs/"));
-      //  await writeContract({
-      //    functionName: "submitEvidence",
-      //    args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), deliverable.resource],
-      //  });
-      // });
+      // Upload the Initial Evidence PDF as part of the dispute creation process
+      const initialEvidenceFile = await createInitialEvidencePDF(
+        new Date().toISOString().split("T")[0],
+        isFreelancer ? "Freelancer" : "Client",
+        `
+        Client address: ${data?.client}\n
+        Freelancer: ${data?.freelancer}\n
+        Freelancer job Title: ${data?.title}\n
+        Freelancer job Description: ${data?.description || ""}\n
+        Payment proposed: ${formatEther(BigInt(data?.payment || 0))} ETH\n`,
+        values.comment,
+      );
+
+      const evidenceJSON = await createAndUploadEvidence(
+        initialEvidenceFile,
+        "Initial Evidence",
+        "All the information regarding the job present in the platform.",
+      );
+
+      await writeContract({
+        functionName: "submitEvidence",
+        args: [BigInt(data?.talentId), BigInt(data?.hiredTalentId), evidenceJSON],
+      });
 
       reload();
     } catch (error) {
