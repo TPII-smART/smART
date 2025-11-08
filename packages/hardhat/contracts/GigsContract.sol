@@ -91,6 +91,7 @@ contract GigsContract {
         bool freelancerUploaded; // Whether the freelancer has uploaded deliverables for the gig
         uint256 disputeId; // ID of the dispute in the arbitrator contract, if any
         DeliverableInfo[] deliverableInfo; // Store the deliverable related to the job
+        uint256 deliverableGroupId; // Group ID for deliverables/evidence submissions
     }
 
     // State variables of the contract
@@ -247,6 +248,9 @@ contract GigsContract {
         require(bytes(params.gigBannerImageHash).length <= 128, "Banner image hash must be up to 128 characters");
 
         uint256 gigId = postedGigsCounter++;
+        uint256 _currentDeliverableGroupId = uint256(
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, gigId, "evidence"))
+        ) % OVERFLOW;
         Gig storage newGig = postedGigs[gigId];
         {
             newGig.gigId = gigId;
@@ -270,6 +274,7 @@ contract GigsContract {
             newGig.acceptedApplicationId = 0;
             newGig.disputeId = 0; // No dispute initially
             newGig.gigBannerImageHash = params.gigBannerImageHash;
+            newGig.deliverableGroupId = _currentDeliverableGroupId;
         }
 
         emit GigCreated(
@@ -475,7 +480,7 @@ contract GigsContract {
         require(gig.deliverableInfo.length > 0, "No deliverable uploaded yet");
         require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
 
-        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+        DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.acceptedFreelancer != address(0), "No freelancer assigned");
         require(gig.freelancerUploaded, "Freelancer has not uploaded deliverables");
@@ -598,6 +603,23 @@ contract GigsContract {
         return postedGigsCounter;
     }
 
+    function isDeliverableUploaded(
+        uint256 gigId,
+        string memory comment,
+        string memory ipfsHash
+    ) external view returns (bool) {
+        Gig storage gig = postedGigs[gigId];
+        if (gig.deliverableInfo.length == 0) {
+            return false;
+        }
+        DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+
+        return
+            bytes(deliverableInfo.resource).length > 0 &&
+            keccak256(bytes(deliverableInfo.submissionComment)) == keccak256(bytes(comment)) &&
+            keccak256(bytes(deliverableInfo.resource)) == keccak256(bytes(ipfsHash));
+    }
+
     // Function to receive Ether
     receive() external payable {
         revert("Direct payments not accepted");
@@ -620,16 +642,6 @@ contract GigsContract {
         require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
-        uint256 _currentDeliverableGroupId = uint256(
-            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _gigId, "evidence"))
-        ) % OVERFLOW;
-
-        // If there was already a deliverableGroupId generated, keep that one
-        if (gig.deliverableInfo.length > 0) {
-            DeliverableInfo memory lastDeliverable = gig.deliverableInfo[gig.deliverableInfo.length - 1];
-            _currentDeliverableGroupId = lastDeliverable.deliverableGroupId;
-        }
-
         DeliverableInfo memory deliverableToUpload = DeliverableInfo({
             resource: _deliverableParams.resource,
             parsedResource: _deliverableParams.parsedResource,
@@ -638,7 +650,7 @@ contract GigsContract {
             responseTimestamp: 0,
             clientResponse: "",
             state: DeliverableState.Pending,
-            deliverableGroupId: _currentDeliverableGroupId
+            deliverableGroupId: gig.deliverableGroupId
         });
 
         gig.freelancerUploaded = true;
@@ -656,7 +668,7 @@ contract GigsContract {
         arbiterProxy.submitEvidence(
             gig.acceptedFreelancer,
             gig.disputeId,
-            gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+            gig.deliverableGroupId,
             deliverableToUpload.parsedResource,
             // Avoids checks and operations related to an existing dispute
             true
@@ -665,7 +677,6 @@ contract GigsContract {
 
     function rejectGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
-        DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
         require(gig.client != address(0), "The gig has no assigned client.");
@@ -679,9 +690,17 @@ contract GigsContract {
         gig.rejectedAt = block.timestamp;
         gig.freelancerUploaded = false;
 
-        deliverableInfo.clientResponse = _comment;
-        deliverableInfo.state = DeliverableState.Rejected;
-        deliverableInfo.responseTimestamp = block.timestamp;
+        uint256 _uploadedAt = 0;
+
+        if (gig.deliverableInfo.length > 0) {
+            DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+
+            deliverableInfo.clientResponse = _comment;
+            deliverableInfo.state = DeliverableState.Rejected;
+            deliverableInfo.responseTimestamp = block.timestamp;
+            uploadedAt = deliverableInfo.uploadedAt;
+        }
+
 
         emit GigRejected(
             _gigId,
@@ -691,7 +710,7 @@ contract GigsContract {
             gig.clientRejected,
             gig.freelancerUploaded,
             _comment,
-            deliverableInfo.uploadedAt,
+            _uploadedAt,
             gig.rejectedAt
         );
     }
@@ -725,7 +744,6 @@ contract GigsContract {
         string calldata _reason
     ) external payable onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
-        DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.InProgress, "Dispute can only be started for ongoing gigs");
         require(msg.value > 0, "Must send arbitration fee");
@@ -742,7 +760,7 @@ contract GigsContract {
                     gig.client,
                     arbitratorExtraData,
                     _metaEvidenceURI,
-                    gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                    gig.deliverableGroupId,
                     _reason
                 );
             } else if (msg.sender == gig.client) {
@@ -752,7 +770,7 @@ contract GigsContract {
                     gig.client,
                     arbitratorExtraData,
                     _metaEvidenceURI,
-                    gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                    gig.deliverableGroupId,
                     _reason
                 );
             } else {
@@ -763,13 +781,16 @@ contract GigsContract {
             arbiterProxy.reLaunchDispute{ value: msg.value }(
                 gig.disputeId,
                 _reason,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+                gig.deliverableGroupId,
                 msg.sender
             );
         }
 
         gig.state = GigState.Disputed;
-        deliverableInfo.state = DeliverableState.Disputed;
+        if (gig.deliverableInfo.length > 0) {
+            DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+            deliverableInfo.state = DeliverableState.Disputed;
+        }
     }
 
     function getArbitrationFee() external view returns (uint256) {
@@ -789,13 +810,13 @@ contract GigsContract {
             arbiterProxy.payArbitrationFeeByFreelancer{ value: msg.value }(
                 msg.sender,
                 gig.disputeId,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
+                gig.deliverableGroupId
             );
         } else if (msg.sender == gig.client) {
             arbiterProxy.payArbitrationFeeByClient{ value: msg.value }(
                 msg.sender,
                 gig.disputeId,
-                gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId
+                gig.deliverableGroupId
             );
         } else {
             revert("Only gig parties can pay arbitration fee");
@@ -806,7 +827,6 @@ contract GigsContract {
         uint256 _gigId
     ) external onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
-        DeliverableInfo storage deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
 
         require(gig.state == GigState.Disputed, "No dispute to dismiss for this gig");
         require(gig.disputeId != 0, "No dispute exists for this gig");
@@ -814,7 +834,10 @@ contract GigsContract {
         arbiterProxy.dismissDispute(gig.disputeId, msg.sender);
 
         gig.state = GigState.InProgress;
-        deliverableInfo.state = DeliverableState.Pending;
+        if (gig.deliverableInfo.length > 0) {
+            DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+            deliverableInfo.state = DeliverableState.Pending;
+        }
     }
 
     function finalizeDispute(uint256 _gigId) external onlyGigParties(_gigId) gigExists(_gigId) {
@@ -834,9 +857,17 @@ contract GigsContract {
         if (ruling == 1) {
             // Ruling in favor of freelancer
             payable(gig.acceptedFreelancer).transfer(gig.finalPayment);
+            if (gig.deliverableInfo.length > 0) {
+                DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+                deliverableInfo.state = DeliverableState.Approved;
+            }
         } else if (ruling == 2) {
             // Ruling in favor of client
             payable(gig.client).transfer(gig.finalPayment);
+            if (gig.deliverableInfo.length > 0) {
+                DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
+                deliverableInfo.state = DeliverableState.Rejected;
+            }
         } else {
             // No ruling or invalid ruling, split payment
             uint256 splitAmount = gig.finalPayment / 2;
@@ -890,7 +921,7 @@ contract GigsContract {
         arbiterProxy.submitEvidence(
             msg.sender,
             gig.disputeId,
-            gig.deliverableInfo[gig.deliverableInfo.length - 1].deliverableGroupId,
+            gig.deliverableGroupId,
             _evidenceURI,
             // If this method is called, we want to emit the evidence event in an ongoing dispute
             false

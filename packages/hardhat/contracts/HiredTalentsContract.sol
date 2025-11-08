@@ -52,6 +52,7 @@ contract HiredTalentsContract {
         bool freelancerUploaded; // Whether the freelancer has uploaded a deliverable
         uint256 disputeId; // ID of the dispute in the arbitrator contract, if any
         DeliverableInfo[] deliverableInfo; // Store the deliverable related to the hiredTalent
+        uint256 deliverableGroupId; // Group id for identifying deliverables from the same group
     }
 
     // Struct that reduces the amount of parameters needed when submitting a HiredTalent
@@ -329,6 +330,9 @@ contract HiredTalentsContract {
 
         // Create new hiredTalent
         uint256 hiredTalentId = talent.hiredTalents.length;
+        uint256 _currentDeliverableGroupId = uint256(
+            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _talentId, hiredTalentId, "evidence"))
+        ) % OVERFLOW;
         HiredTalent memory newHiredTalent = HiredTalent({
             hiredTalentId: hiredTalentId,
             client: msg.sender,
@@ -353,7 +357,8 @@ contract HiredTalentsContract {
             freelancerCancelled: false,
             freelancerUploaded: false,
             disputeId: 0, // No dispute initially
-            deliverableInfo: new DeliverableInfo[](0)
+            deliverableInfo: new DeliverableInfo[](0),
+            deliverableGroupId: _currentDeliverableGroupId
         });
 
         // Add hiredTalent to the talent
@@ -645,18 +650,6 @@ contract HiredTalentsContract {
         require(bytes(_deliverableParams.resource).length <= 256, "Resource must be up to 256 characters.");
         require(bytes(_deliverableParams.submissionComment).length <= 256, "Comment must be up to 256 characters.");
 
-        uint256 _currentDeliverableGroupId = uint256(
-            keccak256(abi.encodePacked(block.timestamp, block.prevrandao, _talentId, _hiredTalentId, "evidence"))
-        ) % OVERFLOW;
-
-        // If there was already a deliverableGroupId generated, keep that one
-        if (hiredTalent.deliverableInfo.length > 0) {
-            DeliverableInfo memory lastDeliverable = hiredTalent.deliverableInfo[
-                hiredTalent.deliverableInfo.length - 1
-            ];
-            _currentDeliverableGroupId = lastDeliverable.deliverableGroupId;
-        }
-
         DeliverableInfo memory deliverableToUpload = DeliverableInfo({
             resource: _deliverableParams.resource,
             parsedResource: _deliverableParams.parsedResource,
@@ -665,7 +658,7 @@ contract HiredTalentsContract {
             clientResponse: "",
             responseTimestamp: 0,
             state: DeliverableState.Pending,
-            deliverableGroupId: _currentDeliverableGroupId
+            deliverableGroupId: hiredTalent.deliverableGroupId
         });
 
         hiredTalent.freelancerUploaded = true;
@@ -684,7 +677,7 @@ contract HiredTalentsContract {
         arbiterProxy.submitEvidence(
             hiredTalent.freelancer,
             hiredTalent.disputeId,
-            deliverableToUpload.deliverableGroupId,
+            hiredTalent.deliverableGroupId,
             deliverableToUpload.parsedResource,
             // Avoids checks and operations related to an existing dispute
             true
@@ -697,7 +690,6 @@ contract HiredTalentsContract {
         string calldata _comment
     ) external onlyClient(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-        DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
 
         require(hiredTalent.state == HiredTalentState.Ongoing, "HiredTalent is not ongoing");
         require(hiredTalent.client != address(0), "HiredTalent has no assigned client");
@@ -709,10 +701,17 @@ contract HiredTalentsContract {
         hiredTalent.clientReceived = false;
         hiredTalent.clientRejected = true;
         hiredTalent.freelancerUploaded = false;
-        deliverableInfo.clientResponse = _comment;
-        deliverableInfo.state = DeliverableState.Rejected;
-        deliverableInfo.responseTimestamp = block.timestamp;
         hiredTalent.rejectedAt = block.timestamp;
+
+        uint256 uploadedAt = 0;
+
+        if (hiredTalent.deliverableInfo.length > 0) {
+            DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
+            deliverableInfo.clientResponse = _comment;
+            deliverableInfo.state = DeliverableState.Rejected;
+            deliverableInfo.responseTimestamp = block.timestamp;
+            uploadedAt = deliverableInfo.uploadedAt;
+        }
 
         emit HiredTalentRejected(
             _talentId,
@@ -721,8 +720,8 @@ contract HiredTalentsContract {
             hiredTalent.clientReceived,
             hiredTalent.clientRejected,
             hiredTalent.freelancerUploaded,
-            deliverableInfo.clientResponse,
-            deliverableInfo.uploadedAt,
+            _comment,
+            uploadedAt,
             hiredTalent.rejectedAt
         );
     }
@@ -734,7 +733,6 @@ contract HiredTalentsContract {
         string calldata _reason
     ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-        DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
 
         require(hiredTalent.state == HiredTalentState.Ongoing, "Dispute can only be started for ongoing hiredTalents");
         require(msg.value > 0, "Must send arbitration fee");
@@ -752,7 +750,7 @@ contract HiredTalentsContract {
                     hiredTalent.client,
                     arbitratorExtraData,
                     _metaEvidenceURI,
-                    hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                    hiredTalent.deliverableGroupId,
                     _reason
                 );
             } else if (msg.sender == hiredTalent.client) {
@@ -763,7 +761,7 @@ contract HiredTalentsContract {
                     hiredTalent.client,
                     arbitratorExtraData,
                     _metaEvidenceURI,
-                    hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                    hiredTalent.deliverableGroupId,
                     _reason
                 );
             } else {
@@ -774,13 +772,16 @@ contract HiredTalentsContract {
             arbiterProxy.reLaunchDispute{ value: msg.value }(
                 hiredTalent.disputeId,
                 _reason,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+                hiredTalent.deliverableGroupId,
                 msg.sender
             );
         }
 
         hiredTalent.state = HiredTalentState.Disputed;
-        deliverableInfo.state = DeliverableState.Disputed;
+        if (hiredTalent.deliverableInfo.length > 0) {
+            DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
+            deliverableInfo.state = DeliverableState.Disputed;
+        }
     }
 
     function getArbitrationFee() external view returns (uint256) {
@@ -803,13 +804,13 @@ contract HiredTalentsContract {
             arbiterProxy.payArbitrationFeeByFreelancer{ value: msg.value }(
                 msg.sender,
                 hiredTalent.disputeId,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+                hiredTalent.deliverableGroupId
             );
         } else if (msg.sender == hiredTalent.client) {
             arbiterProxy.payArbitrationFeeByClient{ value: msg.value }(
                 msg.sender,
                 hiredTalent.disputeId,
-                hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId
+                hiredTalent.deliverableGroupId
             );
         } else {
             revert("Only hired talent parties can pay arbitration fee");
@@ -821,7 +822,6 @@ contract HiredTalentsContract {
         uint256 _hiredTalentId
     ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-        DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
 
         require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to dismiss for this hired talent");
         require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
@@ -829,7 +829,10 @@ contract HiredTalentsContract {
         arbiterProxy.dismissDispute(hiredTalent.disputeId, msg.sender);
 
         hiredTalent.state = HiredTalentState.Ongoing;
-        deliverableInfo.state = DeliverableState.Pending;
+        if (hiredTalent.deliverableInfo.length > 0) {
+            DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
+            deliverableInfo.state = DeliverableState.Pending;
+        }
     }
 
     function finalizeDispute(
@@ -837,7 +840,6 @@ contract HiredTalentsContract {
         uint256 _hiredTalentId
     ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
-        DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
 
         require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to finalize for this hired talent");
         require(hiredTalent.disputeId != 0, "No dispute exists for this hired talent");
@@ -853,11 +855,17 @@ contract HiredTalentsContract {
         if (ruling == 1) {
             // Ruling in favor of freelancer
             payable(hiredTalent.freelancer).transfer(hiredTalent.payment);
-            deliverableInfo.state = DeliverableState.Approved;
+            if (hiredTalent.deliverableInfo.length > 0) {
+                DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
+                deliverableInfo.state = DeliverableState.Approved;
+            }
         } else if (ruling == 2) {
             // Ruling in favor of client
             payable(hiredTalent.client).transfer(hiredTalent.payment);
-            deliverableInfo.state = DeliverableState.Rejected;
+            if (hiredTalent.deliverableInfo.length > 0) {
+                DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
+                deliverableInfo.state = DeliverableState.Rejected;
+            }
         } else {
             // No ruling or invalid ruling, split payment
             uint256 splitAmount = hiredTalent.payment / 2;
@@ -926,7 +934,7 @@ contract HiredTalentsContract {
         arbiterProxy.submitEvidence(
             msg.sender,
             hiredTalent.disputeId,
-            hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1].deliverableGroupId,
+            hiredTalent.deliverableGroupId,
             _evidenceURI,
             // If this method is called, we want to emit the evidence event in an ongoing dispute
             false
