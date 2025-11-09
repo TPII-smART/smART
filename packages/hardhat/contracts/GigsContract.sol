@@ -741,6 +741,7 @@ contract GigsContract {
     function startDispute(
         uint256 _gigId,
         string calldata _metaEvidenceURI,
+        string calldata _initialEvidenceURI,
         string calldata _reason
     ) external payable onlyGigParties(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
@@ -787,6 +788,8 @@ contract GigsContract {
         }
 
         gig.state = GigState.Disputed;
+        submitEvidence(_gigId, _initialEvidenceURI);
+
         if (gig.deliverableInfo.length > 0) {
             DeliverableInfo memory deliverableInfo = gig.deliverableInfo[gig.deliverableInfo.length - 1];
             deliverableInfo.state = DeliverableState.Disputed;
@@ -911,7 +914,7 @@ contract GigsContract {
     function submitEvidence(
         uint256 _gigId,
         string calldata _evidenceURI
-    ) external gigExists(_gigId) {
+    ) public gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.Disputed, "No dispute ongoing for this gig");

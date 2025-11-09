@@ -142,12 +142,6 @@ export default function GigDetail({
     try {
       const metaDataURI = getMetaEvidenceURI();
 
-      await writeContract({
-        functionName: "startDispute",
-        args: [BigInt(data?.gig?.gigId), metaDataURI, values.comment],
-        value: BigInt(arbitrationCost || 0),
-      });
-
       // Upload the Initial Evidence PDF as part of the dispute creation process
       const initialEvidenceFile = await createInitialEvidencePDF(
         new Date().toISOString().split("T")[0],
@@ -168,8 +162,9 @@ export default function GigDetail({
       );
 
       await writeContract({
-        functionName: "submitEvidence",
-        args: [BigInt(data?.gig.gigId), evidenceJSON],
+        functionName: "startDispute",
+        args: [BigInt(data?.gig?.gigId), metaDataURI, evidenceJSON, values.comment],
+        value: BigInt(arbitrationCost || 0),
       });
 
       reload();

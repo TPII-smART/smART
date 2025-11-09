@@ -1130,7 +1130,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         uint256 baseAppealCost = arbitrator.appealCost(dispute.klerosDisputeId, dispute.arbitratorExtraData);
 
-        // Calculate appeal cost if not yet set for this round
+        // Calculate appeal cost if not yet set for this round 
         if (round.appealCost == 0) {
             round.appealCost = baseAppealCost;
             round.appealDeadline = appealEnd;

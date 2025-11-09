@@ -730,6 +730,7 @@ contract HiredTalentsContract {
         uint256 _talentId,
         uint256 _hiredTalentId,
         string calldata _metaEvidenceURI,
+        string calldata _initialEvidenceURI,
         string calldata _reason
     ) external payable onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
@@ -778,6 +779,8 @@ contract HiredTalentsContract {
         }
 
         hiredTalent.state = HiredTalentState.Disputed;
+        submitEvidence(_talentId, _hiredTalentId, _initialEvidenceURI);
+
         if (hiredTalent.deliverableInfo.length > 0) {
             DeliverableInfo memory deliverableInfo = hiredTalent.deliverableInfo[hiredTalent.deliverableInfo.length - 1];
             deliverableInfo.state = DeliverableState.Disputed;
@@ -919,12 +922,12 @@ contract HiredTalentsContract {
 
         return arbiterProxy.getCurrentRuling(hiredTalent.disputeId);
     }
-
+    
     function submitEvidence(
         uint256 _talentId,
         uint256 _hiredTalentId,
         string calldata _evidenceURI
-    ) external onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
+    ) public onlyHiredTalentParties(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
         require(hiredTalent.state == HiredTalentState.Disputed, "No dispute to submit evidence for this hired talent");
