@@ -7,6 +7,7 @@ import Button from "@/components/Button/Button";
 import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/AppealForm";
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
 import Spinner from "@/components/Spinner/Spinner";
+import { InputBase } from "@/components/scaffold-eth";
 import { HiredTalentState } from "@se-2/common";
 import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { fetchHiredTalent } from "@services/graphql/fetchers/hiredTalent";
@@ -49,6 +50,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
   const [evidenceFile, setEvidenceFileValue] = useState<File | undefined>(undefined);
+  const [evidenceComment, setEvidenceComment] = useState<string>("");
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const [fundingSide, setFundingSide] = useState<"client" | "freelancer">("client");
@@ -1102,6 +1104,20 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           onFileRemove={() => setEvidenceFileValue(undefined)}
           acceptedFileTypes={["Document", "Image", "Video"]}
         />
+        <div className="mt-4">
+          <label htmlFor="evidence-comment" className="block text-sm font-medium mb-2">
+            Evidence Description
+          </label>
+          <InputBase
+            placeholder="Comment for the evidence"
+            multiline
+            minRows={4}
+            maxRows={4}
+            variant="filled"
+            value={evidenceComment}
+            onChange={(val: string) => setEvidenceComment(val)}
+          />
+        </div>
         <div className="flex mt-4 justify-center items-center gap-4">
           <Button
             variant="primary"
@@ -1109,14 +1125,15 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
               if (!evidenceFile || !data?.talentId || !data?.hiredTalentId) return;
               const evidenceUri = await createAndUploadEvidence(
                 evidenceFile,
-                "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + "via smART app",
-                "Evidence uploaded",
+                "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + " via smART app",
+                evidenceComment || "",
               );
               await writeContract({
                 functionName: "submitEvidence",
                 args: [BigInt(data.talentId), BigInt(data.hiredTalentId), evidenceUri],
               });
               setShowUploadEvidenceModal(false);
+              setEvidenceComment("");
             }}
             disabled={!evidenceFile}
           >
@@ -1126,6 +1143,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             variant="outline"
             onClick={() => {
               setShowUploadEvidenceModal(false);
+              setEvidenceComment("");
             }}
           >
             Cancel
