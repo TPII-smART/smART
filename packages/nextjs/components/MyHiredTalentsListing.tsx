@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import InfoHeader from "./InfoHeader";
 import Skeleton from "./Skeleton/Skeleton";
 import Spinner from "@/components//Spinner/Spinner";
@@ -21,7 +21,6 @@ const hiredTalentStatesWithAll = [{ id: -1, label: "All" }, ...hiredTalentState]
 
 export default function MyHiredTalentsListing({ talentId }: { talentId: string }) {
   const searchParams = useSearchParams();
-  // Initialize state from URL parameters
   const initialSearch = useMemo(() => searchParams?.get("search") || "", [searchParams]);
   const initialItemId = useMemo(() => searchParams?.get("itemId") || "", [searchParams]);
   const initialState = useMemo(
@@ -29,10 +28,12 @@ export default function MyHiredTalentsListing({ talentId }: { talentId: string }
     [searchParams],
   );
 
+  const router = useRouter();
   const [talent, setTalent] = useState<Talent | null>(null);
   const [rating, setRating] = useState<number>(0);
   const [hiredTalents, setHiredTalents] = useState<HiredTalent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isValidating, setIsValidating] = useState<boolean>(true);
   const { handleScroll, fetchPaginatedData } = usePagination({
     fetchFunction: fetchHiredTalentsFromTalentPaginated,
     loadingFunction: setLoading,
@@ -44,22 +45,31 @@ export default function MyHiredTalentsListing({ talentId }: { talentId: string }
 
   useEffect(() => {
     if (!talentId) {
+      router.replace("/404");
       return;
     }
 
-    fetchPaginatedData(false, `${selectedState}`, talentId, search, selectedState);
-  }, [talentId, search, selectedState, fetchPaginatedData]);
-
-  useEffect(() => {
-    if (!talentId) {
-      return;
-    }
-
-    fetchTalentById(talentId).then(result => setTalent(result));
+    setIsValidating(true);
+    fetchTalentById(talentId).then(result => {
+      if (!result) {
+        router.replace("/404");
+        return;
+      }
+      setTalent(result);
+      setIsValidating(false);
+    });
     fetchTalentAverageRating(talentId).then(avg => setRating(avg));
     fetchPaginatedData(true, `${selectedState}`, talentId, search, selectedState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [talentId, fetchPaginatedData]);
+
+  useEffect(() => {
+    if (!talentId || isValidating) {
+      return;
+    }
+
+    fetchPaginatedData(false, `${selectedState}`, talentId, search, selectedState);
+  }, [talentId, search, selectedState, fetchPaginatedData, isValidating]);
 
   return (
     <div
@@ -68,7 +78,7 @@ export default function MyHiredTalentsListing({ talentId }: { talentId: string }
     >
       <div className="px-4 md:px-6 lg:px-8">
         <div className="mt-8 mb-8">
-          <Skeleton active={loading && !talent} variant="rounded" width={"100%"}>
+          <Skeleton active={(loading && !talent) || isValidating} variant="rounded" width={"100%"}>
             <InfoHeader data={{ ...talent, rating: rating } as Talent} />
           </Skeleton>
           <div className="mb-8 mt-8">
