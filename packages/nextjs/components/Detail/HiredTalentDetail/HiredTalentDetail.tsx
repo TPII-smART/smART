@@ -22,6 +22,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
+import FileUploadBox from "~~/components/FileUploadBox";
 import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
@@ -46,6 +47,8 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPayFeeModal, setShowPayFeeModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
+  const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
+  const [evidenceFile, setEvidenceFileValue] = useState<File | undefined>(undefined);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const [fundingSide, setFundingSide] = useState<"client" | "freelancer">("client");
@@ -648,6 +651,23 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         </Button>,
       );
     }
+
+    if (hiredTalentStatus === HiredTalentState.Disputed) {
+      buttons.push(
+        <Button
+          variant="outline"
+          key="uploadEvidence"
+          onClick={() => setShowUploadEvidenceModal(true)}
+          disabled={isMining}
+          size="sm"
+          tooltip="Upload evidence for dispute"
+        >
+          <ScaleIcon className="h-5 w-5" />
+          <span>Upload evidence for dispute</span>
+        </Button>,
+      );
+    }
+
     // Freelancer actions
     if (isFreelancer) {
       if (hiredTalentStatus === HiredTalentState.WaitingForApproval) {
@@ -1062,6 +1082,53 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             }}
           >
             Pay Arbitration Fee
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={showUploadEvidenceModal}
+        onClose={() => setShowUploadEvidenceModal(false)}
+        title="Uploading evidence"
+      >
+        <div className="mb-4">
+          <p className="mb-2 text-center">
+            The evidence provided in this section will be used in the dispute resolution process. Jurors will be able to
+            review the evidence you submit here to make a better informed decision. Please ensure that all evidence is
+            relevant and clearly presented.
+          </p>
+        </div>
+        <FileUploadBox
+          onUploadSuccess={(val: File) => setEvidenceFileValue(val)}
+          onFileRemove={() => setEvidenceFileValue(undefined)}
+          acceptedFileTypes={["Document", "Image", "Video"]}
+        />
+        <div className="flex mt-4 justify-center items-center gap-4">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              if (!evidenceFile || !data?.talentId || !data?.hiredTalentId) return;
+              const evidenceUri = await createAndUploadEvidence(
+                evidenceFile,
+                "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + "via smART app",
+                "Evidence uploaded",
+              );
+              await writeContract({
+                functionName: "submitEvidence",
+                args: [BigInt(data.talentId), BigInt(data.hiredTalentId), evidenceUri],
+              });
+              setShowUploadEvidenceModal(false);
+            }}
+            disabled={!evidenceFile}
+          >
+            Submit Evidence
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowUploadEvidenceModal(false);
+            }}
+          >
+            Cancel
           </Button>
         </div>
       </Modal>
