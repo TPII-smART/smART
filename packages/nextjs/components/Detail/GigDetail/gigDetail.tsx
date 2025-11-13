@@ -1,7 +1,5 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { DisputeStatus, Ruling, useDisputeContracts } from "../../../hooks/use-dispute-contracts";
 import UniversalDetail from "../UniversalDetail";
 import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/AppealForm";
@@ -90,6 +88,21 @@ export default function GigDetail({
     enabled: typeof gigId === "string" && !!gigId,
   });
 
+  useEffect(() => {
+    if (!gigId) {
+      notFound();
+    } else if (!isDetailLoading && !data) {
+      notFound();
+    } else if (data && data.applications.length === 0 && applicationId) {
+      notFound();
+    } else if (data && applicationId) {
+      const application = data.applications.find(app => String(app.applicationId) === String(applicationId));
+      if (!application) {
+        notFound();
+      }
+    }
+  }, [isDetailLoading, data, applicationId, gigId]);
+
   const {
     data: disputeData,
     isLoading: isDisputeLoading,
@@ -101,10 +114,10 @@ export default function GigDetail({
 
   const isLoading = isDetailLoading || isDisputeLoading;
   const application = data?.applications.find(app => String(app.applicationId) === String(applicationId));
-  const gigState = data?.gig.state as GigState;
+  const gigState = data?.gig?.state as GigState;
   const applicationState = application?.state as ApplicationState;
-  const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
-  const freelancer = data?.gig.acceptedFreelancer ? data?.gig.acceptedFreelancer : application?.freelancer;
+  const isClient = data?.gig?.client?.toLowerCase() === userAddress?.toLowerCase();
+  const freelancer = data?.gig?.acceptedFreelancer ? data?.gig?.acceptedFreelancer : application?.freelancer;
   const isFreelancer = freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const disputeDetail = disputeData ? disputeData : null;
 
@@ -147,11 +160,11 @@ export default function GigDetail({
         new Date().toISOString().split("T")[0],
         isFreelancer ? "Freelancer" : "Client",
         `
-        Client address: ${data?.gig.client}\n
-        Freelancer selected among the candidates: ${data?.gig.acceptedFreelancer}\n
-        Job Title: ${data?.gig.title}\n
-        Job Description: ${data?.gig.description || ""}\n
-        Payment amount declared: ${formatEther(BigInt(data?.gig.finalPayment || data?.gig.basePayment || 0))} ETH\n`,
+        Client address: ${data?.gig?.client}\n
+        Freelancer selected among the candidates: ${data?.gig?.acceptedFreelancer}\n
+        Job Title: ${data?.gig?.title}\n
+        Job Description: ${data?.gig?.description || ""}\n
+        Payment amount declared: ${formatEther(BigInt(data?.gig?.finalPayment || data?.gig?.basePayment || 0))} ETH\n`,
         values.comment,
       );
 
@@ -267,7 +280,7 @@ export default function GigDetail({
       showSpinner();
       let resource = "";
 
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
 
       if (fileData.file) {
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
@@ -276,7 +289,7 @@ export default function GigDetail({
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
-          BigInt(data?.gig.gigId),
+          BigInt(data?.gig?.gigId),
           {
             resource,
             parsedResource: await createEvidenceJSON(
@@ -299,7 +312,7 @@ export default function GigDetail({
   const handleClientConfirmCompletion = async (clientResponse?: string) => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
       await writeContract({
         functionName: "confirmClientCompletion",
         args: [BigInt(data.gig.gigId), clientResponse],
@@ -315,7 +328,7 @@ export default function GigDetail({
   const handleCancel = async () => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
       await writeContract({
         functionName: "cancelGig",
         args: [BigInt(data.gig.gigId)],
@@ -331,7 +344,7 @@ export default function GigDetail({
   const handleRateGig = async (rating: number) => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
       await writeContract({
         functionName: "rateGig",
         args: [BigInt(data.gig.gigId), rating],
@@ -348,7 +361,7 @@ export default function GigDetail({
   const handleRejectGig = async (reason: string) => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
 
       await writeContract({
         functionName: "rejectGig",
@@ -470,9 +483,9 @@ export default function GigDetail({
     if (isFreelancer) {
       if (
         gigState === GigState.InProgress &&
-        !data?.gig.freelancerCancelled &&
-        !data?.gig.clientCancelled &&
-        !data?.gig.freelancerDelivered
+        !data?.gig?.freelancerCancelled &&
+        !data?.gig?.clientCancelled &&
+        !data?.gig?.freelancerDelivered
       ) {
         buttons.push(
           <Button
@@ -493,7 +506,7 @@ export default function GigDetail({
         gigState !== GigState.Cancelled &&
         gigState !== GigState.Disputed &&
         applicationState !== ApplicationState.Rejected &&
-        !data?.gig.freelancerCancelled
+        !data?.gig?.freelancerCancelled
       ) {
         buttons.push(
           <Button
@@ -594,7 +607,7 @@ export default function GigDetail({
         );
       } else {
         if (gigState === GigState.InProgress) {
-          if (data?.gig.freelancerDelivered && !data?.gig.clientReceived) {
+          if (data?.gig?.freelancerDelivered && !data?.gig?.clientReceived) {
             buttons.push(
               <Button
                 variant="primary"
@@ -614,7 +627,7 @@ export default function GigDetail({
         // Rating button for client when gig is completed
 
         if (gigState === GigState.Completed) {
-          if (!data?.gig.rating) {
+          if (!data?.gig?.rating) {
             buttons.push(
               <Button
                 variant="primary"
@@ -635,7 +648,7 @@ export default function GigDetail({
           gigState !== GigState.Cancelled &&
           gigState !== GigState.Disputed &&
           applicationState !== ApplicationState.Rejected &&
-          !data?.gig.clientCancelled
+          !data?.gig?.clientCancelled
         ) {
           buttons.push(
             <Button
@@ -999,23 +1012,23 @@ export default function GigDetail({
 
   const partialData: DetailData = {
     type: "gig",
-    title: data?.gig.title || "",
+    title: data?.gig?.title || "",
     proposalComment: application?.proposalComment || "",
-    description: data?.gig.description || "",
-    client: data?.gig.client,
+    description: data?.gig?.description || "",
+    client: data?.gig?.client,
     freelancer: data?.applications[parseInt(applicationId)]?.freelancer,
-    category: data?.gig.category || "",
+    category: data?.gig?.category || "",
     payment: data?.applications[parseInt(applicationId)]?.proposedPayment,
     duration: data?.applications[parseInt(applicationId)]?.proposedDurationInHours,
-    deadline: data?.gig.deadline || "",
-    state: data?.gig.state || 0,
-    freelancerDelivered: data?.gig.freelancerDelivered || false,
-    clientReceived: data?.gig.clientReceived || false,
-    isRejected: data?.gig.clientRejected || false,
-    createdAt: data?.gig.createdAt || "",
-    acceptedAt: data?.gig.acceptedAt || "",
-    canceledAt: data?.gig.canceledAt || "",
-    finishedAt: data?.gig.finishedAt || "",
+    deadline: data?.gig?.deadline || "",
+    state: data?.gig?.state || 0,
+    freelancerDelivered: data?.gig?.freelancerDelivered || false,
+    clientReceived: data?.gig?.clientReceived || false,
+    isRejected: data?.gig?.clientRejected || false,
+    createdAt: data?.gig?.createdAt || "",
+    acceptedAt: data?.gig?.acceptedAt || "",
+    canceledAt: data?.gig?.canceledAt || "",
+    finishedAt: data?.gig?.finishedAt || "",
     rating: data?.gig?.rating || 0,
     wasDisputed: !!data?.gig?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
@@ -1026,29 +1039,29 @@ export default function GigDetail({
 
   const finalDetailData: DetailData = {
     type: "gig",
-    title: data?.gig.title || "",
+    title: data?.gig?.title || "",
     proposalComment: application?.proposalComment || "",
-    description: data?.gig.description || "",
-    client: data?.gig.client,
-    freelancer: data?.gig.acceptedFreelancer,
-    category: hiredTalentCategories.find(category => category.id === data?.gig.category)?.label ?? "Unknown",
-    payment: data?.gig.finalPayment || "",
-    duration: data?.gig.finalDurationInHours || "",
-    deadline: data?.gig.deadline || "",
-    state: data?.gig.state || 0,
-    freelancerDelivered: data?.gig.freelancerDelivered || false,
-    clientReceived: data?.gig.clientReceived || false,
-    isRejected: data?.gig.clientRejected || false,
-    createdAt: data?.gig.createdAt || "",
-    acceptedAt: data?.gig.acceptedAt || "",
-    canceledAt: data?.gig.canceledAt || "",
-    finishedAt: data?.gig.finishedAt || "",
-    rating: data?.gig.rating || 0,
-    wasDisputed: !!data?.gig.disputeId,
+    description: data?.gig?.description || "",
+    client: data?.gig?.client,
+    freelancer: data?.gig?.acceptedFreelancer,
+    category: hiredTalentCategories.find(category => category.id === data?.gig?.category)?.label ?? "Unknown",
+    payment: data?.gig?.finalPayment || "",
+    duration: data?.gig?.finalDurationInHours || "",
+    deadline: data?.gig?.deadline || "",
+    state: data?.gig?.state || 0,
+    freelancerDelivered: data?.gig?.freelancerDelivered || false,
+    clientReceived: data?.gig?.clientReceived || false,
+    isRejected: data?.gig?.clientRejected || false,
+    createdAt: data?.gig?.createdAt || "",
+    acceptedAt: data?.gig?.acceptedAt || "",
+    canceledAt: data?.gig?.canceledAt || "",
+    finishedAt: data?.gig?.finishedAt || "",
+    rating: data?.gig?.rating || 0,
+    wasDisputed: !!data?.gig?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
     disputeDismissed: disputeDetail?.currentlyDismissed || false,
-    clientRejected: data?.gig.clientRejected || false,
+    clientRejected: data?.gig?.clientRejected || false,
   };
 
   return (
@@ -1061,7 +1074,7 @@ export default function GigDetail({
         loading={isLoading}
         error={error}
         reload={reload}
-        statusBadge={getStatusBadge((data?.gig.state as number) || 0, applicationState)}
+        statusBadge={getStatusBadge((data?.gig?.state as number) || 0, applicationState)}
         actionButtons={getActionButtons()}
         statusMessage={getStatusMessage()}
         isUploadModalOpen={showUploadModal}
