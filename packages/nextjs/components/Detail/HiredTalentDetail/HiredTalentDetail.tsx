@@ -48,10 +48,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [showPayFeeModal, setShowPayFeeModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
   const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
   const [evidenceFile, setEvidenceFileValue] = useState<File | undefined>(undefined);
   const [evidenceComment, setEvidenceComment] = useState<string>("");
-  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
 
   const [fundingSide, setFundingSide] = useState<"client" | "freelancer">("client");
 

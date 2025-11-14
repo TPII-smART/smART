@@ -6,6 +6,8 @@ import { DisputeStatus, Ruling, useDisputeContracts } from "../../../hooks/use-d
 import UniversalDetail from "../UniversalDetail";
 import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/AppealForm";
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
+import FileUploadBox from "@/components/FileUploadBox";
+import { InputBase } from "@/components/scaffold-eth";
 import { ApplicationState, GigState } from "@se-2/common";
 import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +63,9 @@ export default function GigDetail({
   const [showPayFeeModal, setShowPayFeeModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
+  const [evidenceFile, setEvidenceFileValue] = useState<File | undefined>(undefined);
+  const [evidenceComment, setEvidenceComment] = useState<string>("");
 
   const [fundingSide, setFundingSide] = useState<"client" | "freelancer">("client");
   const router = useRouter();
@@ -443,6 +448,22 @@ export default function GigDetail({
         >
           <ClipboardDocumentListIcon className="h-5 w-5" />
           <span>View Deliverables</span>
+        </Button>,
+      );
+    }
+
+    if (gigState === GigState.Disputed) {
+      buttons.push(
+        <Button
+          variant="outline"
+          key="uploadEvidence"
+          onClick={() => setShowUploadEvidenceModal(true)}
+          disabled={isMining}
+          size="sm"
+          tooltip="Upload evidence for dispute"
+        >
+          <ScaleIcon className="h-5 w-5" />
+          <span>Upload evidence for dispute</span>
         </Button>,
       );
     }
@@ -1168,6 +1189,69 @@ export default function GigDetail({
             }}
           >
             Pay Arbitration Fee
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={showUploadEvidenceModal}
+        onClose={() => setShowUploadEvidenceModal(false)}
+        title="Uploading evidence"
+      >
+        <div className="mb-4">
+          <p className="mb-2 text-center">
+            The evidence provided in this section will be used in the dispute resolution process. Jurors will be able to
+            review the evidence you submit here to make a better informed decision. Please ensure that all evidence is
+            relevant and clearly presented.
+          </p>
+        </div>
+        <FileUploadBox
+          onUploadSuccess={(val: File) => setEvidenceFileValue(val)}
+          onFileRemove={() => setEvidenceFileValue(undefined)}
+          acceptedFileTypes={["Document", "Image", "Video"]}
+        />
+        <div className="mt-4">
+          <label htmlFor="evidence-comment" className="block text-sm font-medium mb-2">
+            Evidence Description
+          </label>
+          <InputBase
+            placeholder="Comment for the evidence"
+            multiline
+            minRows={4}
+            maxRows={4}
+            variant="filled"
+            value={evidenceComment}
+            onChange={(val: string) => setEvidenceComment(val)}
+          />
+        </div>
+        <div className="flex mt-4 justify-center items-center gap-4">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              if (!evidenceFile || !gigId) return;
+              const evidenceUri = await createAndUploadEvidence(
+                evidenceFile,
+                "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + " via smART app",
+                evidenceComment || "",
+              );
+              await writeContract({
+                functionName: "submitEvidence",
+                args: [BigInt(gigId), evidenceUri],
+              });
+              setShowUploadEvidenceModal(false);
+              setEvidenceComment("");
+            }}
+            disabled={!evidenceFile}
+          >
+            Submit Evidence
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowUploadEvidenceModal(false);
+              setEvidenceComment("");
+            }}
+          >
+            Cancel
           </Button>
         </div>
       </Modal>
