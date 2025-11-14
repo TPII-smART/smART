@@ -381,7 +381,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             parsedResource: await createEvidenceJSON(
               resource,
               deliverableData.file?.name || "",
-              "Deliverable submission by Freelancer",
+              `Deliverable submission by Freelancer.${deliverableData.submissionComment ? ` Comment provided on submit: ${deliverableData.submissionComment}` : ""}`,
             ),
             submissionComment: deliverableData.submissionComment,
           },

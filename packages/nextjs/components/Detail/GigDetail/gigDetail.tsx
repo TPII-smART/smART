@@ -287,7 +287,7 @@ export default function GigDetail({
             parsedResource: await createEvidenceJSON(
               resource,
               fileData.file?.name || "",
-              "Deliverable submission by Freelancer",
+              `Deliverable submission by Freelancer.${fileData.submissionComment ? ` Comment provided on submit: ${fileData.submissionComment}` : ""}`,
             ),
             submissionComment: fileData.submissionComment,
           },
