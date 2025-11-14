@@ -360,6 +360,21 @@ export default function GigDetail({
         args: [BigInt(data.gig.gigId), reason],
       });
 
+      // Re-upload last deliverable as evidence with the reject reason (if available)
+      const lastDeliverable =
+        data?.deliverables && data.deliverables.length > 0 ? data.deliverables[data.deliverables.length - 1] : null;
+      if (lastDeliverable?.resource) {
+        const evidenceUri = await createEvidenceJSON(
+          lastDeliverable.resource,
+          "Rejected deliverable",
+          `Deliverable rejected with the following reason: ${reason}`,
+        );
+        await writeContract({
+          functionName: "submitEvidence",
+          args: [BigInt(data.gig.gigId), evidenceUri],
+        });
+      }
+
       if (reload) await reload();
     } catch (err) {
       console.error("Reject gig failed:", err);

@@ -405,6 +405,21 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         functionName: "rejectHiredTalent",
         args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), clientResponse],
       });
+
+      // Re-upload last deliverable as evidence with the reject reason (if available)
+      const lastDeliverable = deliverables && deliverables.length > 0 ? deliverables[deliverables.length - 1] : null;
+      if (lastDeliverable?.resource) {
+        const evidenceUri = await createEvidenceJSON(
+          lastDeliverable.resource,
+          "Rejected deliverable",
+          `Deliverable rejected with the following reason: ${clientResponse}`,
+        );
+        await writeContract({
+          functionName: "submitEvidence",
+          args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), evidenceUri],
+        });
+      }
+
       if (reload) await reload();
     } catch (err) {
       console.error("Reject deliverable failed:", err);
