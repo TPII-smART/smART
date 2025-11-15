@@ -1,5 +1,4 @@
 import { endpoint } from "../../config";
-import { NotificationStatus } from "@se-2/common";
 import request, { gql } from "graphql-request";
 import { Notification } from "~~/types/notification.types";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";

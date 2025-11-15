@@ -675,7 +675,7 @@ contract GigsContract {
         );
     }
 
-    function rejectGig(uint256 _gigId, string calldata _comment) external onlyClient(_gigId) gigExists(_gigId) {
+    function rejectGig(uint256 _gigId, string calldata _comment, string calldata _evidenceUri) external onlyClient(_gigId) gigExists(_gigId) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.InProgress, "The gig is not in progress.");
@@ -683,6 +683,7 @@ contract GigsContract {
         require(gig.acceptedFreelancer != address(0), "The gig has no assigned freelancer.");
         require(bytes(_comment).length > 0, "Comment cannot be empty.");
         require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+        require(bytes(_evidenceUri).length > 0, "Evidence URI cannot be empty.");
 
         gig.freelancerDelivered = false;
         gig.clientReceived = false;
@@ -700,7 +701,15 @@ contract GigsContract {
             deliverableInfo.responseTimestamp = block.timestamp;
             _uploadedAt = deliverableInfo.uploadedAt;
         }
-
+        
+        arbiterProxy.submitEvidence(
+            gig.client,
+            gig.disputeId,
+            gig.deliverableGroupId,
+            _evidenceUri,
+            // Avoids checks and operations related to an existing dispute
+            true
+        );
 
         emit GigRejected(
             _gigId,

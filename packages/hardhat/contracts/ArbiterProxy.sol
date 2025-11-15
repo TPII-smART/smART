@@ -302,7 +302,7 @@ contract ArbiterProxy is IArbitrableProxy, IArbitrable, IEvidence {
 
         dispute.freelancerDisputeFee += msg.value;
 
-        require(dispute.freelancerDisputeFee >= arbitrationCost, "Not enough ETH to cover arbitration costs.");
+        require(dispute.freelancerDisputeFee >= arbitrationCost, "Not enough ETH to cover arbitration costs");
 
         // Emit type-specific event
         _emitFreelancerPayedEvent(

@@ -153,7 +153,6 @@ export const notification = onchainTable(
 	})
 );
 
-
 export const hiredTalentDeliverable = onchainTable(
   "hiredTalentDeliverable",
   t => ({

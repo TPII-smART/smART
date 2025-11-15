@@ -7,6 +7,7 @@ import Button from "@/components/Button/Button";
 import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/AppealForm";
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
 import Spinner from "@/components/Spinner/Spinner";
+import { InputBase } from "@/components/scaffold-eth";
 import { HiredTalentState } from "@se-2/common";
 import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { fetchHiredTalent } from "@services/graphql/fetchers/hiredTalent";
@@ -22,6 +23,7 @@ import {
   XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { hiredTalentCategories } from "~~/components/Card/HiredTalentCategory/hiredTalentCategory.data";
+import FileUploadBox from "~~/components/FileUploadBox";
 import Modal from "~~/components/Modal/Modal";
 import { FileFormData } from "~~/components/UploadFileForm/types";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
@@ -47,6 +49,9 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
   const [showPayFeeModal, setShowPayFeeModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
+  const [evidenceFile, setEvidenceFileValue] = useState<File | undefined>(undefined);
+  const [evidenceComment, setEvidenceComment] = useState<string>("");
 
   const [fundingSide, setFundingSide] = useState<"client" | "freelancer">("client");
 
@@ -153,7 +158,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
       const evidenceJSON = await createAndUploadEvidence(
         initialEvidenceFile,
-        "Initial Evidence",
+        "Raised Dispute Evidence",
         "All the information regarding the job present in the platform.",
       );
 
@@ -372,6 +377,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       if (deliverableData.file) {
         resource = (await handleFileUploadToIPFS(deliverableData.file)) || "";
       }
+      const deliverableIndex = deliverables ? deliverables.length + 1 : 1;
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
@@ -381,8 +387,8 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             resource,
             parsedResource: await createEvidenceJSON(
               resource,
-              deliverableData.file?.name || "",
-              "Deliverable submission by Freelancer",
+              `Freelancer Deliverable Submission N° ${deliverableIndex}`,
+              `Deliverable submission by Freelancer.${deliverableData.submissionComment ? ` Comment provided on submit: ${deliverableData.submissionComment}` : ""}`,
             ),
             submissionComment: deliverableData.submissionComment,
           },
@@ -402,10 +408,18 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     try {
       showSpinner();
       if (!hiredTalent.hiredTalentId) return;
-      await writeContract({
-        functionName: "rejectHiredTalent",
-        args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), clientResponse],
-      });
+      const lastDeliverable = deliverables && deliverables.length > 0 ? deliverables[deliverables.length - 1] : null;
+      if (lastDeliverable?.resource) {
+        const evidenceUri = await createEvidenceJSON(
+          lastDeliverable.resource,
+          "Rejected deliverable",
+          `Deliverable rejected with the following reason: ${clientResponse}`,
+        );
+        await writeContract({
+          functionName: "rejectHiredTalent",
+          args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), clientResponse, evidenceUri],
+        });
+      }
       if (reload) await reload();
     } catch (err) {
       console.error("Reject deliverable failed:", err);
@@ -654,6 +668,29 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         </Button>,
       );
     }
+
+    if (
+      hiredTalentStatus === HiredTalentState.Disputed &&
+      disputeDetail &&
+      !disputeDetail?.currentlyDismissed &&
+      !disputeDetail?.disputeFinished &&
+      disputeDetail?.raiseOnKleros
+    ) {
+      buttons.push(
+        <Button
+          variant="outline"
+          key="uploadEvidence"
+          onClick={() => setShowUploadEvidenceModal(true)}
+          disabled={isMining}
+          size="sm"
+          tooltip="Upload evidence for dispute"
+        >
+          <ScaleIcon className="h-5 w-5" />
+          <span>Upload evidence for dispute</span>
+        </Button>,
+      );
+    }
+
     // Freelancer actions
     if (isFreelancer) {
       if (hiredTalentStatus === HiredTalentState.WaitingForApproval) {
@@ -1068,6 +1105,71 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             }}
           >
             Pay Arbitration Fee
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={showUploadEvidenceModal}
+        onClose={() => setShowUploadEvidenceModal(false)}
+        title="Uploading evidence"
+      >
+        <div className="mb-4">
+          <p className="mb-2 text-center">
+            The evidence provided in this section will be used in the dispute resolution process. Jurors will be able to
+            review the evidence you submit here to make a better informed decision. Please ensure that all evidence is
+            relevant and clearly presented.
+          </p>
+        </div>
+        <FileUploadBox
+          onUploadSuccess={(val: File) => setEvidenceFileValue(val)}
+          onFileRemove={() => setEvidenceFileValue(undefined)}
+          acceptedFileTypes={["Document", "Image", "Video"]}
+        />
+        <div className="mt-4">
+          <label htmlFor="evidence-comment" className="block text-sm font-medium mb-2">
+            Evidence Description
+          </label>
+          <InputBase
+            placeholder="Comment for the evidence"
+            multiline
+            minRows={4}
+            maxRows={4}
+            variant="filled"
+            value={evidenceComment}
+            onChange={(val: string) => setEvidenceComment(val)}
+          />
+        </div>
+        <div className="flex mt-4 justify-center items-center gap-4">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              if (!evidenceFile || !data?.talentId || !data?.hiredTalentId) return;
+              showSpinner();
+              const evidenceUri = await createAndUploadEvidence(
+                evidenceFile,
+                "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + " via smART app",
+                evidenceComment || "",
+              );
+              await writeContract({
+                functionName: "submitEvidence",
+                args: [BigInt(data.talentId), BigInt(data.hiredTalentId), evidenceUri],
+              });
+              setShowUploadEvidenceModal(false);
+              hideSpinner();
+              setEvidenceComment("");
+            }}
+            disabled={!evidenceFile}
+          >
+            Submit Evidence
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowUploadEvidenceModal(false);
+              setEvidenceComment("");
+            }}
+          >
+            Cancel
           </Button>
         </div>
       </Modal>
