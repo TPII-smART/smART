@@ -1,4 +1,4 @@
-# smART - Freelance Audiovisual Marketplace (Scaffold-ETH 2 based)
+<h1><img src="https://amaranth-solid-pelican-132.mypinata.cloud/ipfs/bafkreifqyj66woryplivqzt2b6l3cwd4ercee4ch4s2qoojo6miodilnpi" alt="smART logo" width="40" style="vertical-align:middle; margin-right:12px; padding-bottom:8px;"><strong>smART</strong> - Freelance Audiovisual Marketplace (Scaffold-ETH 2 based)</h1>
 
 A blockchain-native freelancing platform focused on audiovisual services. **smART** leverages smart contracts, decentralized arbitration, and transparent on-chain workflows to create clear work agreements, guarantee payment conditions, and provide impartial dispute resolution, fostering trust between freelancers and clients. The project is built on top of Scaffold-ETH 2 tooling and integrates contracts, a Next.js frontend, and a Ponder indexer for on-chain event processing.
 
