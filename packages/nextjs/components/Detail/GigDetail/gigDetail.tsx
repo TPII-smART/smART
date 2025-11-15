@@ -369,8 +369,7 @@ export default function GigDetail({
       showSpinner();
       if (!data?.gig.gigId) return;
       // Re-upload last deliverable as evidence with the reject reason (if available)
-      const lastDeliverable =
-        data?.deliverables && data.deliverables.length > 0 ? data.deliverables[data.deliverables.length - 1] : null;
+      const lastDeliverable = data?.deliverables && data.deliverables.length > 0 ? data.deliverables[0] : null;
       if (lastDeliverable?.resource) {
         const evidenceUri = await createEvidenceJSON(
           lastDeliverable.resource,

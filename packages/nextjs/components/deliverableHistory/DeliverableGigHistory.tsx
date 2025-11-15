@@ -106,8 +106,7 @@ export function DeliverableGigHistory(deliverableProps: any) {
     try {
       if (!data?.gig.gigId) return;
       showSpinner();
-      const lastDeliverable =
-        data?.deliverables && data.deliverables.length > 0 ? data.deliverables[data.deliverables.length - 1] : null;
+      const lastDeliverable = data?.deliverables && data.deliverables.length > 0 ? data.deliverables[0] : null;
       if (lastDeliverable?.resource) {
         const evidenceUri = await createEvidenceJSON(
           lastDeliverable.resource,

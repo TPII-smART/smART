@@ -408,7 +408,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     try {
       showSpinner();
       if (!hiredTalent.hiredTalentId) return;
-      const lastDeliverable = deliverables && deliverables.length > 0 ? deliverables[deliverables.length - 1] : null;
+      const lastDeliverable = deliverables && deliverables.length > 0 ? deliverables[0] : null;
       if (lastDeliverable?.resource) {
         const evidenceUri = await createEvidenceJSON(
           lastDeliverable.resource,
