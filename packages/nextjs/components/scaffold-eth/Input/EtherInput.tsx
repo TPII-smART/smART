@@ -96,7 +96,7 @@ export const EtherInput = ({ value, onChange, usdMode, ...props }: InputBaseProp
       value={displayValue}
       placeholder={props.placeholder ?? "" + (displayUsdMode ? " (USD)" : " (ETH)")}
       onChange={handleChangeNumber}
-      prefix={<span className="text-accent self-center">{displayUsdMode ? "$" : "Ξ"}</span>}
+      prefix={<span className="text-accent self-center">{displayUsdMode ? "$ USD" : "Ξ ETH"}</span>}
       suffix={
         <div
           className={`px-2 ${

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { DisputeStatus, Ruling, useDisputeContracts } from "../../../hooks/use-dispute-contracts";
 import UniversalDetail from "../UniversalDetail";
 import { Badge } from "@/components/Badge";
@@ -81,6 +81,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     queryKey: ["disputeDetail", data?.disputeId],
     queryFn: () => fetchDisputeById(data?.disputeId || 0),
   });
+
+  useEffect(() => {
+    if (!isDetailLoading && !data) {
+      notFound();
+    }
+  }, [isDetailLoading, data]);
 
   const {
     data: deliverables,
