@@ -152,7 +152,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
       const evidenceJSON = await createAndUploadEvidence(
         initialEvidenceFile,
-        "Initial Evidence",
+        "Raised Dispute Evidence",
         "All the information regarding the job present in the platform.",
       );
 
@@ -371,6 +371,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       if (deliverableData.file) {
         resource = (await handleFileUploadToIPFS(deliverableData.file)) || "";
       }
+      const deliverableIndex = deliverables ? deliverables.length + 1 : 1;
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
@@ -380,7 +381,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             resource,
             parsedResource: await createEvidenceJSON(
               resource,
-              deliverableData.file?.name || "",
+              `Freelancer Deliverable Submission N° ${deliverableIndex}`,
               `Deliverable submission by Freelancer.${deliverableData.submissionComment ? ` Comment provided on submit: ${deliverableData.submissionComment}` : ""}`,
             ),
             submissionComment: deliverableData.submissionComment,
@@ -401,12 +402,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     try {
       showSpinner();
       if (!hiredTalent.hiredTalentId) return;
-      await writeContract({
-        functionName: "rejectHiredTalent",
-        args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), clientResponse],
-      });
-
-      // Re-upload last deliverable as evidence with the reject reason (if available)
       const lastDeliverable = deliverables && deliverables.length > 0 ? deliverables[deliverables.length - 1] : null;
       if (lastDeliverable?.resource) {
         const evidenceUri = await createEvidenceJSON(
@@ -415,11 +410,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
           `Deliverable rejected with the following reason: ${clientResponse}`,
         );
         await writeContract({
-          functionName: "submitEvidence",
-          args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), evidenceUri],
+          functionName: "rejectHiredTalent",
+          args: [BigInt(hiredTalent.talentId), BigInt(hiredTalent.hiredTalentId), clientResponse, evidenceUri],
         });
       }
-
       if (reload) await reload();
     } catch (err) {
       console.error("Reject deliverable failed:", err);
@@ -669,7 +663,13 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
       );
     }
 
-    if (hiredTalentStatus === HiredTalentState.Disputed) {
+    if (
+      hiredTalentStatus === HiredTalentState.Disputed &&
+      disputeDetail &&
+      !disputeDetail?.currentlyDismissed &&
+      !disputeDetail?.disputeFinished &&
+      disputeDetail?.raiseOnKleros
+    ) {
       buttons.push(
         <Button
           variant="outline"
@@ -1138,6 +1138,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             variant="primary"
             onClick={async () => {
               if (!evidenceFile || !data?.talentId || !data?.hiredTalentId) return;
+              showSpinner();
               const evidenceUri = await createAndUploadEvidence(
                 evidenceFile,
                 "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + " via smART app",
@@ -1148,6 +1149,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
                 args: [BigInt(data.talentId), BigInt(data.hiredTalentId), evidenceUri],
               });
               setShowUploadEvidenceModal(false);
+              hideSpinner();
               setEvidenceComment("");
             }}
             disabled={!evidenceFile}

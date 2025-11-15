@@ -687,7 +687,8 @@ contract HiredTalentsContract {
     function rejectHiredTalent(
         uint256 _talentId,
         uint256 _hiredTalentId,
-        string calldata _comment
+        string calldata _comment,
+        string calldata _evidenceUri
     ) external onlyClient(_talentId, _hiredTalentId) hiredTalentExists(_talentId, _hiredTalentId) {
         HiredTalent storage hiredTalent = postedHiredTalents[_talentId].hiredTalents[_hiredTalentId];
 
@@ -696,6 +697,7 @@ contract HiredTalentsContract {
         require(hiredTalent.freelancer != address(0), "HiredTalent has no assigned freelancer");
         require(bytes(_comment).length > 0, "Comment cannot be empty.");
         require(bytes(_comment).length <= 256, "Comment must be up to 256 characters.");
+        require(bytes(_evidenceUri).length > 0, "Evidence URI cannot be empty.");
 
         hiredTalent.freelancerDelivered = false;
         hiredTalent.clientReceived = false;
@@ -712,6 +714,15 @@ contract HiredTalentsContract {
             deliverableInfo.responseTimestamp = block.timestamp;
             _uploadedAt = deliverableInfo.uploadedAt;
         }
+
+        arbiterProxy.submitEvidence(
+            hiredTalent.client,
+            hiredTalent.disputeId,
+            hiredTalent.deliverableGroupId,
+            _evidenceUri,
+            // Avoids checks and operations related to an existing dispute
+            true
+        );
 
         emit HiredTalentRejected(
             _talentId,

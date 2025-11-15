@@ -162,7 +162,7 @@ export default function GigDetail({
 
       const evidenceJSON = await createAndUploadEvidence(
         initialEvidenceFile,
-        "Initial Evidence",
+        "Raised Dispute Evidence",
         "All the information regarding the job present in the platform.",
       );
 
@@ -278,6 +278,7 @@ export default function GigDetail({
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
       }
 
+      const deliverableIndex = data?.deliverables ? data.deliverables.length + 1 : 1;
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
@@ -286,7 +287,7 @@ export default function GigDetail({
             resource,
             parsedResource: await createEvidenceJSON(
               resource,
-              fileData.file?.name || "",
+              `Freelancer Deliverable Submission N° ${deliverableIndex}`,
               `Deliverable submission by Freelancer.${fileData.submissionComment ? ` Comment provided on submit: ${fileData.submissionComment}` : ""}`,
             ),
             submissionComment: fileData.submissionComment,
@@ -354,12 +355,6 @@ export default function GigDetail({
     try {
       showSpinner();
       if (!data?.gig.gigId) return;
-
-      await writeContract({
-        functionName: "rejectGig",
-        args: [BigInt(data.gig.gigId), reason],
-      });
-
       // Re-upload last deliverable as evidence with the reject reason (if available)
       const lastDeliverable =
         data?.deliverables && data.deliverables.length > 0 ? data.deliverables[data.deliverables.length - 1] : null;
@@ -370,8 +365,8 @@ export default function GigDetail({
           `Deliverable rejected with the following reason: ${reason}`,
         );
         await writeContract({
-          functionName: "submitEvidence",
-          args: [BigInt(data.gig.gigId), evidenceUri],
+          functionName: "rejectGig",
+          args: [BigInt(data.gig.gigId), reason, evidenceUri],
         });
       }
 
@@ -467,7 +462,13 @@ export default function GigDetail({
       );
     }
 
-    if (gigState === GigState.Disputed) {
+    if (
+      gigState === GigState.Disputed &&
+      disputeDetail &&
+      !disputeDetail?.currentlyDismissed &&
+      !disputeDetail?.disputeFinished &&
+      disputeDetail?.raiseOnKleros
+    ) {
       buttons.push(
         <Button
           variant="outline"
@@ -1243,6 +1244,7 @@ export default function GigDetail({
             variant="primary"
             onClick={async () => {
               if (!evidenceFile || !gigId) return;
+              showSpinner();
               const evidenceUri = await createAndUploadEvidence(
                 evidenceFile,
                 "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + " via smART app",
@@ -1253,6 +1255,7 @@ export default function GigDetail({
                 args: [BigInt(gigId), evidenceUri],
               });
               setShowUploadEvidenceModal(false);
+              hideSpinner();
               setEvidenceComment("");
             }}
             disabled={!evidenceFile}
