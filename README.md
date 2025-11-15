@@ -1,4 +1,4 @@
-# smART — Freelance Audiovisual Marketplace (Scaffold-ETH 2 based)
+# smART - Freelance Audiovisual Marketplace (Scaffold-ETH 2 based)
 
 A blockchain-native freelancing platform focused on audiovisual services. **smART** leverages smart contracts, decentralized arbitration, and transparent on-chain workflows to create clear work agreements, guarantee payment conditions, and provide impartial dispute resolution, fostering trust between freelancers and clients. The project is built on top of Scaffold-ETH 2 tooling and integrates contracts, a Next.js frontend, and a Ponder indexer for on-chain event processing.
 
@@ -68,7 +68,7 @@ Follow these steps to deploy and wire the arbitration system:
     yarn account:import
    ```
 
-2. Make sure the deployment script for ArbiterProxy is set to use the CentralizedKleros address for Sepolia (check `packages/hardhat/deploy/04_arbiter_proxy_contract.ts`) or KlerosLiquid address if using that arbitrator. Then deploy ArbiterProxy:
+2. Make sure the deployment script for ArbiterProxy is set to use the CentralizedKleros address for Sepolia (check `packages/hardhat/deploy/03_arbiter_proxy_contract.ts`) or KlerosLiquid address if using that arbitrator. Then deploy ArbiterProxy:
    ```bash
    yarn deploy --network sepolia --tags ArbiterProxy
    ```
