@@ -57,7 +57,6 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
   };
 
   useEffect(() => {
-    if (!userAddress) return;
     const defaultCache = {
       [NotificationStatus.UNREAD]: [],
       [NotificationStatus.READ]: [],
@@ -91,7 +90,7 @@ export const NotificationsProvider: React.FC<{ children: ReactNode }> = ({ child
     return () => {
       saveCache();
     };
-  }, [userAddress]);
+  }, []);
 
   const getReadCount = (): number => {
     return (
