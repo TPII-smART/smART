@@ -16,6 +16,10 @@ Key ideas
 - Accessible developer experience thanks to Scaffold-ETH utilities and Ponder indexing.
 
 Links
+
+- [User Manual](https://amaranth-solid-pelican-132.mypinata.cloud/ipfs/bafybeiami7neicnhwcgeps6qug3knp33ikd6nctjh77qri2tc3jlzfi2gu)
+- [Technical Documentation](https://tpii-smart.github.io/technical-documentation/)
+
 - Scaffold-ETH docs: https://docs.scaffoldeth.io
 - Scaffold-ETH website: https://scaffoldeth.io
 
