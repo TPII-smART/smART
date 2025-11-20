@@ -48,10 +48,6 @@ const NotificationsDashboard = () => {
   const { unreadCount, refreshUnreadCount, editCache, notificationStatusCache, saveCache, getState } =
     useGlobalNotifications();
 
-  // const { writeContractAsync: changeNotificationStatus } = useScaffoldWriteContract({
-  //   contractName: "NotificationsContract",
-  // });
-
   const activeViewStatusIds = useMemo((): string[][] => {
     switch (activeView) {
       case NotificationStatus.UNREAD:

@@ -18,6 +18,7 @@ import {
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { HiredTalent } from "~~/types/hiredTalent";
 import { UserProfile } from "~~/types/user-profile.type";
+import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 
 export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryProps) {
   const [currentDeliverableIndex, setCurrentDeliverableIndex] = useState<number | null>(null);
@@ -92,10 +93,18 @@ export function DeliverableTalentHistory(deliverableProps: DeliverableHistoryPro
     try {
       if (!hireTalent.hiredTalentId) return;
       showSpinner();
-      await writeJobContract({
-        functionName: "rejectHiredTalent",
-        args: [BigInt(hireTalent.talentId), BigInt(hireTalent.hiredTalentId), clientResponse],
-      });
+      const lastDeliverable = data?.deliverables && data.deliverables.length > 0 ? data.deliverables[0] : null;
+      if (lastDeliverable?.resource) {
+        const evidenceUri = await createEvidenceJSON(
+          lastDeliverable.resource,
+          "Rejected deliverable",
+          `Deliverable rejected with the following reason: ${clientResponse}`,
+        );
+        await writeJobContract({
+          functionName: "rejectHiredTalent",
+          args: [BigInt(hireTalent.talentId), BigInt(hireTalent.hiredTalentId), clientResponse, evidenceUri],
+        });
+      }
       if (reload) await reload();
     } catch (err) {
       console.error("Reject job failed:", err);

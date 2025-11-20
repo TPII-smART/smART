@@ -1,11 +1,11 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import { DisputeStatus, Ruling, useDisputeContracts } from "../../../hooks/use-dispute-contracts";
 import UniversalDetail from "../UniversalDetail";
 import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/AppealForm";
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
+import FileUploadBox from "@/components/FileUploadBox";
+import { InputBase } from "@/components/scaffold-eth";
 import { ApplicationState, GigState } from "@se-2/common";
 import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -61,6 +61,9 @@ export default function GigDetail({
   const [showPayFeeModal, setShowPayFeeModal] = useState(false);
   const [showAppealModal, setShowAppealModal] = useState(false);
   const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+  const [showUploadEvidenceModal, setShowUploadEvidenceModal] = useState(false);
+  const [evidenceFile, setEvidenceFileValue] = useState<File | undefined>(undefined);
+  const [evidenceComment, setEvidenceComment] = useState<string>("");
 
   const [fundingSide, setFundingSide] = useState<"client" | "freelancer">("client");
   const router = useRouter();
@@ -90,6 +93,21 @@ export default function GigDetail({
     enabled: typeof gigId === "string" && !!gigId,
   });
 
+  useEffect(() => {
+    if (!gigId) {
+      notFound();
+    } else if (!isDetailLoading && !data) {
+      notFound();
+    } else if (data && data.applications.length === 0 && applicationId) {
+      notFound();
+    } else if (data && applicationId) {
+      const application = data.applications.find(app => String(app.applicationId) === String(applicationId));
+      if (!application) {
+        notFound();
+      }
+    }
+  }, [isDetailLoading, data, applicationId, gigId]);
+
   const {
     data: disputeData,
     isLoading: isDisputeLoading,
@@ -101,10 +119,10 @@ export default function GigDetail({
 
   const isLoading = isDetailLoading || isDisputeLoading;
   const application = data?.applications.find(app => String(app.applicationId) === String(applicationId));
-  const gigState = data?.gig.state as GigState;
+  const gigState = data?.gig?.state as GigState;
   const applicationState = application?.state as ApplicationState;
-  const isClient = data?.gig.client?.toLowerCase() === userAddress?.toLowerCase();
-  const freelancer = data?.gig.acceptedFreelancer ? data?.gig.acceptedFreelancer : application?.freelancer;
+  const isClient = data?.gig?.client?.toLowerCase() === userAddress?.toLowerCase();
+  const freelancer = data?.gig?.acceptedFreelancer ? data?.gig?.acceptedFreelancer : application?.freelancer;
   const isFreelancer = freelancer?.toLowerCase() === userAddress?.toLowerCase();
   const disputeDetail = disputeData ? disputeData : null;
 
@@ -147,17 +165,17 @@ export default function GigDetail({
         new Date().toISOString().split("T")[0],
         isFreelancer ? "Freelancer" : "Client",
         `
-        Client address: ${data?.gig.client}\n
-        Freelancer selected among the candidates: ${data?.gig.acceptedFreelancer}\n
-        Job Title: ${data?.gig.title}\n
-        Job Description: ${data?.gig.description || ""}\n
-        Payment amount declared: ${formatEther(BigInt(data?.gig.finalPayment || data?.gig.basePayment || 0))} ETH\n`,
+        Client address: ${data?.gig?.client}\n
+        Freelancer selected among the candidates: ${data?.gig?.acceptedFreelancer}\n
+        Job Title: ${data?.gig?.title}\n
+        Job Description: ${data?.gig?.description || ""}\n
+        Payment amount declared: ${formatEther(BigInt(data?.gig?.finalPayment || data?.gig?.basePayment || 0))} ETH\n`,
         values.comment,
       );
 
       const evidenceJSON = await createAndUploadEvidence(
         initialEvidenceFile,
-        "Initial Evidence",
+        "Raised Dispute Evidence",
         "All the information regarding the job present in the platform.",
       );
 
@@ -267,22 +285,23 @@ export default function GigDetail({
       showSpinner();
       let resource = "";
 
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
 
       if (fileData.file) {
         resource = (await handleFileUploadToIPFS(fileData.file)) || "";
       }
 
+      const deliverableIndex = data?.deliverables ? data.deliverables.length + 1 : 1;
       await writeContract({
         functionName: "confirmFreelancerCompletion",
         args: [
-          BigInt(data?.gig.gigId),
+          BigInt(data?.gig?.gigId),
           {
             resource,
             parsedResource: await createEvidenceJSON(
               resource,
-              fileData.file?.name || "",
-              "Deliverable submission by Freelancer",
+              `Freelancer Deliverable Submission N° ${deliverableIndex}`,
+              `Deliverable submission by Freelancer.${fileData.submissionComment ? ` Comment provided on submit: ${fileData.submissionComment}` : ""}`,
             ),
             submissionComment: fileData.submissionComment,
           },
@@ -299,7 +318,7 @@ export default function GigDetail({
   const handleClientConfirmCompletion = async (clientResponse?: string) => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
       await writeContract({
         functionName: "confirmClientCompletion",
         args: [BigInt(data.gig.gigId), clientResponse],
@@ -315,7 +334,7 @@ export default function GigDetail({
   const handleCancel = async () => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
       await writeContract({
         functionName: "cancelGig",
         args: [BigInt(data.gig.gigId)],
@@ -331,7 +350,7 @@ export default function GigDetail({
   const handleRateGig = async (rating: number) => {
     try {
       showSpinner();
-      if (!data?.gig.gigId) return;
+      if (!data?.gig?.gigId) return;
       await writeContract({
         functionName: "rateGig",
         args: [BigInt(data.gig.gigId), rating],
@@ -349,11 +368,19 @@ export default function GigDetail({
     try {
       showSpinner();
       if (!data?.gig.gigId) return;
-
-      await writeContract({
-        functionName: "rejectGig",
-        args: [BigInt(data.gig.gigId), reason],
-      });
+      // Re-upload last deliverable as evidence with the reject reason (if available)
+      const lastDeliverable = data?.deliverables && data.deliverables.length > 0 ? data.deliverables[0] : null;
+      if (lastDeliverable?.resource) {
+        const evidenceUri = await createEvidenceJSON(
+          lastDeliverable.resource,
+          "Rejected deliverable",
+          `Deliverable rejected with the following reason: ${reason}`,
+        );
+        await writeContract({
+          functionName: "rejectGig",
+          args: [BigInt(data.gig.gigId), reason, evidenceUri],
+        });
+      }
 
       if (reload) await reload();
     } catch (err) {
@@ -447,6 +474,28 @@ export default function GigDetail({
       );
     }
 
+    if (
+      gigState === GigState.Disputed &&
+      disputeDetail &&
+      !disputeDetail?.currentlyDismissed &&
+      !disputeDetail?.disputeFinished &&
+      disputeDetail?.raiseOnKleros
+    ) {
+      buttons.push(
+        <Button
+          variant="outline"
+          key="uploadEvidence"
+          onClick={() => setShowUploadEvidenceModal(true)}
+          disabled={isMining}
+          size="sm"
+          tooltip="Upload evidence for dispute"
+        >
+          <ScaleIcon className="h-5 w-5" />
+          <span>Upload evidence for dispute</span>
+        </Button>,
+      );
+    }
+
     // Freelancer applied actions
     if (isFreelancer && !isFreelancer) {
       if (applicationState === ApplicationState.Pending) {
@@ -470,9 +519,9 @@ export default function GigDetail({
     if (isFreelancer) {
       if (
         gigState === GigState.InProgress &&
-        !data?.gig.freelancerCancelled &&
-        !data?.gig.clientCancelled &&
-        !data?.gig.freelancerDelivered
+        !data?.gig?.freelancerCancelled &&
+        !data?.gig?.clientCancelled &&
+        !data?.gig?.freelancerDelivered
       ) {
         buttons.push(
           <Button
@@ -493,7 +542,7 @@ export default function GigDetail({
         gigState !== GigState.Cancelled &&
         gigState !== GigState.Disputed &&
         applicationState !== ApplicationState.Rejected &&
-        !data?.gig.freelancerCancelled
+        !data?.gig?.freelancerCancelled
       ) {
         buttons.push(
           <Button
@@ -594,7 +643,7 @@ export default function GigDetail({
         );
       } else {
         if (gigState === GigState.InProgress) {
-          if (data?.gig.freelancerDelivered && !data?.gig.clientReceived) {
+          if (data?.gig?.freelancerDelivered && !data?.gig?.clientReceived) {
             buttons.push(
               <Button
                 variant="primary"
@@ -614,7 +663,7 @@ export default function GigDetail({
         // Rating button for client when gig is completed
 
         if (gigState === GigState.Completed) {
-          if (!data?.gig.rating) {
+          if (!data?.gig?.rating) {
             buttons.push(
               <Button
                 variant="primary"
@@ -635,7 +684,7 @@ export default function GigDetail({
           gigState !== GigState.Cancelled &&
           gigState !== GigState.Disputed &&
           applicationState !== ApplicationState.Rejected &&
-          !data?.gig.clientCancelled
+          !data?.gig?.clientCancelled
         ) {
           buttons.push(
             <Button
@@ -999,23 +1048,23 @@ export default function GigDetail({
 
   const partialData: DetailData = {
     type: "gig",
-    title: data?.gig.title || "",
+    title: data?.gig?.title || "",
     proposalComment: application?.proposalComment || "",
-    description: data?.gig.description || "",
-    client: data?.gig.client,
+    description: data?.gig?.description || "",
+    client: data?.gig?.client,
     freelancer: data?.applications[parseInt(applicationId)]?.freelancer,
-    category: data?.gig.category || "",
+    category: data?.gig?.category || "",
     payment: data?.applications[parseInt(applicationId)]?.proposedPayment,
     duration: data?.applications[parseInt(applicationId)]?.proposedDurationInHours,
-    deadline: data?.gig.deadline || "",
-    state: data?.gig.state || 0,
-    freelancerDelivered: data?.gig.freelancerDelivered || false,
-    clientReceived: data?.gig.clientReceived || false,
-    isRejected: data?.gig.clientRejected || false,
-    createdAt: data?.gig.createdAt || "",
-    acceptedAt: data?.gig.acceptedAt || "",
-    canceledAt: data?.gig.canceledAt || "",
-    finishedAt: data?.gig.finishedAt || "",
+    deadline: data?.gig?.deadline || "",
+    state: data?.gig?.state || 0,
+    freelancerDelivered: data?.gig?.freelancerDelivered || false,
+    clientReceived: data?.gig?.clientReceived || false,
+    isRejected: data?.gig?.clientRejected || false,
+    createdAt: data?.gig?.createdAt || "",
+    acceptedAt: data?.gig?.acceptedAt || "",
+    canceledAt: data?.gig?.canceledAt || "",
+    finishedAt: data?.gig?.finishedAt || "",
     rating: data?.gig?.rating || 0,
     wasDisputed: !!data?.gig?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
@@ -1026,29 +1075,29 @@ export default function GigDetail({
 
   const finalDetailData: DetailData = {
     type: "gig",
-    title: data?.gig.title || "",
+    title: data?.gig?.title || "",
     proposalComment: application?.proposalComment || "",
-    description: data?.gig.description || "",
-    client: data?.gig.client,
-    freelancer: data?.gig.acceptedFreelancer,
-    category: hiredTalentCategories.find(category => category.id === data?.gig.category)?.label ?? "Unknown",
-    payment: data?.gig.finalPayment || "",
-    duration: data?.gig.finalDurationInHours || "",
-    deadline: data?.gig.deadline || "",
-    state: data?.gig.state || 0,
-    freelancerDelivered: data?.gig.freelancerDelivered || false,
-    clientReceived: data?.gig.clientReceived || false,
-    isRejected: data?.gig.clientRejected || false,
-    createdAt: data?.gig.createdAt || "",
-    acceptedAt: data?.gig.acceptedAt || "",
-    canceledAt: data?.gig.canceledAt || "",
-    finishedAt: data?.gig.finishedAt || "",
-    rating: data?.gig.rating || 0,
-    wasDisputed: !!data?.gig.disputeId,
+    description: data?.gig?.description || "",
+    client: data?.gig?.client,
+    freelancer: data?.gig?.acceptedFreelancer,
+    category: hiredTalentCategories.find(category => category.id === data?.gig?.category)?.label ?? "Unknown",
+    payment: data?.gig?.finalPayment || "",
+    duration: data?.gig?.finalDurationInHours || "",
+    deadline: data?.gig?.deadline || "",
+    state: data?.gig?.state || 0,
+    freelancerDelivered: data?.gig?.freelancerDelivered || false,
+    clientReceived: data?.gig?.clientReceived || false,
+    isRejected: data?.gig?.clientRejected || false,
+    createdAt: data?.gig?.createdAt || "",
+    acceptedAt: data?.gig?.acceptedAt || "",
+    canceledAt: data?.gig?.canceledAt || "",
+    finishedAt: data?.gig?.finishedAt || "",
+    rating: data?.gig?.rating || 0,
+    wasDisputed: !!data?.gig?.disputeId,
     disputeFinalized: disputeDetail?.disputeFinished || false,
     disputeResult: disputeCurrentRuling !== undefined && BigInt(disputeCurrentRuling) === BigInt(Ruling.FreelancerWins),
     disputeDismissed: disputeDetail?.currentlyDismissed || false,
-    clientRejected: data?.gig.clientRejected || false,
+    clientRejected: data?.gig?.clientRejected || false,
   };
 
   return (
@@ -1061,7 +1110,7 @@ export default function GigDetail({
         loading={isLoading}
         error={error}
         reload={reload}
-        statusBadge={getStatusBadge((data?.gig.state as number) || 0, applicationState)}
+        statusBadge={getStatusBadge((data?.gig?.state as number) || 0, applicationState)}
         actionButtons={getActionButtons()}
         statusMessage={getStatusMessage()}
         isUploadModalOpen={showUploadModal}
@@ -1168,6 +1217,71 @@ export default function GigDetail({
             }}
           >
             Pay Arbitration Fee
+          </Button>
+        </div>
+      </Modal>
+      <Modal
+        isOpen={showUploadEvidenceModal}
+        onClose={() => setShowUploadEvidenceModal(false)}
+        title="Uploading evidence"
+      >
+        <div className="mb-4">
+          <p className="mb-2 text-center">
+            The evidence provided in this section will be used in the dispute resolution process. Jurors will be able to
+            review the evidence you submit here to make a better informed decision. Please ensure that all evidence is
+            relevant and clearly presented.
+          </p>
+        </div>
+        <FileUploadBox
+          onUploadSuccess={(val: File) => setEvidenceFileValue(val)}
+          onFileRemove={() => setEvidenceFileValue(undefined)}
+          acceptedFileTypes={["Document", "Image", "Video"]}
+        />
+        <div className="mt-4">
+          <label htmlFor="evidence-comment" className="block text-sm font-medium mb-2">
+            Evidence Description
+          </label>
+          <InputBase
+            placeholder="Comment for the evidence"
+            multiline
+            minRows={4}
+            maxRows={4}
+            variant="filled"
+            value={evidenceComment}
+            onChange={(val: string) => setEvidenceComment(val)}
+          />
+        </div>
+        <div className="flex mt-4 justify-center items-center gap-4">
+          <Button
+            variant="primary"
+            onClick={async () => {
+              if (!evidenceFile || !gigId) return;
+              showSpinner();
+              const evidenceUri = await createAndUploadEvidence(
+                evidenceFile,
+                "Evidence uploaded by" + (isClient ? " Client" : " Freelancer") + " via smART app",
+                evidenceComment || "",
+              );
+              await writeContract({
+                functionName: "submitEvidence",
+                args: [BigInt(gigId), evidenceUri],
+              });
+              setShowUploadEvidenceModal(false);
+              hideSpinner();
+              setEvidenceComment("");
+            }}
+            disabled={!evidenceFile}
+          >
+            Submit Evidence
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setShowUploadEvidenceModal(false);
+              setEvidenceComment("");
+            }}
+          >
+            Cancel
           </Button>
         </div>
       </Modal>

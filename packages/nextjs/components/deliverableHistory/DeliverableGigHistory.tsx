@@ -12,6 +12,7 @@ import { castDateToTimestamp, isImageUrl } from "~~/lib/utils";
 import { fetchDeliverablesForGig, fetchGigById } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { UserProfile } from "~~/types/user-profile.type";
+import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 
 export function DeliverableGigHistory(deliverableProps: any) {
   const [currentDeliverableIndex, setCurrentDeliverableIndex] = useState<number | null>(null);
@@ -105,12 +106,18 @@ export function DeliverableGigHistory(deliverableProps: any) {
     try {
       if (!data?.gig.gigId) return;
       showSpinner();
-
-      await writeContract({
-        functionName: "rejectGig",
-        args: [BigInt(data.gig.gigId), reason],
-      });
-
+      const lastDeliverable = data?.deliverables && data.deliverables.length > 0 ? data.deliverables[0] : null;
+      if (lastDeliverable?.resource) {
+        const evidenceUri = await createEvidenceJSON(
+          lastDeliverable.resource,
+          "Rejected deliverable",
+          `Deliverable rejected with the following reason: ${reason}`,
+        );
+        await writeContract({
+          functionName: "rejectGig",
+          args: [BigInt(data.gig.gigId), reason, evidenceUri],
+        });
+      }
       if (reload) await reload();
     } catch (err) {
       console.error("Reject gig failed:", err);

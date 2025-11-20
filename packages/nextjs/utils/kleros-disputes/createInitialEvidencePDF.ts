@@ -55,6 +55,7 @@ async function fillPdfTemplate(
           textField.setText(replacements[fieldName]);
         } else if (fieldType === "PDFCheckBox") {
           const checkbox = form.getCheckBox(fieldName);
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           replacements[fieldName].toLowerCase() === "true" ? checkbox.check() : checkbox.uncheck();
         } else if (fieldType === "PDFDropdown") {
           const dropdown = form.getDropdown(fieldName);
