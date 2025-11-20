@@ -159,7 +159,7 @@ export default function RatingDisplay({
           <div className="mt-4 pt-3 border-t border-[var(--color-border)] flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-[var(--color-warning)] rounded"></div>
-              <span className="text-[var(--color-primary-content)]">HiredTalents</span>
+              <span className="text-[var(--color-primary-content)]">Hired Talents</span>
             </div>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 bg-[var(--color-accent)] rounded"></div>

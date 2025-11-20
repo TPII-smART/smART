@@ -12,6 +12,7 @@ import FormModal from "~~/components/Modal/FormModal/FormModal";
 import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
+import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 
 class TalentFormData {
   title: string;
@@ -50,8 +51,15 @@ export function TalentCard({ talent, className, reload, ...props }: TalentCardPr
         ],
         value: BigInt(talent?.basePayment),
       });
-      await waitTransaction("hiredTalent", transactionHash);
+      const created = await waitTransaction<HiredTalent>("hiredTalent", transactionHash, [
+        "talentId",
+        "hiredTalentId",
+      ] as (keyof HiredTalent)[]);
       await reload?.();
+
+      if (created && created.talentId && created.hiredTalentId) {
+        window.location.href = `/talents/${created.talentId}/${created.hiredTalentId}`;
+      }
 
       setShowModal(false);
     } catch (err) {

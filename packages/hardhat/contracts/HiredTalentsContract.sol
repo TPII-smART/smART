@@ -313,7 +313,7 @@ contract HiredTalentsContract {
     function createHiredTalent(
         uint256 _talentId,
         HiredTalentParams memory params
-    ) external payable talentExists(_talentId) notFreelancer(_talentId) {
+    ) external payable talentExists(_talentId) notFreelancer(_talentId) returns (uint256) {
         Talent storage talent = postedHiredTalents[_talentId];
 
         require(msg.value == params.payment, "Must send exact payment amount");
@@ -376,6 +376,8 @@ contract HiredTalentsContract {
             talent.bannerImageHash,
             params.durationInHours
         );
+
+        return hiredTalentId;
     }
 
     /**
