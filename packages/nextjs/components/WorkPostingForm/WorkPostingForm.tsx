@@ -158,55 +158,64 @@ const WorkPostingForm = ({ type, refresh }: WorkPostingFormProps) => {
       >
         {({ values, errors, touched, setFieldValue }) => (
           <div className="">
-            <InputBase
-              placeholder="Title"
-              value={values.title}
-              onChange={val => setFieldValue("title", val)}
-              error={touched.title && !!errors.title}
-              helperText={touched.title && errors.title ? errors.title : undefined}
-            />
-            <InputBase
-              multiline
-              minRows={4}
-              placeholder="Description"
-              value={values.description}
-              onChange={val => setFieldValue("description", val)}
-              error={touched.description && !!errors.description}
-              helperText={touched.description && errors.description ? errors.description : undefined}
-            />
-            <FileUploadBox
-              onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
-              //onUploadError={Render error message}
-              acceptedFileTypes={["Document", "Image", "Video"]}
-            />
-            <EtherInput
-              placeholder="Payment"
-              value={values.paymentInEth}
-              onChange={val => setFieldValue("paymentInEth", val)}
-              error={touched.paymentInEth && !!errors.paymentInEth}
-              helperText={touched.paymentInEth && errors.paymentInEth ? errors.paymentInEth : undefined}
-            />
-            <DurationInput
-              placeholder="Estimated Duration"
-              value={values.estimatedDurationHours}
-              onChange={val => setFieldValue("estimatedDurationHours", val)}
-              error={touched.estimatedDurationHours && !!errors.estimatedDurationHours}
-              helperText={
-                touched.estimatedDurationHours && errors.estimatedDurationHours
-                  ? errors.estimatedDurationHours
-                  : undefined
-              }
-            />
-            <ComboBox
-              id="category-combo"
-              label="Category"
-              value={values.category}
-              onChange={val => setFieldValue("category", val)}
-              options={hiredTalentCategories}
-              variant="standard"
-              error={touched.category && !!errors.category}
-              helperText={touched.category && errors.category ? errors.category : undefined}
-            />
+            <div className="flex gap-20 mr-10">
+              <div className="">
+                <InputBase
+                  placeholder="Title"
+                  value={values.title}
+                  onChange={val => setFieldValue("title", val)}
+                  error={touched.title && !!errors.title}
+                  helperText={touched.title && errors.title ? errors.title : undefined}
+                />
+                <InputBase
+                  multiline
+                  minRows={4}
+                  placeholder="Description"
+                  value={values.description}
+                  onChange={val => setFieldValue("description", val)}
+                  error={touched.description && !!errors.description}
+                  helperText={touched.description && errors.description ? errors.description : undefined}
+                />
+                <EtherInput
+                  placeholder="Payment"
+                  value={values.paymentInEth}
+                  onChange={val => setFieldValue("paymentInEth", val)}
+                  error={touched.paymentInEth && !!errors.paymentInEth}
+                  helperText={touched.paymentInEth && errors.paymentInEth ? errors.paymentInEth : undefined}
+                />
+                <DurationInput
+                  placeholder="Estimated Duration"
+                  value={values.estimatedDurationHours}
+                  onChange={val => setFieldValue("estimatedDurationHours", val)}
+                  error={touched.estimatedDurationHours && !!errors.estimatedDurationHours}
+                  helperText={
+                    touched.estimatedDurationHours && errors.estimatedDurationHours
+                      ? errors.estimatedDurationHours
+                      : undefined
+                  }
+                />
+                <ComboBox
+                  id="category-combo"
+                  label="Category"
+                  value={values.category}
+                  onChange={val => setFieldValue("category", val)}
+                  options={hiredTalentCategories}
+                  variant="standard"
+                  error={touched.category && !!errors.category}
+                  helperText={touched.category && errors.category ? errors.category : undefined}
+                />
+              </div>
+              <div className="w-[70%]">
+                <div className="mb-2 mt-8">
+                  <label className="block text-sm mb-1">Upload Banner Image (optional)</label>
+                </div>
+                <FileUploadBox
+                  onUploadSuccess={(val: File) => setFieldValue("bannerImageFile", val)}
+                  //onUploadError={Render error message}
+                  acceptedFileTypes={["Image"]}
+                />
+              </div>
+            </div>
           </div>
         )}
       </FormModal>

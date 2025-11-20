@@ -60,11 +60,6 @@ const NotificationsDashboard = () => {
           [...notificationStatusCache[NotificationStatus.READ]],
           [...notificationStatusCache[NotificationStatus.UNREAD], ...notificationStatusCache[NotificationStatus.DONE]],
         ];
-      case NotificationStatus.DONE:
-        return [
-          [...notificationStatusCache[NotificationStatus.DONE]],
-          [...notificationStatusCache[NotificationStatus.UNREAD], ...notificationStatusCache[NotificationStatus.READ]],
-        ];
       default:
         return [];
     }
@@ -189,11 +184,6 @@ const NotificationsDashboard = () => {
 
   const changeNotificationsStatus = useCallback(
     async (status: NotificationStatus, ids: string[]) => {
-      // const transactionHash = await changeNotificationStatus({
-      //   functionName: "changeNotificationsStatus",
-      //   args: [ids, status],
-      // });
-      // await waitTransaction("notification", transactionHash);
       for (const id of ids) {
         editCache(id, status);
       }
@@ -250,14 +240,6 @@ const NotificationsDashboard = () => {
         {selectedNotifications.length > 0 && (
           <>
             <Button
-              icon={<CheckCircleIcon className="h-5 w-5" />}
-              onClick={() => handleSelected(NotificationStatus.DONE)}
-              size="xs"
-              variant="outline"
-            >
-              Done
-            </Button>
-            <Button
               icon={<EnvelopeOpenIcon className="h-5 w-5" />}
               onClick={() => handleSelected(NotificationStatus.READ)}
               size="xs"
@@ -306,15 +288,6 @@ const NotificationsDashboard = () => {
         >
           <ArchiveBoxIcon className="h-5 w-5" />
           <span>Read</span>
-        </SideBarButton>
-        <SideBarButton
-          isActive={activeView === NotificationStatus.DONE}
-          onClick={() => {
-            setActiveView(NotificationStatus.DONE);
-          }}
-        >
-          <CheckCircleIcon className="h-5 w-5" />
-          <span>Done</span>
         </SideBarButton>
       </div>
 

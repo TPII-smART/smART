@@ -3,7 +3,7 @@ import Button from "./Button/Button";
 
 export function Hero() {
   return (
-    <div className="relative isolate overflow-hidden bg-secondary w-full rounded-tl-2xl">
+    <div className="relative isolate overflow-hidden bg-secondary h-full w-full rounded-tl-2xl">
       <div
         className="absolute inset-0 w-full h-full"
         style={{
@@ -13,7 +13,7 @@ export function Hero() {
           zIndex: 0,
         }}
       />
-      <div className="relative mx-auto max-w-5xl px-6 py-24 sm:py-32 lg:px-8">
+      <div className="flex flex-col h-full items-center justify-center text-center py-32 px-6 relative z-10">
         <div className="mx-auto max-w-3xl text-center">
           <h1
             className="text-4xl font-bold tracking-tight sm:text-6xl"

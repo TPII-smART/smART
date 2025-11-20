@@ -296,7 +296,7 @@ contract GigsContract {
      * @param _gigId The ID of the gig to apply for
      * @param params struct containing proposed payment, duration, and proposal comment
      */
-    function applyToGig(uint256 _gigId, ApplicationParams memory params) external gigExists(_gigId) {
+    function applyToGig(uint256 _gigId, ApplicationParams memory params) external gigExists(_gigId) returns (uint256) {
         Gig storage gig = postedGigs[_gigId];
 
         require(gig.state == GigState.Open, "Gig is not accepting applications");
@@ -332,6 +332,8 @@ contract GigsContract {
             params.proposedDurationInHours,
             params.proposal
         );
+
+        return applicationId;
     }
 
     /**

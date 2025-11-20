@@ -12,7 +12,7 @@ import { GigState, HiredTalentState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
-import { CalendarDaysIcon, ClockIcon, CurrencyDollarIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
+import { CalendarDaysIcon, ClockIcon, ExclamationCircleIcon } from "@heroicons/react/24/outline";
 import AvatarImage from "~~/components/AvatarImage/AvatarImage";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
 import FormModal from "~~/components/Modal/FormModal/FormModal";
@@ -102,7 +102,7 @@ export default function UniversalDetail({
 
     if (displayUsdMode && nativeCurrencyPrice > 0) {
       const usdValue = ethNum * nativeCurrencyPrice;
-      return `$${usdValue < 0.01 ? usdValue.toFixed(6) : usdValue.toFixed(2)}`;
+      return `$${usdValue < 0.01 ? usdValue.toFixed(6) : usdValue.toFixed(2)} USD`;
     } else {
       if (ethNum < 0.001) return `${ethNum.toFixed(6)} ETH`;
       if (ethNum < 1) return `${ethNum.toFixed(4)} ETH`;
@@ -215,7 +215,6 @@ export default function UniversalDetail({
                 title="Toggle USD/ETH display"
               >
                 <div className="flex items-center text-4xl font-bold text-[var(--color-success)]">
-                  {displayUsdMode ? <CurrencyDollarIcon className="w-8 h-8 mr-2" /> : null}
                   {formatPaymentDisplay(BigInt(data.payment || "0"))}
                 </div>
               </div>

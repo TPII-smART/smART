@@ -15,6 +15,7 @@ import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { castHoursToDurationString } from "~~/lib/utils";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
+import { Application } from "~~/types/gig/gig-application.types";
 
 class FormData {
   proposedPayment: string;
@@ -51,8 +52,16 @@ export function GigCard({ gig, className, reload, ...props }: GigCardProps) {
         ],
       });
 
-      await waitTransaction("gigApplication", transactionHash);
+      const created = await waitTransaction<Application>("gigApplication", transactionHash, [
+        "gigId",
+        "applicationId",
+      ] as (keyof Application)[]);
       await reload?.();
+
+      if (created && created.gigId && created.applicationId) {
+        window.location.href = `/gig/${created.gigId}?applicationId=${created.applicationId}`;
+      }
+
       setShowApplyModal(false);
     } catch (err) {
       console.error("Create gig application failed:", err);

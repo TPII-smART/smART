@@ -10,6 +10,7 @@ import { useTheme } from "next-themes";
 import { Toaster } from "react-hot-toast";
 import { WagmiProvider, useAccount } from "wagmi";
 import {
+  BookOpenIcon,
   BugAntIcon,
   HomeIcon,
   MagnifyingGlassIcon,
@@ -37,8 +38,13 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
             items={[
               {
                 label: "Home",
-                href: "/feed",
+                href: "/",
                 icon: HomeIcon,
+              },
+              {
+                label: "Feed",
+                href: "/Feed",
+                icon: BookOpenIcon,
               },
               {
                 label: "Profile",
@@ -51,19 +57,9 @@ const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
                 icon: MagnifyingGlassIcon,
               },
               {
-                label: "Dashboard",
-                href: "/dashboard",
-                icon: TableCellsIcon,
-              },
-              {
                 label: "Disputes",
                 href: "/disputes",
                 icon: ScaleIcon,
-              },
-              {
-                label: "Debug Contracts",
-                href: "/debug",
-                icon: BugAntIcon,
               },
             ]}
           />
