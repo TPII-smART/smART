@@ -1,5 +1,8 @@
-import { NotificationStatus } from "@se-2/common";
-
+export enum NotificationStatus {
+  UNREAD = 0,
+  READ = 1,
+  DONE = 2,
+}
 export interface Notification {
   id: string;
   user: `0x${string}`;

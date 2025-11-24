@@ -1,4 +1,4 @@
-import { HiredTalentState } from "@se-2/common";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 
 export const hiredTalentState = [
   { id: HiredTalentState.WaitingForApproval, label: "Waiting For Approval" },

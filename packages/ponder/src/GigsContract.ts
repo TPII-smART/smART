@@ -5,7 +5,28 @@ import {
 	notification,
 	gigDeliverable,
 } from "ponder:schema";
-import { GigState, ApplicationState, DeliverableState } from "@se-2/common";
+
+export enum GigState {
+  Open = 0,
+  InProgress = 1,
+  Completed = 2,
+  Cancelled = 3,
+  Disputed = 4,
+}
+
+export enum ApplicationState {
+  Pending = 0,
+  Accepted = 1,
+  Rejected = 2,
+  Withdrawn = 3,
+}
+
+export enum DeliverableState {
+  Pending = 0,
+  Approved = 1,
+  Rejected = 2,
+  Disputed = 3,
+}
 
 // Listen for Gig creation
 ponder.on("GigsContract:GigCreated", async ({ event, context }) => {

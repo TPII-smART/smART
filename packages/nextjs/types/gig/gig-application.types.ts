@@ -1,5 +1,11 @@
 import { Gig } from "./gig.types";
 
+export enum ApplicationState {
+  Pending = 0,
+  Accepted = 1,
+  Rejected = 2,
+  Withdrawn = 3,
+}
 export interface Application {
   /** Unique identifier for the application. */
   applicationId: string;

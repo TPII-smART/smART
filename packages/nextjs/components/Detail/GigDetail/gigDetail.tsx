@@ -6,7 +6,6 @@ import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/Appeal
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
 import FileUploadBox from "@/components/FileUploadBox";
 import { InputBase } from "@/components/scaffold-eth";
-import { ApplicationState, GigState } from "@se-2/common";
 import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatEther, parseEther } from "viem";
@@ -32,6 +31,8 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Dispute } from "~~/types/dispute/dispute.type";
 import { Application, Gig } from "~~/types/gig";
+import { ApplicationState } from "~~/types/gig/gig-application.types";
+import { GigState } from "~~/types/gig/gig.types";
 import { createInitialEvidencePDF } from "~~/utils/kleros-disputes/createInitialEvidencePDF";
 import { createAndUploadEvidence, createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";

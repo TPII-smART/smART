@@ -1,6 +1,9 @@
-// Update the import path to the correct relative location, for example:
-import { DeliverableState } from "@se-2/common";
-
+export enum DeliverableState {
+  Pending = 0,
+  Approved = 1,
+  Rejected = 2,
+  Disputed = 3,
+}
 export class Deliverable {
   resource: string;
   uploadedAt: string;

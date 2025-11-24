@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { GigState, HiredTalentState } from "@se-2/common";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
+import { GigState } from "~~/types/gig/gig.types";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 
 interface UniversalRoadmapProps {
   data: any;

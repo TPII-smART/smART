@@ -4,7 +4,6 @@ import * as React from "react";
 import { GigCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { DurationInput, EtherInput, InputBase } from "@/components/scaffold-eth";
-import { GigState } from "@se-2/common";
 import { formatEther } from "viem";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -16,6 +15,7 @@ import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { castHoursToDurationString } from "~~/lib/utils";
 import { waitTransaction } from "~~/lib/waitTransaction.util";
 import { Application } from "~~/types/gig/gig-application.types";
+import { GigState } from "~~/types/gig/gig.types";
 
 class FormData {
   proposedPayment: string;

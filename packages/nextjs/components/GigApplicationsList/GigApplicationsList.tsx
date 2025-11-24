@@ -3,7 +3,6 @@ import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
 import { gigState } from "@/components/Card/GigState/gigState.data";
-import { GigState } from "@se-2/common";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -20,6 +19,7 @@ import {
 import { castHoursToDurationString } from "~~/lib/utils";
 // Adjust the import to match the actual export from the module
 import { fetchApplicationsWithGigDetails } from "~~/services/graphql/fetchers/gig/gig.service";
+import { GigState } from "~~/types/gig/gig.types";
 import { Application, ApplicationsData, Gig } from "~~/types/gig/gig.types";
 
 interface InfoIcons {

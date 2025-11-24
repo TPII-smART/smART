@@ -3,10 +3,9 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { styled } from "@mui/material";
-import { NotificationStatus } from "@se-2/common";
 import { useAccount } from "wagmi";
 import { EnvelopeIcon, EnvelopeOpenIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
-import { ArchiveBoxIcon, CheckCircleIcon, InboxIcon } from "@heroicons/react/24/solid";
+import { ArchiveBoxIcon, InboxIcon } from "@heroicons/react/24/solid";
 import Button from "~~/components/Button";
 import Checkbox from "~~/components/CheckBox/CheckBox";
 import Spinner from "~~/components/Spinner/Spinner";
@@ -16,6 +15,7 @@ import { useGlobalSpinner } from "~~/context/SpinnerProvider";
 import { usePagination } from "~~/hooks/use-pagination";
 import { castDateToTimestamp } from "~~/lib/utils";
 import { fetchNotificationsByUserPaginated } from "~~/services/graphql/fetchers/notification/notification.service";
+import { NotificationStatus } from "~~/types/notification.types";
 import { Notification } from "~~/types/notification.types";
 
 const SideBarButton = styled("button")<{ isActive: boolean }>(({ isActive }) => ({

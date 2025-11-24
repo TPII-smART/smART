@@ -2,9 +2,9 @@ import React from "react";
 import type { HiredTalentCardProps } from "./types";
 import { UniversalCard } from "@/components/Card/UniversalCard";
 import { cn } from "@/lib/utils";
-import { HiredTalentState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 import { getHiredTalentStatus } from "~~/utils/scaffold-eth/Status/getStatus";
 
 const HiredTalentCard = React.memo(({ hiredTalent, className, highlight }: HiredTalentCardProps) => {

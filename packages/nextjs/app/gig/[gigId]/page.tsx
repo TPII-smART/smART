@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import InfoHeader from "@/components/InfoHeader";
 import Spinner from "@/components/Spinner/Spinner";
-import { GigState } from "@se-2/common";
 import ApplicationCard from "~~/components/Card/ApplicationCard/ApplicationCard";
 import GigDetail from "~~/components/Detail/GigDetail/gigDetail";
 import Skeleton from "~~/components/Skeleton/Skeleton";
@@ -12,6 +11,7 @@ import { usePagination } from "~~/hooks/use-pagination";
 import { fetchGigById, getApplicationsForGigPaginated } from "~~/services/graphql/fetchers/gig/gig.service";
 import { GigDetailType } from "~~/types/detail/detail.type";
 import { Application, Gig } from "~~/types/gig";
+import { GigState } from "~~/types/gig/gig.types";
 
 export default function GigPage() {
   const { gigId } = useParams();

@@ -1,4 +1,3 @@
-import { ApplicationState, GigState, HiredTalentState } from "@se-2/common";
 import {
   CheckCircleIcon,
   ClockIcon,
@@ -10,7 +9,10 @@ import {
 } from "@heroicons/react/24/outline";
 import { castDateToTimestampNum } from "~~/lib/utils";
 import { ActivityItemStatus, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
+import { ApplicationState } from "~~/types/gig/gig-application.types";
+import { GigState } from "~~/types/gig/gig.types";
 import { Application, Gig } from "~~/types/gig/gig.types";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 
 export function getHiredTalentStatus(

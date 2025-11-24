@@ -1,8 +1,15 @@
-import { GigState } from "@se-2/common";
 import { parseEther } from "viem";
 import { WorkPostingFormData } from "~~/components/WorkPostingForm/types";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 import { ScaffoldWriteContractVariables } from "~~/utils/scaffold-eth/contract";
+
+export enum GigState {
+  Open = 0,
+  InProgress = 1,
+  Completed = 2,
+  Cancelled = 3,
+  Disputed = 4,
+}
 
 export * from "./gig-application.types";
 

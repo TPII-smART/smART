@@ -8,7 +8,6 @@ import AppealFormModal, { AppealFormData } from "@/components/DisputeForm/Appeal
 import DisputeFormModal, { DisputeFormData } from "@/components/DisputeForm/DisputeForm";
 import Spinner from "@/components/Spinner/Spinner";
 import { InputBase } from "@/components/scaffold-eth";
-import { HiredTalentState } from "@se-2/common";
 import { fetchDisputeById } from "@services/graphql/fetchers/dispute";
 import { fetchHiredTalent } from "@services/graphql/fetchers/hiredTalent";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,6 +33,7 @@ import { Deliverable } from "~~/types/deliverable";
 import { DetailData } from "~~/types/detail/detail.type";
 import { Dispute } from "~~/types/dispute/dispute.type";
 import { HiredTalent } from "~~/types/hiredTalent";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 import { createInitialEvidencePDF } from "~~/utils/kleros-disputes/createInitialEvidencePDF";
 import { createAndUploadEvidence, createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 import { getMetaEvidenceURI } from "~~/utils/kleros-disputes/getMetaEvidenceJSON";

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
-import { HiredTalentState } from "@se-2/common";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import { HiredTalent } from "~~/types/hiredTalent";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 
 export function HiredTalentRoadmap({ hiredTalent }: { hiredTalent: HiredTalent }) {
   const formatDate = (dateString: string | undefined) => {

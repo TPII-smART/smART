@@ -1,8 +1,8 @@
 import React, { ReactNode, createContext, useContext, useEffect, useRef } from "react";
-import { NotificationStatus } from "@se-2/common";
 import { QueryObserverResult, RefetchOptions, useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import { fetchNotificationIdsByUser } from "~~/services/graphql/fetchers/notification/notification.service";
+import { NotificationStatus } from "~~/types/notification.types";
 import { ZERO_ADDRESS } from "~~/utils/scaffold-eth/common";
 
 type NotificationsContextType = {

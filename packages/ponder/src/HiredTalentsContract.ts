@@ -5,7 +5,21 @@ import {
 	notification,
 	hiredTalentDeliverable,
 } from "ponder:schema";
-import { HiredTalentState, DeliverableState } from "@se-2/common";
+
+export enum HiredTalentState {
+  WaitingForApproval = 0,
+  Ongoing = 1,
+  Finished = 2,
+  Cancelled = 3,
+  Disputed = 4,
+}
+
+export enum DeliverableState {
+  Pending = 0,
+  Approved = 1,
+  Rejected = 2,
+  Disputed = 3,
+}
 
 // Event handlers for the HiredTalentsContract
 

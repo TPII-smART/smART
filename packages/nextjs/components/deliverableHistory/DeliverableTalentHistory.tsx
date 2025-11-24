@@ -4,7 +4,6 @@ import { queryClient } from "../ScaffoldEthAppWithProviders";
 import { Spinner } from "../Spinner/Spinner";
 import { DeliverableHistoryProps } from "./types";
 import Button from "@/components/Button/Button";
-import { DeliverableState, HiredTalentState } from "@se-2/common";
 import { useQuery } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
@@ -16,7 +15,9 @@ import {
   fetchHiredTalent,
 } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
+import { DeliverableState } from "~~/types/deliverable/deliverable.type";
 import { HiredTalent } from "~~/types/hiredTalent";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 import { UserProfile } from "~~/types/user-profile.type";
 import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 

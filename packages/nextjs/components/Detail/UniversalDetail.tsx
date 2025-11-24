@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/Card";
 import RatingStars from "@/components/RatingStars";
 import Spinner from "@/components/Spinner/Spinner";
 import { castHoursToDurationString, isImageUrl } from "@/lib/utils";
-import { GigState, HiredTalentState } from "@se-2/common";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 import * as Yup from "yup";
@@ -22,6 +21,8 @@ import UploadDeliverableForm from "~~/components/UploadFileForm/UploadFileForm";
 import { useDisplayUsdMode } from "~~/hooks/scaffold-eth/useDisplayUsdMode";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
 import { useGlobalState } from "~~/services/store/store";
+import { GigState } from "~~/types/gig/gig.types";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 import { UserProfile } from "~~/types/user-profile.type";
 
 export default function UniversalDetail({

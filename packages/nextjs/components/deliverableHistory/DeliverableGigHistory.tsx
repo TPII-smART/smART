@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { DeliverableCard } from "../Card/DeliverableCard/DeliverableCard";
 import { Spinner } from "../Spinner/Spinner";
 import Button from "@/components/Button/Button";
-import { DeliverableState, GigState } from "@se-2/common";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAccount } from "wagmi";
 import DeliverableReviewModal from "~~/components/DeliverableReviewModal/DeliverableReviewModal";
@@ -11,6 +10,8 @@ import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth/useScaffoldWrite
 import { castDateToTimestamp, isImageUrl } from "~~/lib/utils";
 import { fetchDeliverablesForGig, fetchGigById } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchUserProfile } from "~~/services/graphql/fetchers/profile.service";
+import { DeliverableState } from "~~/types/deliverable/deliverable.type";
+import { GigState } from "~~/types/gig/gig.types";
 import { UserProfile } from "~~/types/user-profile.type";
 import { createEvidenceJSON } from "~~/utils/kleros-disputes/getEvidenceJSON";
 

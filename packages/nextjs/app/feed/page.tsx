@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedActivityCard } from "@/components/Card/FeedCard/FeedCard";
-import { ApplicationState } from "@se-2/common";
 import { useAccount } from "wagmi";
 import Spinner from "~~/components/Spinner/Spinner";
 import { PaginationScrollEvent, usePagination } from "~~/hooks/use-pagination";
@@ -13,6 +12,7 @@ import {
 } from "~~/services/graphql/fetchers/gig/gig.service";
 import { fetchHiredTalentsAndHiresPaginated } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
 import { ActivityItem, ActivityItemType, InteractionType } from "~~/types/feed/activityItem.type";
+import { ApplicationState } from "~~/types/gig/gig-application.types";
 import { Application } from "~~/types/gig/gig-application.types";
 import { HiredTalent } from "~~/types/hiredTalent/hiredTalent.types";
 import { Paginated, PaginationMetaArg } from "~~/types/paginated.types";

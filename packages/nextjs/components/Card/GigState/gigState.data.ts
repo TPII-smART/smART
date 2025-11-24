@@ -1,4 +1,4 @@
-import { GigState } from "@se-2/common";
+import { GigState } from "~~/types/gig/gig.types";
 
 export const gigState = [
   { id: GigState.Open, label: "Hearing Offers" },

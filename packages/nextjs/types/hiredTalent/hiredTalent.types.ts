@@ -1,5 +1,12 @@
 export * from "./talent.types";
 
+export enum HiredTalentState {
+  WaitingForApproval = 0,
+  Ongoing = 1,
+  Finished = 2,
+  Cancelled = 3,
+  Disputed = 4,
+}
 export interface HiredTalent {
   /** Unique identifier for the hiredTalent. */
   hiredTalentId: string;

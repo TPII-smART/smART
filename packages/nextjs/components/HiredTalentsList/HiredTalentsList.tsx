@@ -4,7 +4,6 @@ import ComboBox from "../ComboBox/ComboBox";
 import List from "../List/List";
 import { ListItemProps } from "../List/types";
 import { hiredTalentState } from "@/components/Card/HiredTalentState/hiredTalentState.data";
-import { HiredTalentState } from "@se-2/common";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
@@ -22,6 +21,7 @@ import {
 import { castHoursToDurationString } from "~~/lib/utils";
 // Adjust the import to match the actual export from the module
 import { fetchMyHiredTalents } from "~~/services/graphql/fetchers/hiredTalent/hiredTalent.service";
+import { HiredTalentState } from "~~/types/hiredTalent/hiredTalent.types";
 import { HiredTalent, HiredTalentsData } from "~~/types/hiredTalent/hiredTalent.types";
 
 interface InfoIcons {
