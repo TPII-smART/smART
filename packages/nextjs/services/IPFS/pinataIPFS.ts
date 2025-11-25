@@ -14,7 +14,7 @@ export const uploadToIPFS = async (file: File): Promise<string | undefined> => {
       maxBodyLength: Infinity,
       headers: {
         "Content-Type": "multipart/form-data",
-        Authorization: `Bearer ${process.env.PINATA_JWT}`,
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_PINATA_JWT}`,
       },
     });
 
