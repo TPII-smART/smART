@@ -88,7 +88,7 @@ export const AddressInput = ({ value, onChange, ...props }: InputBaseProps) => {
       disabled={isEnsAddressLoading || isEnsNameLoading || props.disabled}
       reFocus={reFocus}
       prefix={
-        true ? (
+        ((enteredEnsName ?? ensName) ? (
           <div className="flex bg-border rounded-l-full items-center">
             {isEnsAvatarLoading && <div className="skeleton bg-primary w-[35px] h-[35px] rounded-full shrink-0"></div>}
             {ensAvatar ? (
@@ -101,14 +101,12 @@ export const AddressInput = ({ value, onChange, ...props }: InputBaseProps) => {
             ) : null}
             <span className="text-accent">{enteredEnsName ?? ensName}</span>
           </div>
-        ) : (
-          (isEnsNameLoading || isEnsAddressLoading) && (
-            <div className="flex bg-border rounded-l-full items-center gap-2 pr-2">
-              <div className="skeleton bg-primary w-[35px] h-[35px] rounded-full shrink-0"></div>
-              <div className="skeleton bg-primary h-3 w-20"></div>
-            </div>
-          )
-        )
+        ) : isEnsNameLoading || isEnsAddressLoading ? (
+          <div className="flex bg-border rounded-l-full items-center gap-2 pr-2">
+            <div className="skeleton bg-primary w-[35px] h-[35px] rounded-full shrink-0"></div>
+            <div className="skeleton bg-primary h-3 w-20"></div>
+          </div>
+        ) : undefined) as any
       }
       suffix={
         // Don't want to use nextJS Image here (and adding remote patterns for the URL)

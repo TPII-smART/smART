@@ -1,6 +1,6 @@
 "use client";
 
-import { Dispatch, SetStateAction, useState } from "react";
+import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 import styles from "./Profile.module.css";
 import { resolveIPFSHash, uploadToIPFS } from "@services/IPFS/pinataIPFS";
 import { LinkIcon, PencilIcon } from "@heroicons/react/24/outline";
@@ -138,8 +138,12 @@ export default function OwnProfile({ user, setUser, onSave, address }: OwnProfil
     setAvatarFile(null);
   };
 
-  const handleChange = (value: string, key: keyof UserProfile) => {
-    setUser(prev => ({ ...prev, [key]: value }));
+  const handleChange = (
+    value: string | ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
+    key: keyof UserProfile,
+  ) => {
+    const newValue = typeof value === "string" ? value : value.target.value;
+    setUser(prev => ({ ...prev, [key]: newValue }));
     setHasChanged(true);
   };
 

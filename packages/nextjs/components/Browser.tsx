@@ -106,7 +106,13 @@ export default function BrowsePage({ type }: BrowsePageProps) {
           variant="outlined"
           placeholder={`Search ${type === "hiredTalent" ? "talents" : "gigs"}...`}
           value={search}
-          onChange={setSearch}
+          onChange={(value: any) => {
+            if (typeof value === "string") {
+              setSearch(value);
+            } else {
+              setSearch((value as any)?.target?.value ?? "");
+            }
+          }}
         />
         <Accordion title="Categories" defaultExpanded={false}>
           {optionsCategories.map(value => (

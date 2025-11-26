@@ -296,9 +296,9 @@ const NotificationsDashboard = () => {
         {/* Header/Controls */}
         <div className="relative w-[91%] place-self-center mb-[0.3rem]">
           <InputBase
-            prefix={<MagnifyingGlassIcon className="h-5 w-5 text-secondary-content" />}
+            prefix={(<MagnifyingGlassIcon className="h-5 w-5 text-secondary-content" />) as unknown as string}
             value={search}
-            onChange={v => setSearch(v)}
+            onChange={(v: any) => setSearch(typeof v === "string" ? v : (v?.target?.value ?? ""))}
             variant="outlined"
             type="text"
             placeholder="Search notifications..."

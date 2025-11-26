@@ -110,7 +110,9 @@ export const InputBase = ({
       name={name}
       value={value}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-      placeholder={placeholder ? placeholder : props.label}
+      placeholder={
+        typeof placeholder === "string" ? placeholder : typeof props.label === "string" ? props.label : undefined
+      }
       label={props.label ? props.label : placeholder}
       error={!!error}
       helperText={!!error ? props.helperText : undefined}

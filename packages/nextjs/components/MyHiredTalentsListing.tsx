@@ -88,7 +88,10 @@ export default function MyHiredTalentsListing({ talentId }: { talentId: string }
                 variant="outlined"
                 placeholder={"Search hires by Title or Description"}
                 value={search}
-                onChange={setSearch}
+                onChange={(e: any) => {
+                  const newValue = typeof e === "string" ? e : (e?.target?.value ?? "");
+                  setSearch(newValue);
+                }}
               />
               <ComboBox
                 id={"HiredTalent state"}

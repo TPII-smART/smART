@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { ChangeEvent, useCallback, useMemo, useState } from "react";
 import { InputBase } from "..";
 import { InputBaseProps } from "./types";
 import ComboBox from "~~/components/ComboBox/ComboBox";
@@ -48,7 +48,9 @@ export const DurationInput = ({
 
   // Handler for when the user changes the numeric quantity
   const handleQuantityChange = useCallback(
-    (newQuantityString: string) => {
+    (eventOrValue: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string) => {
+      const newQuantityString = typeof eventOrValue === "string" ? eventOrValue : eventOrValue.target.value;
+
       const newNumericQuantity = Number(newQuantityString);
 
       if (!newQuantityString) {

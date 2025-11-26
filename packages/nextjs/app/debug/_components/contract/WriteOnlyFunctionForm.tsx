@@ -110,7 +110,7 @@ export const WriteOnlyFunctionForm = ({
               value={txValue}
               onChange={updatedTxValue => {
                 setDisplayedTxResult(undefined);
-                setTxValue(updatedTxValue);
+                setTxValue(typeof updatedTxValue === "string" ? updatedTxValue : updatedTxValue.target.value);
               }}
               placeholder="value (wei)"
             />

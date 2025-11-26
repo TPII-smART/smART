@@ -1136,7 +1136,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
             maxRows={4}
             variant="filled"
             value={evidenceComment}
-            onChange={(val: string) => setEvidenceComment(val)}
+            onChange={(e: any) => setEvidenceComment(typeof e === "string" ? e : e?.target?.value)}
           />
         </div>
         <div className="flex mt-4 justify-center items-center gap-4">

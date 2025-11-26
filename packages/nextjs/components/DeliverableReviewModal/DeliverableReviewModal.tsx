@@ -146,7 +146,10 @@ const DeliverableReviewModal = (props: DeliverableReviewModalProps) => {
                 minRows={4}
                 maxRows={4}
                 value={formik.values.reviewComment}
-                onChange={(val: string) => formik.setFieldValue("reviewComment", val)}
+                onChange={(e: any) => {
+                  const val = typeof e === "string" ? e : (e?.target as HTMLInputElement | HTMLTextAreaElement)?.value;
+                  void formik.setFieldValue("reviewComment", val);
+                }}
                 error={formik.touched.reviewComment && !!formik.errors.reviewComment}
                 helperText={
                   formik.touched.reviewComment && formik.errors.reviewComment ? formik.errors.reviewComment : ""

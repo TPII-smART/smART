@@ -72,7 +72,12 @@ const UploadDeliverableForm = ({
               maxRows={4}
               variant="filled"
               value={values.submissionComment}
-              onChange={(val: string) => setFieldValue("submissionComment", val)}
+              onChange={(valOrEvent: any) =>
+                setFieldValue(
+                  "submissionComment",
+                  typeof valOrEvent === "string" ? valOrEvent : (valOrEvent.target?.value ?? ""),
+                )
+              }
               error={touched.submissionComment && !!errors.submissionComment}
               helperText={touched.submissionComment && errors.submissionComment ? errors.submissionComment : ""}
             />

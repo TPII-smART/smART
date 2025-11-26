@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { ChangeEvent, useMemo, useState } from "react";
 import { InputBaseProps } from "./types";
 import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import { InputBase, SIGNED_NUMBER_REGEX } from "~~/components/scaffold-eth";
@@ -64,7 +64,11 @@ export const EtherInput = ({ value, onChange, usdMode, ...props }: InputBaseProp
     return newDisplayValue;
   }, [nativeCurrencyPrice, transitoryDisplayValue, displayUsdMode, value]);
 
-  const handleChangeNumber = (newValue: string) => {
+  function handleChangeNumber(newValue: string): void;
+  function handleChangeNumber(event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>): void;
+  function handleChangeNumber(newValueOrEvent: string | ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
+    const newValue = typeof newValueOrEvent === "string" ? newValueOrEvent : newValueOrEvent.target.value;
+
     if (newValue && !SIGNED_NUMBER_REGEX.test(newValue)) {
       return;
     }
@@ -88,7 +92,7 @@ export const EtherInput = ({ value, onChange, usdMode, ...props }: InputBaseProp
 
     const newEthValue = displayValueToEtherValue(displayUsdMode, newValue, nativeCurrencyPrice || 0);
     onChange(newEthValue);
-  };
+  }
 
   return (
     <InputBase
@@ -97,10 +101,12 @@ export const EtherInput = ({ value, onChange, usdMode, ...props }: InputBaseProp
       placeholder={props.placeholder ?? "" + (displayUsdMode ? " (USD)" : " (ETH)")}
       onChange={handleChangeNumber}
       prefix={
-        <span className="text-accent self-center flex items-center gap-1">
-          <span className="ml-1">{displayUsdMode ? "USD" : "ETH"}</span>
-          <span>{displayUsdMode ? "$" : "Ξ"}</span>
-        </span>
+        (
+          <span className="text-accent self-center flex items-center gap-1">
+            <span className="ml-1">{displayUsdMode ? "USD" : "ETH"}</span>
+            <span>{displayUsdMode ? "$" : "Ξ"}</span>
+          </span>
+        ) as unknown as any
       }
       suffix={
         <div
