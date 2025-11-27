@@ -2,7 +2,10 @@ import { ReactNode } from "react";
 import { IntegerVariant } from "..";
 import { TextFieldProps } from "@mui/material";
 
-export type InputBaseProps = TextFieldProps & {
+export type InputBaseProps = Omit<
+  TextFieldProps,
+  "onChange" | "prefix" | "error" | "suffix" | "readOnly" | "value" | "reFocus" | "maxLength"
+> & {
   /**
    * Current value of the input.
    */

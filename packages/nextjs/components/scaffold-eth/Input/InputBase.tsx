@@ -110,23 +110,25 @@ export const InputBase = ({
       name={name}
       value={value}
       onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
-      placeholder={placeholder ? placeholder : props.label}
+      placeholder={placeholder ? placeholder : (props.label as unknown as string)}
       label={props.label ? props.label : placeholder}
       error={!!error}
       helperText={!!error ? props.helperText : undefined}
       onFocus={onFocus}
       margin="normal"
       variant={variant}
-      InputProps={{
-        startAdornment: prefix && (
-          <div className={`mr-2 ${variant === "filled" ? "place-self-end pb-2" : ""}`}>{prefix}</div>
-        ),
-        endAdornment: suffix && (
-          <div className={`ml-2 ${variant === "filled" ? "place-self-end pb-3" : ""}`}>{suffix}</div>
-        ),
-        readOnly,
-        inputProps: {
-          maxLength,
+      slotProps={{
+        input: {
+          startAdornment: prefix && (
+            <div className={`mr-2 ${variant === "filled" ? "place-self-end pb-2" : ""}`}>{prefix}</div>
+          ),
+          endAdornment: suffix && (
+            <div className={`ml-2 ${variant === "filled" ? "place-self-end pb-3" : ""}`}>{suffix}</div>
+          ),
+          readOnly,
+          inputProps: {
+            maxLength,
+          },
         },
       }}
       sx={_sx(variant, !!error)}
