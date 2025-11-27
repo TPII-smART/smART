@@ -1,6 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import { TalentCard } from "~~/components/Card/TalentCard/TalentCard";
+import Spinner from "~~/components/Spinner/Spinner";
+import { fetchFeaturedTalents } from "~~/services/graphql/fetchers/hiredTalent";
+import { Talent } from "~~/types/hiredTalent/talent.types";
 
-const featuredTalents = [
+/*
+const featuredTalentsPlaceholder = [
   {
     talentId: "1",
     freelancer: "0x1234567890abcdef1234567890abcdef12345679" as `0x${string}`,
@@ -41,17 +46,40 @@ const featuredTalents = [
     rating: 4.7,
   },
 ];
+*/
 
 export function FeaturedTalents() {
+  const {
+    data,
+    isLoading: isFeaturedTalentsLoading,
+    error,
+  } = useQuery<Talent[]>({
+    queryKey: ["featuredTalents"],
+    queryFn: async () => (await fetchFeaturedTalents(3)).talents,
+  });
+
+  console.log("Featured talents data:", data);
+  console.log("Featured talents error:", error);
+
+  const featuredTalents = data as Talent[] | undefined;
+
   return (
     <section className="py-16 px-6">
       <div className="mx-auto max-w-7xl">
         <h2 className="text-3xl font-bold tracking-tight text-center mb-12">Featured Talents</h2>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {featuredTalents.map(talent => (
-            <TalentCard talent={talent} key={talent.talentId} />
-          ))}
-        </div>
+        {isFeaturedTalentsLoading ? (
+          <Spinner />
+        ) : error ? (
+          <p className="text-center">Failed to load featured talents.</p>
+        ) : featuredTalents && featuredTalents.length === 0 ? (
+          <p className="text-center">No featured talents available.</p>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredTalents?.map(talent => (
+              <TalentCard talent={talent} key={talent.talentId} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

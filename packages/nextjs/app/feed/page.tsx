@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FeedActivityCard } from "@/components/Card/FeedCard/FeedCard";
 import { useAccount } from "wagmi";
+import Button from "~~/components/Button";
+import Modal from "~~/components/Modal/Modal";
 import Spinner from "~~/components/Spinner/Spinner";
 import { PaginationScrollEvent, usePagination } from "~~/hooks/use-pagination";
 import { castDateToTimestamp } from "~~/lib/utils";
@@ -32,7 +34,6 @@ interface Loading {
 
 export default function ActivityFeed() {
   const { address: userAddress } = useAccount();
-  console.log(userAddress);
   const [loading, setLoading] = useState<Loading>({
     hiredTalents: true,
     applications: true,
@@ -49,6 +50,8 @@ export default function ActivityFeed() {
     gigApplications: 0,
   });
   const [orderedData, setOrderedData] = useState<ActivityItem[]>([]);
+
+  const [showModal, setShowModal] = useState(false);
 
   const fetchFunction = useCallback(
     async (meta: PaginationMetaArg): Promise<Paginated<HiredTalent | Application>> => {
@@ -124,7 +127,12 @@ export default function ActivityFeed() {
   };
 
   useEffect(() => {
-    if (!userAddress) return;
+    if (!userAddress) {
+      setShowModal(true);
+      return;
+    } else {
+      setShowModal(false);
+    }
     fetch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userAddress]);
@@ -220,6 +228,10 @@ export default function ActivityFeed() {
     }
   }, [newData]);
 
+  const handleHomeRedirect = () => {
+    window.location.href = "/";
+  };
+
   return (
     <div className="h-full flex flex-col space-y-4">
       <div className="flex items-center justify-between mt-12 px-10">
@@ -243,17 +255,26 @@ export default function ActivityFeed() {
           ))}
         </div>
         <div className="h-6" />
-        {loading.hiredTalents || loading.applications || loading.gigApplications ? (
+        {!userAddress ? (
+          <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Login to Visualize Feed" blocking={true}>
+            <div className="mb-4">
+              <p className="mb-2">Please connect your wallet to visualize the feed information.</p>
+            </div>
+            <div className="flex items-center justify-center">
+              <Button variant="primary" onClick={handleHomeRedirect}>
+                Go to Home
+              </Button>
+            </div>
+          </Modal>
+        ) : loading.hiredTalents || loading.applications || loading.gigApplications ? (
           <div className="flex-1 flex items-center justify-center mb-6">
             <Spinner />
           </div>
-        ) : (
-          orderedData.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-content-secondary text-2xl">No activity found.</p>
-            </div>
-          )
-        )}
+        ) : orderedData.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-content-secondary text-2xl">No activity found.</p>
+          </div>
+        ) : null}
       </div>
     </div>
   );

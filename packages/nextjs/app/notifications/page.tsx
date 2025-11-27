@@ -8,6 +8,7 @@ import { EnvelopeIcon, EnvelopeOpenIcon, MagnifyingGlassIcon } from "@heroicons/
 import { ArchiveBoxIcon, InboxIcon } from "@heroicons/react/24/solid";
 import Button from "~~/components/Button";
 import Checkbox from "~~/components/CheckBox/CheckBox";
+import Modal from "~~/components/Modal/Modal";
 import Spinner from "~~/components/Spinner/Spinner";
 import { InputBase } from "~~/components/scaffold-eth";
 import { useGlobalNotifications } from "~~/context/NotificationsCountProvider";
@@ -47,6 +48,7 @@ const NotificationsDashboard = () => {
   const { address: userAddress } = useAccount();
   const { unreadCount, refreshUnreadCount, editCache, notificationStatusCache, saveCache, getState } =
     useGlobalNotifications();
+  const [showModal, setShowModal] = useState(!userAddress);
 
   const activeViewStatusIds = useMemo((): string[][] => {
     switch (activeView) {
@@ -137,7 +139,10 @@ const NotificationsDashboard = () => {
 
   useEffect(() => {
     if (!userAddress) {
+      setShowModal(true);
       return;
+    } else {
+      setShowModal(false);
     }
 
     refreshUnreadCount();
@@ -261,7 +266,27 @@ const NotificationsDashboard = () => {
     </div>
   );
 
-  return (
+  const handleHomeRedirect = () => {
+    window.location.href = "/";
+  };
+
+  return !userAddress ? (
+    <Modal
+      isOpen={showModal}
+      onClose={() => setShowModal(false)}
+      title="Login to Visualize Notifications"
+      blocking={true}
+    >
+      <div className="mb-4">
+        <p className="mb-2">Please connect your wallet to visualize notifications.</p>
+      </div>
+      <div className="flex items-center justify-center">
+        <Button variant="primary" onClick={handleHomeRedirect}>
+          Go to Home
+        </Button>
+      </div>
+    </Modal>
+  ) : (
     <div className="flex flex-1 w-full h-full overflow-hidden rounded-tl-2xl bg-secondary shadow-xl">
       {/* Sidebar */}
       <div className="w-64 bg-[var(--color-surface)] border-r border-border p-4 flex flex-col space-y-2">

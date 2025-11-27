@@ -21,6 +21,41 @@ export const fetchTalents = async () => {
   return { talents: res.talents.items };
 };
 
+export const fetchFeaturedTalents = async (limit: number) => {
+  // adjusted response typing: featuredTalentIds now contains an object with `items`
+  const res = await request<{
+    featuredTalentIds: { items: { talentId: string; rating: number }[] };
+  }>(endpoint, HiredTalentQueries.getFeaturedTalentIds);
+
+  const map = new Map<string, number[]>();
+  // iterate over the returned items array
+  for (const item of res.featuredTalentIds.items) {
+    if (!map.has(item.talentId)) map.set(item.talentId, []);
+    map.get(item.talentId)!.push(item.rating);
+  }
+
+  const top3TalentIds = Array.from(map.entries())
+    .map(([talentId, ratings]) => ({
+      talentId,
+      averageRating: ratings.reduce((acc, r) => acc + r, 0) / ratings.length,
+    }))
+    .sort((a, b) => b.averageRating - a.averageRating)
+    .slice(0, limit)
+    .map(item => item.talentId);
+
+  const talentsRes = await request<{ talents: { items: Talent[] } }>(endpoint, HiredTalentQueries.getTalentsByIds, {
+    talentIds: top3TalentIds,
+  });
+
+  const talentsWithRatings = talentsRes.talents.items.map(item => ({
+    ...item,
+    rating: map.get(item.talentId)
+      ? map.get(item.talentId)!.reduce((acc: number, r: number) => acc + r, 0) / map.get(item.talentId)!.length
+      : 0,
+  }));
+  return { talents: talentsWithRatings };
+};
+
 export const fetchTalentsPaginated = async (
   meta: PaginationMetaArg,
   search: string = "",

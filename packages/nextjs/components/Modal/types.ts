@@ -35,4 +35,8 @@ export interface ModalProps {
    * Optional width for the modal.
    */
   width?: string | number;
+  /**
+   * Optional blocking flag for the modal, making it non-dismissible.
+   */
+  blocking?: boolean;
 }

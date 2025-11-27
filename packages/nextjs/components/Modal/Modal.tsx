@@ -1,10 +1,15 @@
 import { ModalProps } from "./types";
 
-const BaseModal = ({ title, description, children, isOpen, onClose, width }: ModalProps) => {
+const BaseModal = ({ title, description, children, isOpen, onClose, width, blocking }: ModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-[rgba(0,0,0,0.5)] z-49" onMouseDown={onClose}>
+    <div
+      className="fixed inset-0 bg-[rgba(0,0,0,0.5)] z-49"
+      onMouseDown={() => {
+        if (!blocking && onClose) onClose();
+      }}
+    >
       <div
         style={{ minWidth: width, maxWidth: width }}
         className={`

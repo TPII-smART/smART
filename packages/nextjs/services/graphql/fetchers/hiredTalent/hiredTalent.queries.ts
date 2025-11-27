@@ -503,3 +503,33 @@ export const getHiredTalent = gql`
     }
   }
 `;
+
+export const getFeaturedTalentIds = gql`
+  query GetFeaturedTalentIds {
+    featuredTalentIds: hiredTalents(where: { rating_gt: 0 }, orderBy: "createdAt", limit: 100) {
+      items {
+        talentId
+        rating
+      }
+    }
+  }
+`;
+
+export const getTalentsByIds = gql`
+  query GetTalentsByIds($talentIds: [BigInt!]!) {
+    talents(where: { talentId_in: $talentIds }) {
+      items {
+        talentId
+        freelancer
+        basePayment
+        title
+        description
+        category
+        bannerImageHash
+        minimumNoticeTime
+        averageWorkDuration
+        createdAt
+      }
+    }
+  }
+`;

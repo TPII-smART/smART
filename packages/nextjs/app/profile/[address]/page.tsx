@@ -6,6 +6,8 @@ import ProfileSkeleton from "./ProfileSkeleton";
 import OthersProfile from "./othersProfile";
 import OwnProfile from "./ownProfile";
 import { useAccount } from "wagmi";
+import Button from "~~/components/Button";
+import Modal from "~~/components/Modal/Modal";
 import Spinner from "~~/components/Spinner/Spinner";
 import Tabs from "~~/components/Tabs/Tabs";
 import { Tab, TabProps } from "~~/components/Tabs/types";
@@ -68,8 +70,9 @@ const ratingsPlaceholder = {
 
 export default function Profile() {
   const { address } = useAccount();
-  const { address: profileAddress }: { address: `0x${string}` } = useParams();
+  const { address: profileAddress }: { address?: `0x${string}` } = useParams();
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
   const [user, setUser] = useState<UserProfile>(newUserProfile());
   const [ratingData, setRatingData] = useState<RatingData>(ratingsPlaceholder);
@@ -94,13 +97,33 @@ export default function Profile() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const handleHomeRedirect = () => {
+    window.location.href = "/";
+  };
+
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+    if (!profileAddress || String(profileAddress) === "undefined") {
+      setShowModal(true);
+    } else {
+      setShowModal(false);
+    }
+  }, [fetchUser, address, profileAddress]);
 
   return (
     <div className="w-full h-full overflow-auto" ref={scrollRef}>
-      {loading ? (
+      {!profileAddress || String(profileAddress) === "undefined" ? (
+        <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Login to View Profile" blocking={true}>
+          <div className="mb-4">
+            <p className="mb-2">Please connect your wallet to view your profile information.</p>
+          </div>
+          <div className="flex items-center justify-center">
+            <Button variant="primary" onClick={handleHomeRedirect}>
+              Go to Home
+            </Button>
+          </div>
+        </Modal>
+      ) : loading ? (
         <ProfileSkeleton />
       ) : profileAddress === address && editMode ? (
         <OwnProfile user={user} address={profileAddress} setUser={setUser} onSave={() => setEditMode(false)} />
