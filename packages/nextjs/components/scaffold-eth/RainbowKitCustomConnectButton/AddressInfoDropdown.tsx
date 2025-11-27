@@ -149,7 +149,10 @@ export const AddressInfoDropdown = ({ address, blockExplorerAddressLink, childre
             <button
               className="menu-item text-error h-8 btn-sm rounded-xl! flex gap-3 py-3"
               type="button"
-              onClick={() => disconnect()}
+              onClick={() => {
+                localStorage.removeItem("notificationStatusCache");
+                disconnect();
+              }}
             >
               <ArrowLeftOnRectangleIcon className="h-6 w-4 ml-2 sm:ml-0" /> <span>Disconnect</span>
             </button>
