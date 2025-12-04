@@ -477,6 +477,7 @@ export default function GigDetail({
 
     if (
       gigState === GigState.Disputed &&
+      !expiredRound &&
       disputeDetail &&
       !disputeDetail?.currentlyDismissed &&
       !disputeDetail?.disputeFinished &&

@@ -671,6 +671,7 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
 
     if (
       hiredTalentStatus === HiredTalentState.Disputed &&
+      !expiredRound &&
       disputeDetail &&
       !disputeDetail?.currentlyDismissed &&
       !disputeDetail?.disputeFinished &&
