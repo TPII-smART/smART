@@ -51,7 +51,7 @@ const DeliverableVerification_ = ({
       return analyzeDeliverable(
         workId + "-" + deliverables.length,
         deliverables,
-        `TL;DR\n${workTitle} \n\n${workDescription}`,
+        `${workTitle} \n\n${workDescription}`,
       );
     },
     enabled: deliverables.length > 0,
