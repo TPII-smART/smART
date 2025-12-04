@@ -168,7 +168,12 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         "All the information regarding the job present in the platform.",
       );
 
-      console.log("Evidence JSON URI:", evidenceJSON);
+      // Open the generated initial evidence PDF in a new tab
+      if (typeof window !== "undefined" && initialEvidenceFile) {
+        const pdfUrl = URL.createObjectURL(initialEvidenceFile);
+        window.open(pdfUrl, "_blank", "noopener,noreferrer");
+        setTimeout(() => URL.revokeObjectURL(pdfUrl), 60_000);
+      }
 
       await writeContract({
         functionName: "startDispute",
