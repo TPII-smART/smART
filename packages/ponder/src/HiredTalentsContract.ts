@@ -392,7 +392,7 @@ ponder.on(
 			user: _hiredTalent?.freelancer as unknown as string,
 			title: "Hired talent rejected",
 			message: `The hire "${_hiredTalent?.title}" has been rejected by the client.`,
-			href: `/talents/${event.args.hiredTalentId}`,
+			href: `/talents/${event.args.talentId}`,
 			createdAt: BigInt(event.block.timestamp),
 			itemId: event.args.hiredTalentId,
 		});
