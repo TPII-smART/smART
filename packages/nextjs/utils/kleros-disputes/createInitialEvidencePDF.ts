@@ -22,7 +22,15 @@ export async function createInitialEvidencePDF(
     Text4: disputeReason,
   };
 
-  return await fillPdfTemplate(replacements, DEFAULT_TEMPLATE);
+  console.log("Creating PDF with replacements:", replacements);
+  const file = await fillPdfTemplate(replacements, DEFAULT_TEMPLATE);
+  console.log("PDF created, debugging...");
+
+  // Debug the PDF to verify fields were filled
+  const debugInfo = await debugPdfContent(file, true);
+  console.log("Debug info:", debugInfo);
+
+  return file;
 }
 
 async function fillPdfTemplate(
@@ -55,18 +63,23 @@ async function fillPdfTemplate(
         if (fieldType === "PDFTextField") {
           const textField = form.getTextField(fieldName);
           textField.setText(replacements[fieldName]);
+          textField.enableReadOnly(); // Prevent further changes
         } else if (fieldType === "PDFCheckBox") {
           const checkbox = form.getCheckBox(fieldName);
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           replacements[fieldName].toLowerCase() === "true" ? checkbox.check() : checkbox.uncheck();
+          checkbox.enableReadOnly();
         } else if (fieldType === "PDFDropdown") {
           const dropdown = form.getDropdown(fieldName);
           dropdown.select(replacements[fieldName]);
+          dropdown.enableReadOnly();
         }
       }
     });
 
-    // Save the PDF as bytes
+    // Flatten the form to embed field values
+    form.flatten();
+
     const pdfBytes = await pdfDoc.save();
 
     // Convert to Uint8Array with ArrayBuffer (not SharedArrayBuffer)
