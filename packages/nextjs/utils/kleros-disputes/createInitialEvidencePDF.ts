@@ -46,8 +46,10 @@ async function fillPdfTemplate(
 
     // Fill form fields
     fields.forEach(field => {
+      console.log(`Processing field: ${field.getName()}`);
       const fieldName = field.getName();
       if (replacements[fieldName]) {
+        console.log(` - Replacing with: ${replacements[fieldName]}`);
         const fieldType = field.constructor.name;
 
         if (fieldType === "PDFTextField") {
