@@ -100,7 +100,10 @@ const NotificationsDashboard = () => {
         flex items-center p-4 rounded-lg border-[1px] ${notification.href ? "cursor-pointer" : "cursor-default"} hover:bg-gray-600
         ${state === undefined || state === NotificationStatus.UNREAD ? "bg-gray-900 text-secondary-content border-border" : "bg-gray-800 text-primary-content"}
       `}
-        href={{ pathname: notification.href ?? "#", query: notification.href ? { itemId: notification.itemId } : {} }}
+        href={{
+          pathname: notification.href ?? "#",
+          query: notification.href && notification.itemId ? { itemId: notification.itemId } : {},
+        }}
         onClick={
           state === undefined || state === NotificationStatus.UNREAD
             ? () => {

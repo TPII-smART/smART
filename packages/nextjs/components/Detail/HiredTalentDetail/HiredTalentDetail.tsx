@@ -143,6 +143,10 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     try {
       const metaDataURI = getMetaEvidenceURI();
 
+      console.log("MetaEvidence URI:", metaDataURI);
+      console.log("Dispute reason:", values.comment);
+      console.log("Data:", data);
+
       // Upload the Initial Evidence PDF as part of the dispute creation process
       const initialEvidenceFile = await createInitialEvidencePDF(
         new Date().toISOString().split("T")[0],
@@ -156,11 +160,15 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         values.comment,
       );
 
+      console.log("Initial Evidence File:", initialEvidenceFile);
+
       const evidenceJSON = await createAndUploadEvidence(
         initialEvidenceFile,
         "Raised Dispute Evidence",
         "All the information regarding the job present in the platform.",
       );
+
+      console.log("Evidence JSON URI:", evidenceJSON);
 
       await writeContract({
         functionName: "startDispute",

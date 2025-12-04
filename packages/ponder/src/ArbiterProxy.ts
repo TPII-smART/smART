@@ -61,7 +61,6 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     user: freelancer as string,
     title: "Talent dispute initiated",
     message: `A dispute was created for your hired talent.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -72,7 +71,6 @@ ponder.on("ArbiterProxy:TalentDisputeCreated", async ({ event, context }) => {
     user: client as string,
     title: "Talent dispute initiated",
     message: `A dispute was created for your hired talent.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -94,7 +92,6 @@ ponder.on("ArbiterProxy:FreelancerPayedTalentArbitrationFee", async ({ event, co
     user: freelancerAddr as string,
     title: "You paid arbitration fee",
     message: `You paid ${formatEther(amountPaid)} ETH towards your hired talent dispute.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -116,7 +113,6 @@ ponder.on("ArbiterProxy:ClientPayedTalentArbitrationFee", async ({ event, contex
     user: clientAddr as string,
     title: "You paid arbitration fee",
     message: `You paid ${formatEther(amountPaid)} ETH towards your hired talent dispute.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -202,7 +198,6 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     user: freelancer as string,
     title: "Gig dispute initiated",
     message: `A dispute was created for your gig.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -213,7 +208,6 @@ ponder.on("ArbiterProxy:GigDisputeCreated", async ({ event, context }) => {
     user: client as string,
     title: "Gig dispute initiated",
     message: `A dispute was created for your gig.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -236,7 +230,6 @@ ponder.on("ArbiterProxy:FreelancerPayedGigArbitrationFee", async ({ event, conte
     user: freelancerAddr as string,
     title: "You paid arbitration fee",
     message: `You paid ${formatEther(amountPaid)} ETH towards your gig dispute.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -258,7 +251,6 @@ ponder.on("ArbiterProxy:ClientPayedGigArbitrationFee", async ({ event, context }
     user: clientAddr as string,
     title: "You paid arbitration fee",
     message: `You paid ${formatEther(amountPaid)} ETH towards your gig dispute.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -301,7 +293,6 @@ ponder.on("ArbiterProxy:GigDisputeTimeoutByInaction", async ({ event, context })
     user: winner as string,
     title: "Dispute timeout resolved",
     message: `Dispute for your gig resolved by timeout.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -324,7 +315,6 @@ ponder.on("ArbiterProxy:TalentDisputeTimeoutByInaction", async ({ event, context
     user: winner as string,
     title: "Dispute timeout resolved",
     message: `Dispute for your hired talent resolved by timeout.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -367,7 +357,6 @@ ponder.on("ArbiterProxy:GigAppealContribution", async ({ event, context }) => {
     user: contributor as string,
     title: "Appeal contribution received",
     message: `You contributed ${formatEther(amount)} ETH to appeal your gig dispute.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -411,7 +400,6 @@ ponder.on("ArbiterProxy:TalentAppealContribution", async ({ event, context }) =>
     user: contributor as string,
     title: "Appeal contribution received",
     message: `You contributed ${formatEther(amount)} ETH to appeal your hired talent dispute.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -470,7 +458,6 @@ ponder.on("ArbiterProxy:GigFeesAndRewardsWithdrawn", async ({ event, context }) 
     user: beneficiary as string,
     title: "Fees and rewards withdrawn",
     message: `Rewards withdrawn for your gig dispute.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -490,7 +477,6 @@ ponder.on("ArbiterProxy:TalentFeesAndRewardsWithdrawn", async ({ event, context 
     user: beneficiary as string,
     title: "Fees and rewards withdrawn",
     message: `Rewards withdrawn for your hired talent dispute.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -534,7 +520,6 @@ ponder.on("ArbiterProxy:TalentRoundTimeoutByInaction", async ({ event, context }
     user: winner as string,
     title: "Appeal round timeout resolved",
     message: `Appeal round ${round} for your hired talent dispute resolved by timeout.`,
-    itemId: localDisputeId,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -556,7 +541,6 @@ ponder.on("ArbiterProxy:GigRoundTimeoutByInaction", async ({ event, context }) =
     user: winner as string,
     title: "Appeal round timeout resolved",
     message: `Appeal round ${round} for your gig dispute resolved by timeout.`,
-    itemId: localDisputeId,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -598,13 +582,29 @@ ponder.on("ArbiterProxy:TalentDisputeDismissed", async ({ event, context }) => {
     status: 0, // waiting
     lastTransactionHash: event.transaction.hash,
   });
+  
+  const hireTalent = await context.db.find(hiredTalent, { hiredTalentId, talentId });
+  if (!hireTalent) {
+    console.error(`HiredTalent not found for talentId: ${talentId}, hiredTalentId: ${hiredTalentId}`);
+    return;
+  }
+
+  const otherParty = caller === hireTalent.client ? hireTalent.freelancer : hireTalent.client;
 
   await context.db.insert(notification).values({
     id: `${event.block.number}-${event.log.logIndex}-talent-dismissed`,
     user: caller as string,
     title: "Dispute dismissed",
-    message: `The dispute for your hired talent was dismissed.`,
-    itemId: localDisputeId,
+    message: `You dismissed the dispute for your hired talent "${hireTalent.title}".`,
+    href: `/talents/${talentId}/${hiredTalentId}`,
+    createdAt: BigInt(event.block.timestamp),
+    lastTransactionHash: event.transaction.hash,
+  });
+  await context.db.insert(notification).values({
+    id: `${event.block.number}-${event.log.logIndex}-talent-dismissed-other`,
+    user: otherParty as string,
+    title: "Dispute dismissed",
+    message: `The dispute for your hired talent "${hireTalent.title}" was dismissed.`,
     href: `/talents/${talentId}/${hiredTalentId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,
@@ -629,12 +629,29 @@ ponder.on("ArbiterProxy:GigDisputeDismissed", async ({ event, context }) => {
     lastTransactionHash: event.transaction.hash,
   });
 
+  const gigData = await context.db.find(gig, { gigId });
+  if (!gigData) {
+    console.error(`Gig not found for gigId: ${gigId}`);
+    return;
+  }
+
   await context.db.insert(notification).values({
     id: `${event.block.number}-${event.log.logIndex}-gig-dismissed`,
     user: caller as string,
     title: "Dispute dismissed",
-    message: `The dispute for your gig was dismissed.`,
-    itemId: localDisputeId,
+    message: `You dismissed the dispute for your gig "${gigData.title}".`,
+    href: `/gig/${gigId}`,
+    createdAt: BigInt(event.block.timestamp),
+    lastTransactionHash: event.transaction.hash,
+  });
+
+  const otherParty = caller === gigData.client ? gigData.acceptedFreelancer : gigData.client;
+
+  await context.db.insert(notification).values({
+    id: `${event.block.number}-${event.log.logIndex}-gig-dismissed-other`,
+    user: otherParty as string,
+    title: "Dispute dismissed",
+    message: `The dispute for your gig "${gigData.title}" was dismissed.`,
     href: `/gig/${gigId}`,
     createdAt: BigInt(event.block.timestamp),
     lastTransactionHash: event.transaction.hash,

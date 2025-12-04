@@ -78,8 +78,8 @@ ponder.on(
 		await context.db.insert(notification).values({
 			id: `${event.block.number}-${event.log.logIndex}`, // Unique ID for the notification
 			user: event.args.freelancer as unknown as string,
-			title: "A client want to hire you",
-			message: `A client want to hire you for your talent "${event.args.title}"`,
+			title: "A client wants to hire you",
+			message: `A client wants to hire you for your talent "${event.args.title}"`,
 			href: `/talents/${event.args.talentId}`,
 			createdAt: BigInt(event.block.timestamp),
 			itemId: event.args.hiredTalentId,
