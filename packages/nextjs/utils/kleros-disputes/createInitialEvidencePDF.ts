@@ -10,27 +10,29 @@ import { PDFDocument } from "pdf-lib";
 const DEFAULT_TEMPLATE: string = "/Kleros-Dispute-InitialEvidence.pdf";
 
 export async function createInitialEvidencePDF(
-  dateOfDispute: string, // e.g., "2025-11-02"
-  disputeParty: string, // e.g., "Freelancer" or "Client"
-  jobDetails: string, // Multiline information about the job. Accept line breaks.
-  disputeReason: string, // Reason provided for dispute. Accept line breaks.
+  dateOfDispute: string,
+  disputeParty: string,
+  jobDetails: string,
+  disputeReason: string,
 ): Promise<File> {
-  const replacements: Record<string, string> = {
-    Text1: dateOfDispute,
-    Text2: disputeParty,
-    Text3: jobDetails,
-    Text4: disputeReason,
-  };
+  const res = await fetch("/api/create-pdf", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      Text1: dateOfDispute,
+      Text2: disputeParty,
+      Text3: jobDetails,
+      Text4: disputeReason,
+    }),
+  });
 
-  console.log("Creating PDF with replacements:", replacements);
-  const file = await fillPdfTemplate(replacements, DEFAULT_TEMPLATE);
-  console.log("PDF created, debugging...");
+  if (!res.ok) throw new Error("Failed to generate PDF");
 
-  // Debug the PDF to verify fields were filled
-  const debugInfo = await debugPdfContent(file, true);
-  console.log("Debug info:", debugInfo);
+  const initialEvidenceFile = new File([await res.blob()], "initial_evidence.pdf", {
+    type: "application/pdf",
+  });
 
-  return file;
+  return initialEvidenceFile;
 }
 
 async function fillPdfTemplate(
@@ -82,6 +84,13 @@ async function fillPdfTemplate(
 
     // Now flatten to embed the appearances
     form.flatten();
+
+    console.log(
+      pdfDoc
+        .getForm()
+        .getFields()
+        .map(f => f.getName()),
+    );
 
     const pdfBytes = await pdfDoc.save();
 

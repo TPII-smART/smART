@@ -160,8 +160,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         values.comment,
       );
 
-      console.log("Initial Evidence File:", initialEvidenceFile);
-
       const evidenceJSON = await createAndUploadEvidence(
         initialEvidenceFile,
         "Raised Dispute Evidence",
