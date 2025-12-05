@@ -231,8 +231,8 @@ export default function UniversalDetail({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-3">
                 <p className="font-semibold text-lg text-[var(--color-primary-content)]">Client</p>
-                <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
-                  <div className="flex items-center gap-3">
+                <div className="flex p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <AvatarImage
                       src={getAvatarSrc("client")}
                       alt="Client Avatar"
@@ -241,8 +241,8 @@ export default function UniversalDetail({
                       height={96}
                       onClickProfileNavigation={true}
                     />
-                    <div className="flex-1">
-                      <p className="text-[var(--color-primary-content)] font-medium mb-1">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[var(--color-primary-content)] font-medium mb-1 truncate">
                         {clientProfile?.username || data.client}
                       </p>
                     </div>
@@ -252,8 +252,8 @@ export default function UniversalDetail({
               {data.freelancer && (
                 <div className="space-y-3">
                   <p className="font-semibold text-lg text-[var(--color-primary-content)]">Freelancer</p>
-                  <div className="p-4 bg-[var(--color-primary)]/20 rounded-lg">
-                    <div className="flex items-center gap-3">
+                  <div className="flex p-4 bg-[var(--color-primary)]/20 rounded-lg">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
                       <AvatarImage
                         src={getAvatarSrc("freelancer")}
                         alt="Freelancer Avatar"
@@ -262,8 +262,8 @@ export default function UniversalDetail({
                         height={96}
                         onClickProfileNavigation={true}
                       />
-                      <div className="flex-1">
-                        <p className="text-[var(--color-primary-content)] font-medium mb-1">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[var(--color-primary-content)] font-medium mb-1 truncate">
                           {freelancerProfile?.username || data.freelancer}
                         </p>
                       </div>
