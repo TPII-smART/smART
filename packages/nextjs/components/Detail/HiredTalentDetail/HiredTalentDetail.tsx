@@ -143,10 +143,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
     try {
       const metaDataURI = getMetaEvidenceURI();
 
-      console.log("MetaEvidence URI:", metaDataURI);
-      console.log("Dispute reason:", values.comment);
-      console.log("Data:", data);
-
       // Upload the Initial Evidence PDF as part of the dispute creation process
       const initialEvidenceFile = await createInitialEvidencePDF(
         new Date().toISOString().split("T")[0],
@@ -165,13 +161,6 @@ export default function HiredTalentDetail({ talentId, hiredTalentId }: { talentI
         "Raised Dispute Evidence",
         "All the information regarding the job present in the platform.",
       );
-
-      // Open the generated initial evidence PDF in a new tab
-      if (typeof window !== "undefined" && initialEvidenceFile) {
-        const pdfUrl = URL.createObjectURL(initialEvidenceFile);
-        window.open(pdfUrl, "_blank", "noopener,noreferrer");
-        setTimeout(() => URL.revokeObjectURL(pdfUrl), 60_000);
-      }
 
       await writeContract({
         functionName: "startDispute",

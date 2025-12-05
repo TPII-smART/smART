@@ -35,6 +35,7 @@ export async function createInitialEvidencePDF(
   return initialEvidenceFile;
 }
 
+// UNUSED - Alternative implementation for filling PDF templates in-browser
 async function fillPdfTemplate(
   replacements: Record<string, string>,
   templatePath: string = DEFAULT_TEMPLATE,
