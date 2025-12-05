@@ -39,7 +39,7 @@ async function fillPdfTemplate(
 ): Promise<File> {
   try {
     // Fetch the template PDF file (browser-compatible)
-    const response = await fetch(templatePath);
+    const response = await fetch(templatePath, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to fetch template: ${response.statusText}`);
     }
@@ -63,7 +63,7 @@ async function fillPdfTemplate(
         if (fieldType === "PDFTextField") {
           const textField = form.getTextField(fieldName);
           textField.setText(replacements[fieldName]);
-          textField.enableReadOnly(); // Prevent further changes
+          textField.enableReadOnly();
         } else if (fieldType === "PDFCheckBox") {
           const checkbox = form.getCheckBox(fieldName);
           // eslint-disable-next-line @typescript-eslint/no-unused-expressions
@@ -77,7 +77,10 @@ async function fillPdfTemplate(
       }
     });
 
-    // Flatten the form to embed field values
+    // Update field appearances to reflect filled values
+    form.updateFieldAppearances();
+
+    // Now flatten to embed the appearances
     form.flatten();
 
     const pdfBytes = await pdfDoc.save();
