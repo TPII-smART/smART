@@ -310,7 +310,7 @@ export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: 
         if (hiredTalent.freelancerDelivered && !hiredTalent.clientReceived) {
           return {
             title: "Work Delivered - Awaiting Your Approval",
-            description: `The freelancer delivered the hiredTalent "${hiredTalent.title}". Please review and approve.`,
+            description: `The freelancer delivered "${hiredTalent.title}". Please review and approve.`,
             ...deliveredActivity,
           };
         }
@@ -321,8 +321,8 @@ export function getFeedHiredTalentStatus(hiredTalent: HiredTalent, userAddress: 
       return {
         title: isClient ? "Hire Completed" : "You Completed a Hire",
         description: isClient
-          ? `The hiredTalent "${hiredTalent.title}" has been completed.`
-          : `You completed the hiredTalent "${hiredTalent.title}".`,
+          ? `The hire "${hiredTalent.title}" has been completed.`
+          : `You completed the hire "${hiredTalent.title}".`,
         type: ActivityItemType.status,
         timestamp: castDateToTimestampNum(hiredTalent.finishedAt),
         status: ActivityItemStatus.completed,
