@@ -2,6 +2,7 @@ import { endpoint } from "../../config";
 import { getUserAddressByUsernameOrEmail } from "../profile.service";
 import * as GigQueries from "./gig.queries";
 import request from "graphql-request";
+import { parseEther } from "viem";
 import { Deliverable } from "~~/types/deliverable";
 import { Application, Gig } from "~~/types/gig";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
@@ -38,6 +39,9 @@ export const fetchGigsPaginated = async (
     userAddresses = [search];
   }
 
+  const minPaymentWei = minPayment ? parseEther(minPayment.toString()).toString() : undefined;
+  const maxPaymentWei = maxPayment ? parseEther(maxPayment.toString()).toString() : undefined;
+
   const res = await request<{ gigs: PaginationQueryResponse<Gig> }>(endpoint, GigQueries.getGigsPaginated, {
     limit: meta.limit,
     startCursor: meta.startCursor,
@@ -45,8 +49,8 @@ export const fetchGigsPaginated = async (
     search,
     orderBy,
     orderDirection,
-    minPayment: minPayment ? minPayment * 1e18 : undefined, // Convert ether to wei
-    maxPayment: maxPayment ? maxPayment * 1e18 : undefined, // Convert ether to wei
+    minPayment: minPaymentWei,
+    maxPayment: maxPaymentWei,
     categories,
     userAddresses: userAddresses.length > 0 ? userAddresses : undefined,
   });

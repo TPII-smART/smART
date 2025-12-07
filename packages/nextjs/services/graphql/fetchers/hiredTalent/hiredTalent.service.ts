@@ -2,6 +2,7 @@ import { endpoint } from "../../config";
 import { getUserAddressByUsernameOrEmail } from "../profile.service";
 import * as HiredTalentQueries from "./hiredTalent.queries";
 import request from "graphql-request";
+import { parseEther } from "viem";
 import { Deliverable } from "~~/types/deliverable";
 import { HiredTalent, Talent } from "~~/types/hiredTalent";
 import { Paginated, PaginationMetaArg, PaginationQueryResponse } from "~~/types/paginated.types";
@@ -72,6 +73,9 @@ export const fetchTalentsPaginated = async (
     userAddresses = [search];
   }
 
+  const minPriceWei = minPrice ? parseEther(minPrice.toString()).toString() : undefined;
+  const maxPriceWei = maxPrice ? parseEther(maxPrice.toString()).toString() : undefined;
+
   const res = await request<{ talents: PaginationQueryResponse<Talent> }>(
     endpoint,
     HiredTalentQueries.getTalentsPaginated,
@@ -82,8 +86,8 @@ export const fetchTalentsPaginated = async (
       search,
       orderBy,
       orderDirection,
-      minPrice: minPrice ? minPrice * 1e18 : undefined, // Convert ether to wei
-      maxPrice: maxPrice ? maxPrice * 1e18 : undefined, // Convert ether to wei
+      minPrice: minPriceWei,
+      maxPrice: maxPriceWei,
       categories,
       userAddresses: userAddresses.length > 0 ? userAddresses : undefined,
     },
