@@ -62,7 +62,7 @@ const UploadDeliverableForm = ({
             <div className="flex gap-2 mb-2"></div>
             <FileUploadBox
               onUploadSuccess={(val: File) => setFieldValue("file", val)}
-              acceptedFileTypes={["Document", "Image", "Video"]}
+              acceptedFileTypes={["Document", "Image", "Video", "Audio"]}
             />
 
             <InputBase
