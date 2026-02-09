@@ -72,7 +72,7 @@
 		"@mui/material": "^7.3.2",
 		"@react-native-async-storage/async-storage": "^2.2.0",
 		"@thirdweb-dev/storage": "^2.0.15",
-		"axios": "^1.12.2",
+		"axios": "^1.13.5",
 		"class-variance-authority": "^0.7.1",
 		"framer-motion": "^12.23.18",
 		"motion": "^12.23.18",
